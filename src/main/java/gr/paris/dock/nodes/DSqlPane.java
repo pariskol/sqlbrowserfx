@@ -33,8 +33,8 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -209,17 +209,11 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 
 		logButton = new Button("", JavaFXUtils.icon("/res/monitor.png"));
 		logButton.setOnAction(actionEvent -> {
-			logArea = new TextArea();
-			logArea.setEditable(false);
-//			logArea.textProperty().addListener(listener -> {
-//				if(logArea.getText().split("\n").length > 100) {
-//					logArea.clear();
-//				}
-//			});
+			logListView = new ListView<>();
 			uiLogging = true;
-			DockNode dockNode = new DockNode(logArea, "Log", JavaFXUtils.icon("/res/monitor.png"));
+			DockNode dockNode = new DockNode(logListView, "Log", JavaFXUtils.icon("/res/monitor.png"));
 			dockNode.setOnClose(() -> {
-				logArea = null;
+				logListView = null;
 				uiLogging = false;
 			});
 			dockNode.dock(thisDockNode.getDockPane(), DockPos.RIGHT, thisDockNode);

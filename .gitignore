@@ -5,3 +5,4 @@ logs
 out
 target
 lib
+*.log

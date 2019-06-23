@@ -54,6 +54,20 @@ public class SqlConsoleBox extends VBox {
 		tabPane.setOnMouseClicked(MouseEvent -> addTab());
 		newConsoleTab.setClosable(false);
 		tabPane.getTabs().add(newConsoleTab);
+		tabPane.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.isControlDown()) {
+				switch (keyEvent.getCode()) {
+				case N:
+					this.createSqlConsoleBox();
+					break;
+				case D:
+//					tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
+					break;
+				default:
+					break;
+				}
+			}
+		});
 
 		executebutton = new Button("Execute", JavaFXUtils.icon("res/bolt.png"));
 		executebutton.setOnAction(actionEvent -> executeButonAction());
@@ -67,37 +81,42 @@ public class SqlConsoleBox extends VBox {
 		splitPane.prefHeightProperty().bind(this.heightProperty());
 
 		// initial create one tab
-		addTab();
+		this.addTab();
 	}
 
 	private void addTab() {
 		if (tabPane.getSelectionModel().getSelectedItem() == newConsoleTab) {
-			CodeArea sqlConsoleArea = new CodeArea();
-			AtomicReference<Popup> auoCompletePopup = new AtomicReference<Popup>();
-			sqlConsoleArea.setOnKeyTyped(event -> this.autoCompleteAction(event, sqlConsoleArea, auoCompletePopup));
-
-			sqlConsoleArea.caretPositionProperty().addListener((observable, oldPosition, newPosition) -> {
-				if (auoCompletePopup.get() != null)
-					auoCompletePopup.get().hide();
-			});
-			sqlConsoleArea.setOnKeyPressed(keyEvent -> {
-				if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.ENTER) {
-//					executebutton.getOnAction().handle(new ActionEvent());
-					this.executeButonAction();
-				}
-			});
-
-			// Unsubscribe when not needed
-			Subscription subscription = sqlConsoleArea.multiPlainChanges()
-													  .successionEnds(Duration.ofMillis(500))
-													  .subscribe(ignore -> sqlConsoleArea.setStyleSpans(0, computeHighlighting(sqlConsoleArea.getText())));
-
-			Tab newTab = new Tab("query " + tabPane.getTabs().size(), sqlConsoleArea);
-			tabPane.getTabs().add(newTab);
-			tabPane.getSelectionModel().select(newTab);
+			this.createSqlConsoleBox();
 		}
 	}
 
+	private void createSqlConsoleBox() {
+		CodeArea sqlConsoleArea = new CodeArea();
+		AtomicReference<Popup> auoCompletePopup = new AtomicReference<Popup>();
+		sqlConsoleArea.setOnKeyTyped(event -> this.autoCompleteAction(event, sqlConsoleArea, auoCompletePopup));
+
+		sqlConsoleArea.caretPositionProperty().addListener((observable, oldPosition, newPosition) -> {
+			if (auoCompletePopup.get() != null)
+				auoCompletePopup.get().hide();
+		});
+		sqlConsoleArea.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.ENTER) {
+//				executebutton.getOnAction().handle(new ActionEvent());
+				this.executeButonAction();
+			}
+		});
+
+		// Unsubscribe when not needed
+		Subscription subscription = sqlConsoleArea.multiPlainChanges()
+												  .successionEnds(Duration.ofMillis(500))
+												  .subscribe(ignore -> sqlConsoleArea.setStyleSpans(0, computeHighlighting(sqlConsoleArea.getText())));
+
+		Tab newTab = new Tab("query " + tabPane.getTabs().size(), sqlConsoleArea);
+		tabPane.getTabs().add(newTab);
+		tabPane.getSelectionModel().select(newTab);
+		sqlConsoleArea.requestFocus();
+	}
+	
 	public void autoCompleteAction(KeyEvent event, CodeArea sqlConsoleArea,  AtomicReference<Popup> auoCompletePopup) {
 		String ch = event.getCharacter();
 		// for some reason keycode does not work
