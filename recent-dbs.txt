@@ -1,0 +1,4 @@
+/home/paris/sqllite-dbs/users.db
+/home/paris/sqllite-dbs/chinook.db
+D:\backup\sqllite-dbs\chinook.db
+C:\Java\sqllite-dbs\users.db
