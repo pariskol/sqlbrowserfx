@@ -24,7 +24,6 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.geometry.Orientation;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -34,7 +33,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.SplitPane;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -61,8 +60,8 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 		super();
 	}
 
-	public DSqlPane(SqlConnector connector) {
-		super(connector);
+	public DSqlPane(SqlConnector sqlConnector) {
+		super(sqlConnector);
 
 		listeners = new ArrayList<>();
 		charts = new ArrayList<>();
@@ -111,6 +110,12 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 			sqlTableView.requestFocus();
 		});
 
+		
+	}
+
+	@Override
+	protected FlowPane createToolbar() {
+		FlowPane flowPane = super.createToolbar();
 		nameColumnsBox = new ComboBox<>();
 		columnsBox = new ComboBox<>();
 		showChartButton = new Button("Show", JavaFXUtils.icon("/res/chart-pie.png"));
@@ -218,9 +223,10 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 			});
 			dockNode.dock(thisDockNode.getDockPane(), DockPos.RIGHT, thisDockNode);
 		});
-		this.getToolBar().getChildren().addAll(chartButton, lineChartButton, sqlConsoleButton, logButton);
+		flowPane.getChildren().addAll(chartButton, lineChartButton, sqlConsoleButton, logButton);
+		return flowPane;
 	}
-
+	
 	public ObservableList<XYChart.Data<String, Number>> getLineChartData(LineChartBox box, String tableName) {
 		ObservableList<XYChart.Data<String, Number>> data = FXCollections.observableArrayList();
 		
@@ -321,26 +327,28 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	public void sqlConsoleButtonAction() {
 		if (sqlConsoleBox == null) {
 			sqlConsoleBox = new DSqlConsoleBox(this.sqlConnector, this);
-			if (fullModeCheckBox.isSelected() && fullModeSplitPane != null) {
-				fullModeSplitPane.getItems().clear();
-				SplitPane splitPane = new SplitPane(tabPane, sqlConsoleBox.asDockNode());
-				sqlConsoleBox.asDockNode().setOnClose(() -> {
-					splitPane.getItems().remove(sqlConsoleBox.asDockNode());
-					sqlConsoleBox = null;
-				});
-				sqlConsoleBox.asDockNode().getDockTitleBar().setDragAllowed(false);
-				// set opposite orientation on purpose
-				if (fullModeCheckBox.getText().contains("horizontal"))
-					splitPane.setOrientation(Orientation.VERTICAL);
-				else
-					splitPane.setOrientation(Orientation.HORIZONTAL);
-				fullModeSplitPane.getItems().addAll(sqlTableView, splitPane);
-				fullModeSplitPane.setDividerPositions(0.7, 0.3);
-			} else {
+//			if (fullModeCheckBox.isSelected() && fullModeSplitPane != null) {
+//				fullModeSplitPane.getItems().clear();
+//				SplitPane splitPane = new SplitPane(tabPane, sqlConsoleBox.asDockNode());
+//
+//				sqlConsoleBox.asDockNode().setOnClose(() -> {
+//					splitPane.getItems().remove(sqlConsoleBox.asDockNode());
+//					sqlConsoleBox = null;
+//				});
+//				sqlConsoleBox.asDockNode().getDockTitleBar().setDragAllowed(false);
+//				// set opposite orientation on purpose
+//				if (fullModeCheckBox.getText().contains("horizontal"))
+//					splitPane.setOrientation(Orientation.VERTICAL);
+//				else
+//					splitPane.setOrientation(Orientation.HORIZONTAL);
+//				fullModeSplitPane.getItems().addAll(sqlTableView, splitPane);
+//				fullModeSplitPane.setDividerPositions(0.7, 0.3);
+//			} else {
 				sqlConsoleBox.asDockNode().setOnClose(() -> sqlConsoleBox = null);
 				sqlConsoleBox.asDockNode().setPrefSize(this.getWidth(), this.getHeight()/3);
+				sqlConsoleBox.asDockNode().setMaxHeight(1080);
 				sqlConsoleBox.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, thisDockNode);
-			}
+//			}
 		}
 	}
 	@Override

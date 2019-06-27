@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import gr.paris.dock.nodes.DSqlConsoleView;
 import gr.paris.dock.nodes.DSqlPane;
+import gr.paris.dock.nodes.DTabedSqlPane;
 import gr.paris.nodes.Keywords;
 import gr.paris.nodes.MySqlConfigBox;
 import gr.paris.rest.service.RestServiceConfig;
@@ -71,6 +72,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
@@ -244,6 +246,7 @@ public class SqlBrowserApp extends Application {
 		TreeView<String> treeView = this.createTreeView(dockPane);
 		DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
 		dockNode.setPrefSize(scene.getWidth()/4, scene.getHeight());
+//		dockNode.setMaxWidth(300);
 		dockNode.dock(dockPane, DockPos.LEFT);
 		
 		MenuBar menuBar = createMenu(dockPane);
@@ -273,6 +276,15 @@ public class SqlBrowserApp extends Application {
 
 			});
 		});
+		MenuItem tabedSqlPaneViewItem = new MenuItem("Open Tabed Table View", JavaFXUtils.icon("/res/database.png"));
+		tabedSqlPaneViewItem.setOnAction(event -> {
+			Platform.runLater(() -> {
+				DTabedSqlPane newSqlPane = new DTabedSqlPane(sqlConnector);
+//				newSqlPane.asDockNode().setPrefSize(scene.getWidth() / 2, scene.getHeight() / 2);
+				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
+
+			});
+		});
 		MenuItem sqlConsoleViewItem = new MenuItem("Open Console View", JavaFXUtils.icon("/res/console.png"));
 		sqlConsoleViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
@@ -289,7 +301,7 @@ public class SqlBrowserApp extends Application {
 			dockNode.dock(dockPane, DockPos.LEFT);	
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem);
+		menu1.getItems().addAll(sqlPaneViewItem, tabedSqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service");
@@ -420,6 +432,7 @@ public class SqlBrowserApp extends Application {
 			TreeView<String> treeView = new TreeView<>();
 			this.createContextMenu(treeView);
 			treeView.setRoot(rootItem);
+			treeView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		
 			return treeView;
 		}
@@ -439,7 +452,13 @@ public class SqlBrowserApp extends Application {
 	}
 	
 	private void copyAction(TreeView<String> treeView) {
-		StringSelection stringSelection = new StringSelection(treeView.getSelectionModel().getSelectedItem().getValue());
+		String text = "";
+		for (TreeItem<String> treeItem : treeView.getSelectionModel().getSelectedItems()) {
+			text += treeItem.getValue() + ", ";
+		}
+		text = text.substring(0, text.length() - ", ".length());
+		
+		StringSelection stringSelection = new StringSelection(text);
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
 	}
