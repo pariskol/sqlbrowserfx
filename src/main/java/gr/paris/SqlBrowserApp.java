@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import gr.paris.dock.nodes.DSqlConsoleView;
 import gr.paris.dock.nodes.DSqlPane;
-import gr.paris.dock.nodes.DTabedSqlPane;
+import gr.paris.dock.nodes.DTabSqlPane;
 import gr.paris.nodes.Keywords;
 import gr.paris.nodes.MySqlConfigBox;
 import gr.paris.rest.service.RestServiceConfig;
@@ -246,7 +246,7 @@ public class SqlBrowserApp extends Application {
 		TreeView<String> treeView = this.createTreeView(dockPane);
 		DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
 		dockNode.setPrefSize(scene.getWidth()/4, scene.getHeight());
-//		dockNode.setMaxWidth(300);
+		dockNode.setMaxWidth(400);
 		dockNode.dock(dockPane, DockPos.LEFT);
 		
 		MenuBar menuBar = createMenu(dockPane);
@@ -276,10 +276,10 @@ public class SqlBrowserApp extends Application {
 
 			});
 		});
-		MenuItem tabedSqlPaneViewItem = new MenuItem("Open Tabed Table View", JavaFXUtils.icon("/res/database.png"));
+		MenuItem tabedSqlPaneViewItem = new MenuItem("Open Tabed Table View", JavaFXUtils.icon("/res/m-database.png"));
 		tabedSqlPaneViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
-				DTabedSqlPane newSqlPane = new DTabedSqlPane(sqlConnector);
+				DTabSqlPane newSqlPane = new DTabSqlPane(sqlConnector);
 //				newSqlPane.asDockNode().setPrefSize(scene.getWidth() / 2, scene.getHeight() / 2);
 				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
 

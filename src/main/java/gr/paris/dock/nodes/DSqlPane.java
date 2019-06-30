@@ -44,11 +44,11 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	private Button logButton;
 	private ComboBox<String> columnsBox;
 	private ComboBox<String> nameColumnsBox;
-	List<SimpleChangeListener<String>> listeners;
-	List<PieChart> charts;
-	List<String> chartColumns;
-	List<DockNode> chartsDNs;
-	List<LineChartBox> lineChartBoxes;
+	private List<SimpleChangeListener<String>> listeners;
+	private List<PieChart> charts;
+	private List<String> chartColumns;
+	private List<DockNode> chartsDNs;
+	private List<LineChartBox> lineChartBoxes;
 
 	private DockNode thisDockNode = null;
 	private Button lineChartButton;
@@ -56,8 +56,9 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	private Button showChartButton;
 	private List<String> columnNames;
 
+	
 	public DSqlPane() {
-		super();
+		this(null);
 	}
 
 	public DSqlPane(SqlConnector sqlConnector) {
@@ -107,7 +108,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 					break;
 				}
 			}
-			sqlTableView.requestFocus();
+			sqlTableViewRef.requestFocus();
 		});
 
 		
@@ -354,7 +355,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	@Override
 	public void tableCheckBoxAction() {
 		super.tableCheckBoxAction();
-		sqlConsoleBox = null;
+//		sqlConsoleBox = null;
 		while (chartsDNs.size() > 0) {
 			DockNode dockNode = chartsDNs.get(0);
 			dockNode.close();
@@ -366,11 +367,13 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	}
 
 	@Override
-	protected void getData() {
-		super.getData();
-		columnNames = getSqlTableView().getColumnsNames();
-		columnsBox.setItems(FXCollections.observableList(columnNames));
-		nameColumnsBox.setItems(FXCollections.observableList(columnNames));
+	protected void getData(String table) {
+		if (table != null && !table.equals("empty")) {
+			super.getData(table);
+			columnNames = getSqlTableView().getColumnsNames();
+			columnsBox.setItems(FXCollections.observableList(columnNames));
+			nameColumnsBox.setItems(FXCollections.observableList(columnNames));
+		}
 	}
 
 	@Override

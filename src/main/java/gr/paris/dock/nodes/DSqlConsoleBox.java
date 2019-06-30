@@ -39,7 +39,7 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 			sqlPane.fillColumnCheckBoxes();
 			if (sqlPane.isFullMode()) {
 				sqlPane.closeEditTabs();
-				sqlPane.createAddTab();
+				sqlPane.createRecordsAddTab();
 			}
 			sqlPane.asDockNode().setTitle(sqlPane.getSqlTableView().getTableName());
 		});
@@ -54,5 +54,15 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 	public void hanldeException(Exception e) {
 		DialogFactory.createErrorDialog(e);
 	}
+
+	public DSqlPane getSqlPane() {
+		return sqlPane;
+	}
+
+	public void setSqlPane(DSqlPane sqlPane) {
+		this.sqlPane = sqlPane;
+	}
+	
+	
 
 }
