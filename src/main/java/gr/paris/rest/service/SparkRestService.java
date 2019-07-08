@@ -28,16 +28,7 @@ public class SparkRestService {
 		});
 		
 		Spark.get("/tables", (request, response) -> {
-			List<Object> data = new ArrayList<>();
-			sqlConnector.executeQuery("select name from sqlite_master where type='table'", rset -> {
-				try {
-					HashMap<String, Object> dto = DTOMapper.map(rset);
-					data.add(dto);
-				} catch (Exception e) {
-					logger.error(e.getMessage(), e);
-					Spark.halt(500);
-				}
-			});
+			List<String> data = sqlConnector.getTables();
 			return new JSONArray(data).toString();
 		}, stringTransformer);
 
@@ -59,7 +50,7 @@ public class SparkRestService {
 
 			List<Object> data = new ArrayList<>();
 			try {
-				logger.debug("Aboout to execute query");
+				logger.debug("About to execute query");
 				sqlConnector.executeQuery("select * from " + table + whereFilter.toString(), params, rset -> {
 					try {
 						HashMap<String, Object> dto = DTOMapper.map(rset);

@@ -1,13 +1,14 @@
 package gr.paris.nodes;
 
-import javafx.collections.FXCollections;
-import javafx.scene.control.ListView;
-import org.fxmisc.richtext.CodeArea;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.fxmisc.richtext.CodeArea;
+
+import javafx.collections.FXCollections;
+import javafx.scene.control.ListView;
 
 public class AutoComplete {
 
@@ -36,6 +37,9 @@ public class AutoComplete {
     }
 
     private static List<String> getQuerySuggestions(String query) {
-        return SyntaxUtils.KEYWORDS_lIST.parallelStream().filter(keyword -> keyword.startsWith(query)).collect(Collectors.toList());
+        List<String> suggestions = SyntaxUtils.KEYWORDS_lIST.parallelStream()
+        							.filter(keyword -> keyword.startsWith(query)).collect(Collectors.toList());
+//        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
+        return suggestions;
     }
 }

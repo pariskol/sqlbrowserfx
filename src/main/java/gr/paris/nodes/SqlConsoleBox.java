@@ -4,8 +4,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -16,12 +18,16 @@ import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
 
 import gr.sqlfx.conn.SqlConnector;
+import gr.sqlfx.listeners.SimpleChangeListener;
+import gr.sqlfx.listeners.SimpleObservable;
 import gr.sqlfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
@@ -32,7 +38,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 
-public class SqlConsoleBox extends VBox {
+public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 
 	TextArea historyArea;
 	protected TabPane tabPane;
@@ -41,12 +47,14 @@ public class SqlConsoleBox extends VBox {
 	protected Button executebutton;
 	private SqlConnector sqlConnector;
 	protected AtomicBoolean sqlQueryRunning;
+	List<SimpleChangeListener<String>> listeners;
 
 	public SqlConsoleBox(SqlConnector sqlConnector) {
 		this.sqlConnector = sqlConnector;
 		sqlQueryRunning = new AtomicBoolean(false);
 		progressIndicator = new ProgressIndicator();
 		historyArea = new TextArea();
+		listeners = new ArrayList<>();
 
 		tabPane = new TabPane();
 		newConsoleTab = new Tab("");
@@ -91,15 +99,16 @@ public class SqlConsoleBox extends VBox {
 	}
 
 	private void createSqlConsoleBox() {
-		CodeArea sqlConsoleArea = new CodeArea();
+		CodeArea sqlCodeArea = new CodeArea();
+		sqlCodeArea.setContextMenu(this.createContextMenu(sqlCodeArea));
 		AtomicReference<Popup> auoCompletePopup = new AtomicReference<Popup>();
-		sqlConsoleArea.setOnKeyTyped(event -> this.autoCompleteAction(event, sqlConsoleArea, auoCompletePopup));
+		sqlCodeArea.setOnKeyTyped(event -> this.autoCompleteAction(event, sqlCodeArea, auoCompletePopup));
 
-		sqlConsoleArea.caretPositionProperty().addListener((observable, oldPosition, newPosition) -> {
+		sqlCodeArea.caretPositionProperty().addListener((observable, oldPosition, newPosition) -> {
 			if (auoCompletePopup.get() != null)
 				auoCompletePopup.get().hide();
 		});
-		sqlConsoleArea.setOnKeyPressed(keyEvent -> {
+		sqlCodeArea.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.ENTER) {
 //				executebutton.getOnAction().handle(new ActionEvent());
 				this.executeButonAction();
@@ -107,14 +116,31 @@ public class SqlConsoleBox extends VBox {
 		});
 
 		// Unsubscribe when not needed
-		Subscription subscription = sqlConsoleArea.multiPlainChanges()
+		@SuppressWarnings("unused")
+		Subscription subscription = sqlCodeArea.multiPlainChanges()
 												  .successionEnds(Duration.ofMillis(500))
-												  .subscribe(ignore -> sqlConsoleArea.setStyleSpans(0, computeHighlighting(sqlConsoleArea.getText())));
+												  .subscribe(ignore -> sqlCodeArea.setStyleSpans(0, computeHighlighting(sqlCodeArea.getText())));
 
-		Tab newTab = new Tab("query " + tabPane.getTabs().size(), sqlConsoleArea);
+		Tab newTab = new Tab("query " + tabPane.getTabs().size(), sqlCodeArea);
 		tabPane.getTabs().add(newTab);
 		tabPane.getSelectionModel().select(newTab);
-		sqlConsoleArea.requestFocus();
+		sqlCodeArea.requestFocus();
+	}
+	
+	private ContextMenu createContextMenu(CodeArea codeArea) {
+		ContextMenu menu = new ContextMenu();
+		
+		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/res/copy.png"));
+		menuItemCopy.setOnAction(event -> codeArea.copy());
+		
+		MenuItem menuItemCut = new MenuItem("Cut", JavaFXUtils.icon("/res/cut.png"));
+		menuItemCut.setOnAction(event -> codeArea.cut());
+		
+		MenuItem menuItemPaste = new MenuItem("Paste", JavaFXUtils.icon("/res/paste.png"));
+		menuItemPaste.setOnAction(event -> codeArea.paste());
+		
+		menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste);
+		return menu;
 	}
 	
 	public void autoCompleteAction(KeyEvent event, CodeArea sqlConsoleArea,  AtomicReference<Popup> auoCompletePopup) {
@@ -164,7 +190,7 @@ public class SqlConsoleBox extends VBox {
 	public void executeButonAction() {
 		CodeArea sqlConsoleArea = (CodeArea) tabPane.getSelectionModel().getSelectedItem().getContent();
 		String query = sqlConsoleArea.getText();
-		if (query.startsWith("select")) {
+		if (query.startsWith("select") || query.startsWith("SELECT")) {
 			sqlConnector.getExecutorService().execute(() -> {
 				if (sqlQueryRunning.get())
 					return;
@@ -211,6 +237,10 @@ public class SqlConsoleBox extends VBox {
 						this.getChildren().add(executebutton);
 					});
 					sqlQueryRunning.set(false);
+				}
+				
+				if (query.contains("table") || query.contains("TABLE")) {
+					this.changed();
 				}
 			});
 		}
@@ -262,6 +292,21 @@ public class SqlConsoleBox extends VBox {
 		}
 		spansBuilder.add(Collections.emptyList(), text.length() - lastKwEnd);
 		return spansBuilder.create();
+	}
+
+	@Override
+	public void changed() {
+		listeners.forEach(listener -> listener.onChange(""));
+	}
+
+	@Override
+	public void addListener(SimpleChangeListener<String> listener) {
+		listeners.add(listener);
+	}
+
+	@Override
+	public void removeListener(SimpleChangeListener<String> listener) {
+		listeners.remove(listener);
 	}
 
 }

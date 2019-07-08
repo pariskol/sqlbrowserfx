@@ -21,20 +21,12 @@
 
 package gr.paris;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -46,19 +38,17 @@ import org.dockfx.DockPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gr.paris.dock.nodes.DBTreeView;
 import gr.paris.dock.nodes.DSqlConsoleView;
 import gr.paris.dock.nodes.DSqlPane;
-import gr.paris.dock.nodes.DTabSqlPane;
 import gr.paris.nodes.Keywords;
 import gr.paris.nodes.MySqlConfigBox;
 import gr.paris.rest.service.RestServiceConfig;
 import gr.paris.rest.service.SparkRestService;
 import gr.sqlfx.conn.MysqlConnector;
 import gr.sqlfx.conn.SqlConnector;
-import gr.sqlfx.conn.SqlTable;
 import gr.sqlfx.conn.SqliteConnector;
 import gr.sqlfx.factories.DialogFactory;
-import gr.sqlfx.utils.DTOMapper;
 import gr.sqlfx.utils.JavaFXUtils;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -66,17 +56,15 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -94,14 +82,15 @@ public class SqlBrowserApp extends Application {
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
 	private static String DB = "/home/paris/sqllite-dbs/users.db";
 	private static RestServiceConfig restServiceConfig;
-	private static Logger logger;
+	private static Logger logger = LoggerFactory.getLogger("SPARK");;
 
 	private Scene scene;
+	private Stage stage;
 	private SqlConnector sqlConnector;
 	private boolean restServiceStarted;
 
 	public static void main(String[] args) {
-		logger = LoggerFactory.getLogger("SPARK");
+		Keywords.onKeywordsBind();
 		try {
 			Properties props = new Properties();
 			props.load(new FileInputStream("log4j.properties"));
@@ -109,12 +98,12 @@ public class SqlBrowserApp extends Application {
 		} catch (Exception e) {
 			BasicConfigurator.configure();
 		}
-        Keywords.onKeywordsBind();
 		launch(args);
 	}
 
 	@Override
 	public void start(Stage primaryStage) {
+		stage = primaryStage;
 		primaryStage.setTitle("SqlBrowser");
 
 		createDBselectBox();
@@ -217,6 +206,9 @@ public class SqlBrowserApp extends Application {
 	}
 
 	private void dbSelectionAction(MySqlConfigBox configBox) {
+		
+		DB = configBox.getDatabaseField().getText();
+		restServiceConfig = new RestServiceConfig("localhost", 8080, DB);
 		try {
 			SqlConnector mysqlConnector = new MysqlConnector(configBox.getDatabaseField().getText(),
 					configBox.getUserField().getText(), configBox.getPasswordField().getText());
@@ -233,7 +225,8 @@ public class SqlBrowserApp extends Application {
 
 		DSqlPane sqlPane = new DSqlPane(sqlConnector);
 		sqlPane.asDockNode().setPrefSize(scene.getWidth()/2, scene.getHeight());
-		sqlPane.asDockNode().dock(dockPane, DockPos.CENTER);
+		sqlPane.asDockNode().dock(dockPane, DockPos.CENTER, 0.8f);
+		sqlPane.sqlConsoleButtonAction();
 
 //		DSqlPane sqlPane2 = new DSqlPane(sqlConnector);
 //		sqlPane2.asDockNode().setPrefSize(scene.getWidth()/4, scene.getHeight());
@@ -243,11 +236,14 @@ public class SqlBrowserApp extends Application {
 //		dSqlConsoleView.asDockNode().setPrefSize(scene.getWidth() / 4, scene.getHeight());
 //		dSqlConsoleView.asDockNode().dock(dockPane, DockPos.BOTTOM, sqlPane2.asDockNode());
 
-		TreeView<String> treeView = this.createTreeView(dockPane);
+		DBTreeView treeView = new DBTreeView(DB, sqlConnector);
+		Keywords.bind(treeView.getContentNames());
+		treeView.addListener(value -> Keywords.bind(treeView.getContentNames()));
+		sqlPane.getSqlConsoleBox().addListener(treeView);
 		DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
-		dockNode.setPrefSize(scene.getWidth()/4, scene.getHeight());
-		dockNode.setMaxWidth(400);
-		dockNode.dock(dockPane, DockPos.LEFT);
+		dockNode.dock(dockPane, DockPos.LEFT, 0.2f);
+		// fixed size 
+		//		SplitPane.setResizableWithParent(dockNode, Boolean.FALSE);
 		
 		MenuBar menuBar = createMenu(dockPane);
 
@@ -263,6 +259,12 @@ public class SqlBrowserApp extends Application {
 		vbox.getChildren().addAll(menuBar, dockPane);
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
 		scene.setRoot(vbox);
+		stage.heightProperty().addListener((obs, oldVal, newVal) -> {
+			for (SplitPane split : dockPane.getSplitPanes()) {
+			    double[] positions = split.getDividerPositions(); // reccord the current ratio
+			    Platform.runLater(() -> split.setDividerPositions(positions)); // apply the now former ratio
+			}
+		});
 	}
 
 	private MenuBar createMenu(DockPane dockPane) {
@@ -276,15 +278,15 @@ public class SqlBrowserApp extends Application {
 
 			});
 		});
-		MenuItem tabedSqlPaneViewItem = new MenuItem("Open Tabed Table View", JavaFXUtils.icon("/res/m-database.png"));
-		tabedSqlPaneViewItem.setOnAction(event -> {
-			Platform.runLater(() -> {
-				DTabSqlPane newSqlPane = new DTabSqlPane(sqlConnector);
-//				newSqlPane.asDockNode().setPrefSize(scene.getWidth() / 2, scene.getHeight() / 2);
-				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
-
-			});
-		});
+//		MenuItem tabedSqlPaneViewItem = new MenuItem("Open Tabed Table View", JavaFXUtils.icon("/res/m-database.png"));
+//		tabedSqlPaneViewItem.setOnAction(event -> {
+//			Platform.runLater(() -> {
+//				DTabSqlPane newSqlPane = new DTabSqlPane(sqlConnector);
+////				newSqlPane.asDockNode().setPrefSize(scene.getWidth() / 2, scene.getHeight() / 2);
+//				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
+//
+//			});
+//		});
 		MenuItem sqlConsoleViewItem = new MenuItem("Open Console View", JavaFXUtils.icon("/res/console.png"));
 		sqlConsoleViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
@@ -296,12 +298,12 @@ public class SqlBrowserApp extends Application {
 		});
 		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.icon("/res/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
-			TreeView<String> treeView = this.createTreeView(dockPane);
+			TreeView<String> treeView = new DBTreeView(DB, sqlConnector);
 			DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
 			dockNode.dock(dockPane, DockPos.LEFT);	
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, tabedSqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem);
+		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service");
@@ -350,117 +352,6 @@ public class SqlBrowserApp extends Application {
 		stage.setTitle("Rest service configuration");
 		stage.setScene(scene);
 		stage.show();
-	}
-	
-	public TreeView<String> createTreeView(DockPane dockPane) {
-		{
-			TreeItem<String> rootItem = new TreeItem<>(DB, JavaFXUtils.icon("/res/database.png"));
-			rootItem.setExpanded(true);
-
-			TreeItem<String> tablesRootItem = new TreeItem<>("Tables", JavaFXUtils.icon("/res/table.png"));
-			TreeItem<String> viewsRootItem = new TreeItem<>("Views", JavaFXUtils.icon("/res/view.png"));
-			TreeItem<String> indicesRootItem = new TreeItem<>("Indices", JavaFXUtils.icon("/res/index.png"));
-			rootItem.getChildren().addAll(tablesRootItem, viewsRootItem, indicesRootItem);
-
-			List<String> tables = new ArrayList<>();
-			try {
-				sqlConnector.executeQuery("select name,type from sqlite_master", rset -> {
-					try {
-						HashMap<String, Object> dto = DTOMapper.map(rset);
-						tables.add((String) dto.get("name"));
-						TreeItem<String> treeItem = new TreeItem<String>((String) dto.get("name"));
-						if (dto.get("type").equals("table")) {
-							tablesRootItem.getChildren().add(treeItem);
-							treeItem.setGraphic(JavaFXUtils.icon("/res/table.png"));
-						}
-						else if (dto.get("type").equals("view")) {
-							viewsRootItem.getChildren().add(treeItem);
-							treeItem.setGraphic(JavaFXUtils.icon("/res/view.png"));
-						}
-						else if (dto.get("type").equals("index")) {
-							indicesRootItem.getChildren().add(treeItem);
-							treeItem.setGraphic(JavaFXUtils.icon("/res/index.png"));
-						}
-
-					} catch (Exception e) {
-						logger.error(e.getMessage(), e);
-					}
-				});
-				for (TreeItem<String> table : tablesRootItem.getChildren()) {
-					TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.icon("/res/script.png"));
-					table.getChildren().add(schemaTree);
-					
-					sqlConnector.executeQuery("select sql from sqlite_master where name = ?", Arrays.asList(table.getValue()), rset -> {
-						String schema = rset.getString("sql");
-						schemaTree.getChildren().add(new TreeItem<String>(schema));
-					});
-					
-					TreeItem<String> columnsTree = new TreeItem<>("columns", JavaFXUtils.icon("/res/columns.png"));
-					table.getChildren().add(columnsTree);
-
-					sqlConnector.executeQueryRaw("select * from " + table.getValue(), rset -> {
-						SqlTable sqlTable = new SqlTable(rset.getMetaData());
-						sqlTable.setPrimaryKey(sqlConnector.findPrimaryKey(table.getValue()));
-						sqlTable.setForeignKeys(sqlConnector.findForeignKeys(table.getValue()));
-						sqlTable.getColumns();
-						for(String column : sqlTable.getColumns()) {
-							TreeItem<String> columnTreeItem = new TreeItem<String>(column);
-							if (column.equals(sqlTable.getPrimaryKey()))
-								columnTreeItem.setGraphic(JavaFXUtils.icon("/res/primary-key.png"));
-							else if (sqlTable.isForeignKey(column))
-								columnTreeItem.setGraphic(JavaFXUtils.icon("/res/foreign-key.png"));
-							columnsTree.getChildren().add(columnTreeItem);
-						}
-					});
-				}
-				for (TreeItem<String> table : indicesRootItem.getChildren()) {
-					TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.icon("/res/script.png"));
-					table.getChildren().add(schemaTree);
-					
-					sqlConnector.executeQuery("select sql from sqlite_master where name = ?", Arrays.asList(table.getValue()), rset -> {
-						String schema = rset.getString("sql");
-						schemaTree.getChildren().add(new TreeItem<String>(schema));
-					});
-				}
-			} catch (SQLException e) {
-				logger.error(e.getMessage(), e);
-			}
-
-			Keywords.bind(tables);
-
-
-			TreeView<String> treeView = new TreeView<>();
-			this.createContextMenu(treeView);
-			treeView.setRoot(rootItem);
-			treeView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-		
-			return treeView;
-		}
-	}
-	
-	private ContextMenu createContextMenu(TreeView<String> treeView) {
-		ContextMenu contextMenu = new ContextMenu();
-
-		MenuItem menuItemCopy = new MenuItem("Copy text", JavaFXUtils.icon("/res/copy.png"));
-		menuItemCopy.setOnAction(event -> this.copyAction(treeView));
-
-
-		contextMenu.getItems().addAll(menuItemCopy);
-		treeView.setContextMenu(contextMenu);
-
-		return contextMenu;
-	}
-	
-	private void copyAction(TreeView<String> treeView) {
-		String text = "";
-		for (TreeItem<String> treeItem : treeView.getSelectionModel().getSelectedItems()) {
-			text += treeItem.getValue() + ", ";
-		}
-		text = text.substring(0, text.length() - ", ".length());
-		
-		StringSelection stringSelection = new StringSelection(text);
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		clipboard.setContents(stringSelection, null);
 	}
 
 }

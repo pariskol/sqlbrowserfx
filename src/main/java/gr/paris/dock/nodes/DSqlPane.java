@@ -17,6 +17,7 @@ import gr.sqlfx.factories.DialogFactory;
 import gr.sqlfx.listeners.SimpleChangeListener;
 import gr.sqlfx.listeners.SimpleObservable;
 import gr.sqlfx.sqlPane.SqlPane;
+import gr.sqlfx.sqlPane.SqlTableTab;
 import gr.sqlfx.sqlTableView.EditBox;
 import gr.sqlfx.sqlTableView.SqlTableRow;
 import gr.sqlfx.utils.JavaFXUtils;
@@ -33,6 +34,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.SplitPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -55,6 +57,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	private DSqlConsoleBox sqlConsoleBox;
 	private Button showChartButton;
 	private List<String> columnNames;
+	private DockNode dRecordsTabPane = null;;
 
 	
 	public DSqlPane() {
@@ -149,6 +152,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 				return;
 
 			chartButton.requestFocus();
+			this.fillChartColumnBoxes();
 			PopOver popOver = new PopOver(new VBox(new Label("Select display column"), nameColumnsBox,
 					new Label("Select plot column"), columnsBox, showChartButton));
 			popOver.setDetachable(false);
@@ -192,6 +196,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	
 			lineChartBoxes.clear();
 			lineChartButton.requestFocus();
+			this.fillChartColumnBoxes();
 			PopOver popOver = new PopOver();
 			LineChartBox contentBox = new LineChartBox(columnNames);
 			lineChartBoxes.add(contentBox);
@@ -346,9 +351,10 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 //				fullModeSplitPane.setDividerPositions(0.7, 0.3);
 //			} else {
 				sqlConsoleBox.asDockNode().setOnClose(() -> sqlConsoleBox = null);
-				sqlConsoleBox.asDockNode().setPrefSize(this.getWidth(), this.getHeight()/3);
+//				sqlConsoleBox.asDockNode().setPrefSize(this.getWidth(), this.getHeight()/3);
 				sqlConsoleBox.asDockNode().setMaxHeight(1080);
-				sqlConsoleBox.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, thisDockNode);
+				SplitPane split = sqlConsoleBox.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, thisDockNode);
+				split.setDividerPositions(0.7f, 0.3f);
 //			}
 		}
 	}
@@ -370,12 +376,56 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	protected void getData(String table) {
 		if (table != null && !table.equals("empty")) {
 			super.getData(table);
-			columnNames = getSqlTableView().getColumnsNames();
-			columnsBox.setItems(FXCollections.observableList(columnNames));
-			nameColumnsBox.setItems(FXCollections.observableList(columnNames));
+			this.fillChartColumnBoxes();
 		}
 	}
 
+	private void fillChartColumnBoxes() {
+		columnNames = getSqlTableView().getColumnsNames();
+		columnsBox.setItems(FXCollections.observableList(columnNames));
+		nameColumnsBox.setItems(FXCollections.observableList(columnNames));
+	}
+	@Override
+	public void enableFullMode() {
+		Platform.runLater(() -> {
+			if (fullModeCheckBox.isSelected()) {
+				this.createRecordsTabPane();
+				this.createRecordsAddTab();
+				if (dRecordsTabPane == null) {
+					dRecordsTabPane = new DockNode(recordsTabPaneRef);
+					SplitPane split = dRecordsTabPane.dock(thisDockNode.getDockPane(), DockPos.RIGHT, thisDockNode);
+					split.setDividerPositions(0.7f, 0.3f);
+					dRecordsTabPane.setOnClose(() -> {
+						dRecordsTabPane = null;
+						fullModeCheckBox.setSelected(false);
+					});
+				} else {
+					dRecordsTabPane.setContents(recordsTabPaneRef);
+				}
+				tablesTabPane.getSelectionModel().getSelectedItem().setContent(sqlTableViewRef);
+				((SqlTableTab) tablesTabPane.getSelectionModel().getSelectedItem()).setRecordsTabPane(recordsTabPaneRef);
+			} else
+				tablesTabPane.getSelectionModel().getSelectedItem().setContent(sqlTableViewRef);
+
+			sqlQueryRunning.set(false);
+		});
+	}
+	
+	@Override
+	public void disableFullMode() {
+		if (dRecordsTabPane != null)
+			dRecordsTabPane.close();
+		
+		super.disableFullMode();
+	}
+	
+	@Override
+	protected void tablesTabPaneClickAction() {
+		super.tablesTabPaneClickAction();
+		if (dRecordsTabPane != null && recordsTabPaneRef != null)
+			dRecordsTabPane.setContents(recordsTabPaneRef);
+	}
+	
 	@Override
 	public DockNode asDockNode() {
 		return thisDockNode;
@@ -413,4 +463,9 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	public void showConsole() {
 		this.sqlConsoleButtonAction();
 	}
+
+	public DSqlConsoleBox getSqlConsoleBox() {
+		return sqlConsoleBox;
+	}
+
 }

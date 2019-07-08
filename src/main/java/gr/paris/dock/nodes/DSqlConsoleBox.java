@@ -38,8 +38,7 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 		Platform.runLater(() -> {
 			sqlPane.fillColumnCheckBoxes();
 			if (sqlPane.isFullMode()) {
-				sqlPane.closeEditTabs();
-				sqlPane.createRecordsAddTab();
+				sqlPane.enableFullMode();
 			}
 			sqlPane.asDockNode().setTitle(sqlPane.getSqlTableView().getTableName());
 		});

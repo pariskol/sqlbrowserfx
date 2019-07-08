@@ -2,3 +2,5 @@
 /home/paris/sqllite-dbs/chinook.db
 D:\backup\sqllite-dbs\chinook.db
 C:\Java\sqllite-dbs\users.db
+employees
+/home/paris/eclipse-workspace/sql-lite-bowser/sqlbrowser.db
