@@ -31,7 +31,7 @@ public class SyntaxUtils {
 //    private static final String BRACKET_PATTERN = "\\[|\\]";
 //    private static final String CAST_PATTERN = "<[a-zA-Z0-9,<>]+>";
 	private static final String SEMICOLON_PATTERN = "\\;";
-	private static final String STRING_PATTERN = "\'([^\"\\\\]|\\\\.)*\'";
+	private static final String STRING_PATTERN = "\'([^\'\\\\]|\\\\.)*\'";
 	private static final String STRING_PATTERN_2 = "\"([^\"\\\\]|\\\\.)*\"";
 	public static final String TODO_SINGLE_COMMENT_PATTERN = "//TODO[^\n]*";
 	public static final String WARN_SINGLE_COMMENT_PATTERN = "//WARN[^\n]*";

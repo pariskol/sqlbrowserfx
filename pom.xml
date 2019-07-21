@@ -61,6 +61,13 @@
 		</plugins>
 	</build>
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/com.aquafx-project/aquafx -->
+		<dependency>
+			<groupId>com.aquafx-project</groupId>
+			<artifactId>aquafx</artifactId>
+			<version>0.2</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/org.fxmisc.richtext/richtextfx -->
 		<dependency>
 			<groupId>org.fxmisc.richtext</groupId>

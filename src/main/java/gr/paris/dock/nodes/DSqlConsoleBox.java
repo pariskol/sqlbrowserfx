@@ -46,7 +46,7 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 	
 	@Override
 	protected void handleUpdateResult(int rowsAffected) throws SQLException {
-		DialogFactory.createInfoDialog("SQL query result", "Query OK (" + rowsAffected + ") rowsa affected!");
+		DialogFactory.createInfoDialog("SQL query result", "Query OK (" + rowsAffected + ") rows affected!");
 	}
 	
 	@Override

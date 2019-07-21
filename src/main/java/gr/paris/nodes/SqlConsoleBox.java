@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
@@ -33,6 +34,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
@@ -40,11 +42,15 @@ import javafx.stage.Popup;
 
 public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 
-	TextArea historyArea;
+	private TextArea historyArea;
 	protected TabPane tabPane;
-	ProgressIndicator progressIndicator;
-	Tab newConsoleTab;
+	private ProgressIndicator progressIndicator;
+	private Tab newConsoleTab;
 	protected Button executebutton;
+	protected TextField findField;
+	protected TextField replaceField;
+	private CodeArea codeAreaRef;
+	
 	private SqlConnector sqlConnector;
 	protected AtomicBoolean sqlQueryRunning;
 	List<SimpleChangeListener<String>> listeners;
@@ -54,6 +60,10 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 		sqlQueryRunning = new AtomicBoolean(false);
 		progressIndicator = new ProgressIndicator();
 		historyArea = new TextArea();
+		findField = new TextField();
+		findField.setPromptText("Search...");
+		replaceField = new TextField();
+		replaceField.setPromptText("Replace...");
 		listeners = new ArrayList<>();
 
 		tabPane = new TabPane();
@@ -93,8 +103,12 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 	}
 
 	private void addTab() {
-		if (tabPane.getSelectionModel().getSelectedItem() == newConsoleTab) {
+		Tab selectedTab = tabPane.getSelectionModel().getSelectedItem();
+		if (selectedTab == newConsoleTab) {
 			this.createSqlConsoleBox();
+		}
+		else {
+			codeAreaRef = ((VirtualizedScrollPane<CodeArea>) selectedTab.getContent()).getContent(); 
 		}
 	}
 
@@ -113,6 +127,10 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 //				executebutton.getOnAction().handle(new ActionEvent());
 				this.executeButonAction();
 			}
+			else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.F) {
+//				executebutton.getOnAction().handle(new ActionEvent());
+				this.executeButonAction();
+			}
 		});
 
 		// Unsubscribe when not needed
@@ -121,9 +139,12 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 												  .successionEnds(Duration.ofMillis(500))
 												  .subscribe(ignore -> sqlCodeArea.setStyleSpans(0, computeHighlighting(sqlCodeArea.getText())));
 
-		Tab newTab = new Tab("query " + tabPane.getTabs().size(), sqlCodeArea);
+		VirtualizedScrollPane<CodeArea> scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
+		Tab newTab = new Tab("query " + tabPane.getTabs().size(), scrollPane);
+
 		tabPane.getTabs().add(newTab);
 		tabPane.getSelectionModel().select(newTab);
+		codeAreaRef = sqlCodeArea;
 		sqlCodeArea.requestFocus();
 	}
 	
@@ -188,7 +209,7 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 	}
 
 	public void executeButonAction() {
-		CodeArea sqlConsoleArea = (CodeArea) tabPane.getSelectionModel().getSelectedItem().getContent();
+		CodeArea sqlConsoleArea = ((VirtualizedScrollPane<CodeArea>) tabPane.getSelectionModel().getSelectedItem().getContent()).getContent();
 		String query = sqlConsoleArea.getText();
 		if (query.startsWith("select") || query.startsWith("SELECT")) {
 			sqlConnector.getExecutorService().execute(() -> {
@@ -307,6 +328,10 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 	@Override
 	public void removeListener(SimpleChangeListener<String> listener) {
 		listeners.remove(listener);
+	}
+
+	public CodeArea getCodeAreaRef() {
+		return codeAreaRef;
 	}
 
 }

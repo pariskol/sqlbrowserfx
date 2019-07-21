@@ -22,21 +22,15 @@
 package gr.paris;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.Properties;
 import java.util.stream.Stream;
 
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.PropertyConfigurator;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import gr.paris.dock.nodes.DBTreeView;
 import gr.paris.dock.nodes.DSqlConsoleView;
@@ -52,6 +46,7 @@ import gr.sqlfx.factories.DialogFactory;
 import gr.sqlfx.utils.JavaFXUtils;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -68,6 +63,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -82,7 +79,6 @@ public class SqlBrowserApp extends Application {
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
 	private static String DB = "/home/paris/sqllite-dbs/users.db";
 	private static RestServiceConfig restServiceConfig;
-	private static Logger logger = LoggerFactory.getLogger("SPARK");;
 
 	private Scene scene;
 	private Stage stage;
@@ -91,13 +87,6 @@ public class SqlBrowserApp extends Application {
 
 	public static void main(String[] args) {
 		Keywords.onKeywordsBind();
-		try {
-			Properties props = new Properties();
-			props.load(new FileInputStream("log4j.properties"));
-			PropertyConfigurator.configure(props);
-		} catch (Exception e) {
-			BasicConfigurator.configure();
-		}
 		launch(args);
 	}
 
@@ -189,6 +178,13 @@ public class SqlBrowserApp extends Application {
 		scene = new Scene(dbTabPane, 600, 400);
 		scene.getStylesheets().add(DockPane.class.getResource("default.css").toExternalForm());
 		scene.getStylesheets().add("/res/basic.css");
+		scene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+			if (event.getCode() == KeyCode.ENTER) {
+				if (scene.getFocusOwner() instanceof Button) {
+					((Button) scene.getFocusOwner()).getOnAction().handle(new ActionEvent());
+				}
+			}
+		});
 
 	}
 
@@ -221,29 +217,23 @@ public class SqlBrowserApp extends Application {
 	}
 
 	private void dbSelectionAction(SqlConnector sqlConnector) {
+		stage.setMaximized(true);
 		DockPane dockPane = new DockPane();
 
 		DSqlPane sqlPane = new DSqlPane(sqlConnector);
-		sqlPane.asDockNode().setPrefSize(scene.getWidth()/2, scene.getHeight());
-		sqlPane.asDockNode().dock(dockPane, DockPos.CENTER, 0.8f);
+		sqlPane.asDockNode().dock(dockPane, DockPos.CENTER, new double[] {0.8f});
+		sqlPane.asDockNode().setClosable(false);
 		sqlPane.sqlConsoleButtonAction();
-
-//		DSqlPane sqlPane2 = new DSqlPane(sqlConnector);
-//		sqlPane2.asDockNode().setPrefSize(scene.getWidth()/4, scene.getHeight());
-//		sqlPane2.asDockNode().dock(dockPane, DockPos.RIGHT, sqlPane.asDockNode());
-
-//		DSqlConsoleView dSqlConsoleView = new DSqlConsoleView(sqlConnector);
-//		dSqlConsoleView.asDockNode().setPrefSize(scene.getWidth() / 4, scene.getHeight());
-//		dSqlConsoleView.asDockNode().dock(dockPane, DockPos.BOTTOM, sqlPane2.asDockNode());
 
 		DBTreeView treeView = new DBTreeView(DB, sqlConnector);
 		Keywords.bind(treeView.getContentNames());
 		treeView.addListener(value -> Keywords.bind(treeView.getContentNames()));
 		sqlPane.getSqlConsoleBox().addListener(treeView);
 		DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
-		dockNode.dock(dockPane, DockPos.LEFT, 0.2f);
+		dockNode.dock(dockPane, DockPos.LEFT, new double[] {0.2f});
+		dockNode.setClosable(false);
 		// fixed size 
-		//		SplitPane.setResizableWithParent(dockNode, Boolean.FALSE);
+		SplitPane.setResizableWithParent(dockNode, Boolean.FALSE);
 		
 		MenuBar menuBar = createMenu(dockPane);
 
@@ -252,18 +242,18 @@ public class SqlBrowserApp extends Application {
 //		Button editTableButton = new Button("Edit table", JavaFXUtils.createImageView("/res/edit.png"));
 //		ToolBar toolBar = new ToolBar(addTableButton, editTableButton, deleteTableButton);
 
-//		HBox statusBar = new HBox(new Label("database connection"), new Button("on"), new Label("rest service"), new Button("on"));
-//		statusBar.setAlignment(Pos.CENTER_RIGHT);
 		VBox vbox = new VBox();
 		vbox.setAlignment(Pos.CENTER);
 		vbox.getChildren().addAll(menuBar, dockPane);
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
 		scene.setRoot(vbox);
 		stage.heightProperty().addListener((obs, oldVal, newVal) -> {
+			SplitPane.setResizableWithParent(dockNode, Boolean.TRUE);
 			for (SplitPane split : dockPane.getSplitPanes()) {
 			    double[] positions = split.getDividerPositions(); // reccord the current ratio
 			    Platform.runLater(() -> split.setDividerPositions(positions)); // apply the now former ratio
 			}
+			SplitPane.setResizableWithParent(dockNode, Boolean.FALSE);
 		});
 	}
 
@@ -273,25 +263,14 @@ public class SqlBrowserApp extends Application {
 		sqlPaneViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				DSqlPane newSqlPane = new DSqlPane(sqlConnector);
-//				newSqlPane.asDockNode().setPrefSize(scene.getWidth() / 2, scene.getHeight() / 2);
 				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
 
 			});
 		});
-//		MenuItem tabedSqlPaneViewItem = new MenuItem("Open Tabed Table View", JavaFXUtils.icon("/res/m-database.png"));
-//		tabedSqlPaneViewItem.setOnAction(event -> {
-//			Platform.runLater(() -> {
-//				DTabSqlPane newSqlPane = new DTabSqlPane(sqlConnector);
-////				newSqlPane.asDockNode().setPrefSize(scene.getWidth() / 2, scene.getHeight() / 2);
-//				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
-//
-//			});
-//		});
 		MenuItem sqlConsoleViewItem = new MenuItem("Open Console View", JavaFXUtils.icon("/res/console.png"));
 		sqlConsoleViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				DSqlConsoleView sqlConsoleView = new DSqlConsoleView(sqlConnector);
-//				sqlConsoleView.asDockNode().setPrefSize(scene.getWidth() / 2, scene.getHeight() / 2);
 				sqlConsoleView.asDockNode().dock(dockPane, DockPos.RIGHT);
 
 			});
@@ -303,7 +282,7 @@ public class SqlBrowserApp extends Application {
 			dockNode.dock(dockPane, DockPos.LEFT);	
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem);
+		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service");

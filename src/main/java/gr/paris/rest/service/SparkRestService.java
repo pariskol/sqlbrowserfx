@@ -14,7 +14,7 @@ import spark.Spark;
 
 public class SparkRestService {
 
-	static Logger logger = LoggerFactory.getLogger("SPARK");
+	static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 
 	public static void init(SqlConnector sqlConnector) {
 		StringTransformer stringTransformer = new StringTransformer();
