@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.dockfx.DockNode;
+import org.slf4j.LoggerFactory;
 
 import gr.paris.dock.Dockable;
 import gr.paris.nodes.SqlConsoleBox;
@@ -22,8 +23,8 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 		this.sqlPane = sqlPane;
 		thisDockNode = new DockNode(this, "SqlConsole", JavaFXUtils.icon("/res/console.png"));
 		this.getChildren().clear();
-		this.getChildren().addAll(tabPane, executebutton);
-		tabPane.prefHeightProperty().bind(this.heightProperty());
+		this.getChildren().addAll(queryTabPane, executebutton);
+		queryTabPane.prefHeightProperty().bind(this.heightProperty());
 	}
 
 	@Override
@@ -32,15 +33,18 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 	}
 	
 	@Override
-	protected void handleSelectResult(ResultSet rset) throws SQLException {
-		
+	protected void handleSelectResult(String query, ResultSet rset) throws SQLException {
+//		sqlPane.setInProgress();
 		sqlPane.getSqlTableView().setItemsLater(rset);
+		sqlPane.getSqlTableView().setFilledByQuery(true);
+		
 		Platform.runLater(() -> {
 			sqlPane.fillColumnCheckBoxes();
 			if (sqlPane.isFullMode()) {
 				sqlPane.enableFullMode();
 			}
-			sqlPane.asDockNode().setTitle(sqlPane.getSqlTableView().getTableName());
+			sqlPane.updateRowsCountLabel();
+//			sqlPane.asDockNode().setTitle(sqlPane.getSqlTableView().getTableName());
 		});
 	}
 	
@@ -50,8 +54,15 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 	}
 	
 	@Override
-	public void hanldeException(Exception e) {
+	public void hanldeException(SQLException e) {
+		if (e.getErrorCode() == 9) {
+			String message = "Not enough memory , try again to run query.\n"+
+					"If you are trying to run a select query try to use limit";
+			e = new SQLException(message, e);
+		}
+		LoggerFactory.getLogger("SQLBROWSER").error(e.getMessage(), e);
 		DialogFactory.createErrorDialog(e);
+		System.gc();
 	}
 
 	public DSqlPane getSqlPane() {

@@ -148,12 +148,18 @@
 	-fx-background-color: transparent;
 }
 
+.scroll-pane {
+	-fx-background-color: transparent;
+	-fx-border-color: transparent;
+}
+
 .lineno {
 	-fx-background-color: #303030;
 }
 
 .styled-text-area {
-	-/*fx-font-size: 14px;*/
+	-fx-font-size: 9pt;
+	-fx-font-family: "Consolas";
 }
 
 .styled-text-area .text {
@@ -195,6 +201,10 @@
 
 .styled-text-area .text.string2 {
 	-fx-fill: #729fcf;
+}
+
+.styled-text-area .text.var {
+	-fx-fill: #e9b96e;
 }
 
 .styled-text-area .text.todo {

@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.controlsfx.control.PopOver;
+import org.controlsfx.control.PopOver.ArrowLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,13 +18,20 @@ import gr.sqlfx.conn.SqlTable;
 import gr.sqlfx.factories.DialogFactory;
 import gr.sqlfx.listeners.SimpleChangeListener;
 import gr.sqlfx.listeners.SimpleObservable;
+import gr.sqlfx.sqlTableView.SqlTableRow;
 import gr.sqlfx.utils.DTOMapper;
 import gr.sqlfx.utils.JavaFXUtils;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.KeyCode;
 
 public class DBTreeView extends TreeView<String> implements SimpleChangeListener<String>, SimpleObservable<String> {
 
@@ -35,6 +44,8 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	TreeItem<String> indicesRootItem;
 	private List<String> allNames;
 	private List<SimpleChangeListener<String>> listeners;
+	
+	TextField searchField;
 
 	@SuppressWarnings("unchecked")
 	public DBTreeView(String dbPath, SqlConnector sqlConnector) {
@@ -61,13 +72,26 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		this.createContextMenu();
 		this.setRoot(rootItem);
 		this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+		
+		searchField = new TextField();
+		searchField.setPromptText("Search...");
+		searchField.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ENTER) {
+				this.searchFieldAction();
+			}
+		});
+		
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
 				switch (keyEvent.getCode()) {
 				case C:
 					this.copyAction();
 					break;
-
+				case F:
+					PopOver popOver = new PopOver(searchField);
+					popOver.setArrowSize(0);
+					popOver.show(rootItem.getGraphic());
+					break;
 				default:
 					break;
 				}
@@ -119,6 +143,25 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		});
 		tablesRootItem.getChildren().removeAll(found);
 		allNames.removeAll(sfound);
+		
+		viewsRootItem.getChildren().forEach(treeItem -> {
+			if (!newNames.contains(treeItem.getValue())) {
+				found.add(treeItem);
+				sfound.add(treeItem.getValue());
+			}
+		});
+		viewsRootItem.getChildren().removeAll(found);
+		allNames.removeAll(sfound);
+		
+		indicesRootItem.getChildren().forEach(treeItem -> {
+			if (!newNames.contains(treeItem.getValue())) {
+				found.add(treeItem);
+				sfound.add(treeItem.getValue());
+			}
+		});
+		indicesRootItem.getChildren().removeAll(found);
+		allNames.removeAll(sfound);
+		//TODO implement same behaviour for views, indices
 
 		this.changed();
 	}
@@ -136,6 +179,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		TreeItem<String> columnsTree = new TreeItem<>("columns", JavaFXUtils.icon("/res/columns.png"));
 		treeItem.getChildren().add(columnsTree);
 
+		//TODO maybe executeAsync?
 		sqlConnector.executeQueryRaw("select * from " + treeItem.getValue() + " limit 1", rset -> {
 			SqlTable sqlTable = new SqlTable(rset.getMetaData());
 			sqlTable.setPrimaryKey(sqlConnector.findPrimaryKey(treeItem.getValue()));
@@ -181,7 +225,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/res/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copyAction());
 
-		MenuItem menuItemDrop = new MenuItem("Drop table", JavaFXUtils.icon("/res/minus.png"));
+		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.icon("/res/minus.png"));
 		menuItemDrop.setOnAction(event -> {
 			if (tablesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
 				String table = this.getSelectionModel().getSelectedItem().getValue();
@@ -189,7 +233,36 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 				int result = DialogFactory.createConfirmationDialog("Drop Table", message);
 				if (result == 1) {
 					try {
+						//TODO maybe execute async?
 						sqlConnector.dropTable(table);
+						this.fillTreeView();
+					} catch (SQLException e) {
+						DialogFactory.createErrorDialog(e);
+					}
+				}
+			}
+			else if (viewsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
+				String view = this.getSelectionModel().getSelectedItem().getValue();
+				String message = "Do you want to delete " + view;
+				int result = DialogFactory.createConfirmationDialog("Drop View", message);
+				if (result == 1) {
+					try {
+						//TODO maybe execute async?
+						sqlConnector.dropView(view);
+						this.fillTreeView();
+					} catch (SQLException e) {
+						DialogFactory.createErrorDialog(e);
+					}
+				}
+			}
+			else if (indicesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
+				String index = this.getSelectionModel().getSelectedItem().getValue();
+				String message = "Do you want to delete " + index;
+				int result = DialogFactory.createConfirmationDialog("Drop Index", message);
+				if (result == 1) {
+					try {
+						//TODO maybe execute async?
+						sqlConnector.dropIndex(index);
 						this.fillTreeView();
 					} catch (SQLException e) {
 						DialogFactory.createErrorDialog(e);
@@ -242,5 +315,16 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	@Override
 	public void removeListener(SimpleChangeListener<String> listener) {
 		listeners.remove(listener);
+	}
+	
+	private void searchFieldAction() {
+		sqlConnector.executeAsync(() -> {
+			this.getSelectionModel().clearSelection();
+			for (TreeItem<String> t : tablesRootItem.getChildren()) {
+				if(t.getValue().matches("(?i:.*" + searchField.getText() + ".*)")) {
+					this.getSelectionModel().select(t);
+				}
+			}
+		});
 	}
 }

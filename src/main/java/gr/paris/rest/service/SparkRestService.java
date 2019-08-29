@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,10 +29,37 @@ public class SparkRestService {
 		});
 		
 		Spark.get("/tables", (request, response) -> {
-			List<String> data = sqlConnector.getTables();
+			List<String> data = new ArrayList<>(sqlConnector.getTables());
+			data.addAll(sqlConnector.getViews());
 			return new JSONArray(data).toString();
 		}, stringTransformer);
 
+		
+		Spark.post("/save", (request, response) -> {
+			JSONObject jsonObject = new JSONObject(request.body());
+			System.out.println(jsonObject.toString());
+			
+			String table = request.queryParams("table");
+			String columns = "";
+			String values = "";
+			List<Object> params = new ArrayList<>();
+			
+			for (String key : jsonObject.keySet()) {
+				columns += key + ", ";
+				values += "?, ";
+				params.add(jsonObject.get(key));
+			}
+			
+			columns = columns.substring(0, columns.length() - ", ".length());
+			values = values.substring(0, values.length() - ", ".length());
+			
+			String query = "insert into " + table + " (" + columns
+					+ ") values (" + values + ")";
+			sqlConnector.executeUpdate(query, params);
+			
+			return "Data has been saved";
+		}, stringTransformer);
+		
 		Spark.get("/get/:table", (request, response) -> {
 			String table = request.params(":table");
 			if (table == null)

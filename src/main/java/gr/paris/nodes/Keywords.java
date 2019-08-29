@@ -12,6 +12,9 @@ public class Keywords {
         SyntaxUtils.KEYWORDS_lIST.addAll(Arrays.asList(SyntaxUtils.KEYWORDS));
         SyntaxUtils.KEYWORDS_lIST.addAll(Arrays.asList(SyntaxUtils.FUNCTIONS));
         SyntaxUtils.KEYWORDS_lIST.addAll(Arrays.asList(SyntaxUtils.TYPES));
+        
+//        BashSyntaxUtils.KEYWORDS_lIST.addAll(Arrays.asList(BashSyntaxUtils.KEYWORDS));
+//        BashSyntaxUtils.KEYWORDS_lIST.addAll(Arrays.asList(BashSyntaxUtils.FUNCTIONS));
     }
     
     public static void bind(List<String> list) {

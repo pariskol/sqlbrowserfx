@@ -28,10 +28,12 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.stream.Stream;
 
+import org.apache.log4j.BasicConfigurator;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
 
+import gr.paris.dock.nodes.BashCodeArea;
 import gr.paris.dock.nodes.DBTreeView;
 import gr.paris.dock.nodes.DSqlConsoleView;
 import gr.paris.dock.nodes.DSqlPane;
@@ -43,6 +45,7 @@ import gr.sqlfx.conn.MysqlConnector;
 import gr.sqlfx.conn.SqlConnector;
 import gr.sqlfx.conn.SqliteConnector;
 import gr.sqlfx.factories.DialogFactory;
+import gr.sqlfx.sqlPane.DraggingTabPaneSupport;
 import gr.sqlfx.utils.JavaFXUtils;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -82,14 +85,48 @@ public class SqlBrowserApp extends Application {
 
 	private Scene scene;
 	private Stage stage;
+	private DSqlPane mainSqlPane;
+	DraggingTabPaneSupport dragingSupport;
+	
 	private SqlConnector sqlConnector;
 	private boolean restServiceStarted;
 
 	public static void main(String[] args) {
+		BasicConfigurator.configure();
+
 		Keywords.onKeywordsBind();
 		launch(args);
 	}
 
+//	@Override
+//	public void start(Stage primaryStage) {
+//		stage = primaryStage;
+//		primaryStage.setTitle("SqlBrowser");
+//
+//		scene = new Scene(new BashCodeArea());
+//		scene.getStylesheets().add(DockPane.class.getResource("default.css").toExternalForm());
+//		scene.getStylesheets().add("/res/basic.css");
+//		primaryStage.setScene(scene);
+//		primaryStage.sizeToScene();
+//
+//		primaryStage.getIcons().add(new Image("/res/sqlite.png"));
+//
+//		primaryStage.show();
+//
+//		primaryStage.setOnCloseRequest(closeEvent -> {
+//			boolean exists = false;
+//			try (Stream<String> stream = Files.lines(Paths.get(RECENT_DBS_PATH))) {
+//				exists = stream.anyMatch(line -> line.equals(DB));
+//				if (!exists)
+//					Files.write(Paths.get(RECENT_DBS_PATH), (DB + "\n").getBytes(), StandardOpenOption.APPEND);
+//			} catch (IOException e) {
+//				DialogFactory.createErrorDialog(e);
+//			}
+//			Platform.exit();
+//			System.exit(0);
+//		});
+//
+//	}
 	@Override
 	public void start(Stage primaryStage) {
 		stage = primaryStage;
@@ -220,15 +257,15 @@ public class SqlBrowserApp extends Application {
 		stage.setMaximized(true);
 		DockPane dockPane = new DockPane();
 
-		DSqlPane sqlPane = new DSqlPane(sqlConnector);
-		sqlPane.asDockNode().dock(dockPane, DockPos.CENTER, new double[] {0.8f});
-		sqlPane.asDockNode().setClosable(false);
-		sqlPane.sqlConsoleButtonAction();
+		mainSqlPane = new DSqlPane(sqlConnector);
+		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, new double[] {0.8f});
+		mainSqlPane.asDockNode().setClosable(false);
+		mainSqlPane.sqlConsoleButtonAction();
 
 		DBTreeView treeView = new DBTreeView(DB, sqlConnector);
 		Keywords.bind(treeView.getContentNames());
 		treeView.addListener(value -> Keywords.bind(treeView.getContentNames()));
-		sqlPane.getSqlConsoleBox().addListener(treeView);
+		mainSqlPane.getSqlConsoleBox().addListener(treeView);
 		DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
 		dockNode.dock(dockPane, DockPos.LEFT, new double[] {0.2f});
 		dockNode.setClosable(false);
@@ -263,7 +300,7 @@ public class SqlBrowserApp extends Application {
 		sqlPaneViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				DSqlPane newSqlPane = new DSqlPane(sqlConnector);
-				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
+				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT, mainSqlPane.asDockNode());
 
 			});
 		});
@@ -285,7 +322,7 @@ public class SqlBrowserApp extends Application {
 		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
-		MenuItem restServiceStartItem = new MenuItem("Start Rest Service");
+		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/res/spark.png", 16.0, 16.0));
 		restServiceStartItem.setOnAction(actionEvent -> {
 			if (restServiceStarted == false) {
 				SparkRestService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
@@ -300,7 +337,7 @@ public class SqlBrowserApp extends Application {
 			}
 		});
 
-		MenuItem restServiceConfigItem = new MenuItem("Configure Rest Service");
+		MenuItem restServiceConfigItem = new MenuItem("Configure Rest Service", JavaFXUtils.icon("res/settings.png"));
 		restServiceConfigItem.setOnAction(actionEvent -> createRestServiceConfigBox());
 
 		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
@@ -312,7 +349,7 @@ public class SqlBrowserApp extends Application {
 	}
 
 	private void createRestServiceConfigBox() {
-		ImageView bottleLogo = JavaFXUtils.createImageView("/res/spark-logo.png", 100.0, 50.0);
+		ImageView bottleLogo = JavaFXUtils.createImageView("/res/spark-logo.png", 0.0, 200.0);
 		Label ipLabel = new Label("Ip address");
 		TextField ipField = new TextField(restServiceConfig.getIp());
 		Label portLabel = new Label("Port");

@@ -12,17 +12,17 @@ cd ../DockFX-master
 mvn clean package
 mvn dependency:copy-dependencies
 
-cp ./target/moded-dockfx-1.0.0.jar ../DIST/glib
-cp ./target/moded-dockfx-1.0.0.jar ../sql-lite-bowser/lib
+cp ./target/moded-dockfx-1.0.0-SNAPSHOT.jar ../DIST/glib
+cp ./target/moded-dockfx-1.0.0-SNAPSHOT.jar ../sql-lite-bowser/lib
 cp ./target/dependency/* ../DIST/lib	
 
 cd ../sqlfx
 mvn clean package
 mvn dependency:copy-dependencies
 
-cp ./target/sql-fx-1.0.0.jar ../DIST/glib
+cp ./target/sql-fx-1.0.0-SNAPSHOT.jar ../DIST/glib
 cp ./target/dependency/* ../DIST/lib	
-cp ./target/sql-fx-1.0.0.jar ../sql-lite-bowser/lib
+cp ./target/sql-fx-1.0.0-SNAPSHOT.jar ../sql-lite-bowser/lib
 
 cd ../sql-lite-bowser
 mvn clean package

@@ -41,7 +41,21 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			<plugin>
+				<groupId>org.openjfx</groupId>
+				<artifactId>javafx-maven-plugin</artifactId>
+				<version>0.0.3</version>
+				<configuration>
+					<stripDebug>true</stripDebug>
+					<compress>2</compress>
+					<noHeaderFiles>true</noHeaderFiles>
+					<noManPages>true</noManPages>
+					<launcher>hellofx</launcher>
+					<jlinkImageName>hello</jlinkImageName>
+					<jlinkZipName>hellozip</jlinkZipName>
+					<mainClass>gr.paris.SqlBrowserApp</mainClass>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
@@ -98,10 +112,16 @@
 			<artifactId>json</artifactId>
 			<version>20180813</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.controlsfx/controlsfx -->
 		<dependency>
 			<groupId>org.controlsfx</groupId>
 			<artifactId>controlsfx</artifactId>
-			<version>8.40.14</version>
+			<version>11.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>11.0.2</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/log4j/log4j -->
 		<dependency>
@@ -110,7 +130,7 @@
 			<version>1.2.17</version>
 		</dependency>
 		<dependency>
-			<groupId>gr.sqlfx</groupId>
+			<groupId>gr.paris</groupId>
 			<artifactId>sqlfx</artifactId>
 			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
