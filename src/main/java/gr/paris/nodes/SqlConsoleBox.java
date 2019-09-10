@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 
-import gr.paris.dock.nodes.SqlCodeArea;
 import gr.sqlfx.conn.SqlConnector;
 import gr.sqlfx.listeners.SimpleChangeListener;
 import gr.sqlfx.listeners.SimpleObservable;

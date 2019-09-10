@@ -1,4 +1,4 @@
-package gr.paris.nodes;
+package gr.paris.utils;
 
 import java.util.Arrays;
 import java.util.List;

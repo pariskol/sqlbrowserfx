@@ -1,4 +1,4 @@
-package gr.paris.dock.nodes;
+package gr.paris.nodes;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -15,7 +15,7 @@ import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
 
-import gr.paris.nodes.BashSyntaxUtils;
+import gr.paris.utils.BashSyntaxUtils;
 import gr.sqlfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;

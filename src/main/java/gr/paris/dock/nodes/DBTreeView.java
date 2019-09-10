@@ -202,11 +202,11 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	}
 
 	private void fillTableTreeItem(TreeItem<String> treeItem) throws SQLException {
-		this.fillTVTreeItem(treeItem, sqlConnector.tableSchemaColumn());
+		this.fillTVTreeItem(treeItem, sqlConnector.getTableSchemaColumn());
 	}
 
 	private void fillViewTreeItem(TreeItem<String> treeItem) throws SQLException {
-		this.fillTVTreeItem(treeItem, sqlConnector.viewSchemaColumn());
+		this.fillTVTreeItem(treeItem, sqlConnector.getViewSchemaColumn());
 	}
 
 	private void fillIndexTreeItem(TreeItem<String> treeItem) throws SQLException {
@@ -214,7 +214,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		treeItem.getChildren().add(schemaTree);
 
 		sqlConnector.getSchemas(treeItem.getValue(), rset -> {
-			String schema = rset.getString(sqlConnector.indexColumnName());
+			String schema = rset.getString(sqlConnector.getIndexColumnName());
 			schemaTree.getChildren().add(new TreeItem<String>(schema));
 		});
 	}

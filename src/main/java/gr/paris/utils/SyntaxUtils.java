@@ -1,4 +1,4 @@
-package gr.paris.nodes;
+package gr.paris.utils;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -14,14 +14,14 @@ import gr.sqlfx.conn.SqlConnector;
 import gr.sqlfx.conn.SqliteConnector;
 import gr.sqlfx.utils.DTOMapper;
 
-public class BashSyntaxUtils {
+public class SyntaxUtils {
 
 	private static SqlConnector sqlConnector = new SqliteConnector("./sqlbrowser.db");
 	private static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 	
-	public static final String[] FUNCTIONS = getAutocomplteWords("bash_function");
-//	public static final String[] TYPES = getAutocomplteWords("types");
-	public static final String[] KEYWORDS = getAutocomplteWords("bash");
+	public static final String[] FUNCTIONS = getAutocomplteWords("funcs");
+	public static final String[] TYPES = getAutocomplteWords("types");
+	public static final String[] KEYWORDS = getAutocomplteWords("sql");
 
 	public static final List<String> KEYWORDS_lIST = new ArrayList<>();
 
@@ -36,8 +36,6 @@ public class BashSyntaxUtils {
 	public static final String TODO_SINGLE_COMMENT_PATTERN = "//TODO[^\n]*";
 	public static final String WARN_SINGLE_COMMENT_PATTERN = "//WARN[^\n]*";
 //    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/";
-	private static final String COMMENT_PATTERN = "#[^\n]*";
-	private static final String VAR_PATTERN = "\b$[^\n]*\b";
 //    private static final String ANNOTATION_PATTERN = "@.[a-zA-Z0-9]+";
 //    private static final String OPERATION_PATTERN = ":|==|>|<|!=|>=|<=|->|=|>|<|%|-|-=|%=|\\+|\\-|\\-=|\\+=|\\^|\\&|\\|::|\\?|\\*";
 //    private static final String HEX_PATTERN = "#[a-fA-F0-9]+";
@@ -53,8 +51,7 @@ public class BashSyntaxUtils {
 					+ STRING_PATTERN_2 + ")"
 //                    + "|(?<TODO>" + TODO_SINGLE_COMMENT_PATTERN + ")"
 //                    + "|(?<WARN>" + WARN_SINGLE_COMMENT_PATTERN + ")"
-                    + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
-                    + "|(?<VAR>" + VAR_PATTERN + ")"
+//                    + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
 //                    + "|(?<ANNOTATION>" + ANNOTATION_PATTERN + ")"
 //                    + "|(?<CAST>" + CAST_PATTERN + ")"
 //                    + "|(?<OPERATION>" + OPERATION_PATTERN + ")"

@@ -33,14 +33,13 @@ import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
 
-import gr.paris.dock.nodes.BashCodeArea;
 import gr.paris.dock.nodes.DBTreeView;
 import gr.paris.dock.nodes.DSqlConsoleView;
 import gr.paris.dock.nodes.DSqlPane;
-import gr.paris.nodes.Keywords;
 import gr.paris.nodes.MySqlConfigBox;
 import gr.paris.rest.service.RestServiceConfig;
 import gr.paris.rest.service.SparkRestService;
+import gr.paris.utils.Keywords;
 import gr.sqlfx.conn.MysqlConnector;
 import gr.sqlfx.conn.SqlConnector;
 import gr.sqlfx.conn.SqliteConnector;
@@ -204,12 +203,14 @@ public class SqlBrowserApp extends Application {
 		borderPane.setBottom(bottomBox);
 
 		Tab sqliteTab = new Tab("Sqlite", borderPane);
+		sqliteTab.setGraphic(JavaFXUtils.createImageView("/res/sqlite.png", 28.0, 28.0));
 		sqliteTab.setClosable(false);
 		MySqlConfigBox mySqlConfigBox = new MySqlConfigBox();
 		mySqlConfigBox.getSubmitButton().setOnAction(actionEvent -> {
 			dbSelectionAction(mySqlConfigBox);
 		});
 		Tab mysqlTab = new Tab("MySQL", mySqlConfigBox);
+		mysqlTab.setGraphic(JavaFXUtils.createImageView("/res/mysql.png", 28.0, 28.0));
 		mysqlTab.setClosable(false);
 		TabPane dbTabPane = new TabPane(sqliteTab, mysqlTab);
 		scene = new Scene(dbTabPane, 600, 400);
