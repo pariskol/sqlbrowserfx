@@ -1,6 +1,9 @@
 # Project Title
 
-One Paragraph of project description goes here
+SqlBrowserFX is a feature rich sql client for SQLite , MySQL.
+
+![](images/sqlbrowserfx.png)
+
 
 ## Getting Started
 
