@@ -33,6 +33,8 @@ import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
 
+import com.aquafx_project.AquaFx;
+
 import gr.paris.dock.nodes.DBTreeView;
 import gr.paris.dock.nodes.DSqlConsoleView;
 import gr.paris.dock.nodes.DSqlPane;

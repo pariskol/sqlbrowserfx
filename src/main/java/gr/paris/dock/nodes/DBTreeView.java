@@ -203,6 +203,15 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 
 	private void fillTableTreeItem(TreeItem<String> treeItem) throws SQLException {
 		this.fillTVTreeItem(treeItem, sqlConnector.getTableSchemaColumn());
+			TreeItem<String> triggersTreeItem = new TreeItem<String>("triggers", JavaFXUtils.icon("/res/trigger.png"));
+			sqlConnector.executeQuery("select * from sqlite_master where type like 'trigger' and tbl_name like '" +treeItem.getValue()+"'", rset -> {
+				TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString("NAME"), JavaFXUtils.icon("/res/trigger.png"));
+				String schema = rset.getString("SQL");
+				triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.icon("/res/script.png")));
+				triggersTreeItem.getChildren().add(triggerTreeItem);
+			});
+			
+			treeItem.getChildren().add(triggersTreeItem);
 	}
 
 	private void fillViewTreeItem(TreeItem<String> treeItem) throws SQLException {
