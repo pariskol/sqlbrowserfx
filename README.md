@@ -5,21 +5,14 @@ SqlBrowserFX is a feature rich sql client for SQLite , MySQL.
 ![](images/sqlbrowserfx.png)
 
 
-## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
 ### Prerequisites
 
 JDK 8 with JavaFX like oracle jdk 8 or zulufx 8.
-
-```
-Give examples
-```
+MySQL server for usage with mysql.
 
 ### Installing
 
-Import the project to your favorite ide as maven project and run SQlBrowsrApp class.
+Import the project to your favorite ide as maven project and run SQlBrowserApp class.
 
 
 ### Build standalone app
@@ -30,8 +23,8 @@ Run sql-browser.exe for Windows, or run sqlbrowser.sh for Linux.
 
 ## Libraries used
 
-* [DockFX](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Spark java](https://maven.apache.org/) - Dependency Management
+* [DockFX](https://github.com/RobertBColton/DockFX) - The docking framework used (a moded version actually)
+* [Spark](https://github.com/perwendel/spark)  - Teh web framework used
 
 
 
