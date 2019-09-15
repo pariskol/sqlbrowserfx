@@ -11,7 +11,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+JDK 8 with JavaFX like oracle jdk 8 or zulufx 8.
 
 ```
 Give examples
@@ -19,9 +19,7 @@ Give examples
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
+Import the project to your favorite ide as maven project and run SQlBrowsrApp class.
 
 ```
 Give the example
@@ -33,14 +31,16 @@ And repeat
 until finished
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
+### Build standalone app
+
+Run build.sh script, this will generate all files needed in 'dist' folder.
+Run sql-browser.exe for Windows, or run sqlbrowser.sh for Linux.
 
 
-## Built With
+## Libraries used
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+* [DockFX](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
+* [Spark java](https://maven.apache.org/) - Dependency Management
 
 
 ## Authors
