@@ -11,7 +11,7 @@ SqlBrowserFX is a feature rich sql client for SQLite , MySQL.
 * Editor for sql with highlighting, autocomplete features.
 * Adjustable responsive ui.
 * Graphical represantation of database as tree.
-* Exposure of database to the web as REST witck one click.
+* Exposure of database to the web as REST with one click.
 * Import, export from csv.
 * Support for SQLite.
 * Basic support for MySQL.
