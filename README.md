@@ -21,15 +21,6 @@ Give examples
 
 Import the project to your favorite ide as maven project and run SQlBrowsrApp class.
 
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
 
 ### Build standalone app
 
@@ -43,10 +34,5 @@ Run sql-browser.exe for Windows, or run sqlbrowser.sh for Linux.
 * [Spark java](https://maven.apache.org/) - Dependency Management
 
 
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
 
 
