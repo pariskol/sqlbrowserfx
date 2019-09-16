@@ -2,8 +2,8 @@
 <launch4jConfig>
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>./sqlite-browser-0.0.1-SNAPSHOT.jar</jar>
-  <outfile>/home/paris/sql-browser/sql-browser.exe</outfile>
+  <jar>./sqlite-browser-fx-0.0.1-SNAPSHOT.jar</jar>
+  <outfile>./SqlBrowserFX.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -13,9 +13,9 @@
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon>/home/paris/sql-browser/sqlite.ico</icon>
+  <icon>./sqlbrowser-fx.ico</icon>
   <classPath>
-    <mainClass>gr.paris.SqlBrowserApp</mainClass>
+    <mainClass>gr.paris.SqlBrowserFXApp</mainClass>
     <cp>./lib/*</cp>
   </classPath>
   <jre>
@@ -26,6 +26,6 @@
     <maxVersion></maxVersion>
     <jdkPreference>preferJre</jdkPreference>
     <runtimeBits>64/32</runtimeBits>
-    <opt>-Xmx1024m -XX:+UseG1GC -XX:MaxGCPauseMillis=100</opt>
+    <opt>-Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=100</opt>
   </jre>
 </launch4jConfig>
