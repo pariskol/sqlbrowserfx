@@ -25,7 +25,7 @@ SqlBrowserFX is a feature rich sql client for SQLite , MySQL.
 
 ### Installing
 
-Import the project to your favorite ide as maven project and run SQlBrowserApp class.
+Import the project to your favorite ide as maven project and run SQlBrowserFXApp class.
 
 
 ### Build standalone app
@@ -37,7 +37,7 @@ Run sql-browser.exe for Windows, or run sqlbrowser.sh for Linux.
 ## Awesome projects used
 
 * [DockFX](https://github.com/RobertBColton/DockFX) - The docking framework used (a moded version actually)
-* [RichTextFx](https://github.com/FXMisc/RichTextFX) - Library which provides editor with syntax highlighting feature.
+* [RichTextFΧ](https://github.com/FXMisc/RichTextFX) - Library which provides editor with syntax highlighting feature.
 * [Spark](https://github.com/perwendel/spark)  - The web framework used
 
 
