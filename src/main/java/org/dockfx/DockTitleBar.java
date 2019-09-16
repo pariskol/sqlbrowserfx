@@ -333,11 +333,11 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
 				// However since flickering when popping out was already eliminated that would
 				// be overkill and is not a suitable solution for native decorations.
 				// Bug report open: https://bugs.openjdk.java.net/browse/JDK-8133335
-//				DockPane dockPane = this.getDockNode().getDockPane();
-//				if (dockPane != null) {
-//					dockPane.addEventFilter(MouseEvent.MOUSE_DRAGGED, this);
-//					dockPane.addEventFilter(MouseEvent.MOUSE_RELEASED, this);
-//				}
+				DockPane dockPane = this.getDockNode().getDockPane();
+				if (dockPane != null) {
+					dockPane.addEventFilter(MouseEvent.MOUSE_DRAGGED, this);
+					dockPane.addEventFilter(MouseEvent.MOUSE_RELEASED, this);
+				}
 			} else if (dockNode.isMaximized()) {
 				double ratioX = event.getX() / this.getDockNode().getWidth();
 				double ratioY = event.getY() / this.getDockNode().getHeight();

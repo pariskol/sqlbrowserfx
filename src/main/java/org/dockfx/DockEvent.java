@@ -20,11 +20,14 @@
 
 package org.dockfx;
 
+import com.sun.javafx.scene.input.InputEventUtils;
+
 import javafx.event.Event;
 import javafx.event.EventTarget;
 import javafx.event.EventType;
 import javafx.geometry.Point3D;
 import javafx.scene.Node;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.PickResult;
 
 /**
@@ -284,11 +287,13 @@ public class DockEvent extends Event {
     this.sceneX = x;
     this.sceneY = y;
     this.pickResult = pickResult != null ? pickResult : new PickResult(target, x, y);
-//    final Point3D p = InputEventUtils.recomputeCoordinates(this.pickResult, null);
-//    this.x = p.getX();
-//    this.y = p.getY();
-//    this.z = p.getZ();
+    // comment from here for java 11
+    final Point3D p = InputEventUtils.recomputeCoordinates(this.pickResult, null);
+    this.x = p.getX();
+    this.y = p.getY();
+    this.z = p.getZ();
     this.contents = contents;
+    // comment until here for java 11
   }
 
 }
