@@ -89,6 +89,12 @@ public abstract class SqlConnector {
 		});
 	}
 
+	public void checkConnection() throws SQLException {
+		try (Connection conn = dataSource.getConnection();) {
+			LoggerFactory.getLogger(getClass()).info("Successful try to get connection , pool is ok.");
+		}
+	}
+	
 	/**
 	 * Executes query. Action provided is applied to the whole result set.
 	 * 

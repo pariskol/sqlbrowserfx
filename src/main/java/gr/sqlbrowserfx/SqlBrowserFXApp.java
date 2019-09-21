@@ -26,12 +26,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.sql.SQLException;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import org.apache.log4j.BasicConfigurator;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
+import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -141,14 +144,17 @@ public class SqlBrowserFXApp extends Application {
 		primaryStage.show();
 
 		primaryStage.setOnCloseRequest(closeEvent -> {
-			boolean exists = false;
-			try (Stream<String> stream = Files.lines(Paths.get(RECENT_DBS_PATH))) {
-				exists = stream.anyMatch(line -> line.equals(DB));
-				if (!exists)
-					Files.write(Paths.get(RECENT_DBS_PATH), (DB + "\n").getBytes(), StandardOpenOption.APPEND);
-			} catch (IOException e) {
-				DialogFactory.createErrorDialog(e);
+			if (sqlConnector instanceof SqliteConnector) {
+				boolean exists = false;
+				try (Stream<String> stream = Files.lines(Paths.get(RECENT_DBS_PATH))) {
+					exists = stream.anyMatch(line -> line.equals(DB));
+					if (!exists)
+						Files.write(Paths.get(RECENT_DBS_PATH), (DB + "\n").getBytes(), StandardOpenOption.APPEND);
+				} catch (IOException e) {
+					DialogFactory.createErrorDialog(e);
+				}
 			}
+			
 			Platform.exit();
 			System.exit(0);
 		});
@@ -206,7 +212,8 @@ public class SqlBrowserFXApp extends Application {
 		sqliteTab.setGraphic(JavaFXUtils.createImageView("/res/sqlite.png", 28.0, 28.0));
 		sqliteTab.setClosable(false);
 		MySqlConfigBox mySqlConfigBox = new MySqlConfigBox();
-		mySqlConfigBox.getSubmitButton().setOnAction(actionEvent -> {
+		mySqlConfigBox.getConnectButton().setOnAction(actionEvent -> {
+			mySqlConfigBox.showLoader(true);
 			dbSelectionAction(mySqlConfigBox);
 		});
 		Tab mysqlTab = new Tab("MySQL", mySqlConfigBox);
@@ -241,17 +248,26 @@ public class SqlBrowserFXApp extends Application {
 
 	private void dbSelectionAction(MySqlConfigBox configBox) {
 		
+		configBox.getConnectButton().setDisable(true);
 		DB = configBox.getDatabaseField().getText();
 		restServiceConfig = new RestServiceConfig("localhost", 8080, DB);
-		try {
 			SqlConnector mysqlConnector = new MysqlConnector(configBox.getDatabaseField().getText(),
 					configBox.getUserField().getText(), configBox.getPasswordField().getText());
 			this.sqlConnector = mysqlConnector;
-
-			dbSelectionAction(mysqlConnector);
-		} catch (Exception e) {
-			DialogFactory.createErrorDialog(e);
-		}
+			
+			Executors.newSingleThreadExecutor().execute(() -> {
+				try {
+					mysqlConnector.checkConnection();
+				} catch (SQLException e) {
+					LoggerFactory.getLogger("SQLBROWSER").error(e.getMessage(), e);
+					configBox.showLoader(false);
+					DialogFactory.createErrorDialog(e);
+					configBox.getConnectButton().setDisable(false);
+					return;
+				}
+				
+				Platform.runLater(() -> dbSelectionAction(mysqlConnector));
+			});
 	}
 
 	private void dbSelectionAction(SqlConnector sqlConnector) {
@@ -274,11 +290,6 @@ public class SqlBrowserFXApp extends Application {
 		SplitPane.setResizableWithParent(dockNode, Boolean.FALSE);
 		
 		MenuBar menuBar = createMenu(dockPane);
-
-//		Button addTableButton = new Button("Add table", JavaFXUtils.createImageView("/res/add.png"));
-//		Button deleteTableButton = new Button("Delete table", JavaFXUtils.createImageView("/res/close.png"));
-//		Button editTableButton = new Button("Edit table", JavaFXUtils.createImageView("/res/edit.png"));
-//		ToolBar toolBar = new ToolBar(addTableButton, editTableButton, deleteTableButton);
 
 		VBox vbox = new VBox();
 		vbox.setAlignment(Pos.CENTER);

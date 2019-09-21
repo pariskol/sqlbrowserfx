@@ -13,8 +13,8 @@ public class MysqlConnector extends SqlConnector {
 	private String password;
 
 	public MysqlConnector(String database, String user, String password) {
-		url = "jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true";// &useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
-		driver = "com.mysql.jdbc.Driver";
+		url = "jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+		driver = "com.mysql.cj.jdbc.Driver";
 		this.user = user;
 		this.password = password;
 
