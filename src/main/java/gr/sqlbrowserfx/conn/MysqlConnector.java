@@ -11,12 +11,14 @@ public class MysqlConnector extends SqlConnector {
 
 	private String user;
 	private String password;
+	private String database;
 
 	public MysqlConnector(String database, String user, String password) {
 		url = "jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
 		driver = "com.mysql.cj.jdbc.Driver";
 		this.user = user;
 		this.password = password;
+		this.database = database;
 
 		NAME = "TABLE_NAME";
 		TYPE = "TABLE_TYPE";
@@ -47,7 +49,7 @@ public class MysqlConnector extends SqlConnector {
 
 	@Override
 	public String getContentsQuery() {
-		return "show full tables in " + "employees";
+		return "show full tables in " + database;
 	}
 	
 	@Override
