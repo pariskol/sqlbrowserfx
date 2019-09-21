@@ -6,7 +6,18 @@ rm -rf dist
 mkdir -p dist/sqlbrowserfx/lib
 
 mvn clean package
+if [ $? -ne 0 ]
+then
+  echo "Error : could not package project!"
+  exit 1
+fi
 mvn dependency:copy-dependencies
+if [ $? -ne 0 ]
+then
+  echo "Error : could not download dependencies!"
+  exit 2
+fi
+
 
 cp target/*.jar dist/sqlbrowserfx/
 cp target/dependency/* dist/sqlbrowserfx/lib
