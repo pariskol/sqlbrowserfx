@@ -282,7 +282,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		}
 	}
 	
-	public void updateSelectedRow() {
+	public int updateSelectedRow() {
 		SqlTableRow sqlTableRow = this.getSelectionModel().getSelectedItem();
 		Set<String> columns = this.getSqlTable().getColumns();
 		String query = "update " + this.getTableName() + " set ";
@@ -303,7 +303,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 					// actualValue = clazz.cast(actualValue);
 				} catch (Exception e) {
 					DialogFactory.createErrorDialog(e);
-					return;
+					return 0;
 				}
 				params.add(actualValue);
 				query += column + "= ? ,";
@@ -334,7 +334,10 @@ public class SqlTableView extends TableView<SqlTableRow> {
 			sqlTableRow.changed();
 		} catch (Exception e) {
 			DialogFactory.createErrorDialog(e);
+			return 0;
 		}
+		
+		return 1;
 	}
 	
 	public ObservableList<SqlTableRow> getSqlTableRows() {

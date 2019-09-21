@@ -12,7 +12,7 @@ import javafx.scene.input.KeyCode;
 
 public class SqlTableViewEditCell extends TableCell<SqlTableRow, Object> {
 
-	SqlTableView parentTable;
+	SqlTableView parentTableView;
 	SqlConnector sqlConnector;
 	
 	public SqlTableViewEditCell() {
@@ -20,12 +20,12 @@ public class SqlTableViewEditCell extends TableCell<SqlTableRow, Object> {
 		this.setAlignment(Pos.CENTER);
 	}
 
-	public SqlTableViewEditCell(SqlTableView parentTable) {
+	public SqlTableViewEditCell(SqlTableView parentTableView) {
 		this();
-		this.parentTable = parentTable;
+		this.parentTableView = parentTableView;
 		this.setOnMouseClicked(mouseEvent -> {
-			parentTable.setSelectedCell(this);
-			if (parentTable.areCellsEditableByClick() && mouseEvent.getClickCount() == 2) {
+			parentTableView.setSelectedCell(this);
+			if (parentTableView.areCellsEditableByClick() && mouseEvent.getClickCount() == 2) {
 				this.startEdit();
 			}
 		});
@@ -49,9 +49,9 @@ public class SqlTableViewEditCell extends TableCell<SqlTableRow, Object> {
 	
 	@Override
 	public void startEdit() {
-		TablePosition<?, ?> pos = parentTable.getSelectionModel().getSelectedCells().get(0);
+		TablePosition<?, ?> pos = parentTableView.getSelectionModel().getSelectedCells().get(0);
 		
-		if (pos.getTableColumn().getText().equals(parentTable.getPrimaryKey())) {
+		if (pos.getTableColumn().getText().equals(parentTableView.getPrimaryKey())) {
 			System.out.println(pos.getTableColumn().getText());
 			return;
 		}
@@ -71,25 +71,25 @@ public class SqlTableViewEditCell extends TableCell<SqlTableRow, Object> {
 
 	@Override
 	public void commitEdit(Object newValue) {
+		Object oldValue = getText();
 		if (newValue != null && !newValue.equals(getText())) {
-			TablePosition<?, ?> pos = parentTable.getSelectionModel().getSelectedCells().get(0);
-			String column = parentTable.getColumns().get(pos.getColumn()).getText();
-			parentTable.getSelectionModel().getSelectedItem().set(column, newValue);
-			parentTable.updateSelectedRow();
+			String column = this.getTableColumn().getText();
+			parentTableView.getSelectionModel().getSelectedItem().set(column, newValue);
+			if (parentTableView.updateSelectedRow() == 0) {
+				parentTableView.getSelectionModel().getSelectedItem().set(column, oldValue);
+			}
+//			if (parentTableView.updateSelectedRow() == 1) {
+//				this.updateItem(newValue, false);
+//			}
+//			else {
+//				parentTableView.getSelectionModel().getSelectedItem().set(column, oldValue);
+//				this.updateItem(oldValue, false);
+//			}
 		}
-		
-		super.commitEdit(newValue);
-		if (newValue == null) {
-			setText(null);
-		} else {
-			setText(newValue.toString());
-		}
-		setContentDisplay(ContentDisplay.TEXT_ONLY);
 	}
 	
 	@Override
 	public void cancelEdit() {
-		super.cancelEdit();
 		setText(getText());
 		setContentDisplay(ContentDisplay.TEXT_ONLY);
 	}
@@ -140,7 +140,7 @@ public class SqlTableViewEditCell extends TableCell<SqlTableRow, Object> {
 	}
 
 	public SqlTableView getParentTable() {
-		return parentTable;
+		return parentTableView;
 	}
 	
 	
