@@ -100,35 +100,6 @@ public class SqlBrowserFXApp extends Application {
 		launch(args);
 	}
 
-//	@Override
-//	public void start(Stage primaryStage) {
-//		stage = primaryStage;
-//		primaryStage.setTitle("SqlBrowser");
-//
-//		scene = new Scene(new BashCodeArea());
-//		scene.getStylesheets().add(DockPane.class.getResource("default.css").toExternalForm());
-//		scene.getStylesheets().add("/res/basic.css");
-//		primaryStage.setScene(scene);
-//		primaryStage.sizeToScene();
-//
-//		primaryStage.getIcons().add(new Image("/res/sqlite.png"));
-//
-//		primaryStage.show();
-//
-//		primaryStage.setOnCloseRequest(closeEvent -> {
-//			boolean exists = false;
-//			try (Stream<String> stream = Files.lines(Paths.get(RECENT_DBS_PATH))) {
-//				exists = stream.anyMatch(line -> line.equals(DB));
-//				if (!exists)
-//					Files.write(Paths.get(RECENT_DBS_PATH), (DB + "\n").getBytes(), StandardOpenOption.APPEND);
-//			} catch (IOException e) {
-//				DialogFactory.createErrorDialog(e);
-//			}
-//			Platform.exit();
-//			System.exit(0);
-//		});
-//
-//	}
 	@Override
 	public void start(Stage primaryStage) {
 		stage = primaryStage;
