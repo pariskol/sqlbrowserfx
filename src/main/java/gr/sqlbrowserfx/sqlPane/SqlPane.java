@@ -561,10 +561,10 @@ public class SqlPane extends BorderPane {
 		Button clearBtn = new Button("", JavaFXUtils.icon("/res/clear.png"));
 		clearBtn.setTooltip(new Tooltip("Clear"));
 		clearBtn.setOnAction(event -> editBox.clear());
-		addBtn.setOnAction(event2 -> sqlConnector.executeAsync(() -> this.insertRecord(editBox)));
+		addBtn.setOnMouseClicked(event2 -> sqlConnector.executeAsync(() -> this.insertRecord(editBox)));
 		addBtn.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
-				addBtn.getOnAction().handle(new ActionEvent());
+				sqlConnector.executeAsync(() -> this.insertRecord(editBox));
 			}
 		});
 
