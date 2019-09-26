@@ -121,7 +121,7 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 	
 	public void executeButonAction() {
 		CodeArea sqlConsoleArea = this.getSelectedSqlCodeArea();
-		String query = sqlConsoleArea.getText();
+		String query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
 		if (query.startsWith("select") || query.startsWith("SELECT")) {
 
 			sqlConnector.executeAsync(() -> {
@@ -173,7 +173,8 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 				}
 				
 				if (query.contains("table") || query.contains("TABLE") ||
-					query.contains("view") || query.contains("VIEW")) {
+					query.contains("view") || query.contains("VIEW") ||
+					query.contains("trigger") || query.contains("TRIGGER")) {
 					this.changed();
 				}
 			});

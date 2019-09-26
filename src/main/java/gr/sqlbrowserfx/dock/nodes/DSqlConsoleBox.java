@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.dockfx.DockNode;
-import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.Dockable;
@@ -60,7 +59,7 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 					"If you are trying to run a select query try to use limit";
 			e = new SQLException(message, e);
 		}
-		LoggerFactory.getLogger("SQLBROWSER").error(e.getMessage(), e);
+//		LoggerFactory.getLogger("SQLBROWSER").error(e.getMessage(), e);
 		DialogFactory.createErrorDialog(e);
 		System.gc();
 	}
