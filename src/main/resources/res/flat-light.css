@@ -1,8 +1,25 @@
+/*#ade9ff */
+/*#ade9ff */
 .root {
-	-fx-font-size: 9pt;
+	-fx-font-size: 9.0pt;
 	-fx-font-family: "Open Sans";
 	/*fx-base: #9fbcea;
 	-fx-background: #9fbcea;*/
+	/* A bright blue for highlighting/accenting objects.  For example: selected
+     * text; selected items in menus, lists, trees, and tables; progress bars;
+     * default buttons.
+     */
+    -fx-accent: #ade9ff;
+
+    /* A bright blue for the focus indicator of objects. Typically used as the
+     * first color in -fx-background-color for the "focused" pseudo-class. Also
+     * typically used with insets of -1.4 to provide a glowing effect.
+     *
+     * TODO: should this be derived from -fx-accent?
+     */
+    -fx-focus-color: #ade9ff;
+    	-fx-faint-focus-color: transparent;
+
 }
 
 .dock-area-indicator {
@@ -107,7 +124,7 @@
 	-fx-background-color: -fx-background;
 	-fx-padding: 2.0;
 	-fx-spacing: 3.0;
-	-fx-border-width: 1 0 1 0;
+	-fx-border-width: 1.0 0.0 1.0 0.0;
 	-fx-border-color: -fx-outer-border;
 }
 
@@ -164,23 +181,26 @@
 .text-field {
 	-fx-background-color: transparent;
 	-fx-border-color: #c0c0c0;
-	-fx-background-radius: 3;
-	-fx-border-radius: 0;
-	-fx-border-width: 0 0 2 0;
-	-fx-background-insets: 0;
+	-fx-background-radius: 3.0;
+	-fx-border-radius: 0.0;
+	-fx-border-width: 0.0 0.0 2.0 0.0;
+	-fx-background-insets: 0.0;
 }
 
 .text-field:focused {
 	-fx-border-color: "#ade9ff";
+	-fx-text-fill:black;
+	-fx-fill:black;
+    -fx-prompt-text-fill:black;
 }
 
 .text-area {
 	-fx-background-color: white;
 	-fx-border-color: #c0c0c0;
-	-fx-background-radius: 3;
-	-fx-border-radius: 3;
-	-fx-border-width: 1 1 1 1;
-	-fx-background-insets: 0;
+	-fx-background-radius: 3.0;
+	-fx-border-radius: 3.0;
+	-fx-border-width: 1.0 1.0 1.0 1.0;
+	-fx-background-insets: 0.0;
 }
 
 .text-area .content {
@@ -189,10 +209,13 @@
 
 .text-area:focused {
 	-fx-border-color: "#ade9ff";
+	-fx-text-fill:black;
+	-fx-fill:black;
+    -fx-prompt-text-fill:black;
 }
 
 .tab-pane {
-	-fx-tab-min-width: 2em;
+	-fx-tab-min-width: 2.0em;
 }
 
 .tab-pane .tab-header-area .tab-header-background {
@@ -212,10 +235,10 @@
 
 .tab-pane .tab:selected {
 	-fx-background-color: transparent;
-	-fx-background-radius: 0;
-	-fx-border-radius: 3;
-	-fx-background-insets: 0;
-	-fx-border-width: 2 2 0 2;
+	-fx-background-radius: 0.0;
+	-fx-border-radius: 3.0;
+	-fx-background-insets: 0.0;
+	-fx-border-width: 2.0 2.0 0.0 2.0;
 	-fx-border-color: #ade9ff;
 }
 
@@ -247,36 +270,33 @@
 	-fx-background-color: #F3F3F3, -fx-control-inner-background;
 	-fx-background-insets: 0.0, 1.0;
 	-fx-padding: 1.0;
-	-fx-border-width: 1;
+	-fx-border-width: 1.0;
 	-fx-border-color: #c0c0c0;
 }
 
 .list-view:focused .list-cell:selected {
 	-fx-background-color: -fx-list-color;
 	-fx-table-cell-border-color: -fx-list-color;
-	-fx-text-fill: BLACK;
+	/*-fx-text-fill: BLACK;*/
 }
 
 .table-view {
 	-fx-table-color: "#ade9ff";
 	-fx-table-rippler-color: "#90c9dd";
 	-fx-background-color: #F3F3F3, -fx-control-inner-background;
-	-fx-background-insets: 0.0, 1.0;
-	-fx-border-width: 1;
-	-fx-border-color: #c0c0c0;
 	-fx-padding: 1.0;
 }
 
 .table-view:focused .table-row-cell:selected {
 	-fx-background-color: -fx-table-color;
 	-fx-table-cell-border-color: -fx-table-color;
-	-fx-text-fill: BLACK;
+	/*-fx-text-fill: BLACK;*/
 }
 
-.table-view:focused .table-row-cell:selected .table-cell {
+/* .table-view:focused .table-row-cell:selected .table-cell {
 	-fx-text-fill: BLACK;
 }
-
+*/
 .table-view .column-header, .table-view .column-header-background,
 	.table-view .column-header-background .filler {
 	-fx-background-color: TRANSPARENT;
@@ -296,18 +316,13 @@
 	-fx-background-color: #949494;
 }
 
-.table-view .column-header:last-visible {
-	-fx-border-width: 1.0 2.0 0.0 1.0;
-}
-
 .table-view .column-header-background {
 	-fx-border-width: 0.0 0.0 1.0 0.0;
 	-fx-border-color: #F3F3F3;
 }
 
 .table-view .table-cell {
-	-fx-border-width: 1.0;
-	-fx-alignment: top-center;
+	-fx-alignment: center;
 }
 
 .table-view .column-overlay {
@@ -317,6 +332,18 @@
 .table-view .column-resize-line, .table-view .column-drag-header {
 	-fx-background-color: -fx-table-rippler-color;
 }
+
+.table-row-cell {
+	/*-fx-cell-size: 32px;*/
+}
+
+/*.table-row-cell:odd {
+	-fx-background-color: transparent;
+}
+
+.table-row-cell:even {
+	-fx-background-color: transparent;	
+}*/
 
 .table-row-cell:grouped {
 	-fx-background-color: rgb(230.0, 230.0, 230.0);
@@ -516,8 +543,8 @@
 
 .combo-box-base:focused {
 	-fx-background-color: transparent;
-	-fx-border-radius: 0;
-	-fx-border-width: 0 0 2 0;
+	-fx-border-radius: 0.0;
+	-fx-border-width: 0.0 0.0 2.0 0.0;
 	-fx-border-color: #ade9ff;
 }
 
@@ -530,7 +557,7 @@
 	-fx-background-color: white;
 }
 
-.menu-item:focused .label {
+/* .menu-item:focused .label {
 	-fx-text-fill: black;
 	-fx-background-color: #ade9ff;
 }
@@ -560,7 +587,7 @@
 	-fx-background-color: #ade9ff;
 	-fx-text-fill: black;
 }
-
+*/
 /*
 #ade9ff
 .menu-item {
@@ -581,8 +608,9 @@
 	-fx-background-color: #303030;
 }
 
-.styled-text-area {
-	-/*fx-font-size: 14px;*/
+	/*fx-font-size: 14px;*/
+.styled-text-area .selection {
+    -fx-fill: #ade9ff;
 }
 
 .styled-text-area .text {
