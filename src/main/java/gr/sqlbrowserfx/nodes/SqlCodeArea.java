@@ -74,7 +74,7 @@ public class SqlCodeArea extends CodeArea {
 		});
 		replaceField.setPromptText("Replace...");
 		
-		findButton = new Button("Find");
+		findButton = new Button("Find", JavaFXUtils.icon("/res/magnify.png"));
 		findButton.setOnMouseClicked(mouseEvent -> this.findButtonAction());
 		findButton.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
@@ -82,7 +82,7 @@ public class SqlCodeArea extends CodeArea {
 				keyEvent.consume();
 			}
 		});
-		replaceButton = new Button("Replace");
+		replaceButton = new Button("Replace", JavaFXUtils.icon("/res/replace.png"));
 		replaceButton.setOnMouseClicked(mouseEvent -> this.replaceButtonAction());
 		replaceButton.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
@@ -90,6 +90,8 @@ public class SqlCodeArea extends CodeArea {
 				keyEvent.consume();
 			}
 		});
+		findButton.prefWidthProperty().bind(findField.widthProperty());
+		replaceButton.prefWidthProperty().bind(findField.widthProperty());
 
 		searchAndReplacePopOver = new PopOver();
 		searchAndReplacePopOver.setArrowSize(0);
@@ -118,9 +120,9 @@ public class SqlCodeArea extends CodeArea {
 		this.setOnMouseClicked(mouseEvent -> {
 			if (auoCompletePopupShowing) {
 				auoCompletePopup.get().hide();
-				searchAndReplacePopOver.hide();
 				auoCompletePopupShowing = false;
 			}
+			searchAndReplacePopOver.hide();
 		});
 //FIXME no need for this listener to be removed
 //		this.caretPositionProperty().addListener((observable, oldPosition, newPosition) -> {
