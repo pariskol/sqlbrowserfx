@@ -196,6 +196,19 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		});
 	}
 
+	public void updateTriggers() throws SQLException {
+		if (sqlConnector instanceof SqliteConnector) {
+			for (TreeItem<String> treeItem : tablesRootItem.getChildren()) {
+				sqlConnector.executeQuery("select * from sqlite_master where type like 'trigger' and tbl_name like '" +treeItem.getValue()+"'", rset -> {
+					TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString("NAME"), JavaFXUtils.icon("/res/trigger.png"));
+					String schema = rset.getString("SQL");
+					triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.icon("/res/script.png")));
+					treeItem.getChildren().get(2).getChildren().add(triggerTreeItem);
+				});
+			}
+		}
+	}
+	
 	private void fillTableTreeItem(TreeItem<String> treeItem) throws SQLException {
 		this.fillTVTreeItem(treeItem, sqlConnector.getTableSchemaColumn());
 			TreeItem<String> triggersTreeItem = new TreeItem<String>("triggers", JavaFXUtils.icon("/res/trigger.png"));
@@ -295,6 +308,17 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		clipboard.setContents(stringSelection, null);
 	}
 
+	private void searchFieldAction() {
+		sqlConnector.executeAsync(() -> {
+			this.getSelectionModel().clearSelection();
+			for (TreeItem<String> t : tablesRootItem.getChildren()) {
+				if(t.getValue().matches("(?i:.*" + searchField.getText() + ".*)")) {
+					this.getSelectionModel().select(t);
+				}
+			}
+		});
+	}
+
 	public List<String> getContentNames() {
 		return allNames;
 	}
@@ -303,6 +327,8 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	public void onChange(String newValue) {
 		try {
 			this.fillTreeView();
+			if (newValue.contains("trigger"))
+				this.updateTriggers();
 		} catch (SQLException e) {
 			logger.error(e.getMessage(), e);
 		}
@@ -314,6 +340,12 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	}
 
 	@Override
+	public void changed(String data) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
 	public void addListener(SimpleChangeListener<String> listener) {
 		listeners.add(listener);
 	}
@@ -321,16 +353,5 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	@Override
 	public void removeListener(SimpleChangeListener<String> listener) {
 		listeners.remove(listener);
-	}
-	
-	private void searchFieldAction() {
-		sqlConnector.executeAsync(() -> {
-			this.getSelectionModel().clearSelection();
-			for (TreeItem<String> t : tablesRootItem.getChildren()) {
-				if(t.getValue().matches("(?i:.*" + searchField.getText() + ".*)")) {
-					this.getSelectionModel().select(t);
-				}
-			}
-		});
 	}
 }
