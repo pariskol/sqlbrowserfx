@@ -34,7 +34,13 @@ import javafx.stage.Stage;
 
 public class DialogFactory {
 
+	private static String DEFAULT_STYLESHEET;
+	
 	public static void createErrorDialog(Exception e) {
+		createErrorDialog(e, null);
+	}
+	
+	public static void createErrorDialog(Exception e, String stylesheet) {
 
 		Platform.runLater(() -> {
 			Alert alert = new Alert(AlertType.ERROR);
@@ -61,17 +67,29 @@ public class DialogFactory {
 
 			LoggerFactory.getLogger(DialogFactory.class).error(e.getMessage(), e);
 			alert.getDialogPane().setExpandableContent(expContent);
+			if (stylesheet != null)
+				alert.getDialogPane().getStylesheets().add(stylesheet);
+			else
+				alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
 			alert.showAndWait();
 		});
 	}
 	
 	public static int createConfirmationDialog(String title, String message) {
+		return createConfirmationDialog(title, message, null);
+	}
+	
+	public static int createConfirmationDialog(String title, String message, String stylesheet) {
 		AtomicInteger result = new AtomicInteger(0);
 		
 		Alert alert = new Alert(AlertType.CONFIRMATION);
 		alert.setTitle(title);
 		alert.setHeaderText(null);
 		alert.setContentText(message);
+		if (stylesheet != null)
+			alert.getDialogPane().getStylesheets().add(stylesheet);
+		else
+			alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
 		
 		Optional<ButtonType> res = alert.showAndWait();
 		if (res.get() == ButtonType.OK){
@@ -84,11 +102,19 @@ public class DialogFactory {
 	}
 	
 	public static void createInfoDialog(String title, String message) {
+		createInfoDialog(title, message, null);
+	}
+	
+	public static void createInfoDialog(String title, String message, String stylesheet) {
 		Platform.runLater(() -> {
 			Alert alert = new Alert(AlertType.INFORMATION);
 			alert.setTitle(title);
 			alert.setHeaderText(null);
 			alert.setContentText(message);
+			if (stylesheet != null)
+				alert.getDialogPane().getStylesheets().add(stylesheet);
+			else
+				alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
 
 			LoggerFactory.getLogger(DialogFactory.class).info(message);
 			alert.showAndWait();
@@ -108,6 +134,10 @@ public class DialogFactory {
 		}
 		
 		return null;
+	}
+	
+	public static int createDeleteDialog(Node owner, ObservableList<SqlTableRow> rows, String message) {
+		return createDeleteDialog(owner, rows, message, null);
 	}
 	
 	public static int createDeleteDialog(Node owner, ObservableList<SqlTableRow> rows, String message, String stylesheet) {
@@ -162,8 +192,20 @@ public class DialogFactory {
         Scene dialogScene = new Scene(dialogVbox, 400, 200);
         if (stylesheet != null)
         	dialogScene.getStylesheets().add(stylesheet);
+        else
+        	dialogScene.getStylesheets().add(DEFAULT_STYLESHEET);
         dialog.setScene(dialogScene);
         dialog.showAndWait();
         return result.get();
     }
+
+	public static String getDialogStyleSheet() {
+		return DEFAULT_STYLESHEET;
+	}
+
+	public static void setDialogStyleSheet(String dialogStyleSheet) {
+		DialogFactory.DEFAULT_STYLESHEET = dialogStyleSheet;
+	}
+	
+	
 }
