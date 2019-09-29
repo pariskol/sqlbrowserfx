@@ -782,8 +782,7 @@ public class SqlPane extends BorderPane {
 			if (sqlTableRows.size() == 0)
 				return;
 
-			if (DialogFactory.createDeleteDialog(sqlTableViewRef, sqlTableRows, "Do you want to delete records?",
-					null) == 0)
+			if (DialogFactory.createDeleteDialog(sqlTableViewRef, sqlTableRows, "Do you want to delete records?") == 0)
 				return;
 
 			List<SqlTableRow> toRemove = new ArrayList<>();

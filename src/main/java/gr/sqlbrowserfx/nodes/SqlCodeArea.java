@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 
+import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
@@ -20,11 +21,14 @@ import gr.sqlbrowserfx.utils.SyntaxUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Bounds;
+import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 
 public class SqlCodeArea extends CodeArea {
@@ -35,6 +39,13 @@ public class SqlCodeArea extends CodeArea {
 	private Runnable enterAction;
 	private boolean auoCompletePopupShowing = false;
 	private AtomicReference<Popup> auoCompletePopup;
+	private boolean autoCompleteOnType = true;
+	private TextField findField;
+	private TextField replaceField;
+	private Button findButton;
+	private Button replaceButton;
+	private PopOver searchAndReplacePopOver;
+	private volatile int lastPos;
 
 	public SqlCodeArea() {
 		super();
@@ -42,6 +53,49 @@ public class SqlCodeArea extends CodeArea {
 		auoCompletePopup = new AtomicReference<Popup>();
 		this.setOnKeyTyped(keyEvent -> this.autoCompleteAction(keyEvent, auoCompletePopup));
 
+		findField = new TextField();
+		findField.setPromptText("Search...");
+		findField.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ESCAPE) {
+				searchAndReplacePopOver.hide();
+			}
+			else if (keyEvent.getCode() == KeyCode.ENTER) {
+				this.findButtonAction();
+			}
+		});
+		replaceField = new TextField();
+		replaceField.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ESCAPE) {
+				searchAndReplacePopOver.hide();
+			}
+//			else if (keyEvent.getCode() == KeyCode.ENTER) {
+//				this.replaceButtonAction();
+//			}
+		});
+		replaceField.setPromptText("Replace...");
+		
+		findButton = new Button("Find");
+		findButton.setOnMouseClicked(mouseEvent -> this.findButtonAction());
+		findButton.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ENTER) {
+				this.findButtonAction();
+				keyEvent.consume();
+			}
+		});
+		replaceButton = new Button("Replace");
+		replaceButton.setOnMouseClicked(mouseEvent -> this.replaceButtonAction());
+		replaceButton.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ENTER) {
+				this.replaceButtonAction();
+				keyEvent.consume();
+			}
+		});
+
+		searchAndReplacePopOver = new PopOver();
+		searchAndReplacePopOver.setArrowSize(0);
+		searchAndReplacePopOver.setContentNode(new VBox(findField, replaceField, findButton, replaceButton));
+		searchAndReplacePopOver.setAutoHide(true);
+		
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.ENTER) {
 				enterAction.run();
@@ -55,12 +109,16 @@ public class SqlCodeArea extends CodeArea {
 //				this.autoCompleteAction(keyEvent, auoCompletePopup);
 			} else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.Q) {
 				// TODO go to query x tab
+			} else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.F) {
+				Bounds boundsInScene = this.localToScene(this.getBoundsInLocal());
+				searchAndReplacePopOver.show(this, boundsInScene.getMinX(), boundsInScene.getMinY());
 			}
 		});
 
 		this.setOnMouseClicked(mouseEvent -> {
 			if (auoCompletePopupShowing) {
 				auoCompletePopup.get().hide();
+				searchAndReplacePopOver.hide();
 				auoCompletePopupShowing = false;
 			}
 		});
@@ -79,6 +137,25 @@ public class SqlCodeArea extends CodeArea {
 
 	}
 
+	private void findButtonAction() {
+		if (!findField.getText().isEmpty()) {
+			lastPos = this.getText().indexOf(findField.getText(), this.getCaretPosition());
+			if (lastPos != -1) {
+				this.moveTo(lastPos + findField.getText().length());
+				this.selectRange(lastPos, lastPos + findField.getText().length());
+			}
+			else if (lastPos == -1) {
+				lastPos = 0;
+				this.moveTo(0);
+			}
+		}
+	}
+	
+	private void replaceButtonAction() {
+		if (!replaceField.getText().isEmpty() && !this.getSelectedText().isEmpty())
+			this.replaceSelection(replaceField.getText());
+	}
+	
 	private ContextMenu createContextMenu() {
 		ContextMenu menu = new ContextMenu();
 
@@ -91,7 +168,7 @@ public class SqlCodeArea extends CodeArea {
 		MenuItem menuItemPaste = new MenuItem("Paste", JavaFXUtils.icon("/res/paste.png"));
 		menuItemPaste.setOnAction(event -> this.paste());
 
-		MenuItem menuItemSuggestions = new MenuItem("Suggestions");// , JavaFXUtils.icon("/res/paste.png"));
+		MenuItem menuItemSuggestions = new MenuItem("Suggestions", JavaFXUtils.icon("/res/suggestion.png"));
 		menuItemSuggestions
 				.setOnAction(event -> this.autoCompleteAction(this.simulateControlSpaceEvent(), auoCompletePopup));
 
@@ -115,7 +192,7 @@ public class SqlCodeArea extends CodeArea {
 	private void autoCompleteAction(KeyEvent event, AtomicReference<Popup> auoCompletePopup) {
 		String ch = event.getCharacter();
 		// for some reason keycode does not work
-		if (Character.isLetter(ch.charAt(0)) || (event.isControlDown() && ch.equals(" "))
+		if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType ) || (event.isControlDown() && ch.equals(" "))
 				|| event.getCode() == KeyCode.BACK_SPACE) {
 			int position = this.getCaretPosition();
 			String query = AutoComplete.getQuery(this, position);
@@ -163,7 +240,7 @@ public class SqlCodeArea extends CodeArea {
 				auoCompletePopup.get().hide();
 				auoCompletePopupShowing = false;
 			}
-		} else {
+		} else if (!event.isControlDown()){
 			auoCompletePopup.get().hide();
 			auoCompletePopupShowing = false;
 		}
@@ -195,4 +272,14 @@ public class SqlCodeArea extends CodeArea {
 	public void setEnterAction(Runnable action) {
 		enterAction = action;
 	}
+
+	public boolean isAutoCompleteOnTypeEnabled() {
+		return autoCompleteOnType;
+	}
+
+	public void setAutoCompleteOnType(boolean autoCompleteOnType) {
+		this.autoCompleteOnType = autoCompleteOnType;
+	}
+	
+	
 }

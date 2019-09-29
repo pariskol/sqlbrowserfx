@@ -16,14 +16,15 @@ import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.sqlPane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
 public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
@@ -33,23 +34,19 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 	private ProgressIndicator progressIndicator;
 	private Tab newConsoleTab;
 	protected Button executebutton;
-	protected TextField findField;
-	protected TextField replaceField;
-	private CodeArea codeAreaRef;
+	private SqlCodeArea codeAreaRef;
+	protected CheckBox autoCompleteOnTypeCheckBox;
 	
 	private SqlConnector sqlConnector;
 	protected AtomicBoolean sqlQueryRunning;
 	List<SimpleChangeListener<String>> listeners;
 
+	@SuppressWarnings("unchecked")
 	public SqlConsoleBox(SqlConnector sqlConnector) {
 		this.sqlConnector = sqlConnector;
 		sqlQueryRunning = new AtomicBoolean(false);
 		progressIndicator = new ProgressIndicator();
 		historyArea = new TextArea();
-		findField = new TextField();
-		findField.setPromptText("Search...");
-		replaceField = new TextField();
-		replaceField.setPromptText("Replace...");
 		listeners = new ArrayList<>();
 
 		queryTabPane = new TabPane();
@@ -83,7 +80,21 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 		historyArea.prefHeightProperty().bind(splitPane.heightProperty().multiply(0.65));
 		queryTabPane.prefHeightProperty().bind(splitPane.heightProperty().multiply(0.35));
 
-		this.getChildren().addAll(splitPane, executebutton);
+		autoCompleteOnTypeCheckBox = new CheckBox("Autocomplete on type");
+		autoCompleteOnTypeCheckBox.setSelected(true);
+		autoCompleteOnTypeCheckBox.setOnAction(event -> {
+			codeAreaRef.setAutoCompleteOnType(autoCompleteOnTypeCheckBox.isSelected());
+		});
+		queryTabPane.getSelectionModel().selectedItemProperty().addListener(
+			    (ChangeListener<Tab>) (ov, oldTab, newTab) -> {
+			    	if ((VirtualizedScrollPane<SqlCodeArea>)newTab.getContent() != null) {
+			    		SqlCodeArea sqlCodeArea = ((VirtualizedScrollPane<SqlCodeArea>)newTab.getContent()).getContent();
+				    	if (sqlCodeArea != null)
+				    		sqlCodeArea.setAutoCompleteOnType(autoCompleteOnTypeCheckBox.isSelected());
+			    	}
+			    });
+		
+		this.getChildren().addAll(splitPane, autoCompleteOnTypeCheckBox, executebutton);
 		splitPane.prefHeightProperty().bind(this.heightProperty());
 
 		// initial create one tab
@@ -97,7 +108,7 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 			this.createSqlConsoleBox();
 		}
 		else {
-			codeAreaRef = ((VirtualizedScrollPane<CodeArea>) selectedTab.getContent()).getContent(); 
+			codeAreaRef = ((VirtualizedScrollPane<SqlCodeArea>) selectedTab.getContent()).getContent(); 
 		}
 	}
 
@@ -175,7 +186,7 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 				if (query.contains("table") || query.contains("TABLE") ||
 					query.contains("view") || query.contains("VIEW") ||
 					query.contains("trigger") || query.contains("TRIGGER")) {
-					this.changed();
+					this.changed(query);
 				}
 			});
 		}
@@ -208,6 +219,12 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 	@Override
 	public void changed() {
 		listeners.forEach(listener -> listener.onChange(null));
+	}
+
+	@Override
+	public void changed(String data) {
+		listeners.forEach(listener -> listener.onChange(data));
+		
 	}
 
 	@Override

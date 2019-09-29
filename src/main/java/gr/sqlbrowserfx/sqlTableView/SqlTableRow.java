@@ -79,6 +79,12 @@ public class SqlTableRow implements SimpleObservable<SqlTableRow> {
 	}
 
 	@Override
+	public void changed(SqlTableRow data) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
 	public synchronized void addListener(SimpleChangeListener<SqlTableRow> listener) {
 		listeners.add(listener);
 	}

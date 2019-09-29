@@ -464,6 +464,12 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	}
 
 	@Override
+	public void changed(String data) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
 	public void addListener(SimpleChangeListener<String> listener) {
 		listeners.add(listener);
 	}

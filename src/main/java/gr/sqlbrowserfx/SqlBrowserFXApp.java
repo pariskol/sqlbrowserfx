@@ -76,12 +76,14 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class SqlBrowserFXApp extends Application {
 
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
+	private static final String CSS_THEME = "/res/basic.css";
 	private static String DB = "/home/paris/sqllite-dbs/users.db";
 	private static RestServiceConfig restServiceConfig;
 
@@ -95,7 +97,7 @@ public class SqlBrowserFXApp extends Application {
 
 	public static void main(String[] args) {
 		BasicConfigurator.configure();
-
+		DialogFactory.setDialogStyleSheet(CSS_THEME);
 		Keywords.onKeywordsBind();
 		launch(args);
 	}
@@ -193,7 +195,7 @@ public class SqlBrowserFXApp extends Application {
 		TabPane dbTabPane = new TabPane(sqliteTab, mysqlTab);
 		scene = new Scene(dbTabPane, 600, 400);
 		scene.getStylesheets().add(DockPane.class.getResource("default.css").toExternalForm());
-		scene.getStylesheets().add("/res/basic.css");
+		scene.getStylesheets().add(CSS_THEME);
 		scene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
 			if (event.getCode() == KeyCode.ENTER) {
 				if (scene.getFocusOwner() instanceof Button) {
@@ -244,6 +246,7 @@ public class SqlBrowserFXApp extends Application {
 	private void dbSelectionAction(SqlConnector sqlConnector) {
 		stage.setMaximized(true);
 		DockPane dockPane = new DockPane();
+		dockPane.getStylesheets().add(CSS_THEME);
 
 		mainSqlPane = new DSqlPane(sqlConnector);
 		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, new double[] {0.8f});
@@ -301,8 +304,16 @@ public class SqlBrowserFXApp extends Application {
 			DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
 			dockNode.dock(dockPane, DockPos.LEFT);	
 		});
+		
+		MenuItem webViewItem = new MenuItem("Open Docs", JavaFXUtils.icon("/res/web.png"));
+		webViewItem.setOnAction(event -> {
+			WebView docsView = new WebView();
+			docsView.getEngine().load("https://www.sqlite.org/index.html");
+			DockNode dockNode = new DockNode(docsView, "Docs", JavaFXUtils.icon("/res/web.png"));
+			dockNode.dock(dockPane, DockPos.LEFT);	
+		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem);
+		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, webViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/res/spark.png", 16.0, 16.0));
