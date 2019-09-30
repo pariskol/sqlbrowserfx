@@ -83,8 +83,8 @@ import javafx.stage.Stage;
 public class SqlBrowserFXApp extends Application {
 
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
-	private static final String CSS_THEME = "/res/basic.css";
-	private static String DB = "/home/paris/sqllite-dbs/users.db";
+	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/basic.css");
+	private static String DB;
 	private static RestServiceConfig restServiceConfig;
 
 	private Scene scene;
