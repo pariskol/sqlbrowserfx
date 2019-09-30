@@ -4,6 +4,10 @@ SqlBrowserFX is a feature rich sql client for SQLite , MySQL.
 
 ![](images/sqlbrowserfx.png)
 
+Flat Light Theme
+
+![](images/sqlbrowserfx2.png)
+
 ### Features
 
 * Manage data (insert, update, delete) via gui.
