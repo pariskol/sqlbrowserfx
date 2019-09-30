@@ -1,23 +1,3 @@
-/**
- * @file DockFX.java
- * @brief Driver demonstrating basic dock layout with prototypes. Maintained in a separate package
- *        to ensure the encapsulation of org.dockfx private package members.
- *
- * @section License
- *
- *          This file is a part of the DockFX Library. Copyright (C) 2015 Robert B. Colton
- *
- *          This program is free software: you can redistribute it and/or modify it under the terms
- *          of the GNU Lesser General Public License as published by the Free Software Foundation,
- *          either version 3 of the License, or (at your option) any later version.
- *
- *          This program is distributed in the hope that it will be useful, but WITHOUT ANY
- *          WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- *          PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
- *
- *          You should have received a copy of the GNU Lesser General Public License along with this
- *          program. If not, see <http://www.gnu.org/licenses/>.
- **/
 
 package gr.sqlbrowserfx;
 
@@ -87,8 +67,8 @@ public class SqlBrowserFXApp extends Application {
 	private static String DB;
 	private static RestServiceConfig restServiceConfig;
 
-	private Scene scene;
-	private Stage stage;
+	private Scene primaryScene;
+	private Stage primaryStage;
 	private DSqlPane mainSqlPane;
 	DraggingTabPaneSupport dragingSupport;
 	
@@ -104,12 +84,12 @@ public class SqlBrowserFXApp extends Application {
 
 	@Override
 	public void start(Stage primaryStage) {
-		stage = primaryStage;
+		this.primaryStage = primaryStage;
 		primaryStage.setTitle("SqlBrowser");
 
 		createDBselectBox();
 
-		primaryStage.setScene(scene);
+		primaryStage.setScene(primaryScene);
 		primaryStage.sizeToScene();
 
 		primaryStage.getIcons().add(new Image("/res/sqlbrowser-fx.png"));
@@ -193,13 +173,13 @@ public class SqlBrowserFXApp extends Application {
 		mysqlTab.setGraphic(JavaFXUtils.createImageView("/res/mysql.png", 28.0, 28.0));
 		mysqlTab.setClosable(false);
 		TabPane dbTabPane = new TabPane(sqliteTab, mysqlTab);
-		scene = new Scene(dbTabPane, 600, 400);
-		scene.getStylesheets().add(DockPane.class.getResource("default.css").toExternalForm());
-		scene.getStylesheets().add(CSS_THEME);
-		scene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+		primaryScene = new Scene(dbTabPane, 600, 400);
+		primaryScene.getStylesheets().add(DockPane.class.getResource("default.css").toExternalForm());
+		primaryScene.getStylesheets().add(CSS_THEME);
+		primaryScene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
 			if (event.getCode() == KeyCode.ENTER) {
-				if (scene.getFocusOwner() instanceof Button) {
-					((Button) scene.getFocusOwner()).getOnAction().handle(new ActionEvent());
+				if (primaryScene.getFocusOwner() instanceof Button) {
+					((Button) primaryScene.getFocusOwner()).getOnAction().handle(new ActionEvent());
 				}
 			}
 		});
@@ -215,7 +195,7 @@ public class SqlBrowserFXApp extends Application {
 
 		SqlConnector sqliteConnector = new SqliteConnector(dbPath);
 		this.sqlConnector = sqliteConnector;
-		dbSelectionAction(sqliteConnector);
+		createAppView(sqliteConnector);
 
 	}
 
@@ -239,12 +219,12 @@ public class SqlBrowserFXApp extends Application {
 					return;
 				}
 				
-				Platform.runLater(() -> dbSelectionAction(mysqlConnector));
+				Platform.runLater(() -> createAppView(mysqlConnector));
 			});
 	}
 
-	private void dbSelectionAction(SqlConnector sqlConnector) {
-		stage.setMaximized(true);
+	private void createAppView(SqlConnector sqlConnector) {
+		primaryStage.setMaximized(true);
 		DockPane dockPane = new DockPane();
 		dockPane.getStylesheets().add(CSS_THEME);
 
@@ -269,8 +249,8 @@ public class SqlBrowserFXApp extends Application {
 		vbox.setAlignment(Pos.CENTER);
 		vbox.getChildren().addAll(menuBar, dockPane);
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
-		scene.setRoot(vbox);
-		stage.heightProperty().addListener((obs, oldVal, newVal) -> {
+		primaryScene.setRoot(vbox);
+		primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> {
 			SplitPane.setResizableWithParent(dockNode, Boolean.TRUE);
 			for (SplitPane split : dockPane.getSplitPanes()) {
 			    double[] positions = split.getDividerPositions(); // reccord the current ratio
@@ -359,6 +339,8 @@ public class SqlBrowserFXApp extends Application {
 
 		Stage stage = new Stage();
 		Scene scene = new Scene(vBox);
+		for (String styleSheet : primaryScene.getStylesheets())
+			scene.getStylesheets().add(styleSheet);
 		stage.setTitle("Rest service configuration");
 		stage.setScene(scene);
 		stage.show();

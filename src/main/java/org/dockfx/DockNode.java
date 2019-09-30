@@ -295,7 +295,8 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 			borderPane.setCenter(this);
 
 			Scene scene = new Scene(borderPane);
-			scene.getStylesheets().add(DockPane.class.getResource("default.css").toExternalForm());
+			for (String styleSheet : dockPane.getStylesheets())
+				scene.getStylesheets().add(styleSheet);
 
 			// apply the border pane css so that we can get the insets and
 			// position the stage properly
