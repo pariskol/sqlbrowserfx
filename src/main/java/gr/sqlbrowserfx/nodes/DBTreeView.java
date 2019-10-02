@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.dock.nodes;
+package gr.sqlbrowserfx.nodes;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -20,6 +20,7 @@ import gr.sqlbrowserfx.listeners.SimpleChangeListener;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
+import javafx.collections.ObservableList;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
@@ -61,7 +62,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		try {
 			this.fillTreeView();
 		} catch (SQLException e) {
-			logger.error(e.getMessage(), e);
+			DialogFactory.createErrorDialog(e);
 		}
 
 		this.createContextMenu();
@@ -94,6 +95,13 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		});
 	}
 
+	private void clearAll() {
+		tablesRootItem.getChildren().clear();
+		viewsRootItem.getChildren().clear();
+		indicesRootItem.getChildren().clear();
+		allNames.clear();
+	}
+	
 	private void fillTreeView() throws SQLException {
 		List<String> newNames = new ArrayList<>();
 		sqlConnector.getContents(rset -> {
@@ -110,7 +118,6 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 					if (type.contains("table") || type.contains("TABLE")) {
 						this.fillTableTreeItem(treeItem);
 						tablesRootItem.getChildren().add(treeItem);
-						tablesRootItem.getChildren().remove(null);
 						treeItem.setGraphic(JavaFXUtils.icon("/res/table.png"));
 					} else if (type.contains("view") || type.contains("VIEW")) {
 						this.fillViewTreeItem(treeItem);
@@ -196,14 +203,20 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		});
 	}
 
-	public void updateTriggers() throws SQLException {
+	//TODO implement in a more abstract way
+	private void updateTriggers() throws SQLException {
 		if (sqlConnector instanceof SqliteConnector) {
 			for (TreeItem<String> treeItem : tablesRootItem.getChildren()) {
-				sqlConnector.executeQuery("select * from sqlite_master where type like 'trigger' and tbl_name like '" +treeItem.getValue()+"'", rset -> {
-					TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString("NAME"), JavaFXUtils.icon("/res/trigger.png"));
-					String schema = rset.getString("SQL");
-					triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.icon("/res/script.png")));
-					treeItem.getChildren().get(2).getChildren().add(triggerTreeItem);
+				sqlConnector.executeQueryRaw("select * from sqlite_master where type like 'trigger' and tbl_name like '" +treeItem.getValue()+"'", rset -> {
+					treeItem.getChildren().get(2).getChildren().clear();
+					while (rset.next()) {
+						TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString("NAME"), JavaFXUtils.icon("/res/trigger.png"));
+						String schema = rset.getString("SQL");
+						triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.icon("/res/script.png")));
+						ObservableList<TreeItem<String>> triggerItems = treeItem.getChildren().get(2).getChildren();
+						triggerItems.add(triggerTreeItem);
+					}
+					
 				});
 			}
 		}
@@ -290,7 +303,16 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 			}
 		});
 
-		contextMenu.getItems().addAll(menuItemCopy, menuItemDrop);
+		MenuItem menuItemRefresh = new MenuItem("Refresh View", JavaFXUtils.icon("/res/refresh.png"));
+		menuItemRefresh.setOnAction(event -> {
+			try {
+				this.fillTreeView();
+				this.clearAll();
+			} catch (SQLException e) {
+				DialogFactory.createErrorDialog(e);
+			} 
+		});
+		contextMenu.getItems().addAll(menuItemCopy, menuItemDrop, menuItemRefresh);
 		this.setContextMenu(contextMenu);
 
 		return contextMenu;
@@ -327,10 +349,10 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	public void onChange(String newValue) {
 		try {
 			this.fillTreeView();
-			if (newValue.contains("trigger"))
+			if (newValue.contains("trigger") || newValue.contains("trigger".toUpperCase()))
 				this.updateTriggers();
 		} catch (SQLException e) {
-			logger.error(e.getMessage(), e);
+			DialogFactory.createErrorDialog(e);
 		}
 	}
 
