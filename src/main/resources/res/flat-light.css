@@ -238,7 +238,7 @@
 	-fx-background-radius: 0.0;
 	-fx-border-radius: 3.0;
 	-fx-background-insets: 0.0;
-	-fx-border-width: 2.0 2.0 0.0 2.0;
+	-fx-border-width: 2.0 0.0 0.0 0.0;
 	-fx-border-color: #ade9ff;
 }
 
@@ -518,7 +518,7 @@
 }
 
 .vbox {
-	-fx-background-color: transparent;
+	-fx-background-color: pink;
 }
 
 .hbox {
@@ -647,11 +647,11 @@
 }
 
 .styled-text-area .text.string {
-	-fx-fill: #729fcf;
+	-fx-fill: blue;
 }
 
 .styled-text-area .text.string2 {
-	-fx-fill: #729fcf;
+	-fx-fill: blue;
 }
 
 .styled-text-area .text.todo {
