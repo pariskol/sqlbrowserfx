@@ -397,15 +397,18 @@ public class SqlPane extends BorderPane {
 		MenuItem menuItemCellEdit = new MenuItem("Edit cell", JavaFXUtils.icon("/res/edit.png"));
 
 		menuItemCellEdit.setOnAction(event -> {
-			sqlTableViewRef.getSelectedCell().startEdit();
+			if (sqlTableViewRef.getSelectedCell() != null)
+				sqlTableViewRef.getSelectedCell().startEdit();
 		});
 
 		MenuItem menuItemCopyCell = new MenuItem("Copy cell", JavaFXUtils.icon("/res/copy.png"));
 
 		menuItemCopyCell.setOnAction(event -> {
-			StringSelection stringSelection = new StringSelection(sqlTableViewRef.getSelectedCell().getText());
-			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-			clipboard.setContents(stringSelection, null);
+			if (sqlTableViewRef.getSelectedCell() != null) {
+				StringSelection stringSelection = new StringSelection(sqlTableViewRef.getSelectedCell().getText());
+				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				clipboard.setContents(stringSelection, null);
+			}
 		});
 
 		MenuItem menuItemDelete = new MenuItem("Delete", JavaFXUtils.icon("/res/minus.png"));
