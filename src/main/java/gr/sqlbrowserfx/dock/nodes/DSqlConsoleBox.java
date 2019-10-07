@@ -9,21 +9,23 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.SqlConsoleBox;
+import gr.sqlbrowserfx.sqlPane.SqlPane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 
 public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 
 	private DockNode thisDockNode;
-	private DSqlPane sqlPane;
+	private SqlPane sqlPane;
 
-	public DSqlConsoleBox(SqlConnector sqlConnector, DSqlPane sqlPane) {
+	public DSqlConsoleBox(SqlConnector sqlConnector, SqlPane sqlPane) {
 		super(sqlConnector);
 		this.sqlPane = sqlPane;
 		thisDockNode = new DockNode(this, "SqlConsole", JavaFXUtils.icon("/res/console.png"));
 		this.getChildren().clear();
 		this.getChildren().addAll(queryTabPane, autoCompleteOnTypeCheckBox, executebutton);
 		queryTabPane.prefHeightProperty().bind(this.heightProperty());
+		thisDockNode.setOnClose(() -> this.listeners.clear()); 
 	}
 
 	@Override
@@ -59,12 +61,11 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 					"If you are trying to run a select query try to use limit";
 			e = new SQLException(message, e);
 		}
-//		LoggerFactory.getLogger("SQLBROWSER").error(e.getMessage(), e);
 		DialogFactory.createErrorDialog(e);
 		System.gc();
 	}
 
-	public DSqlPane getSqlPane() {
+	public SqlPane getSqlPane() {
 		return sqlPane;
 	}
 
