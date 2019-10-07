@@ -58,7 +58,13 @@ public class DTOMapper {
 			Annotation annotation = field.getAnnotation(Column.class);
 			if (annotation != null) {
 				// get object from result set and cast it to field's class
-				Object value = rset.getObject(((Column) annotation).value(), field.getType());
+				Object value = null;
+				try {
+					value = rset.getObject(((Column) annotation).value(), field.getType());
+				} catch(Exception e) {
+					// getObject(name, class) may be unsupported in some jdbc drivers (ex sqlite)
+					value = rset.getObject(((Column) annotation).value());
+				}
 				field.set(dto, value);
 			}
 		}
