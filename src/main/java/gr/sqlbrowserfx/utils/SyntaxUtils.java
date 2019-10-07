@@ -10,13 +10,10 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 
 public class SyntaxUtils {
 
-	private static SqlConnector sqlConnector = new SqliteConnector("./sqlbrowser.db");
 	private static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 	
 	public static final String[] FUNCTIONS = getAutocomplteWords("funcs");
@@ -62,7 +59,7 @@ public class SyntaxUtils {
 	private static String[] getAutocomplteWords(String category) {
 		List<String> list = new ArrayList<>();
 		try {
-			sqlConnector.executeQuery("select name from autocomplete where category= ?", Arrays.asList(new String[]{category}), rset -> {
+			AppManager.getConfigSqlConnector().executeQuery("select name from autocomplete where category= ?", Arrays.asList(new String[]{category}), rset -> {
 				try {
 					HashMap<String, Object> dto = DTOMapper.map(rset);
 					list.add((String)dto.get("name"));

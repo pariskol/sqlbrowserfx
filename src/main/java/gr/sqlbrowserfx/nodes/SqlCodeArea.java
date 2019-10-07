@@ -112,8 +112,7 @@ public class SqlCodeArea extends CodeArea {
 			} else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.Q) {
 				// TODO go to query x tab
 			} else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.F) {
-				Bounds boundsInScene = this.localToScene(this.getBoundsInLocal());
-				searchAndReplacePopOver.show(this, boundsInScene.getMinX(), boundsInScene.getMinY());
+				this.showSearchAndReplacePopup();
 			}
 		});
 
@@ -139,6 +138,11 @@ public class SqlCodeArea extends CodeArea {
 
 	}
 
+	private void showSearchAndReplacePopup() {
+		Bounds boundsInScene = this.localToScene(this.getBoundsInLocal());
+		searchAndReplacePopOver.show(this, boundsInScene.getMinX()+searchAndReplacePopOver.getWidth()/3, boundsInScene.getMinY()-searchAndReplacePopOver.getHeight()/2);
+	}
+	
 	private void findButtonAction() {
 		if (!findField.getText().isEmpty()) {
 			lastPos = this.getText().indexOf(findField.getText(), this.getCaretPosition());
@@ -173,8 +177,11 @@ public class SqlCodeArea extends CodeArea {
 		MenuItem menuItemSuggestions = new MenuItem("Suggestions", JavaFXUtils.icon("/res/suggestion.png"));
 		menuItemSuggestions
 				.setOnAction(event -> this.autoCompleteAction(this.simulateControlSpaceEvent(), auoCompletePopup));
+		
+		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.icon("/res/magnify.png"));
+		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
-		menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste, menuItemSuggestions);
+		menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste, menuItemSuggestions, menuItemSearchAndReplace);
 		return menu;
 	}
 
@@ -194,7 +201,8 @@ public class SqlCodeArea extends CodeArea {
 	private void autoCompleteAction(KeyEvent event, AtomicReference<Popup> auoCompletePopup) {
 		String ch = event.getCharacter();
 		// for some reason keycode does not work
-		if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType ) || (event.isControlDown() && ch.equals(" "))
+		if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType && !event.isControlDown() )
+				|| (event.isControlDown() && ch.equals(" "))
 				|| event.getCode() == KeyCode.BACK_SPACE) {
 			int position = this.getCaretPosition();
 			String query = AutoComplete.getQuery(this, position);
