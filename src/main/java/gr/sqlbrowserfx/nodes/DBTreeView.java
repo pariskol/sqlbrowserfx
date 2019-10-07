@@ -251,7 +251,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		});
 	}
 
-	private ContextMenu createContextMenu() {
+	protected ContextMenu createContextMenu() {
 		ContextMenu contextMenu = new ContextMenu();
 
 		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/res/copy.png"));
@@ -306,8 +306,8 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		MenuItem menuItemRefresh = new MenuItem("Refresh View", JavaFXUtils.icon("/res/refresh.png"));
 		menuItemRefresh.setOnAction(event -> {
 			try {
-				this.fillTreeView();
 				this.clearAll();
+				this.fillTreeView();
 			} catch (SQLException e) {
 				DialogFactory.createErrorDialog(e);
 			} 

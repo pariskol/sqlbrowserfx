@@ -19,14 +19,18 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
+import gr.sqlbrowserfx.dock.nodes.DDBTreeView;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsoleView;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
+import gr.sqlbrowserfx.nodes.QueriesMenu;
 import gr.sqlbrowserfx.rest.service.RestServiceConfig;
 import gr.sqlbrowserfx.rest.service.SparkRestService;
 import gr.sqlbrowserfx.sqlPane.DraggingTabPaneSupport;
+import gr.sqlbrowserfx.sqlPane.SqlPane;
+import gr.sqlbrowserfx.utils.AppManager;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.Keywords;
 import javafx.application.Application;
@@ -64,6 +68,7 @@ public class SqlBrowserFXApp extends Application {
 
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
 	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/basic.css");
+	private static final String INTERNAL_DB = "sqlbrowse.db";
 	private static String DB;
 	private static RestServiceConfig restServiceConfig;
 
@@ -74,6 +79,7 @@ public class SqlBrowserFXApp extends Application {
 	
 	private SqlConnector sqlConnector;
 	private boolean restServiceStarted;
+	private DDBTreeView ddbTreeView;
 
 	public static void main(String[] args) {
 		BasicConfigurator.configure();
@@ -229,19 +235,20 @@ public class SqlBrowserFXApp extends Application {
 		dockPane.getStylesheets().add(CSS_THEME);
 
 		mainSqlPane = new DSqlPane(sqlConnector);
+		AppManager.addSqlPane(mainSqlPane);
+		mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + AppManager.getActiveSqlPanes().size());
 		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, new double[] {0.8f});
 		mainSqlPane.asDockNode().setClosable(false);
-		mainSqlPane.sqlConsoleButtonAction();
+		mainSqlPane.showConsole();
 
-		DBTreeView treeView = new DBTreeView(DB, sqlConnector);
-		Keywords.bind(treeView.getContentNames());
-		treeView.addListener(value -> Keywords.bind(treeView.getContentNames()));
-		mainSqlPane.getSqlConsoleBox().addListener(treeView);
-		DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
-		dockNode.dock(dockPane, DockPos.LEFT, new double[] {0.2f});
-		dockNode.setClosable(false);
+		ddbTreeView = new DDBTreeView(DB, sqlConnector);
+		Keywords.bind(ddbTreeView.getContentNames());
+		ddbTreeView.addListener(value -> Keywords.bind(ddbTreeView.getContentNames()));
+		mainSqlPane.getSqlConsoleBox().addListener(ddbTreeView);
+		ddbTreeView.asDockNode().dock(dockPane, DockPos.LEFT, new double[] {0.2f});
+		ddbTreeView.asDockNode().setClosable(false);
 		// fixed size 
-		SplitPane.setResizableWithParent(dockNode, Boolean.FALSE);
+		SplitPane.setResizableWithParent(ddbTreeView.asDockNode(), Boolean.FALSE);
 		
 		MenuBar menuBar = createMenu(dockPane);
 
@@ -251,12 +258,12 @@ public class SqlBrowserFXApp extends Application {
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
 		primaryScene.setRoot(vbox);
 		primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> {
-			SplitPane.setResizableWithParent(dockNode, Boolean.TRUE);
+			SplitPane.setResizableWithParent(ddbTreeView.asDockNode(), Boolean.TRUE);
 			for (SplitPane split : dockPane.getSplitPanes()) {
 			    double[] positions = split.getDividerPositions(); // reccord the current ratio
 			    Platform.runLater(() -> split.setDividerPositions(positions)); // apply the now former ratio
 			}
-			SplitPane.setResizableWithParent(dockNode, Boolean.FALSE);
+			SplitPane.setResizableWithParent(ddbTreeView.asDockNode(), Boolean.FALSE);
 		});
 	}
 
@@ -266,8 +273,11 @@ public class SqlBrowserFXApp extends Application {
 		sqlPaneViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				DSqlPane newSqlPane = new DSqlPane(sqlConnector);
+				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + AppManager.getActiveSqlPanes().size());
 				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT, mainSqlPane.asDockNode());
-
+//FIXME null pointer wxception occures
+				//				newSqlPane.getSqlConsoleBox().addListener(ddbTreeView);
+				AppManager.addSqlPane(newSqlPane);
 			});
 		});
 		MenuItem sqlConsoleViewItem = new MenuItem("Open Console View", JavaFXUtils.icon("/res/console.png"));
@@ -316,8 +326,23 @@ public class SqlBrowserFXApp extends Application {
 
 		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
 
+		Menu menu3 = new Menu("Configuration", JavaFXUtils.icon("res/settings.png"));
+		MenuItem OpenConfigMenuItem = new MenuItem("Configure");
+		OpenConfigMenuItem.setOnAction(action -> {
+			DBTreeView treeView2 = new DBTreeView(INTERNAL_DB, AppManager.getConfigSqlConnector());
+			SplitPane configPane = new SplitPane(treeView2, new SqlPane(AppManager.getConfigSqlConnector()));
+			configPane.setDividerPositions(new double[] {0.3, 0.7});
+			SplitPane.setResizableWithParent(treeView2, Boolean.FALSE);
+			Scene scene = new Scene(configPane, 800, 600);
+			scene.getStylesheets().addAll(primaryScene.getStylesheets());
+			Stage newStage = new Stage();
+			newStage.setScene(scene);
+			newStage.show();
+		});
+		menu3.getItems().add(OpenConfigMenuItem);
+		
 		MenuBar menuBar = new MenuBar();
-		menuBar.getMenus().addAll(menu1, menu2);
+		menuBar.getMenus().addAll(menu1, menu2, new QueriesMenu(), menu3);
 
 		return menuBar;
 	}
