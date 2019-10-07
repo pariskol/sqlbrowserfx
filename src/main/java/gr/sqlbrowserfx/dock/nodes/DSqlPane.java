@@ -20,6 +20,7 @@ import gr.sqlbrowserfx.sqlPane.SqlPane;
 import gr.sqlbrowserfx.sqlPane.SqlTableTab;
 import gr.sqlbrowserfx.sqlTableView.EditBox;
 import gr.sqlbrowserfx.sqlTableView.SqlTableRow;
+import gr.sqlbrowserfx.utils.AppManager;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -41,7 +42,6 @@ import javafx.scene.layout.VBox;
 public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<String>, SimpleObservable<String> {
 
 	private Button chartButton;
-	private Button sqlConsoleButton;
 	private Button logButton;
 	private ComboBox<String> columnsBox;
 	private ComboBox<String> nameColumnsBox;
@@ -123,6 +123,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 		});
 
 		thisDockNode.setOnClose(() ->{
+			AppManager.removeSqlPane(this);
 //			it does not work as expected
 //			if (sqlConsoleBox != null)
 //				sqlConsoleBox.asDockNode().close();
@@ -231,9 +232,9 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 			this.getPopOver().show(lineChartButton);
 		});
 
-		sqlConsoleButton = new Button("", JavaFXUtils.icon("/res/console.png"));
-		sqlConsoleButton.setOnMouseClicked(mouseEvent -> this.sqlConsoleButtonAction());
-		sqlConsoleButton.setOnAction(mouseEvent -> this.sqlConsoleButtonAction());
+//		sqlConsoleButton = new Button("", JavaFXUtils.icon("/res/console.png"));
+//		sqlConsoleButton.setOnMouseClicked(mouseEvent -> this.sqlConsoleButtonAction());
+//		sqlConsoleButton.setOnAction(mouseEvent -> this.sqlConsoleButtonAction());
 
 		logButton = new Button("", JavaFXUtils.icon("/res/monitor.png"));
 		logButton.setOnAction(actionEvent -> {
@@ -251,7 +252,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 				dLogListView.dock(thisDockNode.getDockPane(), DockPos.BOTTOM, new double[] {0.7f,0.3f});
 
 		});
-		flowPane.getChildren().addAll(chartButton, lineChartButton, sqlConsoleButton, logButton);
+		flowPane.getChildren().addAll(chartButton, lineChartButton, logButton);
 		return flowPane;
 	}
 	
@@ -353,32 +354,16 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 		});
 	}
 
-	public void sqlConsoleButtonAction() {
+	@Override
+	protected void sqlConsoleButtonAction() {
 		if (sqlConsoleBox == null) {
 			sqlConsoleBox = new DSqlConsoleBox(this.sqlConnector, this);
-//			if (fullModeCheckBox.isSelected() && fullModeSplitPane != null) {
-//				fullModeSplitPane.getItems().clear();
-//				SplitPane splitPane = new SplitPane(tabPane, sqlConsoleBox.asDockNode());
-//
-//				sqlConsoleBox.asDockNode().setOnClose(() -> {
-//					splitPane.getItems().remove(sqlConsoleBox.asDockNode());
-//					sqlConsoleBox = null;
-//				});
-//				sqlConsoleBox.asDockNode().getDockTitleBar().setDragAllowed(false);
-//				// set opposite orientation on purpose
-//				if (fullModeCheckBox.getText().contains("horizontal"))
-//					splitPane.setOrientation(Orientation.VERTICAL);
-//				else
-//					splitPane.setOrientation(Orientation.HORIZONTAL);
-//				fullModeSplitPane.getItems().addAll(sqlTableView, splitPane);
-//				fullModeSplitPane.setDividerPositions(0.7, 0.3);
-//			} else {
 				sqlConsoleBox.asDockNode().setOnClose(() -> sqlConsoleBox = null);
 				sqlConsoleBox.asDockNode().setMaxHeight(1080);
 				sqlConsoleBox.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, thisDockNode, new double[] {0.7f,0.3f});
-//			}
 		}
 	}
+	
 	@Override
 	protected void tableComboBoxAction(ComboBox<String> comboBox) {
 		super.tableComboBoxAction(comboBox);

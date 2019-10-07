@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.dock.nodes.DSqlConsoleBox;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.sqlTableView.EditBox;
 import gr.sqlbrowserfx.sqlTableView.SqlTableRow;
@@ -40,6 +41,7 @@ import javafx.event.ActionEvent;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -65,6 +67,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 
 public class SqlPane extends BorderPane {
 
@@ -79,6 +82,7 @@ public class SqlPane extends BorderPane {
 	protected Button refreshButton;
 	protected Button tableSelectButton;
 	protected Button columnsFilterButton;
+	protected Button sqlConsoleButton;
 	protected TextField searchField;
 	protected CheckBox resizeModeCheckBox;
 	protected CheckBox fullModeCheckBox;
@@ -181,6 +185,17 @@ public class SqlPane extends BorderPane {
         dragingSupport.addSupport(this);
 	}
 
+	public void createTableViewWithData(String table) {
+		if (sqlQueryRunning.get()) {
+			return;
+		} else {
+			tablesTabPane.getSelectionModel().select(addTableTab);
+			this.createSqlTableView();
+			this.setInProgress();
+			sqlConnector.executeAsync(() -> this.getData(table));
+		}
+	}
+	
 	private void createSqlTableView() {
 		if (tablesTabPane.getSelectionModel().getSelectedItem() == addTableTab) {
 			sqlTableViewRef = new SqlTableView();
@@ -319,6 +334,11 @@ public class SqlPane extends BorderPane {
 			// TODO
 		});
 
+		sqlConsoleButton = new Button("", JavaFXUtils.icon("/res/console.png"));
+		sqlConsoleButton.setOnMouseClicked(mouseEvent -> this.sqlConsoleButtonAction());
+		//FIXME maybe uncomment this
+//		sqlConsoleButton.setOnAction(mouseEvent -> this.sqlConsoleButtonAction());
+		
 		if (sqlConnector != null) {
 			refreshButton = new Button("", JavaFXUtils.icon("/res/refresh.png"));
 			tableSelectButton = new Button("", JavaFXUtils.icon("/res/database.png"));
@@ -331,7 +351,7 @@ public class SqlPane extends BorderPane {
 
 			return new FlowPane(searchButton, settingsButton, columnsSettingsButton,
 					/* columnsFilterButton, */tableSelectButton, refreshButton, addButton, editButton, deleteButton,
-					importCsvButton, exportCsvButton);
+					importCsvButton, exportCsvButton, sqlConsoleButton);
 		} else {
 			return new FlowPane(searchButton, settingsButton);
 		}
@@ -419,9 +439,12 @@ public class SqlPane extends BorderPane {
 
 		MenuItem menuItemCompare = new MenuItem("Compare", JavaFXUtils.icon("/res/compare.png"));
 		menuItemCompare.setOnAction(actionEvent -> compareAction(simulateClickEvent(contextMenu)));
-
+	
+		MenuItem menuItemRefreshView = new MenuItem("Refresh View", JavaFXUtils.icon("/res/refresh.png"));
+		menuItemRefreshView.setOnAction(actionEvent -> this.refreshButtonAction());
+		
 		contextMenu.getItems().addAll(menuItemEdit, menuItemCellEdit, menuItemCopyCell, menuItemCopy, menuItemCompare,
-				menuItemDelete);
+				menuItemDelete, menuItemRefreshView);
 
 		return contextMenu;
 	}
@@ -699,6 +722,14 @@ public class SqlPane extends BorderPane {
 		});
 	}
 
+	protected void sqlConsoleButtonAction() {
+		Scene scene = new Scene(new DSqlConsoleBox(sqlConnector, this).asDockNode(), 400, 300);
+		scene.getStylesheets().addAll(this.getScene().getStylesheets());
+		Stage newStage = new Stage();
+		newStage.setScene(scene);
+		newStage.show();
+	}
+	
 	protected void addButtonAction() {
 		if (addButton.isFocused() && popOver.isShowing())
 			return;

@@ -39,7 +39,7 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 	
 	private SqlConnector sqlConnector;
 	protected AtomicBoolean sqlQueryRunning;
-	List<SimpleChangeListener<String>> listeners;
+	protected List<SimpleChangeListener<String>> listeners;
 
 	@SuppressWarnings("unchecked")
 	public SqlConsoleBox(SqlConnector sqlConnector) {
