@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.sqlTableView;
+package gr.sqlbrowserfx.nodes.sqlTableView;
 
 import javafx.geometry.Pos;
 import javafx.scene.control.TableCell;

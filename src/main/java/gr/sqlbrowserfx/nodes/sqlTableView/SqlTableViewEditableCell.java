@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.sqlTableView;
+package gr.sqlbrowserfx.nodes.sqlTableView;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import javafx.application.Platform;
@@ -8,19 +8,18 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
 
-public class SqlTableViewEditCell extends TableCell<SqlTableRow, Object> {
+public class SqlTableViewEditableCell extends TableCell<SqlTableRow, Object> {
 
 	SqlTableView parentTableView;
 	SqlConnector sqlConnector;
 	
-	public SqlTableViewEditCell() {
+	public SqlTableViewEditableCell() {
 		super();
 		this.setAlignment(Pos.CENTER);
 	}
 
-	public SqlTableViewEditCell(SqlTableView parentTableView) {
+	public SqlTableViewEditableCell(SqlTableView parentTableView) {
 		this();
 		this.parentTableView = parentTableView;
 		this.setOnMouseClicked(mouseEvent -> {
@@ -31,7 +30,7 @@ public class SqlTableViewEditCell extends TableCell<SqlTableRow, Object> {
 		});
 	}
 	
-	public SqlTableViewEditCell(SqlTableView parentTable, SqlConnector sqlConnector) {
+	public SqlTableViewEditableCell(SqlTableView parentTable, SqlConnector sqlConnector) {
 		this(parentTable);
 		this.sqlConnector = sqlConnector;
 	}
@@ -78,13 +77,6 @@ public class SqlTableViewEditCell extends TableCell<SqlTableRow, Object> {
 			if (parentTableView.updateSelectedRow() == 0) {
 				parentTableView.getSelectionModel().getSelectedItem().set(column, oldValue);
 			}
-//			if (parentTableView.updateSelectedRow() == 1) {
-//				this.updateItem(newValue, false);
-//			}
-//			else {
-//				parentTableView.getSelectionModel().getSelectedItem().set(column, oldValue);
-//				this.updateItem(oldValue, false);
-//			}
 		}
 	}
 	
@@ -95,7 +87,7 @@ public class SqlTableViewEditCell extends TableCell<SqlTableRow, Object> {
 	}
 
 	protected TextField createTextField() {
-		TextField textField = new TextField(getText());
+		SqlTableViewCellEditField textField = new SqlTableViewCellEditField(getText(), this);
 		
 		if (sqlConnector != null)
 			textField.setEditable(true);
@@ -103,39 +95,6 @@ public class SqlTableViewEditCell extends TableCell<SqlTableRow, Object> {
 			textField.setEditable(false);
 		
 		textField.setAlignment(Pos.CENTER);
-		textField.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				commitEdit(textField.getText());
-			} else if (keyEvent.getCode() == KeyCode.ESCAPE) {
-				cancelEdit();
-			} else if (keyEvent.isShiftDown() || keyEvent.isControlDown()) {
-				if (keyEvent.getCode() == KeyCode.A) {
-					textField.selectAll();
-				}
-				else if (keyEvent.getCode() == KeyCode.C && keyEvent.isControlDown()) {
-					textField.copy();
-				}
-				else if (keyEvent.getCode() == KeyCode.V && keyEvent.isControlDown()) {
-					textField.paste();
-				}
-				else if (keyEvent.getCode() == KeyCode.X && keyEvent.isControlDown()) {
-					textField.cut();
-				}
-				else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isControlDown()) {
-					textField.undo();
-				}
-				else if (keyEvent.getCode() == KeyCode.C  && keyEvent.isShiftDown() && keyEvent.isControlDown()) {
-					textField.redo();
-				}
-				keyEvent.consume();
-			}
-		});
-//		textField.focusedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
-//			if (!newValue && textField != null) {
-//				commitEdit(textField.getText());
-//			}
-//		});
-		
 		return textField;
 	}
 

@@ -7,8 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.LoggerFactory;
 
-import gr.sqlbrowserfx.sqlTableView.SqlTableRow;
-import gr.sqlbrowserfx.sqlTableView.SqlTableView;
+import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
+import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;

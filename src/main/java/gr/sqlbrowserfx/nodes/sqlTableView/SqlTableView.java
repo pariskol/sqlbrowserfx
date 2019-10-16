@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.sqlTableView;
+package gr.sqlbrowserfx.nodes.sqlTableView;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -136,7 +136,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 				return param.getValue().getObjectProperty(column);
 			});
 			col.setCellFactory(callback -> {
-				return new SqlTableViewEditCell(this, sqlConnector);
+				return new SqlTableViewEditableCell(this, sqlConnector);
 			});
 //			col.setGraphic(JavaFXUtils.createImageView("res/mini-filter.png"));
 //			col.getGraphic().setOnMouseClicked(mouseEvent -> {
@@ -210,7 +210,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 					return param.getValue().getObjectProperty(column);
 				});
 				col.setCellFactory(callback -> {
-					return new SqlTableViewEditCell(this, sqlConnector);
+					return new SqlTableViewEditableCell(this, sqlConnector);
 				});
 				this.getColumns().add(col);
 			}

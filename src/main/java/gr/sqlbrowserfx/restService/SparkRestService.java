@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.rest.service;
+package gr.sqlbrowserfx.restService;
 
 import java.util.ArrayList;
 import java.util.HashMap;

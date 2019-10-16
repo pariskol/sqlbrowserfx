@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.utils;
+package gr.sqlbrowserfx.nodes.sqlCodeArea;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -10,9 +10,10 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 
-public class SyntaxUtils {
+public class CodeAreaSyntax {
 
 	private static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 	
@@ -59,7 +60,7 @@ public class SyntaxUtils {
 	private static String[] getAutocomplteWords(String category) {
 		List<String> list = new ArrayList<>();
 		try {
-			AppManager.getConfigSqlConnector().executeQuery("select name from autocomplete where category= ?", Arrays.asList(new String[]{category}), rset -> {
+			SqlBrowserFXAppManager.getConfigSqlConnector().executeQuery("select name from autocomplete where category= ?", Arrays.asList(new String[]{category}), rset -> {
 				try {
 					HashMap<String, Object> dto = DTOMapper.map(rset);
 					list.add((String)dto.get("name"));

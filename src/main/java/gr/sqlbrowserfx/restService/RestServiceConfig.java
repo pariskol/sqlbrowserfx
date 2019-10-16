@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.rest.service;
+package gr.sqlbrowserfx.restService;
 
 public class RestServiceConfig {
 

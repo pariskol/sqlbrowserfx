@@ -2,11 +2,11 @@ package gr.sqlbrowserfx.dock.nodes;
 
 import org.dockfx.DockNode;
 
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.nodes.DBTreeView;
-import gr.sqlbrowserfx.sqlPane.SqlPane;
-import gr.sqlbrowserfx.utils.AppManager;
+import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
@@ -23,7 +23,7 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 		this.setOnContextMenuRequested(menuRequestedEvent -> {
 			openInSqlPaneMenu.getItems().clear();
 			int i = 1;
-			for (SqlPane sqlPane : AppManager.getActiveSqlPanes()) {
+			for (SqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
 				MenuItem item = new MenuItem("SqlPane " + i++);
 				item.setOnAction(action2 -> {
 					sqlPane.createTableViewWithData(this.getSelectionModel().getSelectedItem().getValue());
@@ -46,7 +46,7 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 		openInSqlPaneMenu.setOnMenuValidation(action -> {
 			openInSqlPaneMenu.getItems().clear();
 			int i = 1;
-			for (SqlPane sqlPane : AppManager.getActiveSqlPanes()) {
+			for (SqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
 				MenuItem item = new MenuItem("Data explorer " + i++);
 				item.setOnAction(action2 -> {
 					sqlPane.createTableViewWithData(this.getSelectionModel().getSelectedItem().getValue());

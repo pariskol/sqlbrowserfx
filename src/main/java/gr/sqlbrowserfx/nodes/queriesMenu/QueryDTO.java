@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.nodes;
+package gr.sqlbrowserfx.nodes.queriesMenu;
 
 import gr.sqlbrowserfx.utils.mapper.Column;
 import gr.sqlbrowserfx.utils.mapper.DTO;

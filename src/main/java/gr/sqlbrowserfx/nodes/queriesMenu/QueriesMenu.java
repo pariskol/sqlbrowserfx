@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.nodes;
+package gr.sqlbrowserfx.nodes.queriesMenu;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -7,8 +7,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.utils.AppManager;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.scene.control.Menu;
@@ -33,7 +33,7 @@ public class QueriesMenu extends Menu{
 	private void loadQueries() {
 		this.getItems().removeAll(menuItemsMap.values());
 		try {
-			SqlConnector sqlConnector = AppManager.getConfigSqlConnector();
+			SqlConnector sqlConnector = SqlBrowserFXAppManager.getConfigSqlConnector();
 			sqlConnector.executeQuery("select distinct category from saved_queries", rset -> {
 				String category = rset.getString(1); 
 				Menu categorySubMenu =  new Menu(category);

@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.sqlTableView;
+package gr.sqlbrowserfx.nodes.sqlTableView;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

@@ -1,6 +1,6 @@
-package gr.sqlbrowserfx.sqlPane;
+package gr.sqlbrowserfx.nodes.sqlPane;
 
-import gr.sqlbrowserfx.sqlTableView.SqlTableView;
+import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.beans.property.StringProperty;
 import javafx.scene.Node;

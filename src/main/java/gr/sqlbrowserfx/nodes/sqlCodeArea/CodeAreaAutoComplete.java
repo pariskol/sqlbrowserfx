@@ -1,11 +1,11 @@
-package gr.sqlbrowserfx.utils;
+package gr.sqlbrowserfx.nodes.sqlCodeArea;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.fxmisc.richtext.CodeArea;
 
-public class AutoComplete {
+public class CodeAreaAutoComplete {
 
     private static final int WORD_LENGTH_LIMIT = 45;
 
@@ -19,7 +19,7 @@ public class AutoComplete {
     }
 
     public static List<String> getQuerySuggestions(String query) {
-        List<String> suggestions = SyntaxUtils.KEYWORDS_lIST.parallelStream()
+        List<String> suggestions = CodeAreaSyntax.KEYWORDS_lIST.parallelStream()
         							.filter(keyword -> keyword.startsWith(query)).collect(Collectors.toList());
 //        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
         return suggestions;

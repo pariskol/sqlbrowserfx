@@ -10,17 +10,17 @@ import org.dockfx.DockNode;
 import org.dockfx.DockPos;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleChangeListener;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.nodes.LineChartBox;
-import gr.sqlbrowserfx.sqlPane.SqlPane;
-import gr.sqlbrowserfx.sqlPane.SqlTableTab;
-import gr.sqlbrowserfx.sqlTableView.EditBox;
-import gr.sqlbrowserfx.sqlTableView.SqlTableRow;
-import gr.sqlbrowserfx.utils.AppManager;
+import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
+import gr.sqlbrowserfx.nodes.sqlPane.SqlTableRowEditBox;
+import gr.sqlbrowserfx.nodes.sqlPane.SqlTableTab;
+import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -123,7 +123,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 		});
 
 		thisDockNode.setOnClose(() ->{
-			AppManager.removeSqlPane(this);
+			SqlBrowserFXAppManager.removeSqlPane(this);
 //			it does not work as expected
 //			if (sqlConsoleBox != null)
 //				sqlConsoleBox.asDockNode().close();
@@ -331,7 +331,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	}
 
 	@Override
-	public void updateRecord(EditBox editBox, SqlTableRow sqlTableRow) {
+	public void updateRecord(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) {
 		super.updateRecord(editBox, sqlTableRow);
 		this.changed();
 		Platform.runLater(() -> {
@@ -343,7 +343,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	}
 
 	@Override
-	public void insertRecord(EditBox editBox) {
+	public void insertRecord(SqlTableRowEditBox editBox) {
 		super.insertRecord(editBox);
 		this.changed();
 		Platform.runLater(() -> {

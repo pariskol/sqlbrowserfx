@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.sqlTableView;
+package gr.sqlbrowserfx.nodes.sqlPane;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -11,6 +11,8 @@ import org.controlsfx.control.PopOver;
 
 import gr.sqlbrowserfx.listeners.CloseAction;
 import gr.sqlbrowserfx.listeners.SimpleChangeListener;
+import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
+import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
@@ -28,7 +30,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public class EditBox extends BorderPane implements SimpleChangeListener<SqlTableRow> {
+public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListener<SqlTableRow> {
 
 	private HashMap<String, TextField> fieldsMap;
 	private List<String> columns;
@@ -38,7 +40,7 @@ public class EditBox extends BorderPane implements SimpleChangeListener<SqlTable
 	private FlowPane toolbar;
 	private ScrollPane scrollPane;
 
-	public EditBox(SqlTableView sqlTableView, SqlTableRow sqlTableRow, boolean resizeable) {
+	public SqlTableRowEditBox(SqlTableView sqlTableView, SqlTableRow sqlTableRow, boolean resizeable) {
 		centerBox = new VBox();
 		fieldsMap = new HashMap<>();
 		columns = sqlTableView.getColumnsNames();
@@ -109,7 +111,7 @@ public class EditBox extends BorderPane implements SimpleChangeListener<SqlTable
 		}
 	}
 
-	public EditBox() {
+	public SqlTableRowEditBox() {
 		
 	}
 	public List<TextField> getTextFields() {

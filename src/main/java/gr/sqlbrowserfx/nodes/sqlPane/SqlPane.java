@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.sqlPane;
+package gr.sqlbrowserfx.nodes.sqlPane;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -30,9 +30,8 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsoleBox;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.sqlTableView.EditBox;
-import gr.sqlbrowserfx.sqlTableView.SqlTableRow;
-import gr.sqlbrowserfx.sqlTableView.SqlTableView;
+import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
+import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -100,7 +99,7 @@ public class SqlPane extends BorderPane {
 	private Tab addRecordTab;
 	private Tab addTableTab;
 	private Label rowsCountLabel;
-	Timer searchTimer;
+	private Timer searchTimer;
 
 	protected TabPane tablesTabPane;
 
@@ -154,15 +153,8 @@ public class SqlPane extends BorderPane {
 			else
 				sqlTableViewRef.autoResizedColumns(false);
 		});
-		// fullModeCheckBox = new CheckBox("Full mode : horizontal");
 		fullModeCheckBox = new CheckBox("Full mode");
 		fullModeCheckBox.setOnMouseClicked(moueEvent -> {
-			// if (moueEvent.getClickCount() == 2) {
-			// if (fullModeCheckBox.getText().contains("horizontal"))
-			// fullModeCheckBox.setText("Full mode : vertical");
-			// else
-			// fullModeCheckBox.setText("Full mode : horizontal");
-			// }
 			if (isFullMode() && !((SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem()).getCustomText().equals(EMPTY)) {
 				this.enableFullMode();
 			} else {
@@ -172,9 +164,6 @@ public class SqlPane extends BorderPane {
 		});
 
 		limitModeCheckBox = new CheckBox("Set limit");
-//		limitModeCheckBox.setOnMouseClicked(mouseEvent -> {
-//			
-//		});
 		rowsCountLabel = new Label("0 rows");
 		
 		this.setLeft(toolBar);
@@ -450,22 +439,22 @@ public class SqlPane extends BorderPane {
 	}
 
 	@SuppressWarnings("unused")
-	private EditBox createEditBox(SqlTableRow sqlTableRow) {
+	private SqlTableRowEditBox createEditBox(SqlTableRow sqlTableRow) {
 		return isFullMode() ? createEditBox(sqlTableRow, true) : createEditBox(sqlTableRow, false);
 	}
 
 	@SuppressWarnings("unused")
-	private EditBox createEditBox(SqlTableRow sqlTableRow, Orientation toolBarOrientation) {
+	private SqlTableRowEditBox createEditBox(SqlTableRow sqlTableRow, Orientation toolBarOrientation) {
 		return isFullMode() ? createEditBox(sqlTableRow, true, toolBarOrientation)
 				: createEditBox(sqlTableRow, false, toolBarOrientation);
 	}
 
-	private EditBox createEditBox(SqlTableRow sqlTableRow, boolean resizeable) {
+	private SqlTableRowEditBox createEditBox(SqlTableRow sqlTableRow, boolean resizeable) {
 		return createEditBox(sqlTableRow, resizeable, Orientation.HORIZONTAL);
 	}
 
-	private EditBox createEditBox(SqlTableRow sqlTableRow, boolean resizeable, Orientation toolBarOrientation) {
-		EditBox editBox = new EditBox(sqlTableViewRef, sqlTableRow, resizeable);
+	private SqlTableRowEditBox createEditBox(SqlTableRow sqlTableRow, boolean resizeable, Orientation toolBarOrientation) {
+		SqlTableRowEditBox editBox = new SqlTableRowEditBox(sqlTableViewRef, sqlTableRow, resizeable);
 
 		Button copyButton = new Button("", JavaFXUtils.icon("/res/copy.png"));
 		copyButton.setTooltip(new Tooltip("Copy"));
@@ -580,7 +569,7 @@ public class SqlPane extends BorderPane {
 		addRecordTab.setGraphic(JavaFXUtils.icon("/res/add.png"));
 		addRecordTab.setClosable(false);
 
-		EditBox editBox = createEditBox(null, true);
+		SqlTableRowEditBox editBox = createEditBox(null, true);
 
 		Button addBtn = new Button("Add", JavaFXUtils.icon("/res/check.png"));
 		addBtn.setTooltip(new Tooltip("Add"));
@@ -680,7 +669,7 @@ public class SqlPane extends BorderPane {
 			}
 		}
 
-		EditBox editBox = this.createEditBox(sqlTableRow, true);
+		SqlTableRowEditBox editBox = this.createEditBox(sqlTableRow, true);
 
 		sqlTableRow.addListener(editBox);
 
@@ -739,7 +728,7 @@ public class SqlPane extends BorderPane {
 		if (sqlTableViewRef.getColumns().size() == 0)
 			return;
 
-		EditBox editBox = this.createEditBox(null, false);
+		SqlTableRowEditBox editBox = this.createEditBox(null, false);
 
 		Button addBtn = new Button("Add", JavaFXUtils.icon("/res/check.png"));
 		addBtn.setTooltip(new Tooltip("Add"));
@@ -776,7 +765,7 @@ public class SqlPane extends BorderPane {
 		if (sqlTableRow == null)
 			return;
 
-		EditBox editBox = this.createEditBox(sqlTableRow, false);
+		SqlTableRowEditBox editBox = this.createEditBox(sqlTableRow, false);
 		sqlTableRow.addListener(editBox);
 
 		popOver = new PopOver(editBox);
@@ -846,7 +835,7 @@ public class SqlPane extends BorderPane {
 				// compareRowBox.prefWidthProperty().bind(compareBox.widthProperty());
 				compareBox.getChildren().add(compareRowBox);
 			}
-			EditBox editBox = createEditBox(row, true);
+			SqlTableRowEditBox editBox = createEditBox(row, true);
 
 			row.addListener(editBox);
 			Button editButton = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
@@ -871,7 +860,7 @@ public class SqlPane extends BorderPane {
 				for (Node node : compareBox.getChildren()) {
 					HBox hbox = (HBox) node;
 					for (Node editBox : hbox.getChildren())
-						((EditBox) editBox).close();
+						((SqlTableRowEditBox) editBox).close();
 				}
 			});
 			recordsTabPaneRef.getTabs().add(compareTab);
@@ -884,7 +873,7 @@ public class SqlPane extends BorderPane {
 				for (Node node : compareBox.getChildren()) {
 					HBox hbox = (HBox) node;
 					for (Node editBox : hbox.getChildren())
-						((EditBox) editBox).close();
+						((SqlTableRowEditBox) editBox).close();
 				}
 			});
 			popOver.show(editButton, mouseEvent.getScreenX(), mouseEvent.getScreenY());
@@ -1078,7 +1067,7 @@ public class SqlPane extends BorderPane {
 		clipboard.setContents(stringSelection, null);
 	}
 
-	protected void pasteAction(EditBox editBox) {
+	protected void pasteAction(SqlTableRowEditBox editBox) {
 		try {
 			String data = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
 
@@ -1123,7 +1112,7 @@ public class SqlPane extends BorderPane {
 		return 1;
 	}
 
-	public void insertRecord(EditBox editBox) {
+	public void insertRecord(SqlTableRowEditBox editBox) {
 		Set<String> columns = sqlTableViewRef.getSqlTable().getColumns();
 		List<Object> params = new ArrayList<>();
 		String notEmptyColumns = "";
@@ -1204,7 +1193,7 @@ public class SqlPane extends BorderPane {
 		sqlConnector.executeUpdate(query, params);
 	}
 
-	public void updateRecord(EditBox editBox, SqlTableRow sqlTableRow) {
+	public void updateRecord(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) {
 		Set<String> columns = sqlTableViewRef.getSqlTable().getColumns();
 		String query = "update " + sqlTableViewRef.getTableName() + " set ";
 		List<Object> params = new ArrayList<>();

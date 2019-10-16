@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.sqlPane;
+package gr.sqlbrowserfx.nodes.sqlPane;
 
 import java.util.concurrent.atomic.AtomicLong;
 

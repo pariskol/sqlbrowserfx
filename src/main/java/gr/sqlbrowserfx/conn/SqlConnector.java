@@ -27,14 +27,15 @@ public abstract class SqlConnector {
 	public String TYPE;
 
 	public SqlConnector() {
-		int processors = Runtime.getRuntime().availableProcessors() / 2;
-		if (processors < 2)
-			processors = 1;
-		else
-			processors = 2;
-
-		LoggerFactory.getLogger(getClass()).debug("Executor service threads = " + processors);
-		executorService = Executors.newFixedThreadPool(processors);
+//		int processors = Runtime.getRuntime().availableProcessors() / 2;
+//		if (processors < 2)
+//			processors = 1;
+//		else
+//			processors = 2;
+//
+//		LoggerFactory.getLogger(getClass()).debug("Executor service threads = " + processors);
+//		executorService = Executors.newFixedThreadPool(processors);
+		executorService = Executors.newCachedThreadPool();
 	}
 
 	abstract protected void initDatasource();

@@ -9,7 +9,7 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.SqlConsoleBox;
-import gr.sqlbrowserfx.sqlPane.SqlPane;
+import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 

@@ -1,13 +1,13 @@
-package gr.sqlbrowserfx.utils;
+package gr.sqlbrowserfx;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
-import gr.sqlbrowserfx.sqlPane.SqlPane;
+import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
 
-public class AppManager {
+public class SqlBrowserFXAppManager {
 
 	private static SqlConnector sqlConnector = new SqliteConnector("./sqlbrowser.db");
 	private static List<SqlPane> sqlPanesList = new ArrayList<>();

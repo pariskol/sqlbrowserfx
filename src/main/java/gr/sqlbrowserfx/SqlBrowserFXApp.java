@@ -25,14 +25,13 @@ import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
-import gr.sqlbrowserfx.nodes.QueriesMenu;
-import gr.sqlbrowserfx.rest.service.RestServiceConfig;
-import gr.sqlbrowserfx.rest.service.SparkRestService;
-import gr.sqlbrowserfx.sqlPane.DraggingTabPaneSupport;
-import gr.sqlbrowserfx.sqlPane.SqlPane;
-import gr.sqlbrowserfx.utils.AppManager;
+import gr.sqlbrowserfx.nodes.queriesMenu.QueriesMenu;
+import gr.sqlbrowserfx.nodes.sqlCodeArea.CodeAreaKeywords;
+import gr.sqlbrowserfx.nodes.sqlPane.DraggingTabPaneSupport;
+import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
+import gr.sqlbrowserfx.restService.RestServiceConfig;
+import gr.sqlbrowserfx.restService.SparkRestService;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import gr.sqlbrowserfx.utils.Keywords;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -84,7 +83,7 @@ public class SqlBrowserFXApp extends Application {
 	public static void main(String[] args) {
 		BasicConfigurator.configure();
 		DialogFactory.setDialogStyleSheet(CSS_THEME);
-		Keywords.onKeywordsBind();
+		CodeAreaKeywords.onKeywordsBind();
 		launch(args);
 	}
 
@@ -235,15 +234,15 @@ public class SqlBrowserFXApp extends Application {
 		dockPane.getStylesheets().add(CSS_THEME);
 
 		mainSqlPane = new DSqlPane(sqlConnector);
-		AppManager.addSqlPane(mainSqlPane);
-		mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + AppManager.getActiveSqlPanes().size());
+		SqlBrowserFXAppManager.addSqlPane(mainSqlPane);
+		mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, new double[] {0.8f});
 		mainSqlPane.asDockNode().setClosable(false);
 		mainSqlPane.showConsole();
 
 		ddbTreeView = new DDBTreeView(DB, sqlConnector);
-		Keywords.bind(ddbTreeView.getContentNames());
-		ddbTreeView.addListener(value -> Keywords.bind(ddbTreeView.getContentNames()));
+		CodeAreaKeywords.bind(ddbTreeView.getContentNames());
+		ddbTreeView.addListener(value -> CodeAreaKeywords.bind(ddbTreeView.getContentNames()));
 		mainSqlPane.getSqlConsoleBox().addListener(ddbTreeView);
 		ddbTreeView.asDockNode().dock(dockPane, DockPos.LEFT, new double[] {0.2f});
 		ddbTreeView.asDockNode().setClosable(false);
@@ -273,11 +272,11 @@ public class SqlBrowserFXApp extends Application {
 		sqlPaneViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				DSqlPane newSqlPane = new DSqlPane(sqlConnector);
-				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + AppManager.getActiveSqlPanes().size());
+				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT, mainSqlPane.asDockNode());
 //FIXME null pointer wxception occures
 				//				newSqlPane.getSqlConsoleBox().addListener(ddbTreeView);
-				AppManager.addSqlPane(newSqlPane);
+				SqlBrowserFXAppManager.addSqlPane(newSqlPane);
 			});
 		});
 		MenuItem sqlConsoleViewItem = new MenuItem("Open Console View", JavaFXUtils.icon("/res/console.png"));
@@ -329,8 +328,8 @@ public class SqlBrowserFXApp extends Application {
 		Menu menu3 = new Menu("Configuration", JavaFXUtils.icon("res/settings.png"));
 		MenuItem OpenConfigMenuItem = new MenuItem("Configure");
 		OpenConfigMenuItem.setOnAction(action -> {
-			DBTreeView treeView2 = new DBTreeView(INTERNAL_DB, AppManager.getConfigSqlConnector());
-			SplitPane configPane = new SplitPane(treeView2, new SqlPane(AppManager.getConfigSqlConnector()));
+			DBTreeView treeView2 = new DBTreeView(INTERNAL_DB, SqlBrowserFXAppManager.getConfigSqlConnector());
+			SplitPane configPane = new SplitPane(treeView2, new SqlPane(SqlBrowserFXAppManager.getConfigSqlConnector()));
 			configPane.setDividerPositions(new double[] {0.3, 0.7});
 			SplitPane.setResizableWithParent(treeView2, Boolean.FALSE);
 			Scene scene = new Scene(configPane, 800, 600);

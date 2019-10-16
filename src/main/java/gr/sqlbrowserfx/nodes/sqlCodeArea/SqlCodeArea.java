@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.nodes;
+package gr.sqlbrowserfx.nodes.sqlCodeArea;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -15,9 +15,7 @@ import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
 
-import gr.sqlbrowserfx.utils.AutoComplete;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import gr.sqlbrowserfx.utils.SyntaxUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Bounds;
@@ -205,7 +203,7 @@ public class SqlCodeArea extends CodeArea {
 				|| (event.isControlDown() && ch.equals(" "))
 				|| event.getCode() == KeyCode.BACK_SPACE) {
 			int position = this.getCaretPosition();
-			String query = AutoComplete.getQuery(this, position);
+			String query = CodeAreaAutoComplete.getQuery(this, position);
 			if (auoCompletePopup.get() == null) {
 				Popup popup = new Popup();
 				popup.setAutoHide(true);
@@ -214,7 +212,7 @@ public class SqlCodeArea extends CodeArea {
 			}
 
 			if (!query.trim().isEmpty()) {
-				ListView<String> suggestionsList = this.createListView(AutoComplete.getQuerySuggestions(query));
+				ListView<String> suggestionsList = this.createListView(CodeAreaAutoComplete.getQuerySuggestions(query));
 				if (suggestionsList.getItems().size() != 0) {
 					auoCompletePopup.get().getContent().setAll(suggestionsList);
 					Bounds pointer = this.caretBoundsProperty().getValue().get();
@@ -257,7 +255,7 @@ public class SqlCodeArea extends CodeArea {
 	}
 
 	private static StyleSpans<Collection<String>> computeHighlighting(String text) {
-		Matcher matcher = SyntaxUtils.PATTERN.matcher(text);
+		Matcher matcher = CodeAreaSyntax.PATTERN.matcher(text);
 		int lastKwEnd = 0;
 		StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
 		while (matcher.find()) {
