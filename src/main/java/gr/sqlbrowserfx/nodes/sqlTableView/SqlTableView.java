@@ -5,16 +5,19 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
-import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.sqlPane.SqlTableRowEditBox;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -24,26 +27,27 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 
 public class SqlTableView extends TableView<SqlTableRow> {
 
 	protected ObservableList<SqlTableRow> rows;
-//	String tableName;
 	protected SimpleStringProperty titleProperty;
 	protected SqlTable sqlTable;
 	protected List<String> columns;
 	protected SqlConnector sqlConnector;
 	double minWidth, prefWidth, maxWidth;
-//	String primaryKey;
 	protected boolean autoResize;
-	int i = 0;
+	int currentColumnPos = 0;
 	private TableCell<SqlTableRow, Object> selectedCell;
 	protected boolean filledByQuery = false;
 	protected boolean areCellsEditableByClick;
 
 	protected final static int NOT_SET = 0;
-	
+
+	private Logger logger = LoggerFactory.getLogger("SQLBROWSER");
+
 	public SqlTableView() {
 
 		rows = FXCollections.observableArrayList();
@@ -56,18 +60,17 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
 				if (keyEvent.getCode() == KeyCode.LEFT) {
-					if (i < getColumns().size() - 1)
-						this.scrollToColumn(getColumns().get(i++));;
+					if (currentColumnPos < getColumns().size() - 1)
+						this.scrollToColumn(getColumns().get(currentColumnPos++));;
 				}
 				if (keyEvent.getCode() == KeyCode.RIGHT) {
-					if (i > 0)
-						this.scrollToColumn(getColumns().get(i--));;
+					if (currentColumnPos > 0)
+						this.scrollToColumn(getColumns().get(currentColumnPos--));;
 				}
 			}
 		});
 		
 		titleProperty = new SimpleStringProperty("empty");
-//		this.setEditable(true);
 	}
 
 	public SqlTableView(ResultSet rs) throws SQLException {
@@ -160,7 +163,6 @@ public class SqlTableView extends TableView<SqlTableRow> {
 
 		this.filledByQuery = true;
 		rows.clear();
-//		super.setItems(FXCollections.emptyObservableList());
 
 		HashSet<String> tablesSet = new HashSet<>();
 		ResultSetMetaData rsmd = rs.getMetaData();
@@ -183,16 +185,13 @@ public class SqlTableView extends TableView<SqlTableRow> {
 			List<String> foreignKeys = sqlConnector.findForeignKeys(sqlTable.getName());
 			sqlTable.setForeignKeys(foreignKeys);
 		} catch (SQLException e) {
-//			logger
+			logger.error(e.getMessage(), e);
 		}
 		
 		while (rs.next()) {
 			LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
 			for (String columnLabel : sqlTable.getColumns()) {
-//				if (tablesSet.size() > 1)
-//					entry.put(columnLabel + " (" + sqlTable.getName() + ")", rs.getObject(columnLabel));
-//				else
-					entry.put(columnLabel, rs.getObject(columnLabel));
+				entry.put(columnLabel, rs.getObject(columnLabel));
 			}
 
 			rows.add(new SqlTableRow(entry));
@@ -245,7 +244,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 	public void autoResizedColumns(boolean autoResize) {
 		this.autoResize = autoResize;
 		if (autoResize) {
-			this.setColumnWidth(0, 0, 0);
+			this.setColumnWidth(NOT_SET, NOT_SET, NOT_SET);
 			for (TableColumn<?, ?> column : this.getVisibleLeafColumns()) {
 				column.prefWidthProperty().bind(this.widthProperty().divide(this.getVisibleLeafColumns().size()));
 			}
@@ -293,21 +292,17 @@ public class SqlTableView extends TableView<SqlTableRow> {
 				String elm = null;
 				if (sqlTableRow.get(column) != null)
 					elm = sqlTableRow.get(column).toString();
-//				if (elm != null && !elm.getText().equals("")) {
 				// type checking
 				Object actualValue = null;
 				try {
 					if (elm != null && !elm.isEmpty())
 						actualValue = sqlConnector.castToDBType(this.getSqlTable(), column, elm);
-					// Class<?> clazz = sqlTableRow.get(label.getText()).getValue().getClass();
-					// actualValue = clazz.cast(actualValue);
 				} catch (Exception e) {
-					DialogFactory.createErrorDialog(e);
+					logger.error(e.getMessage(), e);
 					return 0;
 				}
 				params.add(actualValue);
 				query += column + "= ? ,";
-//				}
 			}
 		}
 		query = query.substring(0, query.length() - 1);
@@ -333,11 +328,178 @@ public class SqlTableView extends TableView<SqlTableRow> {
 			// notify listeners
 			sqlTableRow.changed();
 		} catch (Exception e) {
-			DialogFactory.createErrorDialog(e);
+			logger.error(e.getMessage(), e);
 			return 0;
 		}
 		
 		return 1;
+	}
+	
+	public int deleteRecord(SqlTableRow sqlTableRow) {
+		String query = "delete from " + this.getTableName() + " where ";
+		List<Object> params = new ArrayList<>();
+		Set<String> columns = this.getSqlTable().getColumns();
+		if (this.getPrimaryKey() != null) {
+			params.add(sqlTableRow.get(this.getPrimaryKey()));
+			query += this.getPrimaryKey() + "= ?";
+		} else {
+			for (String column : columns) {
+				params.add(sqlTableRow.get(column));
+				query += column + "= ? and ";
+			}
+			query = query.substring(0, query.length() - 5);
+		}
+
+		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
+		logger.debug(message);
+
+		try {
+			sqlConnector.executeUpdate(query, params);
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			return 0;
+		}
+
+		return 1;
+	}
+
+	public void insertRecord(SqlTableRowEditBox editBox) {
+		Set<String> columns = this.getSqlTable().getColumns();
+		List<Object> params = new ArrayList<>();
+		String notEmptyColumns = "";
+		String values = "";
+		Map<String, TextField> map = editBox.getMap();
+		Map<String, Object> entry = new HashMap<>();
+
+		for (String column : columns) {
+			Object elm = map.get(column).getText();
+			if (elm != null && !elm.toString().equals("")) {
+				notEmptyColumns += column + ", ";
+				Object actualValue = null;
+				try {
+					actualValue = sqlConnector.castToDBType(this.getSqlTable(), column,
+							editBox.getMap().get(column).getText());
+				} catch (NumberFormatException e) {
+					String message = "Value \"" + editBox.getMap().get(column).getText() + "\" is not valid for column "
+							+ column + ", expecting " + this.getSqlTable().getColumnsMap().get(column);
+					logger.error(message);
+					return;
+				} catch (Exception e) {
+					logger.error(e.getMessage(), e);
+					return;
+				}
+				params.add(actualValue);
+				entry.put(column, actualValue);
+				values += "?, ";
+			}
+		}
+		notEmptyColumns = notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length());
+		values = values.substring(0, values.length() - ", ".length());
+
+		String sqlQuery = "insert into " + this.getTableName() + "(" + notEmptyColumns + ")" + " values ("
+				+ values + ")";
+
+		String message = "Executing : " + sqlQuery + " [ values : " + params.toString() + " ]";
+		logger.debug(message);
+		final String query = sqlQuery;
+		try {
+			sqlConnector.executeUpdate(query, params);
+			this.getSqlTableRows().add(new SqlTableRow(entry));
+			this.sort(this);
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
+
+	public void insertRecord(Map<String, Object> map) throws SQLException {
+		Set<String> columns = this.getSqlTable().getColumns();
+		List<Object> params = new ArrayList<>();
+		String notEmptyColumns = "";
+		String values = "";
+
+		for (String column : columns) {
+			Object elm = map.get(column);
+			if (elm != null && !elm.toString().equals("")) {
+				notEmptyColumns += column + ", ";
+				params.add(map.get(column));
+				values += "?, ";
+			}
+		}
+		notEmptyColumns = notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length());
+		values = values.substring(0, values.length() - ", ".length());
+
+		String sqlQuery = "insert into " + this.getTableName() + "(" + notEmptyColumns + ")" + " values ("
+				+ values + ")";
+
+		String message = "Executing : " + sqlQuery + " [ values : " + params.toString() + " ]";
+		logger.debug(message);
+		final String query = sqlQuery;
+		sqlConnector.executeUpdate(query, params);
+	}
+
+	public void updateRecord(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) {
+		Set<String> columns = this.getSqlTable().getColumns();
+		String query = "update " + this.getTableName() + " set ";
+		List<Object> params = new ArrayList<>();
+
+		for (String column : columns) {
+			if (!column.equals(this.getPrimaryKey())) {
+				TextField elm = editBox.getMap().get(column);
+				Object actualValue = null;
+				if (elm != null && elm.getText() != null && !elm.getText().equals("")) {
+					// type checking
+					try {
+						actualValue = sqlConnector.castToDBType(this.getSqlTable(), column,
+								editBox.getMap().get(column).getText());
+						// Class<?> clazz = sqlTableRow.get(label.getText()).getValue().getClass();
+						// actualValue = clazz.cast(actualValue);
+					} catch (Exception e) {
+						logger.error(e.getMessage(), e);
+						return;
+					}
+				}
+				params.add(actualValue);
+				query += column + "= ? ,";
+			}
+		}
+		query = query.substring(0, query.length() - 1);
+		query += " where " + this.getPrimaryKey() + "= ?";
+		params.add(sqlTableRow.get(this.getPrimaryKey()));
+
+		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
+		logger.debug(message);
+
+		try {
+			sqlConnector.executeUpdate(query, params);
+
+			for (String column : columns) {
+				TextField elm = editBox.getMap().get(column);
+				Object actualValue = null;
+				if (elm != null && elm.getText() != null && !elm.getText().equals("")) {
+					actualValue = sqlConnector.castToDBType(this.getSqlTable(), column,
+							editBox.getMap().get(column).getText());
+				}
+				sqlTableRow.set(column, actualValue);
+
+			}
+			// notify listeners
+			sqlTableRow.changed();
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
+	
+	private void sort(SqlTableView sqlTableView) {
+		sqlTableView.getSqlTableRows().sort((o1, o2) -> {
+			if (o1.get(sqlTableView.getPrimaryKey()) != null && o2.get(sqlTableView.getPrimaryKey()) != null) {
+				if (o1.get(sqlTableView.getPrimaryKey()).toString()
+						.compareTo(o2.get(sqlTableView.getPrimaryKey()).toString()) > 0) {
+
+					return 1;
+				}
+			}
+			return 0;
+		});
 	}
 	
 	public ObservableList<SqlTableRow> getSqlTableRows() {

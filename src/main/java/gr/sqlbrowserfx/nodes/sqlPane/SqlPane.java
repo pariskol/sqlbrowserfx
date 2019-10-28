@@ -28,8 +28,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.dock.nodes.DSqlConsoleBox;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.SqlConsoleBox;
 import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
 import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -428,12 +428,9 @@ public class SqlPane extends BorderPane {
 
 		MenuItem menuItemCompare = new MenuItem("Compare", JavaFXUtils.icon("/res/compare.png"));
 		menuItemCompare.setOnAction(actionEvent -> compareAction(simulateClickEvent(contextMenu)));
-	
-		MenuItem menuItemRefreshView = new MenuItem("Refresh View", JavaFXUtils.icon("/res/refresh.png"));
-		menuItemRefreshView.setOnAction(actionEvent -> this.refreshButtonAction());
 		
 		contextMenu.getItems().addAll(menuItemEdit, menuItemCellEdit, menuItemCopyCell, menuItemCopy, menuItemCompare,
-				menuItemDelete, menuItemRefreshView);
+				menuItemDelete);
 
 		return contextMenu;
 	}
@@ -615,11 +612,21 @@ public class SqlPane extends BorderPane {
 			Platform.runLater(() -> sqlTableViewRef.setItems(sqlTableViewRef.getSqlTableRows()));
 			ObservableList<SqlTableRow> searchRows = FXCollections.observableArrayList();
 
+			String[] split = searchField.getText().split(":");
+			String columnRegex = split.length > 1 ? split[0] : null;
+			String regex = split.length > 1 ? split[1] : split[0];
+			
 			for (SqlTableRow row : sqlTableViewRef.getSqlTableRows()) {
 				for (TableColumn<SqlTableRow, ?> column : sqlTableViewRef.getVisibleLeafColumns()) {
 
-					if (row.get(column.getText()) != null) {
-						if (row.get(column.getText()).toString().matches("(?i:.*" + searchField.getText() + ".*)")) {
+					if (columnRegex != null && column.getText().equals(columnRegex) && row.get(column.getText()) != null) {
+						if (row.get(column.getText()).toString().matches("(?i:.*" + regex + ".*)")) {
+							searchRows.add(new SqlTableRow(row));
+							break;
+						}
+					}
+					else if (columnRegex == null && row.get(column.getText()) != null) {
+						if (row.get(column.getText()).toString().matches("(?i:.*" + regex + ".*)")) {
 							searchRows.add(new SqlTableRow(row));
 							break;
 						}
@@ -712,7 +719,7 @@ public class SqlPane extends BorderPane {
 	}
 
 	protected void sqlConsoleButtonAction() {
-		Scene scene = new Scene(new DSqlConsoleBox(sqlConnector, this).asDockNode(), 400, 300);
+		Scene scene = new Scene(new SqlConsoleBox(sqlConnector), 400, 300);
 		scene.getStylesheets().addAll(this.getScene().getStylesheets());
 		Stage newStage = new Stage();
 		newStage.setScene(scene);
@@ -1100,7 +1107,6 @@ public class SqlPane extends BorderPane {
 		logger.debug(message);
 		if (uiLogging)
 			Platform.runLater(() -> logListView.getItems().add(message));
-		;
 
 		try {
 			sqlConnector.executeUpdate(query, params);
@@ -1152,7 +1158,7 @@ public class SqlPane extends BorderPane {
 		logger.debug(message);
 		if (uiLogging)
 			Platform.runLater(() -> logListView.getItems().add(message));
-		;
+
 		final String query = sqlQuery;
 		try {
 			sqlConnector.executeUpdate(query, params);
@@ -1188,7 +1194,7 @@ public class SqlPane extends BorderPane {
 		logger.debug(message);
 		if (uiLogging)
 			Platform.runLater(() -> logListView.getItems().add(message));
-		;
+
 		final String query = sqlQuery;
 		sqlConnector.executeUpdate(query, params);
 	}

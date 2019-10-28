@@ -69,7 +69,7 @@ public class DialogFactory {
 			alert.getDialogPane().setExpandableContent(expContent);
 			if (stylesheet != null)
 				alert.getDialogPane().getStylesheets().add(stylesheet);
-			else
+			else if (DEFAULT_STYLESHEET != null)
 				alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
 			alert.showAndWait();
 		});
@@ -88,7 +88,7 @@ public class DialogFactory {
 		alert.setContentText(message);
 		if (stylesheet != null)
 			alert.getDialogPane().getStylesheets().add(stylesheet);
-		else
+		else if (DEFAULT_STYLESHEET != null)
 			alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
 		
 		Optional<ButtonType> res = alert.showAndWait();
@@ -113,7 +113,7 @@ public class DialogFactory {
 			alert.setContentText(message);
 			if (stylesheet != null)
 				alert.getDialogPane().getStylesheets().add(stylesheet);
-			else
+			else if (DEFAULT_STYLESHEET != null)
 				alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
 
 			LoggerFactory.getLogger(DialogFactory.class).info(message);
@@ -192,7 +192,7 @@ public class DialogFactory {
         Scene dialogScene = new Scene(dialogVbox, 400, 200);
         if (stylesheet != null)
         	dialogScene.getStylesheets().add(stylesheet);
-        else
+        else if (DEFAULT_STYLESHEET != null)
         	dialogScene.getStylesheets().add(DEFAULT_STYLESHEET);
         dialog.setScene(dialogScene);
         dialog.showAndWait();

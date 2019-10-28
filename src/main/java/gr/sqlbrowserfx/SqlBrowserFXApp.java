@@ -325,20 +325,12 @@ public class SqlBrowserFXApp extends Application {
 
 		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
 
-		Menu menu3 = new Menu("Configuration", JavaFXUtils.icon("res/settings.png"));
-		MenuItem OpenConfigMenuItem = new MenuItem("Configure");
-		OpenConfigMenuItem.setOnAction(action -> {
-			DBTreeView treeView2 = new DBTreeView(INTERNAL_DB, SqlBrowserFXAppManager.getConfigSqlConnector());
-			SplitPane configPane = new SplitPane(treeView2, new SqlPane(SqlBrowserFXAppManager.getConfigSqlConnector()));
-			configPane.setDividerPositions(new double[] {0.3, 0.7});
-			SplitPane.setResizableWithParent(treeView2, Boolean.FALSE);
-			Scene scene = new Scene(configPane, 800, 600);
-			scene.getStylesheets().addAll(primaryScene.getStylesheets());
-			Stage newStage = new Stage();
-			newStage.setScene(scene);
-			newStage.show();
+		Menu menu3 = new Menu();
+		menu3.setGraphic(new HBox(JavaFXUtils.icon("res/settings.png"), new Label("Configuration")));
+		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
+			DockNode dockNode = new DockNode(new SqlPane(SqlBrowserFXAppManager.getConfigSqlConnector()), "Internal DB");
+			dockNode.dock(dockPane, DockPos.BOTTOM, ddbTreeView.asDockNode());
 		});
-		menu3.getItems().add(OpenConfigMenuItem);
 		
 		MenuBar menuBar = new MenuBar();
 		menuBar.getMenus().addAll(menu1, menu2, new QueriesMenu(), menu3);

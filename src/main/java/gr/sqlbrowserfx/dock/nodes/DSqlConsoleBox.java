@@ -18,10 +18,10 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 	private DockNode thisDockNode;
 	private SqlPane sqlPane;
 
-	public DSqlConsoleBox(SqlConnector sqlConnector, SqlPane sqlPane) {
+	public DSqlConsoleBox(SqlConnector sqlConnector, DSqlPane sqlPane) {
 		super(sqlConnector);
 		this.sqlPane = sqlPane;
-		thisDockNode = new DockNode(this, "SqlConsole", JavaFXUtils.icon("/res/console.png"));
+		thisDockNode = new DockNode(this, sqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.icon("/res/console.png"));
 		this.getChildren().clear();
 		this.getChildren().addAll(queryTabPane, autoCompleteOnTypeCheckBox, executebutton);
 		queryTabPane.prefHeightProperty().bind(this.heightProperty());

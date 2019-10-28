@@ -13,6 +13,7 @@ import org.fxmisc.richtext.CodeArea;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.listeners.SimpleChangeListener;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
+import gr.sqlbrowserfx.nodes.sqlCodeArea.CSqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlCodeArea.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlPane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -35,7 +36,7 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 	private ProgressIndicator progressIndicator;
 	private Tab newConsoleTab;
 	protected Button executebutton;
-	private SqlCodeArea codeAreaRef;
+	private CSqlCodeArea codeAreaRef;
 	protected CheckBox autoCompleteOnTypeCheckBox;
 	
 	private SqlConnector sqlConnector;
@@ -109,12 +110,12 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 			this.createSqlConsoleBox();
 		}
 		else {
-			codeAreaRef = ((VirtualizedScrollPane<SqlCodeArea>) selectedTab.getContent()).getContent(); 
+			codeAreaRef = ((VirtualizedScrollPane<CSqlCodeArea>) selectedTab.getContent()).getContent(); 
 		}
 	}
 
 	private void createSqlConsoleBox() {
-		SqlCodeArea sqlCodeArea = new SqlCodeArea();
+		CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
 		sqlCodeArea.setEnterAction(() -> this.executeButonAction());
 
 		VirtualizedScrollPane<CodeArea> scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);

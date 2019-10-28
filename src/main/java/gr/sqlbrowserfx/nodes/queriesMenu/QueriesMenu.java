@@ -7,10 +7,15 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
+import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 
@@ -31,6 +36,7 @@ public class QueriesMenu extends Menu{
 	}
 	
 	private void loadQueries() {
+		Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 		this.getItems().removeAll(menuItemsMap.values());
 		try {
 			SqlConnector sqlConnector = SqlBrowserFXAppManager.getConfigSqlConnector();
@@ -43,7 +49,8 @@ public class QueriesMenu extends Menu{
 				sqlConnector.executeQuery("select * from saved_queries where category = ?", Arrays.asList(category), rset2 -> {
 					try {
 						QueryDTO qd = (QueryDTO) DTOMapper.map(rset2, QueryDTO.class);
-						MenuItem queryMenuItem = new MenuItem(qd.getDescription());
+						Menu queryMenuItem = new Menu();
+						queryMenuItem.setGraphic(new Label(qd.getDescription()));
 						queriesMap.put(qd.getDescription(), qd.getSql());
 						queryMenuItem.setOnAction(action -> {
 							StringSelection stringSelection = new StringSelection(queriesMap.get(qd.getDescription()));
@@ -51,14 +58,29 @@ public class QueriesMenu extends Menu{
 							clipboard.setContents(stringSelection, null);
 						});
 						categorySubMenu.getItems().add(queryMenuItem);
+						
+						queryMenuItem.getGraphic().setOnMouseEntered(mouseEvent -> {
+							queryMenuItem.getItems().clear();
+							for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
+								if (sqlPane.getSqlCodeAreaRef() != null) {
+									MenuItem sendToCodeArea = new MenuItem("Paste in " + sqlPane.asDockNode().getTitle());
+									sendToCodeArea.setOnAction(action2 -> {
+										sqlPane.getSqlCodeAreaRef().clear();
+										sqlPane.getSqlCodeAreaRef().appendText(queriesMap.get(qd.getDescription()));
+									});
+									queryMenuItem.getItems().add(sendToCodeArea);
+								}
+							}
+							queryMenuItem.show();
+						});
 					} catch (IllegalAccessException | InstantiationException e) {
-						e.printStackTrace();
+						logger.error(e.getMessage(), e);
 					}
 				});
 			});
 			
 		} catch (SQLException e) {
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
 		}
 	}
 }

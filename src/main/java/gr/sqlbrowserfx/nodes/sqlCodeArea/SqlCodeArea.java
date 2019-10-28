@@ -160,7 +160,7 @@ public class SqlCodeArea extends CodeArea {
 			this.replaceSelection(replaceField.getText());
 	}
 	
-	private ContextMenu createContextMenu() {
+	protected ContextMenu createContextMenu() {
 		ContextMenu menu = new ContextMenu();
 
 		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/res/copy.png"));
