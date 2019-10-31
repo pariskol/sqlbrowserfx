@@ -38,7 +38,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	TreeItem<String> tablesRootItem;
 	TreeItem<String> viewsRootItem;
 	TreeItem<String> indicesRootItem;
-	private List<String> allNames;
+	private List<String> allItems;
 	private List<SimpleChangeListener<String>> listeners;
 	
 	TextField searchField;
@@ -47,7 +47,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	public DBTreeView(String dbPath, SqlConnector sqlConnector) {
 		super();
 		this.sqlConnector = sqlConnector;
-		this.allNames = new ArrayList<>();
+		this.allItems = new ArrayList<>();
 		this.listeners = new ArrayList<>();
 
 		rootItem = new TreeItem<>(dbPath, JavaFXUtils.icon("/res/database.png"));
@@ -84,9 +84,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 					this.copyAction();
 					break;
 				case F:
-					PopOver popOver = new PopOver(searchField);
-					popOver.setArrowSize(0);
-					popOver.show(rootItem.getGraphic());
+					this.showSearch();
 					break;
 				default:
 					break;
@@ -95,15 +93,21 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		});
 	}
 
+	private void showSearch() {
+		PopOver popOver = new PopOver(searchField);
+		popOver.setArrowSize(0);
+		popOver.show(rootItem.getGraphic());
+	}
+
 	private void clearAll() {
 		tablesRootItem.getChildren().clear();
 		viewsRootItem.getChildren().clear();
 		indicesRootItem.getChildren().clear();
-		allNames.clear();
+		allItems.clear();
 	}
 	
 	private void fillTreeView() throws SQLException {
-		List<String> newNames = new ArrayList<>();
+		List<String> newItems = new ArrayList<>();
 		sqlConnector.getContents(rset -> {
 			try {
 				HashMap<String, Object> dto = DTOMapper.map(rset);
@@ -111,9 +115,9 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 				String name = (String) dto.get(sqlConnector.NAME);
 				String type = (String) dto.get(sqlConnector.TYPE);
 
-				newNames.add(name);
-				if (!allNames.contains(name)) {
-					allNames.add(name);
+				newItems.add(name);
+				if (!allItems.contains(name)) {
+					allItems.add(name);
 					TreeItem<String> treeItem = new TreeItem<String>(name);
 					if (type.contains("table") || type.contains("TABLE")) {
 						this.fillTableTreeItem(treeItem);
@@ -138,32 +142,31 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		List<String> sfound = new ArrayList<>();
 
 		tablesRootItem.getChildren().forEach(treeItem -> {
-			if (!newNames.contains(treeItem.getValue())) {
+			if (!newItems.contains(treeItem.getValue())) {
 				found.add(treeItem);
 				sfound.add(treeItem.getValue());
 			}
 		});
 		tablesRootItem.getChildren().removeAll(found);
-		allNames.removeAll(sfound);
+		allItems.removeAll(sfound);
 		
 		viewsRootItem.getChildren().forEach(treeItem -> {
-			if (!newNames.contains(treeItem.getValue())) {
+			if (!newItems.contains(treeItem.getValue())) {
 				found.add(treeItem);
 				sfound.add(treeItem.getValue());
 			}
 		});
 		viewsRootItem.getChildren().removeAll(found);
-		allNames.removeAll(sfound);
+		allItems.removeAll(sfound);
 		
 		indicesRootItem.getChildren().forEach(treeItem -> {
-			if (!newNames.contains(treeItem.getValue())) {
+			if (!newItems.contains(treeItem.getValue())) {
 				found.add(treeItem);
 				sfound.add(treeItem.getValue());
 			}
 		});
 		indicesRootItem.getChildren().removeAll(found);
-		allNames.removeAll(sfound);
-		//TODO implement same behaviour for views, indices
+		allItems.removeAll(sfound);
 
 		this.changed();
 	}
@@ -254,7 +257,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	protected ContextMenu createContextMenu() {
 		ContextMenu contextMenu = new ContextMenu();
 
-		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/res/copy.png"));
+		MenuItem menuItemCopy = new MenuItem("Copy text", JavaFXUtils.icon("/res/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copyAction());
 
 		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.icon("/res/minus.png"));
@@ -303,6 +306,9 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 			}
 		});
 
+		MenuItem menuItemSearch = new MenuItem("Search...", JavaFXUtils.icon("/res/magnify.png"));
+		menuItemSearch.setOnAction(event -> this.showSearch());
+		
 		MenuItem menuItemRefresh = new MenuItem("Refresh View", JavaFXUtils.icon("/res/refresh.png"));
 		menuItemRefresh.setOnAction(event -> {
 			try {
@@ -312,7 +318,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 				DialogFactory.createErrorDialog(e);
 			} 
 		});
-		contextMenu.getItems().addAll(menuItemCopy, menuItemDrop, menuItemRefresh);
+		contextMenu.getItems().addAll(menuItemCopy, menuItemDrop, menuItemSearch, menuItemRefresh);
 		this.setContextMenu(contextMenu);
 
 		return contextMenu;
@@ -342,7 +348,7 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 	}
 
 	public List<String> getContentNames() {
-		return allNames;
+		return allItems;
 	}
 
 	@Override

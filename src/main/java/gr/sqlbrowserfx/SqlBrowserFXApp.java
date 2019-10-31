@@ -183,7 +183,8 @@ public class SqlBrowserFXApp extends Application {
 		primaryScene.getStylesheets().add(CSS_THEME);
 		primaryScene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
 			if (event.getCode() == KeyCode.ENTER) {
-				if (primaryScene.getFocusOwner() instanceof Button) {
+				if (primaryScene.getFocusOwner() instanceof Button
+						&& ((Button) primaryScene.getFocusOwner()).getOnAction() != null) {
 					((Button) primaryScene.getFocusOwner()).getOnAction().handle(new ActionEvent());
 				}
 			}
@@ -272,11 +273,10 @@ public class SqlBrowserFXApp extends Application {
 		sqlPaneViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				DSqlPane newSqlPane = new DSqlPane(sqlConnector);
+				SqlBrowserFXAppManager.addSqlPane(newSqlPane);
 				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT, mainSqlPane.asDockNode());
-//FIXME null pointer wxception occures
-				//				newSqlPane.getSqlConsoleBox().addListener(ddbTreeView);
-				SqlBrowserFXAppManager.addSqlPane(newSqlPane);
+				
 			});
 		});
 		MenuItem sqlConsoleViewItem = new MenuItem("Open Console View", JavaFXUtils.icon("/res/console.png"));
@@ -326,7 +326,9 @@ public class SqlBrowserFXApp extends Application {
 		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
 
 		Menu menu3 = new Menu();
-		menu3.setGraphic(new HBox(JavaFXUtils.icon("res/settings.png"), new Label("Configuration")));
+		HBox customGraphic = new HBox(JavaFXUtils.icon("res/settings.png"), new Label("Configuration"));
+		customGraphic.setSpacing(5);
+		menu3.setGraphic(customGraphic);
 		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
 			DockNode dockNode = new DockNode(new SqlPane(SqlBrowserFXAppManager.getConfigSqlConnector()), "Internal DB");
 			dockNode.dock(dockPane, DockPos.BOTTOM, ddbTreeView.asDockNode());

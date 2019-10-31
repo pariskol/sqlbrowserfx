@@ -1,6 +1,8 @@
 package gr.sqlbrowserfx.dock.nodes;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,9 +21,7 @@ import gr.sqlbrowserfx.listeners.SimpleChangeListener;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.nodes.LineChartBox;
 import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
-import gr.sqlbrowserfx.nodes.sqlPane.SqlTableRowEditBox;
 import gr.sqlbrowserfx.nodes.sqlPane.SqlTableTab;
-import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -60,7 +60,6 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	private DockNode dRecordsTabPane = null;
 	private DockNode dLogListView;;
 
-	
 	public DSqlPane() {
 		this(null);
 	}
@@ -74,8 +73,8 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 		chartColumns = new ArrayList<>();
 		lineChartBoxes = new ArrayList<>();
 
-		this.getSqlTableView().setColumnWidth(1, 100, 300);
-		this.getSqlTableView().setOnKeyPressed(keyEvent -> {
+		this.getSelectedSqlTableView().setColumnWidth(1, 100, 300);
+		this.getSelectedSqlTableView().setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
 				switch (keyEvent.getCode()) {
 				case F:
@@ -137,19 +136,18 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 			DockNode chartDockNode = new DockNode(chart, "Chart", JavaFXUtils.icon("/res/chart-pie.png"));
 			chartDockNode.setPrefSize(100, 100);
 			chartDockNode.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode());
-			chartDockNode.setOnClose(() -> {
-				charts.remove(chart);
-				chartColumns.remove(nameColumnsBox.getSelectionModel().getSelectedItem());
-				chartsDNs.remove(chartDockNode);
-			});
+//			chartDockNode.setOnClose(() -> {
+//				charts.remove(chart);
+//				chartColumns.remove(nameColumnsBox.getSelectionModel().getSelectedItem());
+//				chartsDNs.remove(chartDockNode);
+//			});
 			chartsDNs.add(chartDockNode);
 		});
 
 		chartButton = new Button("", JavaFXUtils.icon("/res/chart-pie.png"));
 		chartButton.setOnMouseClicked(mouseEvent -> {
 
-			if (chartButton.isFocused() && this.getPopOver().isShowing() || this.getTablesBox() == null
-					|| this.getTablesBox().getSelectionModel().isEmpty())
+			if (chartButton.isFocused() && this.getPopOver().isShowing() || ((SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem()).getCustomText().isEmpty())
 				return;
 
 			chartButton.requestFocus();
@@ -164,27 +162,25 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 
 		Button showLineChartButton = new Button("Show", JavaFXUtils.icon("/res/chart.png"));
 		showLineChartButton.setOnMouseClicked(actionEvent -> {
-			ObservableList<XYChart.Series<String, Number>> data =
-		            FXCollections.<XYChart.Series<String, Number>>observableArrayList();
-		        
+			ObservableList<XYChart.Series<String, Number>> data = FXCollections.<XYChart.Series<String, Number>>observableArrayList();
+
 			for (LineChartBox box : lineChartBoxes) {
 				XYChart.Series<String, Number> series = new XYChart.Series<String, Number>();
 				series.setName(box.getValue());
-				String tableName = this.getSqlTableView().getTableName();
+				String tableName = this.getSelectedSqlTableView().getTableName();
 				sqlConnector.executeAsync(() -> {
 					series.setData(this.getLineChartData(box, tableName));
 				});
 				data.add(series);
 			}
-			
 
 			LineChart<String, Number> lineChart = new LineChart<>(new CategoryAxis(), new NumberAxis());
-			lineChart.setCreateSymbols(false); 
+			lineChart.setCreateSymbols(false);
 			lineChart.setData(data);
-			
+
 			Platform.runLater(() -> {
 				DockNode lineDockNode = new DockNode(lineChart);
-				lineDockNode.dock(this.asDockNode().getDockPane(), DockPos.RIGHT,this.asDockNode());
+				lineDockNode.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode());
 			});
 		});
 
@@ -194,7 +190,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 			if (lineChartButton.isFocused() && this.getPopOver().isShowing() || this.getTablesBox() == null
 					|| this.getTablesBox().getSelectionModel().isEmpty())
 				return;
-	
+
 			lineChartBoxes.clear();
 			lineChartButton.requestFocus();
 			this.fillChartColumnBoxes();
@@ -227,36 +223,43 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 				uiLogging = false;
 			});
 			if (sqlConsoleBox != null)
-				dLogListView.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, sqlConsoleBox.asDockNode(), new double[] {0.7f,0.3f});
+				dLogListView.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, sqlConsoleBox.asDockNode(),
+						new double[] { 0.7f, 0.3f });
 			else
-				dLogListView.dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, new double[] {0.7f,0.3f});
+				dLogListView.dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, new double[] { 0.7f, 0.3f });
 
 		});
 		flowPane.getChildren().addAll(chartButton, lineChartButton, logButton);
 		return flowPane;
 	}
-	
+
 	private ObservableList<XYChart.Data<String, Number>> getLineChartData(LineChartBox box, String tableName) {
 		ObservableList<XYChart.Data<String, Number>> data = FXCollections.observableArrayList();
-		
+
 		try {
-			sqlConnector
-					.executeQuery(
-							"SELECT " + box.getPlotColumn1() + ", " + box.getPlotColumn2() + " FROM "
-									+ tableName + " WHERE " + box.getKeyColumn() + "='" + box.getValue() + "' ORDER BY DATE(" + box.getPlotColumn1() + ") ASC",
-							rset -> data.add(
-									new XYChart.Data<String, Number>(rset.getString(1),rset.getDouble(2))
-									));
+			sqlConnector.executeQuery(
+					"SELECT " + box.getPlotColumn1() + ", " + box.getPlotColumn2() + " FROM " + tableName + " WHERE "
+							+ box.getKeyColumn() + "='" + box.getValue() + "' ORDER BY DATE(" + box.getPlotColumn1()
+							+ ") ASC",
+					rset -> data.add(new XYChart.Data<String, Number>(rset.getString(1), rset.getDouble(2))));
 		} catch (SQLException e) {
 			DialogFactory.createErrorDialog(e);
 		}
-		
+
+		data.sort((o1, o2) -> {
+	        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+			if (LocalDate.parse(((XYChart.Data<String, Number>) o1).getXValue().toString(), formatter)
+					.isAfter(LocalDate.parse(((XYChart.Data<String, Number>) o2).getXValue().toString(),formatter))) {
+				return 1;
+			}
+			return 0;
+		});
 		return data;
 	}
 
 	@SuppressWarnings("unused")
 	private int countSUM(String columnName, String groupColumnName) throws SQLException {
-		String tableName = this.getSqlTableView().getTableName();
+		String tableName = this.getSelectedSqlTableView().getTableName();
 
 		AtomicInteger total = new AtomicInteger(0);
 		sqlConnector.executeQuery("SELECT SUM(" + columnName + ") FROM " + tableName, resultSet -> {
@@ -265,7 +268,6 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 
 		return total.get();
 	}
-	
 
 	private ObservableList<PieChart.Data> getPieChartData(String columnName, String groupColumnName) {
 
@@ -273,7 +275,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 
 		try {
 //			int total = countSUM(columnName, groupColumnName);
-			String tableName = this.getSqlTableView().getTableName();
+			String tableName = this.getSelectedSqlTableView().getTableName();
 
 			sqlConnector.executeQuery("SELECT * FROM " + tableName + " GROUP BY " + groupColumnName + " ORDER BY "
 					+ columnName + " DESC LIMIT 10", row -> {
@@ -297,64 +299,68 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 		return records;
 	}
 
-	@Override
-	public int deleteRecord(SqlTableRow sqlTableRow) {
-		int result = super.deleteRecord(sqlTableRow);
-		this.changed();
-		Platform.runLater(() -> {
-			for (int i = 0; i < charts.size(); i++) {
-				PieChart chart = charts.get(i);
-				chart.setData(this.getPieChartData(chart.getTitle(), chartColumns.get(i)));
-			}
-		});
-		return result;
-	}
-
-	@Override
-	public void updateRecord(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) {
-		super.updateRecord(editBox, sqlTableRow);
-		this.changed();
-		Platform.runLater(() -> {
-			for (int i = 0; i < charts.size(); i++) {
-				PieChart chart = charts.get(i);
-				chart.setData(this.getPieChartData(chart.getTitle(), chartColumns.get(i)));
-			}
-		});
-	}
-
-	@Override
-	public void insertRecord(SqlTableRowEditBox editBox) {
-		super.insertRecord(editBox);
-		this.changed();
-		Platform.runLater(() -> {
-			for (int i = 0; i < charts.size(); i++) {
-				PieChart chart = charts.get(i);
-				chart.setData(this.getPieChartData(chart.getTitle(), chartColumns.get(i)));
-			}
-		});
-	}
+// Uncomment this section for piecharts to refresh on changes
+//-------------------------------------------------------------------------------------------------------------
+//	@Override
+//	public int deleteRecord(SqlTableRow sqlTableRow) {
+//		int result = super.deleteRecord(sqlTableRow);
+//		this.changed();
+//		Platform.runLater(() -> {
+//			for (int i = 0; i < charts.size(); i++) {
+//				PieChart chart = charts.get(i);
+//				chart.setData(this.getPieChartData(chart.getTitle(), chartColumns.get(i)));
+//			}
+//		});
+//		return result;
+//	}
+//
+//	@Override
+//	public void updateRecord(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) {
+//		super.updateRecord(editBox, sqlTableRow);
+//		this.changed();
+//		Platform.runLater(() -> {
+//			for (int i = 0; i < charts.size(); i++) {
+//				PieChart chart = charts.get(i);
+//				chart.setData(this.getPieChartData(chart.getTitle(), chartColumns.get(i)));
+//			}
+//		});
+//	}
+//
+//	@Override
+//	public void insertRecord(SqlTableRowEditBox editBox) {
+//		super.insertRecord(editBox);
+//		this.changed();
+//		Platform.runLater(() -> {
+//			for (int i = 0; i < charts.size(); i++) {
+//				PieChart chart = charts.get(i);
+//				chart.setData(this.getPieChartData(chart.getTitle(), chartColumns.get(i)));
+//			}
+//		});
+//	}
+//-------------------------------------------------------------------------------------------------------------
 
 	@Override
 	protected void sqlConsoleButtonAction() {
 		if (sqlConsoleBox == null) {
 			sqlConsoleBox = new DSqlConsoleBox(this.sqlConnector, this);
-				sqlConsoleBox.asDockNode().setOnClose(() -> sqlConsoleBox = null);
-				sqlConsoleBox.asDockNode().setMaxHeight(1080);
-				sqlConsoleBox.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, this.asDockNode(), new double[] {0.7f,0.3f});
+			sqlConsoleBox.asDockNode().setOnClose(() -> sqlConsoleBox = null);
+			sqlConsoleBox.asDockNode().setMaxHeight(1080);
+			sqlConsoleBox.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, this.asDockNode(),
+					new double[] { 0.7f, 0.3f });
 		}
 	}
-	
-	public CodeArea getSqlCodeAreaRef( ) {
+
+	public CodeArea getSqlCodeAreaRef() {
 		return sqlConsoleBox != null ? sqlConsoleBox.getCodeAreaRef() : null;
 	}
-	
+
 	@Override
 	protected void tableComboBoxAction(ComboBox<String> comboBox) {
 		super.tableComboBoxAction(comboBox);
-		while (chartsDNs.size() > 0) {
-			DockNode dockNode = chartsDNs.get(0);
-			dockNode.close();
-		}
+//		while (chartsDNs.size() > 0) {
+//			DockNode dockNode = chartsDNs.get(0);
+//			dockNode.close();
+//		}
 		charts.clear();
 		chartColumns.clear();
 		chartsDNs.clear();
@@ -369,10 +375,11 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	}
 
 	private void fillChartColumnBoxes() {
-		columnNames = getSqlTableView().getColumnsNames();
+		columnNames = getSelectedSqlTableView().getColumnsNames();
 		columnsBox.setItems(FXCollections.observableList(columnNames));
 		nameColumnsBox.setItems(FXCollections.observableList(columnNames));
 	}
+
 	@Override
 	public void enableFullMode() {
 		Platform.runLater(() -> {
@@ -381,8 +388,10 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 				this.createRecordsTabPane();
 				this.createRecordsAddTab();
 				if (dRecordsTabPane == null) {
-					dRecordsTabPane = new DockNode(recordsTabPaneRef, this.asDockNode().getTitle() + " : Full mode", JavaFXUtils.icon("/res/details.png"));
-					dRecordsTabPane.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(), new double[] {0.7f, 0.3f});
+					dRecordsTabPane = new DockNode(recordsTabPaneRef, this.asDockNode().getTitle() + " : Full mode",
+							JavaFXUtils.icon("/res/details.png"));
+					dRecordsTabPane.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),
+							new double[] { 0.7f, 0.3f });
 					dRecordsTabPane.setOnClose(() -> {
 						dRecordsTabPane = null;
 						this.setFullMode(false);
@@ -390,28 +399,29 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 				} else {
 					dRecordsTabPane.setContents(recordsTabPaneRef);
 				}
-				((SqlTableTab) tablesTabPane.getSelectionModel().getSelectedItem()).setRecordsTabPane(recordsTabPaneRef);
+				((SqlTableTab) tablesTabPane.getSelectionModel().getSelectedItem())
+						.setRecordsTabPane(recordsTabPaneRef);
 			}
 
 			sqlQueryRunning.set(false);
 		});
 	}
-	
+
 	@Override
 	public void disableFullMode() {
 		if (dRecordsTabPane != null)
 			dRecordsTabPane.close();
-		
+
 		super.disableFullMode();
 	}
-	
+
 	@Override
 	protected void tablesTabPaneClickAction() {
 		super.tablesTabPaneClickAction();
 		if (dRecordsTabPane != null && recordsTabPaneRef != null)
 			dRecordsTabPane.setContents(recordsTabPaneRef);
 	}
-	
+
 	@Override
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
@@ -421,8 +431,8 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 				chartsDNs.clear();
 				charts.clear();
 			});
-			
-			thisDockNode.setOnClose(() ->{
+
+			thisDockNode.setOnClose(() -> {
 				SqlBrowserFXAppManager.removeSqlPane(this);
 //				it does not work as expected
 //				if (sqlConsoleBox != null)
@@ -450,7 +460,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	@Override
 	public void changed(String data) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
@@ -462,11 +472,11 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	public void removeListener(SimpleChangeListener<String> listener) {
 		listeners.remove(listener);
 	}
-	
+
 	public void setFullMode(boolean mode) {
 		fullModeCheckBox.setSelected(mode);
 	}
-	
+
 	public void showConsole() {
 		this.sqlConsoleButtonAction();
 	}

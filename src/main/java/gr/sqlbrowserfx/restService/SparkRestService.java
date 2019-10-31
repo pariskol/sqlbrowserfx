@@ -13,6 +13,7 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import spark.Spark;
 
+//TODO implement delete 
 public class SparkRestService {
 
 	static Logger logger = LoggerFactory.getLogger("SQLBROWSER");

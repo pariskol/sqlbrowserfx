@@ -10,8 +10,6 @@ import javafx.scene.layout.VBox;
 
 public class LineChartBox extends VBox {
 
-	private String displayColMessage = "Select display column";
-	private String plotColMessage = "Select plot column";
 	private ComboBox<String> displayColComboBox;
 	private TextField valueField;
 	private ComboBox<String> plotColxComboBox;
@@ -25,9 +23,9 @@ public class LineChartBox extends VBox {
 		plotColxComboBox = new ComboBox<String>(FXCollections.observableArrayList(columnNames));
 		plotColyComboBox = new ComboBox<String>(FXCollections.observableArrayList(columnNames));
 
-		this.getChildren().addAll(new Label(displayColMessage), displayColComboBox, valueField, new Label("Select x column"),
-				plotColxComboBox, new Label("Select y column"), plotColyComboBox);
-		
+		this.getChildren().addAll(new Label("Select display column"), displayColComboBox, valueField,
+				new Label("Select x column"), plotColxComboBox, new Label("Select y column"), plotColyComboBox);
+
 		displayColComboBox.prefWidthProperty().bind(this.widthProperty());
 		valueField.prefWidthProperty().bind(this.widthProperty());
 		plotColxComboBox.prefWidthProperty().bind(this.widthProperty());
@@ -41,7 +39,7 @@ public class LineChartBox extends VBox {
 	public String getPlotColumn2() {
 		return plotColyComboBox.getSelectionModel().getSelectedItem();
 	}
-	
+
 	public String getKeyColumn() {
 		return displayColComboBox.getSelectionModel().getSelectedItem();
 	}

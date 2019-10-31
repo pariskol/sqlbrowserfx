@@ -137,6 +137,10 @@ public class SqlCodeArea extends CodeArea {
 	}
 
 	private void showSearchAndReplacePopup() {
+		if (!this.getSelectedText().isEmpty()) {
+			findField.setText(this.getSelectedText());
+			findField.selectAll();
+		}
 		Bounds boundsInScene = this.localToScene(this.getBoundsInLocal());
 		searchAndReplacePopOver.show(this, boundsInScene.getMinX()+searchAndReplacePopOver.getWidth()/3, boundsInScene.getMinY()-searchAndReplacePopOver.getHeight()/2);
 	}

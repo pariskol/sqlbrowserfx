@@ -55,7 +55,7 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 				openInSqlPaneMenu.getItems().add(item);
 			}
 		});
-		menu.getItems().add(openInSqlPaneMenu);
+		menu.getItems().add(menu.getItems().size()-1, openInSqlPaneMenu);
 		return menu;
 		
 	}

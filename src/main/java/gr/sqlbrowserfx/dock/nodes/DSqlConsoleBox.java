@@ -36,8 +36,8 @@ public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
 	@Override
 	protected void handleSelectResult(String query, ResultSet rset) throws SQLException {
 //		sqlPane.setInProgress();
-		sqlPane.getSqlTableView().setItemsLater(rset);
-		sqlPane.getSqlTableView().setFilledByQuery(true);
+		sqlPane.getSelectedSqlTableView().setItemsLater(rset);
+		sqlPane.getSelectedSqlTableView().setFilledByQuery(true);
 		
 		Platform.runLater(() -> {
 			sqlPane.fillColumnCheckBoxes();

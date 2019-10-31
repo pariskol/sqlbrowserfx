@@ -174,12 +174,15 @@ public class SqlPane extends BorderPane {
         dragingSupport.addSupport(this);
 	}
 
+	//TODO Is it buggy?
 	public void createTableViewWithData(String table) {
 		if (sqlQueryRunning.get()) {
 			return;
 		} else {
 			tablesTabPane.getSelectionModel().select(addTableTab);
 			this.createSqlTableView();
+			this.createTablesBox();
+			this.createViewsBox();
 			this.setInProgress();
 			sqlConnector.executeAsync(() -> this.getData(table));
 		}
@@ -892,6 +895,7 @@ public class SqlPane extends BorderPane {
 			return;
 
 		tableSelectButton.requestFocus();
+		// invoke createTableBox(), createViewsBox every time button clicked to has the latset updates from db
 		ComboBox<String> tablesBox = this.createTablesBox();
 		ComboBox<String> viewsBox = this.createViewsBox();
 		viewsBox.prefWidthProperty().bind(tablesBox.widthProperty());
@@ -1148,8 +1152,8 @@ public class SqlPane extends BorderPane {
 				values += "?, ";
 			}
 		}
-		notEmptyColumns = notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length());
-		values = values.substring(0, values.length() - ", ".length());
+		notEmptyColumns = notEmptyColumns.length() > ", ".length() ? notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length()) : notEmptyColumns;
+		values = values.length() > ", ".length() ? values.substring(0, values.length() - ", ".length()) : values;
 
 		String sqlQuery = "insert into " + sqlTableViewRef.getTableName() + "(" + notEmptyColumns + ")" + " values ("
 				+ values + ")";
@@ -1184,8 +1188,8 @@ public class SqlPane extends BorderPane {
 				values += "?, ";
 			}
 		}
-		notEmptyColumns = notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length());
-		values = values.substring(0, values.length() - ", ".length());
+		notEmptyColumns = notEmptyColumns.length() > ", ".length() ? notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length()) : notEmptyColumns;
+		values = values.length() > ", ".length() ? values.substring(0, values.length() - ", ".length()) : values;
 
 		String sqlQuery = "insert into " + sqlTableViewRef.getTableName() + "(" + notEmptyColumns + ")" + " values ("
 				+ values + ")";
@@ -1288,7 +1292,7 @@ public class SqlPane extends BorderPane {
 		});
 	}
 
-	public SqlTableView getSqlTableView() {
+	public SqlTableView getSelectedSqlTableView() {
 		return sqlTableViewRef;
 	}
 
