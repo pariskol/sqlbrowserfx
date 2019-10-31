@@ -1,6 +1,7 @@
 # SqlBrowserFX
 
 SqlBrowserFX is a feature rich sql client for SQLite , MySQL.
+[Click here to download](https://gitlab.com/Paris_Kolovos/sqlbrowser/raw/development/builds/sqlbrowserfx-1.0.0.tar.gz) for both windows and linux 
 
 ![](images/sqlbrowserfx.png)
 
