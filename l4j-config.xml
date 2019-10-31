@@ -15,7 +15,7 @@
   <manifest></manifest>
   <icon>./sqlbrowser-fx.ico</icon>
   <classPath>
-    <mainClass>gr.paris.SqlBrowserFXApp</mainClass>
+    <mainClass>gr.sqlbrowserfx.SqlBrowserFXApp</mainClass>
     <cp>./lib/*</cp>
   </classPath>
   <jre>
