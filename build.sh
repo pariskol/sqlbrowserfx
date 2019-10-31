@@ -29,6 +29,7 @@ touch dist/sqlbrowserfx/recent-dbs.txt
 chmod +x dist/sqlbrowserfx/*.sh
 cd dist
 
-tar -czvf sql-browser-fx.tar.gz *
+latest_tag=$(git describe)
+tar -czvf sqlbrowserfx-$latest_tag.tar.gz *
 
 
