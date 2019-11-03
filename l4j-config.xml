@@ -2,7 +2,7 @@
 <launch4jConfig>
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>./sqlite-browser-fx-0.0.1-SNAPSHOT.jar</jar>
+  <jar>./sqlbrowserfx.jar</jar>
   <outfile>./SqlBrowserFX.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>

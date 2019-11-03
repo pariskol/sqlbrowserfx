@@ -19,7 +19,7 @@ then
 fi
 
 
-cp target/*.jar dist/sqlbrowserfx/
+cp target/sqlbrowserfx*.jar dist/sqlbrowserfx/sqlbrowserfx.jar
 cp target/dependency/* dist/sqlbrowserfx/lib
 cp log4j.properties dist/sqlbrowserfx/
 cp sqlbrowser.db dist/sqlbrowserfx/
