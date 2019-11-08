@@ -614,6 +614,7 @@
 }
 
 .styled-text-area .text {
+	-fx-font-family: "Open Sans";
 	-fx-fill: black;
 }
 
