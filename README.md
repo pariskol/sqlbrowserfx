@@ -16,7 +16,7 @@ Flat Light Theme
 * Editor for sql with syntax highlighting, autocomplete features.
 * Adjustable responsive ui.
 * Graphical representation of database as tree.
-* Exposure of database to the web as REST with one click.
+* Exposure of database to the web as RESTful service with one click.
 * Import, export csv files.
 * Support for SQLite.
 * Basic support for MySQL.
