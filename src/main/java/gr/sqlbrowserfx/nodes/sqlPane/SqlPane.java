@@ -1022,7 +1022,7 @@ public class SqlPane extends BorderPane {
 			File selectedFile = directoryChooser.showDialog(null);
 			if (selectedFile != null) {
 				String dirPath = selectedFile.getAbsolutePath();
-				pathField.setText(dirPath);
+				pathField.setText(dirPath + "/" + sqlTableViewRef.titleProperty().get() + ".csv");
 			}
 			exportCsvButton.getOnAction().handle(new ActionEvent());
 
@@ -1034,7 +1034,7 @@ public class SqlPane extends BorderPane {
 
 			String filePath = pathField.getText();
 
-			if (!filePath.isEmpty()) {
+			if (filePath != null && !filePath.isEmpty()) {
 				if (filePath != null) {
 					Executor executor = Executors.newSingleThreadExecutor();
 					executor.execute(() -> {
