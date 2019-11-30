@@ -56,7 +56,9 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		tablesRootItem = new TreeItem<>("Tables", JavaFXUtils.icon("/res/table.png"));
 		tablesRootItem.setExpanded(true);
 		viewsRootItem = new TreeItem<>("Views", JavaFXUtils.icon("/res/view.png"));
+		viewsRootItem.setExpanded(true);
 		indicesRootItem = new TreeItem<>("Indices", JavaFXUtils.icon("/res/index.png"));
+		indicesRootItem.setExpanded(true);
 		rootItem.getChildren().addAll(tablesRootItem, viewsRootItem, indicesRootItem);
 
 		try {
@@ -112,8 +114,8 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 			try {
 				HashMap<String, Object> dto = DTOMapper.map(rset);
 
-				String name = (String) dto.get(sqlConnector.NAME);
-				String type = (String) dto.get(sqlConnector.TYPE);
+				String name = (String) dto.get(sqlConnector.getName());
+				String type = (String) dto.get(sqlConnector.getType());
 
 				newItems.add(name);
 				if (!allItems.contains(name)) {

@@ -2,6 +2,8 @@ package gr.sqlbrowserfx.conn;
 
 import java.sql.SQLException;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.dbcp2.BasicDataSource;
 
 public class MysqlConnector extends SqlConnector {
@@ -14,29 +16,25 @@ public class MysqlConnector extends SqlConnector {
 	private String database;
 
 	public MysqlConnector(String database, String user, String password) {
-		url = "jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
-		driver = "com.mysql.cj.jdbc.Driver";
+		super("com.mysql.cj.jdbc.Driver",
+				"jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
 		this.user = user;
 		this.password = password;
 		this.database = database;
-
-		NAME = "TABLE_NAME";
-		TYPE = "TABLE_TYPE";
 		
-		initDatasource();
 	}
 
+	
 	@Override
-	protected void initDatasource() {
+	protected DataSource initDatasource() {
 		BasicDataSource dbcp2DataSource = new BasicDataSource();
-		dbcp2DataSource.setDriverClassName(driver);
-		dbcp2DataSource.setUrl(url);
+		dbcp2DataSource.setDriverClassName(this.getDriver());
+		dbcp2DataSource.setUrl(this.getUrl());
 		dbcp2DataSource.setUsername(user);
 		dbcp2DataSource.setPassword(password);
 		dbcp2DataSource.setInitialSize(2);
 		dbcp2DataSource.setMaxTotal(5);
-
-		dataSource = dbcp2DataSource;
+		return dbcp2DataSource;
 	}
 
 	/**
@@ -74,5 +72,15 @@ public class MysqlConnector extends SqlConnector {
 	@Override
 	public String getIndexColumnName() {
 		return null;
+	}
+	
+	@Override
+	public String getName() {
+		return "TABLE_NAME";
+	}
+	
+	@Override
+	public String getType() {
+		return "TABLE_TYPE";
 	}
 }

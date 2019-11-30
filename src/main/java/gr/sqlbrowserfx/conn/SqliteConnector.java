@@ -2,33 +2,64 @@ package gr.sqlbrowserfx.conn;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.commons.dbcp2.BasicDataSource;
+import javax.sql.DataSource;
+
+import org.slf4j.LoggerFactory;
+import org.sqlite.SQLiteDataSource;
 
 public class SqliteConnector extends SqlConnector {
 
 	private final String SCHEMA_COLUMN = "sql";
 	private final String SCHEMA_QUERY = "select sql from sqlite_master where name = ?";
 	
+	LinkedBlockingQueue<UpdateQuery> updateQueriesQueue;
 	public SqliteConnector(String database) {
-		url = "jdbc:sqlite:" + database;
-		driver = "org.sqlite.JDBC";
-		
-		NAME = "name";
-		TYPE = "type";
-		
-		initDatasource();
+		super("org.sqlite.JDBC", "jdbc:sqlite:" + database);
+		this.updateQueriesQueue = new LinkedBlockingQueue<UpdateQuery>();
+		ExecutorService updateQueriesRunner = Executors.newSingleThreadExecutor();
+		updateQueriesRunner.execute(() -> {
+			while(true) {
+				UpdateQuery updateQuery;
+				try {
+					updateQuery = updateQueriesQueue.take();
+					LoggerFactory.getLogger(getClass().getSimpleName()).info("Executing update");
+					super.executeUpdate(updateQuery.getQuery(), updateQuery.getParams());
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+			}
+		});
 	}
 
 	@Override
-	protected void initDatasource() {
-		BasicDataSource dbcp2DataSource = new BasicDataSource();
-		dbcp2DataSource.setDriverClassName(driver);
-		dbcp2DataSource.setUrl(url);
-		dbcp2DataSource.setInitialSize(2);
-		dbcp2DataSource.setMaxTotal(5);
-		
-		dataSource = dbcp2DataSource;
+	protected DataSource initDatasource() {
+		SQLiteDataSource datasource = new SQLiteDataSource();
+		datasource.setUrl(this.getUrl());
+		return datasource;
+	}
+	
+//	@Override
+//	protected DataSource initDatasource() {
+//		BasicDataSource dbcp2DataSource = new BasicDataSource();
+//		dbcp2DataSource.setDriverClassName(this.getDriver());
+//		dbcp2DataSource.setUrl(this.getUrl());
+//		dbcp2DataSource.setInitialSize(2);
+//		dbcp2DataSource.setMaxTotal(5);
+//		return dbcp2DataSource;
+//	}
+	
+	public int executeUpdateSerially(String query, List<Object> params) throws SQLException {
+		try {
+			this.updateQueriesQueue.put(new UpdateQuery(query, params));
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return 2;
 	}
 	
 	@Override

@@ -18,27 +18,23 @@ import org.slf4j.LoggerFactory;
 
 public abstract class SqlConnector {
 
-	protected DataSource dataSource;
-	protected String driver;
-	protected String url;
-	protected ExecutorService executorService;
-
-	public String NAME;
-	public String TYPE;
+	private DataSource dataSource;
+	private String driver;
+	private String url;
+	private ExecutorService executorService;
 
 	public SqlConnector() {
-//		int processors = Runtime.getRuntime().availableProcessors() / 2;
-//		if (processors < 2)
-//			processors = 1;
-//		else
-//			processors = 2;
-//
-//		LoggerFactory.getLogger(getClass()).debug("Executor service threads = " + processors);
-//		executorService = Executors.newFixedThreadPool(processors);
 		executorService = Executors.newCachedThreadPool();
 	}
+	
+	public SqlConnector(String driver, String url) {
+		this();
+		this.url = url;
+		this.driver = driver;
+		dataSource = this.initDatasource();
+	}
 
-	abstract protected void initDatasource();
+	abstract protected DataSource initDatasource();
 
 	private PreparedStatement prepareStatementWithParams(Connection conn, String query, List<Object> params)
 			throws SQLException {
@@ -346,4 +342,29 @@ public abstract class SqlConnector {
 	public abstract String getViewSchemaColumn();
 
 	public abstract String getIndexColumnName();
+	
+	public String getName() {
+		return "name";
+	}
+	
+	public String getType() {
+		return "type";
+	}
+
+	public String getDriver() {
+		return driver;
+	}
+
+	public void setDriver(String driver) {
+		this.driver = driver;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
 }
