@@ -253,8 +253,10 @@ public class SqlCodeArea extends CodeArea {
 				auoCompletePopupShowing = false;
 			}
 		} else if (!event.isControlDown()){
-			auoCompletePopup.get().hide();
-			auoCompletePopupShowing = false;
+			if (auoCompletePopup.get() != null) {
+				auoCompletePopup.get().hide();
+				auoCompletePopupShowing = false;
+			}
 		}
 	}
 
