@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
+import gr.sqlbrowserfx.dock.DockWeights;
 import gr.sqlbrowserfx.dock.nodes.DDBTreeView;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsoleView;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
@@ -66,8 +67,8 @@ import javafx.stage.Stage;
 public class SqlBrowserFXApp extends Application {
 
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
-	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/basic.css");
-	private static final String INTERNAL_DB = "sqlbrowse.db";
+//	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/basic.css");
+	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/flat-light.css");
 	private static String DB;
 	private static RestServiceConfig restServiceConfig;
 
@@ -237,7 +238,7 @@ public class SqlBrowserFXApp extends Application {
 		mainSqlPane = new DSqlPane(sqlConnector);
 		SqlBrowserFXAppManager.addSqlPane(mainSqlPane);
 		mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
-		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, new double[] {0.8f});
+		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, DockWeights.asDoubleArrray(0.8f));
 		mainSqlPane.asDockNode().setClosable(false);
 		mainSqlPane.showConsole();
 
@@ -245,7 +246,7 @@ public class SqlBrowserFXApp extends Application {
 		CodeAreaKeywords.bind(ddbTreeView.getContentNames());
 		ddbTreeView.addListener(value -> CodeAreaKeywords.bind(ddbTreeView.getContentNames()));
 		mainSqlPane.getSqlConsoleBox().addListener(ddbTreeView);
-		ddbTreeView.asDockNode().dock(dockPane, DockPos.LEFT, new double[] {0.2f});
+		ddbTreeView.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
 		ddbTreeView.asDockNode().setClosable(false);
 		// fixed size 
 		SplitPane.setResizableWithParent(ddbTreeView.asDockNode(), Boolean.FALSE);
