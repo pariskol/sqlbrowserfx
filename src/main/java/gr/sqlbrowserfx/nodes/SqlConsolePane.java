@@ -152,7 +152,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	public void executeButonAction() {
 		CodeArea sqlConsoleArea = this.getSelectedSqlCodeArea();
 		String query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
-		if (query.startsWith("select") || query.startsWith("SELECT")) {
+		final String fixedQuery = this.removeLeadingSpaces(query);
+		if (fixedQuery.startsWith("select") || fixedQuery.startsWith("SELECT")) {
 
 			sqlConnector.executeAsync(() -> {
 				if (sqlQueryRunning.get())
@@ -164,8 +165,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 					this.getToolbar().getChildren().add(progressIndicator);
 				});
 				try {
-					sqlConnector.executeQueryRawSafely(query, rset -> {
-						handleSelectResult(query, rset);
+					sqlConnector.executeQueryRawSafely(fixedQuery, rset -> {
+						handleSelectResult(fixedQuery, rset);
 					});
 
 				} catch (SQLException e) {
@@ -178,7 +179,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 					sqlQueryRunning.set(false);
 				}
 			});
-		} else {
+		} else if (!fixedQuery.isEmpty()){
 			sqlConnector.executeAsync(() -> {
 				if (sqlQueryRunning.get())
 					return;
@@ -189,7 +190,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 					this.getToolbar().getChildren().add(progressIndicator);
 				});
 				try {
-					int rowsAffected = sqlConnector.executeUpdate(query);
+					int rowsAffected = sqlConnector.executeUpdate(fixedQuery);
 					handleUpdateResult(rowsAffected);
 
 				} catch (SQLException e) {
@@ -202,13 +203,26 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 					sqlQueryRunning.set(false);
 				}
 				
-				if (query.contains("table") || query.contains("TABLE") ||
-					query.contains("view") || query.contains("VIEW") ||
-					query.contains("trigger") || query.contains("TRIGGER")) {
-					this.changed(query);
+				if (fixedQuery.contains("table") || fixedQuery.contains("TABLE") ||
+					fixedQuery.contains("view") || fixedQuery.contains("VIEW") ||
+					fixedQuery.contains("trigger") || fixedQuery.contains("TRIGGER")) {
+					this.changed(fixedQuery);
 				}
 			});
 		}
+	}
+
+	private String removeLeadingSpaces(String query) {
+		int spacesNum = 0;
+		for (int i=0; i<query.length(); i++) {
+			if (query.charAt(i) == ' ' || query.charAt(i) == '\n') {
+				spacesNum++;
+			}
+			else {
+				break;
+			}
+		}
+		return query.substring(spacesNum, query.length());
 	}
 
 	protected void handleUpdateResult(int rowsAffected) throws SQLException {
