@@ -29,7 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.nodes.SqlConsoleBox;
+import gr.sqlbrowserfx.nodes.SqlConsolePane;
+import gr.sqlbrowserfx.nodes.ToolbarOwner;
 import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
 import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -68,7 +69,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-public class SqlPane extends BorderPane {
+public class SqlPane extends BorderPane implements ToolbarOwner{
 
 	protected SqlTableView sqlTableViewRef;
 	protected FlowPane toolBar;
@@ -270,7 +271,8 @@ public class SqlPane extends BorderPane {
 	}
 // Create methods -------------------------------------------------------
 
-	protected FlowPane createToolbar() {
+	@Override
+	public FlowPane createToolbar() {
 		addButton = new Button("", JavaFXUtils.icon("/res/add.png"));
 		addButton.setOnMouseClicked(event -> addButtonAction());
 		addButton.setOnAction(event -> addButtonAction());
@@ -722,7 +724,7 @@ public class SqlPane extends BorderPane {
 	}
 
 	protected void sqlConsoleButtonAction() {
-		Scene scene = new Scene(new SqlConsoleBox(sqlConnector), 400, 300);
+		Scene scene = new Scene(new SqlConsolePane(sqlConnector), 400, 300);
 		scene.getStylesheets().addAll(this.getScene().getStylesheets());
 		Stage newStage = new Stage();
 		newStage.setScene(scene);
@@ -969,7 +971,7 @@ public class SqlPane extends BorderPane {
 	}
 
 	protected void importCsvAction() {
-		if (tablesBox != null && !tablesBox.getSelectionModel().isEmpty()) {
+		if (sqlTableViewRef != null && !sqlTableViewRef.titleProperty().get().isEmpty()) {
 			FileChooser fileChooser = new FileChooser();
 			File selectedFile = fileChooser.showOpenDialog(null);
 			if (selectedFile != null) {

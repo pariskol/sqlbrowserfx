@@ -8,23 +8,24 @@ import org.dockfx.DockNode;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.nodes.SqlConsoleBox;
+import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 
-public class DSqlConsoleBox extends SqlConsoleBox implements Dockable{
+public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
 	private DockNode thisDockNode;
 	private SqlPane sqlPane;
 
-	public DSqlConsoleBox(SqlConnector sqlConnector, DSqlPane sqlPane) {
+	public DSqlConsolePane(SqlConnector sqlConnector, DSqlPane sqlPane) {
 		super(sqlConnector);
 		this.sqlPane = sqlPane;
 		thisDockNode = new DockNode(this, sqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.icon("/res/console.png"));
 		this.getChildren().clear();
-		this.getChildren().addAll(queryTabPane, autoCompleteOnTypeCheckBox, executebutton);
-		queryTabPane.prefHeightProperty().bind(this.heightProperty());
+		this.setCenter(getQueryTabPane());
+		this.setBottom(getBottomBar());
+		this.setLeft(getToolbar());
 		thisDockNode.setOnClose(() -> this.listeners.clear()); 
 	}
 

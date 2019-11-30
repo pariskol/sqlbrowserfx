@@ -27,27 +27,32 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 
-public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
+public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObservable<String>{
 
 	private TextArea historyArea;
-	protected TabPane queryTabPane;
+	private TabPane queryTabPane;
 	private ProgressIndicator progressIndicator;
 	private Tab newConsoleTab;
-	protected Button executebutton;
+	private Button executebutton;
 	private CSqlCodeArea codeAreaRef;
-	protected CheckBox autoCompleteOnTypeCheckBox;
+	private CheckBox autoCompleteOnTypeCheckBox;
+	private FlowPane toolbar;
+	private FlowPane bottomBar;
 	
 	private SqlConnector sqlConnector;
 	protected AtomicBoolean sqlQueryRunning;
 	protected List<SimpleChangeListener<String>> listeners;
 
 	@SuppressWarnings("unchecked")
-	public SqlConsoleBox(SqlConnector sqlConnector) {
+	public SqlConsolePane(SqlConnector sqlConnector) {
 		this.sqlConnector = sqlConnector;
 		sqlQueryRunning = new AtomicBoolean(false);
 		progressIndicator = new ProgressIndicator();
+		progressIndicator.setMaxSize(32, 32);
 		historyArea = new TextArea();
 		listeners = new ArrayList<>();
 
@@ -63,7 +68,7 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 			if (keyEvent.isControlDown()) {
 				switch (keyEvent.getCode()) {
 				case N:
-					this.createSqlConsoleBox();
+					this.createSqlConsoleTab();
 					break;
 				case D:
 //					tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
@@ -73,9 +78,6 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 				}
 			}
 		});
-
-		executebutton = new Button("Execute", JavaFXUtils.icon("res/bolt.png"));
-		executebutton.setOnAction(actionEvent -> executeButonAction());
 
 		SplitPane splitPane = new SplitPane(historyArea, queryTabPane);
 		splitPane.setOrientation(Orientation.VERTICAL);
@@ -96,8 +98,13 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 			    	}
 			    });
 		
-		this.getChildren().addAll(splitPane, autoCompleteOnTypeCheckBox, executebutton);
-		splitPane.prefHeightProperty().bind(this.heightProperty());
+		toolbar = this.createToolbar();
+		bottomBar = new FlowPane(autoCompleteOnTypeCheckBox);
+		
+		this.setCenter(splitPane);
+		this.setBottom(bottomBar);
+		this.setLeft(toolbar);
+//		splitPane.prefHeightProperty().bind(this.heightProperty());
 
 		// initial create one tab
 		this.addTab();
@@ -107,14 +114,14 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 	private void addTab() {
 		Tab selectedTab = queryTabPane.getSelectionModel().getSelectedItem();
 		if (selectedTab == newConsoleTab) {
-			this.createSqlConsoleBox();
+			this.createSqlConsoleTab();
 		}
 		else {
 			codeAreaRef = ((VirtualizedScrollPane<CSqlCodeArea>) selectedTab.getContent()).getContent(); 
 		}
 	}
 
-	private void createSqlConsoleBox() {
+	private void createSqlConsoleTab() {
 		CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
 		sqlCodeArea.setEnterAction(() -> this.executeButonAction());
 
@@ -125,6 +132,16 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 		queryTabPane.getSelectionModel().select(newTab);
 		codeAreaRef = sqlCodeArea;
 		sqlCodeArea.requestFocus();
+	}
+	
+	@Override
+	public FlowPane createToolbar() {
+		executebutton = new Button("", JavaFXUtils.icon("res/play.png"));
+		executebutton.setTooltip(new Tooltip("Execute"));
+		executebutton.setOnAction(actionEvent -> executeButonAction());
+		FlowPane toolbar = new FlowPane(executebutton);
+		toolbar.setOrientation(Orientation.VERTICAL);
+		return toolbar;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -143,8 +160,8 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 
 				sqlQueryRunning.set(true);
 				Platform.runLater(() -> {
-					this.getChildren().remove(executebutton);
-					this.getChildren().add(progressIndicator);
+					this.getToolbar().getChildren().remove(executebutton);
+					this.getToolbar().getChildren().add(progressIndicator);
 				});
 				try {
 					sqlConnector.executeQueryRawSafely(query, rset -> {
@@ -155,8 +172,8 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 					hanldeException(e);
 				} finally {
 					Platform.runLater(() -> {
-						this.getChildren().remove(progressIndicator);
-						this.getChildren().add(executebutton);
+						this.getToolbar().getChildren().remove(progressIndicator);
+						this.getToolbar().getChildren().add(executebutton);
 					});
 					sqlQueryRunning.set(false);
 				}
@@ -168,8 +185,8 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 
 				sqlQueryRunning.set(true);
 				Platform.runLater(() -> {
-					this.getChildren().remove(executebutton);
-					this.getChildren().add(progressIndicator);
+					this.getToolbar().getChildren().remove(executebutton);
+					this.getToolbar().getChildren().add(progressIndicator);
 				});
 				try {
 					int rowsAffected = sqlConnector.executeUpdate(query);
@@ -179,8 +196,8 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 					hanldeException(e);
 				} finally {
 					Platform.runLater(() -> {
-						this.getChildren().remove(progressIndicator);
-						this.getChildren().add(executebutton);
+						this.getToolbar().getChildren().remove(progressIndicator);
+						this.getToolbar().getChildren().add(executebutton);
 					});
 					sqlQueryRunning.set(false);
 				}
@@ -242,5 +259,38 @@ public class SqlConsoleBox extends VBox implements SimpleObservable<String>{
 	public CodeArea getCodeAreaRef() {
 		return codeAreaRef;
 	}
+
+	public TabPane getQueryTabPane() {
+		return queryTabPane;
+	}
+
+	public void setQueryTabPane(TabPane queryTabPane) {
+		this.queryTabPane = queryTabPane;
+	}
+
+	public Button getExecutebutton() {
+		return executebutton;
+	}
+
+	public void setExecutebutton(Button executebutton) {
+		this.executebutton = executebutton;
+	}
+
+	public FlowPane getToolbar() {
+		return toolbar;
+	}
+
+	public void setToolbar(FlowPane toolbar) {
+		this.toolbar = toolbar;
+	}
+
+	public FlowPane getBottomBar() {
+		return bottomBar;
+	}
+
+	public void setBottomBar(FlowPane bottomBar) {
+		this.bottomBar = bottomBar;
+	}
+	
 
 }

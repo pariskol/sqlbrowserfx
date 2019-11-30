@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.dock.DockWeights;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleChangeListener;
@@ -54,7 +55,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 
 	private DockNode thisDockNode = null;
 	private Button lineChartButton;
-	private DSqlConsoleBox sqlConsoleBox;
+	private DSqlConsolePane sqlConsoleBox;
 	private Button showChartButton;
 	private List<String> columnNames;
 	private DockNode dRecordsTabPane = null;
@@ -118,7 +119,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	}
 
 	@Override
-	protected FlowPane createToolbar() {
+	public FlowPane createToolbar() {
 		FlowPane flowPane = super.createToolbar();
 		nameColumnsBox = new ComboBox<>();
 		columnsBox = new ComboBox<>();
@@ -224,9 +225,9 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 			});
 			if (sqlConsoleBox != null)
 				dLogListView.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, sqlConsoleBox.asDockNode(),
-						new double[] { 0.7f, 0.3f });
+						DockWeights.asDoubleArrray(0.7f, 0.3f));
 			else
-				dLogListView.dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, new double[] { 0.7f, 0.3f });
+				dLogListView.dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, DockWeights.asDoubleArrray(0.7f, 0.3f));
 
 		});
 		flowPane.getChildren().addAll(chartButton, lineChartButton, logButton);
@@ -342,11 +343,11 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	@Override
 	protected void sqlConsoleButtonAction() {
 		if (sqlConsoleBox == null) {
-			sqlConsoleBox = new DSqlConsoleBox(this.sqlConnector, this);
+			sqlConsoleBox = new DSqlConsolePane(this.sqlConnector, this);
 			sqlConsoleBox.asDockNode().setOnClose(() -> sqlConsoleBox = null);
 			sqlConsoleBox.asDockNode().setMaxHeight(1080);
-			sqlConsoleBox.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, this.asDockNode(),
-					new double[] { 0.7f, 0.3f });
+			sqlConsoleBox.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.TOP, this.asDockNode(),
+					DockWeights.asDoubleArrray(0.3f, 0.7f));
 		}
 	}
 
@@ -391,7 +392,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 					dRecordsTabPane = new DockNode(recordsTabPaneRef, this.asDockNode().getTitle() + " : Full mode",
 							JavaFXUtils.icon("/res/details.png"));
 					dRecordsTabPane.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),
-							new double[] { 0.7f, 0.3f });
+							DockWeights.asDoubleArrray(0.7f, 0.3f));
 					dRecordsTabPane.setOnClose(() -> {
 						dRecordsTabPane = null;
 						this.setFullMode(false);
@@ -481,7 +482,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 		this.sqlConsoleButtonAction();
 	}
 
-	public DSqlConsoleBox getSqlConsoleBox() {
+	public DSqlConsolePane getSqlConsoleBox() {
 		return sqlConsoleBox;
 	}
 
