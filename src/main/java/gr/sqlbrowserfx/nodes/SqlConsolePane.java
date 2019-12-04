@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
+import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.listeners.SimpleChangeListener;
@@ -37,7 +38,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private TabPane queryTabPane;
 	private ProgressIndicator progressIndicator;
 	private Tab newConsoleTab;
-	private Button executebutton;
+	private Button executeButton;
 	private CSqlCodeArea codeAreaRef;
 	private CheckBox autoCompleteOnTypeCheckBox;
 	private FlowPane toolbar;
@@ -46,6 +47,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private SqlConnector sqlConnector;
 	protected AtomicBoolean sqlQueryRunning;
 	protected List<SimpleChangeListener<String>> listeners;
+	private Button stopExecutionButton;
 
 	@SuppressWarnings("unchecked")
 	public SqlConsolePane(SqlConnector sqlConnector) {
@@ -136,10 +138,14 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	
 	@Override
 	public FlowPane createToolbar() {
-		executebutton = new Button("", JavaFXUtils.icon("res/play.png"));
-		executebutton.setTooltip(new Tooltip("Execute"));
-		executebutton.setOnAction(actionEvent -> executeButonAction());
-		FlowPane toolbar = new FlowPane(executebutton);
+		executeButton = new Button("", JavaFXUtils.icon("res/play.png"));
+		executeButton.setTooltip(new Tooltip("Execute"));
+		executeButton.setOnAction(actionEvent -> executeButonAction());
+		
+		stopExecutionButton = new Button("", JavaFXUtils.icon("res/stop.png"));
+		executeButton.setTooltip(new Tooltip("Stop execution"));
+		
+		FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton);
 		toolbar.setOrientation(Orientation.VERTICAL);
 		return toolbar;
 	}
@@ -149,10 +155,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		return ((VirtualizedScrollPane<CodeArea>) queryTabPane.getSelectionModel().getSelectedItem().getContent()).getContent();
 	}
 	
-	public void executeButonAction() {
+	public String executeButonAction() {
 		CodeArea sqlConsoleArea = this.getSelectedSqlCodeArea();
 		String query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
-		final String fixedQuery = this.removeLeadingSpaces(query);
+		final String fixedQuery = this.fixQuery(query);
 		if (fixedQuery.startsWith("select") || fixedQuery.startsWith("SELECT")) {
 
 			sqlConnector.executeAsync(() -> {
@@ -161,20 +167,33 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 				sqlQueryRunning.set(true);
 				Platform.runLater(() -> {
-					this.getToolbar().getChildren().remove(executebutton);
-					this.getToolbar().getChildren().add(progressIndicator);
+					executeButton.setDisable(true);
+//					this.getToolbar().getChildren().remove(executeButton);
+//					this.getToolbar().getChildren().add(0, progressIndicator);
 				});
 				try {
-					sqlConnector.executeQueryRawSafely(fixedQuery, rset -> {
+//					sqlConnector.executeQueryRawSafely(fixedQuery, rset -> {
+//						handleSelectResult(fixedQuery, rset);
+//					});
+					sqlConnector.executeCancelableQuery(fixedQuery, rset -> {
 						handleSelectResult(fixedQuery, rset);
+					}, stmt -> {
+						stopExecutionButton.setOnAction(action -> {
+							try {
+								stmt.cancel();
+							} catch (SQLException e) {
+								LoggerFactory.getLogger("SQL-BROWSER").error(e.getMessage());
+							}
+						});
 					});
 
 				} catch (SQLException e) {
 					hanldeException(e);
 				} finally {
 					Platform.runLater(() -> {
-						this.getToolbar().getChildren().remove(progressIndicator);
-						this.getToolbar().getChildren().add(executebutton);
+						executeButton.setDisable(false);
+//						this.getToolbar().getChildren().remove(progressIndicator);
+//						this.getToolbar().getChildren().add(0, executeButton);
 					});
 					sqlQueryRunning.set(false);
 				}
@@ -186,8 +205,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 				sqlQueryRunning.set(true);
 				Platform.runLater(() -> {
-					this.getToolbar().getChildren().remove(executebutton);
-					this.getToolbar().getChildren().add(progressIndicator);
+					executeButton.setDisable(true);
+//					this.getToolbar().getChildren().remove(executeButton);
+//					this.getToolbar().getChildren().add(0, progressIndicator);
 				});
 				try {
 					int rowsAffected = sqlConnector.executeUpdate(fixedQuery);
@@ -197,8 +217,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 					hanldeException(e);
 				} finally {
 					Platform.runLater(() -> {
-						this.getToolbar().getChildren().remove(progressIndicator);
-						this.getToolbar().getChildren().add(executebutton);
+						executeButton.setDisable(false);
+//						this.getToolbar().getChildren().remove(progressIndicator);
+//						this.getToolbar().getChildren().add(0, executeButton);
 					});
 					sqlQueryRunning.set(false);
 				}
@@ -210,9 +231,11 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				}
 			});
 		}
+		
+		return fixedQuery;
 	}
 
-	private String removeLeadingSpaces(String query) {
+	private String fixQuery(String query) {
 		int spacesNum = 0;
 		for (int i=0; i<query.length(); i++) {
 			if (query.charAt(i) == ' ' || query.charAt(i) == '\n') {
@@ -222,7 +245,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				break;
 			}
 		}
-		return query.substring(spacesNum, query.length());
+		query = query.substring(spacesNum, query.length());
+		query.replaceAll("--.*\n", "");
+		return query;
 	}
 
 	protected void handleUpdateResult(int rowsAffected) throws SQLException {
@@ -283,11 +308,11 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	}
 
 	public Button getExecutebutton() {
-		return executebutton;
+		return executeButton;
 	}
 
 	public void setExecutebutton(Button executebutton) {
-		this.executebutton = executebutton;
+		this.executeButton = executebutton;
 	}
 
 	public FlowPane getToolbar() {

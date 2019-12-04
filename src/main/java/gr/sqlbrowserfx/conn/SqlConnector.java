@@ -21,16 +21,20 @@ public abstract class SqlConnector {
 	private DataSource dataSource;
 	private String driver;
 	private String url;
+	private String user;
+	private String password;
 	private ExecutorService executorService;
 
 	public SqlConnector() {
 		executorService = Executors.newCachedThreadPool();
 	}
-	
-	public SqlConnector(String driver, String url) {
+
+	public SqlConnector(String driver, String url, String user, String password) {
 		this();
 		this.url = url;
 		this.driver = driver;
+		this.user = user;
+		this.password = password;
 		dataSource = this.initDatasource();
 	}
 
@@ -44,19 +48,18 @@ public abstract class SqlConnector {
 			if (param == null || param.toString().equals(""))
 				statement.setNull(i++, Types.VARCHAR);
 			else if (param instanceof Byte) {
-				statement.setBytes(i++, (byte[])param);
-			}
-			else
+				statement.setBytes(i++, (byte[]) param);
+			} else
 				statement.setObject(i++, param);
 		}
-	
+
 		return statement;
 	}
 
 	/**
-	 * A new worker of the executor service monitors the execution of a query,
-	 * in order to cancel it if memory consumption gets very big, to avoid
-	 * jvm memory crashes.
+	 * A new worker of the executor service monitors the execution of a query, in
+	 * order to cancel it if memory consumption gets very big, to avoid jvm memory
+	 * crashes.
 	 * 
 	 * @param statement
 	 * @param rset
@@ -91,7 +94,7 @@ public abstract class SqlConnector {
 			LoggerFactory.getLogger(getClass()).info("Successful try to get connection , pool is ok.");
 		}
 	}
-	
+
 	/**
 	 * Executes query. Action provided is applied to the whole result set.
 	 * 
@@ -127,20 +130,20 @@ public abstract class SqlConnector {
 	}
 
 	/**
-	 * Executes query. Action provided is applied to the whole result set.
-	 * This function also avoid jvm memory crashes due to too big result set,
-	 * by canceling the query if memory consumption gets too high.
+	 * Executes query. Action provided is applied to the whole result set. This
+	 * function also avoid jvm memory crashes due to too big result set, by
+	 * canceling the query if memory consumption gets too high.
 	 * 
 	 * @param query
 	 * @param action
 	 * @throws SQLException
 	 */
 	public void executeQueryRawSafely(String query, ResultSetAction action) throws SQLException {
-	
+
 		try (Connection conn = dataSource.getConnection();
 				Statement statement = conn.createStatement();
 				ResultSet rset = statement.executeQuery(query);) {
-	
+
 			this.avoidMemoryCrash(statement, rset);
 			action.use(rset);
 			System.gc();
@@ -182,10 +185,31 @@ public abstract class SqlConnector {
 			}
 		}
 	}
+	
+	/**
+	 * Use this function if you want to register a button action to cancel query,
+	 * by canceling statement
+	 * 
+	 * @param query
+	 * @param action
+	 * @param statementAction
+	 * @throws SQLException
+	 */
+	public void executeCancelableQuery(String query, ResultSetAction action, StatementAction statementAction) throws SQLException {
+		try (Connection conn = dataSource.getConnection();
+				Statement statement = conn.createStatement();) {
+			statementAction.use(statement);
+			ResultSet rset = statement.executeQuery(query);
+			action.use(rset);
+			rset.close();
+			statement.close();
+		}
+	}
 
 	/**
-	 * Executes query asynchronously through {@link gr.sqlbrowserfx.conn.SqlConnector}
-	 * executor service. Action provided is applied to each row of result set.
+	 * Executes query asynchronously through
+	 * {@link gr.sqlbrowserfx.conn.SqlConnector} executor service. Action provided
+	 * is applied to each row of result set.
 	 * 
 	 * @param query
 	 * @param action
@@ -196,7 +220,7 @@ public abstract class SqlConnector {
 			try {
 				this.executeQuery(query, action);
 			} catch (SQLException e) {
-				LoggerFactory.getLogger("SQLBROWSER").error(e.getMessage(), e);
+				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
 			}
 		});
 	}
@@ -214,6 +238,15 @@ public abstract class SqlConnector {
 		int result = 0;
 		try (Connection conn = dataSource.getConnection();
 				PreparedStatement statement = prepareStatementWithParams(conn, query, params);) {
+			result = statement.executeUpdate();
+		}
+
+		return result;
+	}
+
+	public int executeUpdate(Connection conn, String query, List<Object> params) throws SQLException {
+		int result = 0;
+		try (PreparedStatement statement = prepareStatementWithParams(conn, query, params);) {
 			result = statement.executeUpdate();
 		}
 
@@ -247,13 +280,20 @@ public abstract class SqlConnector {
 
 		try (Connection conn = dataSource.getConnection();) {
 			DatabaseMetaData meta = conn.getMetaData();
-			try (ResultSet rset = meta.getPrimaryKeys(null, null, tableName);) {
-				while (rset.next())
-					primaryKey = rset.getString("COLUMN_NAME");
-			}
+			ResultSet rset = meta.getPrimaryKeys(null, null, tableName);
+			while (rset.next())
+				primaryKey = rset.getString("COLUMN_NAME");
 		}
 
 		return primaryKey;
+	}
+
+	public void rollbackQuitely(Connection conn) {
+		try {
+			conn.rollback();
+		} catch (SQLException e) {
+			LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+		}
 	}
 
 	public List<String> findForeignKeys(String tableName) throws SQLException {
@@ -342,11 +382,11 @@ public abstract class SqlConnector {
 	public abstract String getViewSchemaColumn();
 
 	public abstract String getIndexColumnName();
-	
+
 	public String getName() {
 		return "name";
 	}
-	
+
 	public String getType() {
 		return "type";
 	}
@@ -365,6 +405,22 @@ public abstract class SqlConnector {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public String getUser() {
+		return user;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
 	}
 
 }
