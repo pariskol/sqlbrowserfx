@@ -272,8 +272,8 @@ public class SqlCodeArea extends CodeArea {
 //									: matcher.group("BRACKET") != null ? "bracket"
 									: matcher.group("SEMICOLON") != null ? "semicolon"
 											: matcher.group("STRING2") != null ? "string2"
-													: matcher.group("STRING") != null ? "string" : null;
-//															: matcher.group("COMMENT") != null ? "comment" : null;
+													: matcher.group("STRING") != null ? "string"
+															: matcher.group("COMMENT") != null ? "comment" : null;
 			/* never happens */ assert styleClass != null;
 			spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
 			spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());

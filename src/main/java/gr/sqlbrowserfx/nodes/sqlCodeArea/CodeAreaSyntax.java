@@ -34,6 +34,8 @@ public class CodeAreaSyntax {
 	public static final String TODO_SINGLE_COMMENT_PATTERN = "//TODO[^\n]*";
 	public static final String WARN_SINGLE_COMMENT_PATTERN = "//WARN[^\n]*";
 //    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/";
+	//FIXME add right pattern
+	private static final String COMMENT_PATTERN = "--[^\n]*";
 //    private static final String ANNOTATION_PATTERN = "@.[a-zA-Z0-9]+";
 //    private static final String OPERATION_PATTERN = ":|==|>|<|!=|>=|<=|->|=|>|<|%|-|-=|%=|\\+|\\-|\\-=|\\+=|\\^|\\&|\\|::|\\?|\\*";
 //    private static final String HEX_PATTERN = "#[a-fA-F0-9]+";
@@ -49,7 +51,7 @@ public class CodeAreaSyntax {
 					+ STRING_PATTERN_2 + ")"
 //                    + "|(?<TODO>" + TODO_SINGLE_COMMENT_PATTERN + ")"
 //                    + "|(?<WARN>" + WARN_SINGLE_COMMENT_PATTERN + ")"
-//                    + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
+                    + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
 //                    + "|(?<ANNOTATION>" + ANNOTATION_PATTERN + ")"
 //                    + "|(?<CAST>" + CAST_PATTERN + ")"
 //                    + "|(?<OPERATION>" + OPERATION_PATTERN + ")"
