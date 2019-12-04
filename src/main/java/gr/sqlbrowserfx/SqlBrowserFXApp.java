@@ -30,8 +30,8 @@ import gr.sqlbrowserfx.nodes.queriesMenu.QueriesMenu;
 import gr.sqlbrowserfx.nodes.sqlCodeArea.CodeAreaKeywords;
 import gr.sqlbrowserfx.nodes.sqlPane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
-import gr.sqlbrowserfx.restService.RestServiceConfig;
-import gr.sqlbrowserfx.restService.SparkRestService;
+import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
+import gr.sqlbrowserfx.rest.SparkRESTfulService;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -70,7 +70,7 @@ public class SqlBrowserFXApp extends Application {
 //	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/basic.css");
 	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/flat-light.css");
 	private static String DB;
-	private static RestServiceConfig restServiceConfig;
+	private static RESTfulServiceConfig restServiceConfig;
 
 	private Scene primaryScene;
 	private Stage primaryStage;
@@ -198,7 +198,7 @@ public class SqlBrowserFXApp extends Application {
 			return;
 
 		DB = dbPath;
-		restServiceConfig = new RestServiceConfig("localhost", 8080, DB);
+		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
 
 		SqlConnector sqliteConnector = new SqliteConnector(dbPath);
 		this.sqlConnector = sqliteConnector;
@@ -210,8 +210,8 @@ public class SqlBrowserFXApp extends Application {
 		
 		configBox.getConnectButton().setDisable(true);
 		DB = configBox.getDatabaseField().getText();
-		restServiceConfig = new RestServiceConfig("localhost", 8080, DB);
-			SqlConnector mysqlConnector = new MysqlConnector(configBox.getDatabaseField().getText(),
+		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
+			SqlConnector mysqlConnector = new MysqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
 					configBox.getUserField().getText(), configBox.getPasswordField().getText());
 			this.sqlConnector = mysqlConnector;
 			
@@ -309,13 +309,13 @@ public class SqlBrowserFXApp extends Application {
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/res/spark.png", 16.0, 16.0));
 		restServiceStartItem.setOnAction(actionEvent -> {
 			if (restServiceStarted == false) {
-				SparkRestService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
-				SparkRestService.init(sqlConnector);
-				SparkRestService.start();
+				SparkRESTfulService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
+				SparkRESTfulService.init(sqlConnector);
+				SparkRESTfulService.start();
 				restServiceStartItem.setText("Stop Rest Service");
 				restServiceStarted = true;
 			} else {
-				SparkRestService.stop();
+				SparkRESTfulService.stop();
 				restServiceStarted = false;
 				restServiceStartItem.setText("Start Rest Service");
 			}

@@ -11,17 +11,19 @@ public class MysqlConnector extends SqlConnector {
 	private final String SCHEMA_VIEW_QUERY = "SHOW CREATE VIEW employees.";
 	private final String SCHEMA_TABLE_QUERY = "SHOW CREATE TABLE employees.";
 
-	private String user;
-	private String password;
 	private String database;
 
 	public MysqlConnector(String database, String user, String password) {
 		super("com.mysql.cj.jdbc.Driver",
-				"jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
-		this.user = user;
-		this.password = password;
+				"jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
+				user, password);
 		this.database = database;
 		
+	}
+	
+	public MysqlConnector(String url, String database, String user, String password) {
+		super("com.mysql.cj.jdbc.Driver", url, user, password);
+		this.database = database;
 	}
 
 	
@@ -30,8 +32,8 @@ public class MysqlConnector extends SqlConnector {
 		BasicDataSource dbcp2DataSource = new BasicDataSource();
 		dbcp2DataSource.setDriverClassName(this.getDriver());
 		dbcp2DataSource.setUrl(this.getUrl());
-		dbcp2DataSource.setUsername(user);
-		dbcp2DataSource.setPassword(password);
+		dbcp2DataSource.setUsername(this.getUser());
+		dbcp2DataSource.setPassword(this.getPassword());
 		dbcp2DataSource.setInitialSize(2);
 		dbcp2DataSource.setMaxTotal(5);
 		return dbcp2DataSource;
