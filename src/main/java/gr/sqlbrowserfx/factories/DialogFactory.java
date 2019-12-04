@@ -36,11 +36,11 @@ public class DialogFactory {
 
 	private static String DEFAULT_STYLESHEET;
 	
-	public static void createErrorDialog(Exception e) {
+	public static void createErrorDialog(Throwable e) {
 		createErrorDialog(e, null);
 	}
 	
-	public static void createErrorDialog(Exception e, String stylesheet) {
+	public static void createErrorDialog(Throwable e, String stylesheet) {
 
 		Platform.runLater(() -> {
 			Alert alert = new Alert(AlertType.ERROR);
