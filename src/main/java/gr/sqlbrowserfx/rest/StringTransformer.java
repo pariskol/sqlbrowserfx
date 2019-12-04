@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.restService;
+package gr.sqlbrowserfx.rest;
 
 import spark.ResponseTransformer;
 

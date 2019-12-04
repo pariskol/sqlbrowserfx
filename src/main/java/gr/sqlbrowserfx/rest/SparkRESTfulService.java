@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.restService;
+package gr.sqlbrowserfx.rest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,11 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import spark.Spark;
 
 //TODO implement delete 
-public class SparkRestService {
+public class SparkRESTfulService {
 
 	static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 
@@ -56,7 +57,10 @@ public class SparkRestService {
 			
 			String query = "insert into " + table + " (" + columns
 					+ ") values (" + values + ")";
-			sqlConnector.executeUpdate(query, params);
+			if (sqlConnector instanceof SqliteConnector)
+				((SqliteConnector)sqlConnector).executeUpdateSerially(query, params);
+			else
+				sqlConnector.executeUpdate(query, params);
 			
 			return "Data has been saved";
 		}, stringTransformer);

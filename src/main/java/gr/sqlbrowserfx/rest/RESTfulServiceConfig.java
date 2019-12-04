@@ -1,12 +1,12 @@
-package gr.sqlbrowserfx.restService;
+package gr.sqlbrowserfx.rest;
 
-public class RestServiceConfig {
+public class RESTfulServiceConfig {
 
 	private String ip;
 	private Integer port;
 	private String database;
 	
-	public RestServiceConfig(String ip, Integer port, String database) {
+	public RESTfulServiceConfig(String ip, Integer port, String database) {
 		this.ip = ip;
 		this.port = port;
 		this.database = database;
