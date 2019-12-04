@@ -14,11 +14,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -81,7 +78,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 	protected Button searchButton;
 	protected Button refreshButton;
 	protected Button tableSelectButton;
-	protected Button columnsFilterButton;
 	protected Button sqlConsoleButton;
 	protected TextField searchField;
 	protected CheckBox resizeModeCheckBox;
@@ -100,7 +96,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 	private Tab addRecordTab;
 	private Tab addTableTab;
 	private Label rowsCountLabel;
-	private Timer searchTimer;
 
 	protected TabPane tablesTabPane;
 
@@ -175,20 +170,117 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
         dragingSupport.addSupport(this);
 	}
 
-	//TODO Is it buggy?
-	public void createTableViewWithData(String table) {
-		if (sqlQueryRunning.get()) {
-			return;
+	@Override
+	public FlowPane createToolbar() {
+		addButton = new Button("", JavaFXUtils.icon("/res/add.png"));
+		addButton.setOnMouseClicked(event -> addButtonAction());
+		addButton.setOnAction(event -> addButtonAction());
+
+		deleteButton = new Button("", JavaFXUtils.icon("/res/minus.png"));
+		deleteButton.setOnMouseClicked(event -> deleteButtonAction());
+		deleteButton.setOnAction(event -> deleteButtonAction());
+
+		editButton = new Button("", JavaFXUtils.icon("/res/edit.png"));
+		editButton.setOnMouseClicked(mouseEvent -> editButtonAction(mouseEvent));
+		editButton.setOnAction(mouseEvent -> editButtonAction(this.simulateClickEvent(editButton)));
+
+		searchField = new TextField();
+		searchField.setPromptText("Search...");
+		searchField.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ENTER) {
+				if (searchField.getText().isEmpty()) {
+					Platform.runLater(() -> sqlTableViewRef.setItems(sqlTableViewRef.getSqlTableRows()));
+				} else {
+					SqlPane.this.searchFieldAction();
+				}
+			}
+		});
+
+		settingsButton = new Button("", JavaFXUtils.icon("/res/settings.png"));
+		settingsButton.setOnMouseClicked(event -> this.settingsButtonAction());
+		settingsButton.setOnAction(event -> this.settingsButtonAction());
+
+		searchButton = new Button("", JavaFXUtils.icon("/res/magnify.png"));
+		searchButton.setOnAction(actionEvent -> this.searchButtonAction());
+		searchButton.setOnMouseClicked(mouseEvent -> this.searchButtonAction());
+
+		importCsvButton = new Button("", JavaFXUtils.icon("res/csv-import.png"));
+		importCsvButton.setOnAction(actionEvent -> this.importCsvAction());
+		importCsvButton.setOnMouseClicked(mouseEvent -> this.importCsvAction());
+
+		exportCsvButton = new Button("", JavaFXUtils.icon("res/csv.png"));
+		exportCsvButton.setOnAction(actionEvent -> this.exportCsvAction());
+		exportCsvButton.setOnMouseClicked(mouseEvent -> this.exportCsvAction());
+
+		sqlConsoleButton = new Button("", JavaFXUtils.icon("/res/console.png"));
+		sqlConsoleButton.setOnMouseClicked(mouseEvent -> this.sqlConsoleButtonAction());
+		//FIXME maybe uncomment this
+//		sqlConsoleButton.setOnAction(mouseEvent -> this.sqlConsoleButtonAction());
+		
+		if (sqlConnector != null) {
+			refreshButton = new Button("", JavaFXUtils.icon("/res/refresh.png"));
+			tableSelectButton = new Button("", JavaFXUtils.icon("/res/database.png"));
+
+			tableSelectButton.setOnMouseClicked(event -> this.tableSelectButtonAction());
+			tableSelectButton.setOnAction(event -> this.tableSelectButtonAction());
+
+			refreshButton.setOnMouseClicked(event -> refreshButtonAction());
+//FIXME something goes wrong if both action and mouse handlers set
+//			refreshButton.setOnAction(event -> refreshButtonAction());
+
+			return new FlowPane(searchButton, settingsButton, columnsSettingsButton,
+					/* columnsFilterButton, */tableSelectButton, refreshButton, addButton, editButton, deleteButton,
+					importCsvButton, exportCsvButton, sqlConsoleButton);
 		} else {
-			tablesTabPane.getSelectionModel().select(addTableTab);
-			this.createSqlTableView();
-			this.createTablesBox();
-			this.createViewsBox();
-			this.setInProgress();
-			sqlConnector.executeAsync(() -> this.getData(table));
+			return new FlowPane(searchButton, settingsButton);
 		}
+
+	}
+
+	protected ComboBox<String> createTablesBox() {
+		List<String> tablesList = null;
+		try {
+			tablesList = sqlConnector.getTables();
+		} catch (SQLException e) {
+			DialogFactory.createErrorDialog(e);
+		}
+		ObservableList<String> options = FXCollections.observableArrayList(tablesList);
+
+		if (tablesBox == null || !tablesList.equals(tablesBox.getItems())) {
+			String lastSelected = null;
+			if (tablesBox != null)
+				lastSelected = tablesBox.getSelectionModel().getSelectedItem();
+			tablesBox = new ComboBox<>(options);
+			tablesBox.setPromptText("table...");
+			if (lastSelected != null)
+				tablesBox.getSelectionModel().select(lastSelected);
+			tablesBox.setOnAction(event -> this.tableComboBoxAction(tablesBox));
+		}
+		return tablesBox;
 	}
 	
+	protected ComboBox<String> createViewsBox() {
+		List<String> tablesList = null;
+		try {
+			tablesList = sqlConnector.getViews();
+		} catch (SQLException e) {
+			DialogFactory.createErrorDialog(e);
+		}
+		ObservableList<String> options = FXCollections.observableArrayList(tablesList);
+
+		if (viewsBox == null || !tablesList.equals(viewsBox.getItems())) {
+			String lastSelected = null;
+			if (viewsBox != null)
+				lastSelected = viewsBox.getSelectionModel().getSelectedItem();
+			viewsBox = new ComboBox<>(options);
+			viewsBox.setPromptText("view...");
+			if (lastSelected != null)
+				viewsBox.getSelectionModel().select(lastSelected);
+			viewsBox.setOnAction(event -> this.tableComboBoxAction(viewsBox));
+		}
+		return viewsBox;
+	}
+
 	private void createSqlTableView() {
 		if (tablesTabPane.getSelectionModel().getSelectedItem() == addTableTab) {
 			sqlTableViewRef = new SqlTableView();
@@ -261,139 +353,18 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 		}
 	}
 
-	protected void tablesTabPaneClickAction() {
-		this.createSqlTableView();
-		Tab selectedTab = tablesTabPane.getSelectionModel().getSelectedItem();
-		sqlTableViewRef = ((SqlTableTab) selectedTab).getSqlTableView();
-		fullModeSplitPaneRef = ((SqlTableTab) selectedTab).getSplitPane();
-		recordsTabPaneRef = ((SqlTableTab) selectedTab).getRecordsTabPane();
-		this.updateRowsCountLabel();
-	}
-// Create methods -------------------------------------------------------
-
-	@Override
-	public FlowPane createToolbar() {
-		addButton = new Button("", JavaFXUtils.icon("/res/add.png"));
-		addButton.setOnMouseClicked(event -> addButtonAction());
-		addButton.setOnAction(event -> addButtonAction());
-
-		deleteButton = new Button("", JavaFXUtils.icon("/res/minus.png"));
-		deleteButton.setOnMouseClicked(event -> deleteButtonAction());
-		deleteButton.setOnAction(event -> deleteButtonAction());
-
-		editButton = new Button("", JavaFXUtils.icon("/res/edit.png"));
-		editButton.setOnMouseClicked(mouseEvent -> editButtonAction(mouseEvent));
-		editButton.setOnAction(mouseEvent -> editButtonAction(this.simulateClickEvent(editButton)));
-
-		searchField = new TextField();
-		searchField.setPromptText("Search...");
-		searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-			if (searchTimer != null)
-				searchTimer.cancel();
-			searchTimer = new Timer();
-			searchTimer.schedule(new TimerTask() {
-				@Override
-				public void run() {
-					if (newValue.isEmpty()) {
-						Platform.runLater(() -> sqlTableViewRef.setItems(sqlTableViewRef.getSqlTableRows()));
-					} else {
-						SqlPane.this.searchFieldAction();
-					}
-				}
-			}, 1000);
-		});
-
-		settingsButton = new Button("", JavaFXUtils.icon("/res/settings.png"));
-		settingsButton.setOnMouseClicked(event -> this.settingsButtonAction());
-		settingsButton.setOnAction(event -> this.settingsButtonAction());
-
-		searchButton = new Button("", JavaFXUtils.icon("/res/magnify.png"));
-		searchButton.setOnAction(actionEvent -> this.searchButtonAction());
-		searchButton.setOnMouseClicked(mouseEvent -> this.searchButtonAction());
-
-		importCsvButton = new Button("", JavaFXUtils.icon("res/csv-import.png"));
-		importCsvButton.setOnAction(actionEvent -> this.importCsvAction());
-		importCsvButton.setOnMouseClicked(mouseEvent -> this.importCsvAction());
-
-		exportCsvButton = new Button("", JavaFXUtils.icon("res/csv.png"));
-		exportCsvButton.setOnAction(actionEvent -> this.exportCsvAction());
-		exportCsvButton.setOnMouseClicked(mouseEvent -> this.exportCsvAction());
-
-		columnsSettingsButton = new Button("", JavaFXUtils.icon("/res/table-settings.png"));
-		columnsSettingsButton.setOnAction(actionEvent -> this.columnsSettingsButtonAction());
-		columnsSettingsButton.setOnMouseClicked(mouseEvent -> this.columnsSettingsButtonAction());
-
-		columnsFilterButton = new Button("", JavaFXUtils.icon("/res/filter.png"));
-		columnsFilterButton.setOnMouseClicked(mouseEvent -> {
-			// TODO
-		});
-
-		sqlConsoleButton = new Button("", JavaFXUtils.icon("/res/console.png"));
-		sqlConsoleButton.setOnMouseClicked(mouseEvent -> this.sqlConsoleButtonAction());
-		//FIXME maybe uncomment this
-//		sqlConsoleButton.setOnAction(mouseEvent -> this.sqlConsoleButtonAction());
-		
-		if (sqlConnector != null) {
-			refreshButton = new Button("", JavaFXUtils.icon("/res/refresh.png"));
-			tableSelectButton = new Button("", JavaFXUtils.icon("/res/database.png"));
-
-			tableSelectButton.setOnMouseClicked(event -> this.tableSelectButtonAction());
-			tableSelectButton.setOnAction(event -> this.tableSelectButtonAction());
-
-			refreshButton.setOnMouseClicked(event -> refreshButtonAction());
-			refreshButton.setOnAction(event -> refreshButtonAction());
-
-			return new FlowPane(searchButton, settingsButton, columnsSettingsButton,
-					/* columnsFilterButton, */tableSelectButton, refreshButton, addButton, editButton, deleteButton,
-					importCsvButton, exportCsvButton, sqlConsoleButton);
+	//FIXME Is it buggy?
+	public void createTableViewWithData(String table) {
+		if (sqlQueryRunning.get()) {
+			return;
 		} else {
-			return new FlowPane(searchButton, settingsButton);
+			tablesTabPane.getSelectionModel().select(addTableTab);
+			this.createSqlTableView();
+			this.createTablesBox();
+			this.createViewsBox();
+			this.setInProgress();
+			sqlConnector.executeAsync(() -> this.getDataFromDB(table));
 		}
-
-	}
-
-	protected ComboBox<String> createTablesBox() {
-		List<String> tablesList = null;
-		try {
-			tablesList = sqlConnector.getTables();
-		} catch (SQLException e) {
-			DialogFactory.createErrorDialog(e);
-		}
-		ObservableList<String> options = FXCollections.observableArrayList(tablesList);
-
-		if (tablesBox == null || !tablesList.equals(tablesBox.getItems())) {
-			String lastSelected = null;
-			if (tablesBox != null)
-				lastSelected = tablesBox.getSelectionModel().getSelectedItem();
-			tablesBox = new ComboBox<>(options);
-			tablesBox.setPromptText("table...");
-			if (lastSelected != null)
-				tablesBox.getSelectionModel().select(lastSelected);
-			tablesBox.setOnAction(event -> this.tableComboBoxAction(tablesBox));
-		}
-		return tablesBox;
-	}
-	
-	protected ComboBox<String> createViewsBox() {
-		List<String> tablesList = null;
-		try {
-			tablesList = sqlConnector.getViews();
-		} catch (SQLException e) {
-			DialogFactory.createErrorDialog(e);
-		}
-		ObservableList<String> options = FXCollections.observableArrayList(tablesList);
-
-		if (viewsBox == null || !tablesList.equals(viewsBox.getItems())) {
-			String lastSelected = null;
-			if (viewsBox != null)
-				lastSelected = viewsBox.getSelectionModel().getSelectedItem();
-			viewsBox = new ComboBox<>(options);
-			viewsBox.setPromptText("view...");
-			if (lastSelected != null)
-				viewsBox.getSelectionModel().select(lastSelected);
-			viewsBox.setOnAction(event -> this.tableComboBoxAction(viewsBox));
-		}
-		return viewsBox;
 	}
 
 	private ContextMenu createContextMenu() {
@@ -404,7 +375,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 			if (isFullMode()) {
 				this.fullModeAction();
 			} else {
-				this.editButtonAction(simulateClickEvent(contextMenu));
+				this.editButtonAction(simulateClickEvent());
 			}
 		});
 
@@ -432,7 +403,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 		menuItemCopy.setOnAction(actionEvent -> this.copyAction());
 
 		MenuItem menuItemCompare = new MenuItem("Compare", JavaFXUtils.icon("/res/compare.png"));
-		menuItemCompare.setOnAction(actionEvent -> compareAction(simulateClickEvent(contextMenu)));
+		menuItemCompare.setOnAction(actionEvent -> compareAction(simulateClickEvent()));
 		
 		contextMenu.getItems().addAll(menuItemEdit, menuItemCellEdit, menuItemCopyCell, menuItemCopy, menuItemCompare,
 				menuItemDelete);
@@ -492,6 +463,46 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 		return editBox;
 	}
 
+	protected void createRecordsTabPane() {
+		recordsTabPaneRef = new TabPane();
+		DraggingTabPaneSupport draggingSupport = new DraggingTabPaneSupport();
+		draggingSupport.addSupport(recordsTabPaneRef);
+	}
+
+	protected void createRecordsAddTab() {
+		if (recordsTabPaneRef == null)
+			return;
+	
+		addRecordTab = new Tab("Add");
+		addRecordTab.setGraphic(JavaFXUtils.icon("/res/add.png"));
+		addRecordTab.setClosable(false);
+	
+		SqlTableRowEditBox editBox = createEditBox(null, true);
+	
+		Button addBtn = new Button("Add", JavaFXUtils.icon("/res/check.png"));
+		addBtn.setTooltip(new Tooltip("Add"));
+		Button clearBtn = new Button("", JavaFXUtils.icon("/res/clear.png"));
+		clearBtn.setTooltip(new Tooltip("Clear"));
+		clearBtn.setOnAction(event -> editBox.clear());
+		addBtn.setOnMouseClicked(event2 -> sqlConnector.executeAsync(() -> this.insertRecordToSqlTableViewRef(editBox)));
+		addBtn.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ENTER) {
+				sqlConnector.executeAsync(() -> this.insertRecordToSqlTableViewRef(editBox));
+			}
+		});
+	
+		editBox.getToolbar().getChildren().addAll(clearBtn);
+		editBox.getMainBox().getChildren().add(addBtn);
+	
+		for (Node node : editBox.getChildren()) {
+			if (node instanceof HBox)
+				((HBox) node).prefWidthProperty().bind(editBox.widthProperty());
+		}
+	
+		addRecordTab.setContent(editBox);
+		recordsTabPaneRef.getTabs().add(0, addRecordTab);
+	}
+
 	public boolean isFullMode() {
 		return fullModeCheckBox.isSelected();
 	}
@@ -500,7 +511,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 		return limitModeCheckBox.isSelected();
 	}
 
-	protected void getData(String table) {
+	protected void getDataFromDB(String table) {
 		sqlQueryRunning.set(true);
 		String query = "select " + columnsFilter + " from " + table + whereFilter;
 
@@ -522,8 +533,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 		} catch (SQLException e) {
 			DialogFactory.createErrorDialog(e);
 		} finally {
-			this.enableFullMode();
 			this.updateRowsCountLabel();
+			this.enableFullMode();
 		}
 	}
 
@@ -539,10 +550,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 				this.createRecordsAddTab();
 				fullModeSplitPaneRef = new SplitPane(sqlTableViewRef, recordsTabPaneRef);
 				fullModeSplitPaneRef.setDividerPositions(0.7, 0.3);
-//				if (fullModeCheckBox.getText().contains("horizontal"))
-					fullModeSplitPaneRef.setOrientation(Orientation.HORIZONTAL);
-//				else
-//					fullModeSplitPaneRef.setOrientation(Orientation.VERTICAL);
+				fullModeSplitPaneRef.setOrientation(Orientation.HORIZONTAL);
 				tablesTabPane.getSelectionModel().getSelectedItem().setContent(fullModeSplitPaneRef);
 				((SqlTableTab) tablesTabPane.getSelectionModel().getSelectedItem())
 						.setRecordsTabPane(recordsTabPaneRef);
@@ -555,46 +563,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 
 	public void disableFullMode() {
 		tablesTabPane.getSelectionModel().getSelectedItem().setContent(sqlTableViewRef);
-	}
-
-	protected void createRecordsTabPane() {
-		recordsTabPaneRef = new TabPane();
-		DraggingTabPaneSupport draggingSupport = new DraggingTabPaneSupport();
-		draggingSupport.addSupport(recordsTabPaneRef);
-	}
-
-	protected void createRecordsAddTab() {
-		if (recordsTabPaneRef == null)
-			return;
-
-		addRecordTab = new Tab("Add");
-		addRecordTab.setGraphic(JavaFXUtils.icon("/res/add.png"));
-		addRecordTab.setClosable(false);
-
-		SqlTableRowEditBox editBox = createEditBox(null, true);
-
-		Button addBtn = new Button("Add", JavaFXUtils.icon("/res/check.png"));
-		addBtn.setTooltip(new Tooltip("Add"));
-		Button clearBtn = new Button("", JavaFXUtils.icon("/res/clear.png"));
-		clearBtn.setTooltip(new Tooltip("Clear"));
-		clearBtn.setOnAction(event -> editBox.clear());
-		addBtn.setOnMouseClicked(event2 -> sqlConnector.executeAsync(() -> this.insertRecord(editBox)));
-		addBtn.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				sqlConnector.executeAsync(() -> this.insertRecord(editBox));
-			}
-		});
-
-		editBox.getToolbar().getChildren().addAll(clearBtn);
-		editBox.getMainBox().getChildren().add(addBtn);
-
-		for (Node node : editBox.getChildren()) {
-			if (node instanceof HBox)
-				((HBox) node).prefWidthProperty().bind(editBox.widthProperty());
-		}
-
-		addRecordTab.setContent(editBox);
-		recordsTabPaneRef.getTabs().add(0, addRecordTab);
 	}
 
 	public void fillColumnCheckBoxes() {
@@ -642,19 +610,28 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 		});
 	}
 
+	public void setInProgress() {
+		Platform.runLater(
+				() -> tablesTabPane.getSelectionModel().getSelectedItem().setContent(new StackPane(progressIndicator)));
+	}
+
 	// Buttons' actions -------------------------------------------------------
 	protected void tableComboBoxAction(ComboBox<String> comboBox) {
 		if (sqlQueryRunning.get()) {
 			return;
 		} else {
 			this.setInProgress();
-			sqlConnector.executeAsync(() -> this.getData(comboBox.getSelectionModel().getSelectedItem()));
+			sqlConnector.executeAsync(() -> this.getDataFromDB(comboBox.getSelectionModel().getSelectedItem()));
 		}
 	}
 
-	public void setInProgress() {
-		Platform.runLater(
-				() -> tablesTabPane.getSelectionModel().getSelectedItem().setContent(new StackPane(progressIndicator)));
+	protected void tablesTabPaneClickAction() {
+		this.createSqlTableView();
+		Tab selectedTab = tablesTabPane.getSelectionModel().getSelectedItem();
+		sqlTableViewRef = ((SqlTableTab) selectedTab).getSqlTableView();
+		fullModeSplitPaneRef = ((SqlTableTab) selectedTab).getSplitPane();
+		recordsTabPaneRef = ((SqlTableTab) selectedTab).getRecordsTabPane();
+		this.updateRowsCountLabel();
 	}
 
 	private void fullModeAction() {
@@ -687,7 +664,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 
 		Button editButton = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
 		editButton.setTooltip(new Tooltip("Edit"));
-		editButton.setOnAction(event -> sqlConnector.executeAsync(() -> this.updateRecord(editBox, sqlTableRow)));
+		editButton.setOnAction(event -> sqlConnector.executeAsync(() -> this.updateRecordOfSqlTableViewRef(editBox, sqlTableRow)));
 		editButton.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				editButton.getOnAction().handle(new ActionEvent());
@@ -744,17 +721,12 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 
 		Button addBtn = new Button("Add", JavaFXUtils.icon("/res/check.png"));
 		addBtn.setTooltip(new Tooltip("Add"));
-//		Button clearBtn = new Button("", JavaFXUtils.icon("/res/clear.png"));
-//		clearBtn.setTooltip(new Tooltip("Clear"));
-//		editBox.getToolbar().getChildren().addAll(addBtn);
 		editBox.getMainBox().getChildren().add(addBtn);
-
-//		clearBtn.setOnAction(event -> editBox.clear());
 
 		popOver = new PopOver(editBox);
 		popOver.setHeight(editBox.getMainBox().getHeight());
 
-		addBtn.setOnAction(submitEvent -> sqlConnector.executeAsync(() -> this.insertRecord(editBox)));
+		addBtn.setOnAction(submitEvent -> sqlConnector.executeAsync(() -> this.insertRecordToSqlTableViewRef(editBox)));
 		addBtn.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				addBtn.getOnAction().handle(new ActionEvent());
@@ -788,7 +760,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 			Button editBtn = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
 			editBtn.setTooltip(new Tooltip("Edit"));
 			editBtn.setOnAction(submitEvent -> sqlConnector.getExecutorService()
-					.execute(() -> this.updateRecord(editBox, sqlTableRow)));
+					.execute(() -> this.updateRecordOfSqlTableViewRef(editBox, sqlTableRow)));
 			editBtn.setOnKeyPressed(keyEvent -> {
 				if (keyEvent.getCode() == KeyCode.ENTER) {
 					editBtn.getOnAction().handle(new ActionEvent());
@@ -852,7 +824,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 			row.addListener(editBox);
 			Button editButton = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
 			editButton.setTooltip(new Tooltip("Edit"));
-			editButton.setOnAction(event -> sqlConnector.executeAsync(() -> this.updateRecord(editBox, row)));
+			editButton.setOnAction(event -> sqlConnector.executeAsync(() -> this.updateRecordOfSqlTableViewRef(editBox, row)));
 			editBox.getMainBox().getChildren().add(editButton);
 			editBox.prefWidthProperty().bind(compareBox.widthProperty().divide(2));
 			compareRowBox.getChildren().add(editBox);
@@ -918,8 +890,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 			if (tablesTabPane.getSelectionModel().getSelectedItem() != null
 					&& !((SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem()).getCustomText().equals(EMPTY)) {
 				tablesTabPane.getSelectionModel().getSelectedItem().setContent(new StackPane(progressIndicator));
-				sqlConnector.getExecutorService()
-						.execute(() -> this.getData(((SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem()).getCustomText()));
+				sqlConnector.executeAsync(() -> this.getDataFromDB(((SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem()).getCustomText()));
 			}
 		}
 	}
@@ -991,7 +962,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 								map.put(columns[i], values[i]);
 							}
 							try {
-								this.insertRecord(map);
+								sqlTableViewRef.insertRecord(map);
 								rows.add(new SqlTableRow(map));
 							} catch (Exception e) {
 								logger.error(e.getMessage(), e);
@@ -1011,7 +982,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 		}
 	}
 
-	private void exportCsvAction() {
+	protected void exportCsvAction() {
 		if (exportCsvButton.isFocused() && popOver.isShowing())
 			return;
 
@@ -1124,143 +1095,25 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 		return 1;
 	}
 
-	public void insertRecord(SqlTableRowEditBox editBox) {
-		Set<String> columns = sqlTableViewRef.getSqlTable().getColumns();
-		List<Object> params = new ArrayList<>();
-		String notEmptyColumns = "";
-		String values = "";
-		Map<String, TextField> map = editBox.getMap();
-		Map<String, Object> entry = new HashMap<>();
-
-		for (String column : columns) {
-			Object elm = map.get(column).getText();
-			if (elm != null && !elm.toString().equals("")) {
-				notEmptyColumns += column + ", ";
-				Object actualValue = null;
-				try {
-					actualValue = sqlConnector.castToDBType(sqlTableViewRef.getSqlTable(), column,
-							editBox.getMap().get(column).getText());
-				} catch (NumberFormatException e) {
-					String message = "Value \"" + editBox.getMap().get(column).getText() + "\" is not valid for column "
-							+ column + ", expecting " + sqlTableViewRef.getSqlTable().getColumnsMap().get(column);
-					DialogFactory.createErrorDialog(new Exception(message));
-					return;
-				} catch (Exception e) {
-					DialogFactory.createErrorDialog(e);
-					return;
-				}
-				params.add(actualValue);
-				entry.put(column, actualValue);
-				values += "?, ";
-			}
-		}
-		notEmptyColumns = notEmptyColumns.length() > ", ".length() ? notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length()) : notEmptyColumns;
-		values = values.length() > ", ".length() ? values.substring(0, values.length() - ", ".length()) : values;
-
-		String sqlQuery = "insert into " + sqlTableViewRef.getTableName() + "(" + notEmptyColumns + ")" + " values ("
-				+ values + ")";
-
-		String message = "Executing : " + sqlQuery + " [ values : " + params.toString() + " ]";
-		logger.debug(message);
-		if (uiLogging)
-			Platform.runLater(() -> logListView.getItems().add(message));
-
-		final String query = sqlQuery;
+	public void insertRecordToSqlTableViewRef(SqlTableRowEditBox editBox) {
 		try {
-			sqlConnector.executeUpdate(query, params);
-			sqlTableViewRef.getSqlTableRows().add(new SqlTableRow(entry));
-			this.sortSqlTableView(sqlTableViewRef);
-		} catch (Exception e) {
+			sqlTableViewRef.insertRecord(editBox);
+		} catch (Throwable e) {
 			DialogFactory.createErrorDialog(e);
 		}
 
 	}
 
-	public void insertRecord(Map<String, Object> map) throws SQLException {
-		Set<String> columns = sqlTableViewRef.getSqlTable().getColumns();
-		List<Object> params = new ArrayList<>();
-		String notEmptyColumns = "";
-		String values = "";
-
-		for (String column : columns) {
-			Object elm = map.get(column);
-			if (elm != null && !elm.toString().equals("")) {
-				notEmptyColumns += column + ", ";
-				params.add(map.get(column));
-				values += "?, ";
-			}
-		}
-		notEmptyColumns = notEmptyColumns.length() > ", ".length() ? notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length()) : notEmptyColumns;
-		values = values.length() > ", ".length() ? values.substring(0, values.length() - ", ".length()) : values;
-
-		String sqlQuery = "insert into " + sqlTableViewRef.getTableName() + "(" + notEmptyColumns + ")" + " values ("
-				+ values + ")";
-
-		String message = "Executing : " + sqlQuery + " [ values : " + params.toString() + " ]";
-		logger.debug(message);
-		if (uiLogging)
-			Platform.runLater(() -> logListView.getItems().add(message));
-
-		final String query = sqlQuery;
-		sqlConnector.executeUpdate(query, params);
-	}
-
-	public void updateRecord(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) {
-		Set<String> columns = sqlTableViewRef.getSqlTable().getColumns();
-		String query = "update " + sqlTableViewRef.getTableName() + " set ";
-		List<Object> params = new ArrayList<>();
-
-		for (String column : columns) {
-			if (!column.equals(sqlTableViewRef.getPrimaryKey())) {
-				TextField elm = editBox.getMap().get(column);
-				Object actualValue = null;
-				if (elm != null && elm.getText() != null && !elm.getText().equals("")) {
-					// type checking
-					try {
-						actualValue = sqlConnector.castToDBType(sqlTableViewRef.getSqlTable(), column,
-								editBox.getMap().get(column).getText());
-						// Class<?> clazz = sqlTableRow.get(label.getText()).getValue().getClass();
-						// actualValue = clazz.cast(actualValue);
-					} catch (Exception e) {
-						DialogFactory.createErrorDialog(e);
-						return;
-					}
-				}
-				params.add(actualValue);
-				query += column + "= ? ,";
-			}
-		}
-		query = query.substring(0, query.length() - 1);
-		query += " where " + sqlTableViewRef.getPrimaryKey() + "= ?";
-		params.add(sqlTableRow.get(sqlTableViewRef.getPrimaryKey()));
-
-		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
-		logger.debug(message);
-		if (uiLogging)
-			Platform.runLater(() -> logListView.getItems().add(message));
-
+	public void updateRecordOfSqlTableViewRef(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) {
 		try {
-			sqlConnector.executeUpdate(query, params);
-
-			for (String column : columns) {
-				TextField elm = editBox.getMap().get(column);
-				Object actualValue = null;
-				if (elm != null && elm.getText() != null && !elm.getText().equals("")) {
-					actualValue = sqlConnector.castToDBType(sqlTableViewRef.getSqlTable(), column,
-							editBox.getMap().get(column).getText());
-				}
-				sqlTableRow.set(column, actualValue);
-
-			}
-			// notify listeners
-			sqlTableRow.changed();
-		} catch (Exception e) {
+			sqlTableViewRef.updateRecord(editBox, sqlTableRow);
+		} catch (Throwable e) {
 			DialogFactory.createErrorDialog(e);
 		}
 	}
 
-	protected MouseEvent simulateClickEvent(ContextMenu contextMenu) {
-		return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, contextMenu.getAnchorX(), contextMenu.getAnchorY(),
+	protected MouseEvent simulateClickEvent() {
+		return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, contextMenu.getX(), contextMenu.getY(),
 				MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null);
 		// new MouseEvent(source, target, eventType, x, y, screenX, screenY, button,
 		// clickCount, shiftDown, controlDown, altDown, metaDown, primaryButtonDown,
@@ -1275,12 +1128,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 
 		return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, x, y, MouseButton.PRIMARY, 1, true, true, true, true,
 				true, true, true, true, true, true, null);
-		// new MouseEvent(source, target, eventType, x, y, screenX, screenY, button,
-		// clickCount, shiftDown, controlDown, altDown, metaDown, primaryButtonDown,
-		// middleButtonDown, secondaryButtonDown, synthesized, popupTrigger,
-		// stillSincePress, pickResult)
 	}
 
+	@SuppressWarnings("unused")
 	private void sortSqlTableView(SqlTableView sqlTableView) {
 		sqlTableView.getSqlTableRows().sort((o1, o2) -> {
 			if (o1.get(sqlTableView.getPrimaryKey()) != null && o2.get(sqlTableView.getPrimaryKey()) != null) {

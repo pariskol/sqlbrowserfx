@@ -106,14 +106,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		for (int i=1;i<=rsmd.getColumnCount();i++) {
 			tablesSet.add(rsmd.getTableName(i));
 		}
-		String actualName = "";
-		for (String table : tablesSet) {
-			sqlTable = new SqlTable(table, rsmd);
-			actualName += table + ", ";
-		}
-		actualName = actualName.substring(0, actualName.length() - ", ".length());
 		sqlTable = new SqlTable(rsmd);
-//		sqlTable.setName(actualName);
 		columns = new ArrayList<>(sqlTable.getColumns());
 
 		String primaryKey = sqlTable.getName() != null ? sqlConnector.findPrimaryKey(sqlTable.getName()) : null;
@@ -141,13 +134,6 @@ public class SqlTableView extends TableView<SqlTableRow> {
 			col.setCellFactory(callback -> {
 				return new SqlTableViewEditableCell(this, sqlConnector);
 			});
-//			col.setGraphic(JavaFXUtils.createImageView("res/mini-filter.png"));
-//			col.getGraphic().setOnMouseClicked(mouseEvent -> {
-//				if (mouseEvent.getButton() == MouseButton.SECONDARY) {
-//				mouseEvent.consume();
-//				DialogFactory.createInfoDialog("Filter", "Filtered");
-//				}
-//			});
 			tableColumns.add(col);
 		}
 
@@ -167,14 +153,17 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		HashSet<String> tablesSet = new HashSet<>();
 		ResultSetMetaData rsmd = rs.getMetaData();
 		for (int i=1;i<=rsmd.getColumnCount();i++) {
-			tablesSet.add(rsmd.getTableName(i));
+			if (!rsmd.getTableName(i).isEmpty())
+				tablesSet.add(rsmd.getTableName(i));
 		}
+		
 		String actualName = "";
 		for (String table : tablesSet) {
 			sqlTable = new SqlTable(table, rsmd);
 			actualName += table + ", ";
 		}
-		actualName = actualName.substring(0, actualName.length() - ", ".length());
+		if (actualName.length() > ", ".length())
+			actualName = actualName.substring(0, actualName.length() - ", ".length());
 		sqlTable = new SqlTable(rsmd);
 		sqlTable.setName(actualName);
 		columns = new ArrayList<>(sqlTable.getColumns());
@@ -363,7 +352,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		return 1;
 	}
 
-	public void insertRecord(SqlTableRowEditBox editBox) {
+	public void insertRecord(SqlTableRowEditBox editBox) throws SQLException {
 		Set<String> columns = this.getSqlTable().getColumns();
 		List<Object> params = new ArrayList<>();
 		String notEmptyColumns = "";
@@ -402,13 +391,9 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		String message = "Executing : " + sqlQuery + " [ values : " + params.toString() + " ]";
 		logger.debug(message);
 		final String query = sqlQuery;
-		try {
-			sqlConnector.executeUpdate(query, params);
-			this.getSqlTableRows().add(new SqlTableRow(entry));
-			this.sort(this);
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-		}
+		sqlConnector.executeUpdate(query, params);
+		this.getSqlTableRows().add(new SqlTableRow(entry));
+		this.sort(this);
 	}
 
 	public void insertRecord(Map<String, Object> map) throws SQLException {
@@ -437,7 +422,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		sqlConnector.executeUpdate(query, params);
 	}
 
-	public void updateRecord(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) {
+	public void updateRecord(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) throws SQLException {
 		Set<String> columns = this.getSqlTable().getColumns();
 		String query = "update " + this.getTableName() + " set ";
 		List<Object> params = new ArrayList<>();
@@ -469,24 +454,20 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
 		logger.debug(message);
 
-		try {
-			sqlConnector.executeUpdate(query, params);
+		sqlConnector.executeUpdate(query, params);
 
-			for (String column : columns) {
-				TextField elm = editBox.getMap().get(column);
-				Object actualValue = null;
-				if (elm != null && elm.getText() != null && !elm.getText().equals("")) {
-					actualValue = sqlConnector.castToDBType(this.getSqlTable(), column,
-							editBox.getMap().get(column).getText());
-				}
-				sqlTableRow.set(column, actualValue);
-
+		for (String column : columns) {
+			TextField elm = editBox.getMap().get(column);
+			Object actualValue = null;
+			if (elm != null && elm.getText() != null && !elm.getText().equals("")) {
+				actualValue = sqlConnector.castToDBType(this.getSqlTable(), column,
+						editBox.getMap().get(column).getText());
 			}
-			// notify listeners
-			sqlTableRow.changed();
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			sqlTableRow.set(column, actualValue);
+
 		}
+		// notify listeners
+		sqlTableRow.changed();
 	}
 	
 	private void sort(SqlTableView sqlTableView) {
