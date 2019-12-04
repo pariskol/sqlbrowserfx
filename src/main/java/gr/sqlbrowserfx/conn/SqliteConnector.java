@@ -1,10 +1,9 @@
 package gr.sqlbrowserfx.conn;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.sql.DataSource;
@@ -17,23 +16,33 @@ public class SqliteConnector extends SqlConnector {
 	private final String SCHEMA_COLUMN = "sql";
 	private final String SCHEMA_QUERY = "select sql from sqlite_master where name = ?";
 	
-	LinkedBlockingQueue<UpdateQuery> updateQueriesQueue;
+	private LinkedBlockingQueue<UpdateQuery> updateQueriesQueue;
+	
 	public SqliteConnector(String database) {
-		super("org.sqlite.JDBC", "jdbc:sqlite:" + database);
+		super("org.sqlite.JDBC", "jdbc:sqlite:" + database, null, null);
 		this.updateQueriesQueue = new LinkedBlockingQueue<UpdateQuery>();
-		ExecutorService updateQueriesRunner = Executors.newSingleThreadExecutor();
-		updateQueriesRunner.execute(() -> {
-			while(true) {
-				UpdateQuery updateQuery;
-				try {
-					updateQuery = updateQueriesQueue.take();
-					LoggerFactory.getLogger(getClass().getSimpleName()).info("Executing update");
-					super.executeUpdate(updateQuery.getQuery(), updateQuery.getParams());
-				} catch (Throwable e) {
-					e.printStackTrace();
+		this.startUpdateExecutor();
+	}
+
+	private void startUpdateExecutor() {
+		Thread updatesExecutorThread = new Thread(() -> {
+			try (Connection conn = this.getConnection();) {
+				while(!Thread.currentThread().isInterrupted()) {
+					UpdateQuery updateQuery;
+					try {
+						updateQuery = updateQueriesQueue.take();
+						LoggerFactory.getLogger(getClass()).info("Executing update");
+						super.executeUpdate(conn, updateQuery.getQuery(), updateQuery.getParams());
+					} catch (Throwable e) {
+						LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+					}
 				}
+			} catch (SQLException e1) {
+				LoggerFactory.getLogger(getClass()).error(e1.getMessage(), e1);
 			}
-		});
+		}, "SQLite updates executor");
+		updatesExecutorThread.setDaemon(true);
+		updatesExecutorThread.start();
 	}
 
 	@Override
@@ -57,7 +66,7 @@ public class SqliteConnector extends SqlConnector {
 		try {
 			this.updateQueriesQueue.put(new UpdateQuery(query, params));
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
 		}
 		return 2;
 	}
