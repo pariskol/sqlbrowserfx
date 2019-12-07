@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.controlsfx.control.PopOver;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
 
 public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObservable<String>{
 
@@ -48,6 +50,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	protected AtomicBoolean sqlQueryRunning;
 	protected List<SimpleChangeListener<String>> listeners;
 	private Button stopExecutionButton;
+	private Button settingsButton;
+	private boolean popOverIsShowing = false;
 
 	@SuppressWarnings("unchecked")
 	public SqlConsolePane(SqlConnector sqlConnector) {
@@ -101,12 +105,11 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			    });
 		
 		toolbar = this.createToolbar();
-		bottomBar = new FlowPane(autoCompleteOnTypeCheckBox);
+//		bottomBar = new FlowPane(autoCompleteOnTypeCheckBox);
 		
 		this.setCenter(splitPane);
-		this.setBottom(bottomBar);
+//		this.setBottom(bottomBar);
 		this.setLeft(toolbar);
-//		splitPane.prefHeightProperty().bind(this.heightProperty());
 
 		// initial create one tab
 		this.addTab();
@@ -145,7 +148,17 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		stopExecutionButton = new Button("", JavaFXUtils.icon("res/stop.png"));
 		executeButton.setTooltip(new Tooltip("Stop execution"));
 		
-		FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton);
+		settingsButton = new Button("", JavaFXUtils.icon("/res/settings.png"));
+		settingsButton.setOnMouseClicked(mouseEvent -> {
+			if (!popOverIsShowing) {
+				popOverIsShowing = true;
+				PopOver popOver = new PopOver(new VBox(autoCompleteOnTypeCheckBox));
+				popOver.setOnHidden(event -> popOverIsShowing = false);
+				popOver.show(settingsButton);
+			}
+		});
+		
+		FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton, settingsButton);
 		toolbar.setOrientation(Orientation.VERTICAL);
 		return toolbar;
 	}
@@ -168,13 +181,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				sqlQueryRunning.set(true);
 				Platform.runLater(() -> {
 					executeButton.setDisable(true);
-//					this.getToolbar().getChildren().remove(executeButton);
-//					this.getToolbar().getChildren().add(0, progressIndicator);
 				});
 				try {
-//					sqlConnector.executeQueryRawSafely(fixedQuery, rset -> {
-//						handleSelectResult(fixedQuery, rset);
-//					});
 					sqlConnector.executeCancelableQuery(fixedQuery, rset -> {
 						handleSelectResult(fixedQuery, rset);
 					}, stmt -> {
@@ -192,8 +200,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				} finally {
 					Platform.runLater(() -> {
 						executeButton.setDisable(false);
-//						this.getToolbar().getChildren().remove(progressIndicator);
-//						this.getToolbar().getChildren().add(0, executeButton);
 					});
 					sqlQueryRunning.set(false);
 				}
@@ -206,8 +212,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				sqlQueryRunning.set(true);
 				Platform.runLater(() -> {
 					executeButton.setDisable(true);
-//					this.getToolbar().getChildren().remove(executeButton);
-//					this.getToolbar().getChildren().add(0, progressIndicator);
 				});
 				try {
 					int rowsAffected = sqlConnector.executeUpdate(fixedQuery);
@@ -218,8 +222,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				} finally {
 					Platform.runLater(() -> {
 						executeButton.setDisable(false);
-//						this.getToolbar().getChildren().remove(progressIndicator);
-//						this.getToolbar().getChildren().add(0, executeButton);
 					});
 					sqlQueryRunning.set(false);
 				}
@@ -246,6 +248,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			}
 		}
 		query = query.substring(spacesNum, query.length());
+		//FIXME find right pattern to ignore comments 
 		query.replaceAll("--.*\n", "");
 		return query;
 	}

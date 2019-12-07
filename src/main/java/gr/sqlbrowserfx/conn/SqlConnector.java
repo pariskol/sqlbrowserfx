@@ -16,6 +16,8 @@ import javax.sql.DataSource;
 
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.utils.MemoryGuard;
+
 public abstract class SqlConnector {
 
 	private DataSource dataSource;
@@ -54,39 +56,6 @@ public abstract class SqlConnector {
 		}
 
 		return statement;
-	}
-
-	/**
-	 * A new worker of the executor service monitors the execution of a query, in
-	 * order to cancel it if memory consumption gets very big, to avoid jvm memory
-	 * crashes.
-	 * 
-	 * @param statement
-	 * @param rset
-	 */
-	private void avoidMemoryCrash(Statement statement, ResultSet rset) {
-		executorService.execute(() -> {
-			try {
-				long heapMaxSize = Runtime.getRuntime().maxMemory();
-				while (!statement.isClosed()) {
-					long currentUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
-					if (currentUsage > heapMaxSize - heapMaxSize / 5) {
-						statement.cancel();
-						System.gc();
-					}
-					Thread.sleep(100);
-				}
-			} catch (SQLException | InterruptedException e) {
-				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
-			} finally {
-				try {
-					statement.close();
-					rset.close();
-				} catch (SQLException e) {
-					LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
-				}
-			}
-		});
 	}
 
 	public void checkConnection() throws SQLException {
@@ -140,13 +109,15 @@ public abstract class SqlConnector {
 	 */
 	public void executeQueryRawSafely(String query, ResultSetAction action) throws SQLException {
 
+		ResultSet rset = null;
 		try (Connection conn = dataSource.getConnection();
-				Statement statement = conn.createStatement();
-				ResultSet rset = statement.executeQuery(query);) {
-
-			this.avoidMemoryCrash(statement, rset);
+			 Statement statement = conn.createStatement();) {
+			MemoryGuard.startMemoryGuard(statement);
+			rset = statement.executeQuery(query);
 			action.use(rset);
 			System.gc();
+		} finally {
+			rset.close();
 		}
 	}
 
@@ -196,13 +167,16 @@ public abstract class SqlConnector {
 	 * @throws SQLException
 	 */
 	public void executeCancelableQuery(String query, ResultSetAction action, StatementAction statementAction) throws SQLException {
+		ResultSet rset = null;
 		try (Connection conn = dataSource.getConnection();
 				Statement statement = conn.createStatement();) {
 			statementAction.use(statement);
-			ResultSet rset = statement.executeQuery(query);
+			MemoryGuard.startMemoryGuard(statement);
+			rset = statement.executeQuery(query);
 			action.use(rset);
-			rset.close();
-			statement.close();
+		} finally {
+			if (rset != null)
+				rset.close();
 		}
 	}
 

@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.nodes.sqlPane.SqlTableRowEditBox;
+import gr.sqlbrowserfx.utils.MemoryGuard;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -177,13 +178,18 @@ public class SqlTableView extends TableView<SqlTableRow> {
 			logger.error(e.getMessage(), e);
 		}
 		
-		while (rs.next()) {
-			LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
-			for (String columnLabel : sqlTable.getColumns()) {
-				entry.put(columnLabel, rs.getObject(columnLabel));
+		MemoryGuard.startMemoryGuard(rs);
+		try {
+			while (rs.next()) {
+				LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
+				for (String columnLabel : sqlTable.getColumns()) {
+					entry.put(columnLabel, rs.getObject(columnLabel));
+				}
+	
+				rows.add(new SqlTableRow(entry));
 			}
-
-			rows.add(new SqlTableRow(entry));
+		} catch (Throwable e) {
+			rows.clear();
 		}
 
 		Platform.runLater(() -> {

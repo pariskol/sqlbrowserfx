@@ -227,9 +227,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 			refreshButton.setOnMouseClicked(event -> refreshButtonAction());
 //FIXME something goes wrong if both action and mouse handlers set
 //			refreshButton.setOnAction(event -> refreshButtonAction());
+			columnsSettingsButton = new Button("", JavaFXUtils.icon("/res/table-settings.png"));
+			columnsSettingsButton.setOnMouseClicked(mouseEvent -> this.columnsSettingsButtonAction());
 
-			return new FlowPane(searchButton, settingsButton, columnsSettingsButton,
-					/* columnsFilterButton, */tableSelectButton, refreshButton, addButton, editButton, deleteButton,
+			return new FlowPane(searchButton, settingsButton, columnsSettingsButton,tableSelectButton, refreshButton, addButton, editButton, deleteButton,
 					importCsvButton, exportCsvButton, sqlConsoleButton);
 		} else {
 			return new FlowPane(searchButton, settingsButton);
