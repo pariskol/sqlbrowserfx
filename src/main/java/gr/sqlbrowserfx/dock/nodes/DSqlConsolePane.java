@@ -28,6 +28,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	private DockNode thisDockNode;
 	private SqlPane sqlPane;
 	private Button historyButton;
+	private boolean historyShowing = false;
 	private ListView<String> historyListView;
  
 	public DSqlConsolePane(SqlConnector sqlConnector, DSqlPane sqlPane) {
@@ -64,10 +65,16 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	public FlowPane createToolbar() {
 		FlowPane toolbar = super.createToolbar();
+		//FIXME 
 		historyButton = new Button("", JavaFXUtils.icon("res/monitor.png"));
 		historyButton.setTooltip(new Tooltip("Show history"));
 		historyButton.setOnMouseClicked(mouseEvent -> {
-			new DockNode(historyListView).dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),DockWeights.asDoubleArrray(0.7f, 0.3f));
+			if (!historyShowing) {
+				historyShowing = true;
+				DockNode dockNode = new DockNode(historyListView, "Query history", JavaFXUtils.icon("/res/monitor.png"));
+				dockNode.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),DockWeights.asDoubleArrray(0.7f, 0.3f));
+				dockNode.setOnClose(() -> historyShowing = false);
+			}
 		});
 		toolbar.getChildren().add(historyButton);
 		return toolbar;
@@ -85,7 +92,6 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 				sqlPane.enableFullMode();
 			}
 			sqlPane.updateRowsCountLabel();
-//			sqlPane.asDockNode().setTitle(sqlPane.getSqlTableView().getTableName());
 		});
 	}
 	
