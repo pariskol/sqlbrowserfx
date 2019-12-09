@@ -117,13 +117,17 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		
 		Platform.runLater(() -> titleProperty.set(sqlTable.getName()));
 		
-		while (rs.next()) {
-			LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
-			for (String columnLabel : sqlTable.getColumns()) {
-				entry.put(columnLabel, rs.getObject(columnLabel));
+		try {
+			while (rs.next()) {
+				LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
+				for (String columnLabel : sqlTable.getColumns()) {
+					entry.put(columnLabel, rs.getObject(columnLabel));
+				}
+	
+				rows.add(new SqlTableRow(entry));
 			}
-
-			rows.add(new SqlTableRow(entry));
+		} catch (Exception e) {
+			rows.clear();
 		}
 
 		List<TableColumn<SqlTableRow, Object>> tableColumns = new ArrayList<>();

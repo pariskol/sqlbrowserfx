@@ -25,6 +25,7 @@ import javafx.scene.layout.FlowPane;
 
 public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
+	private static final int MAX_HISTORY = 20;
 	private DockNode thisDockNode;
 	private SqlPane sqlPane;
 	private Button historyButton;
@@ -40,6 +41,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 			if (keyEvent.getCode() == KeyCode.C && keyEvent.isControlDown())
 				this.copyAction(historyListView);
 		});
+//		historyListView.setContextMenu(new ContextMenu(items));
 		this.getChildren().clear();
 		this.setCenter(getQueryTabPane());
 		this.setBottom(getBottomBar());
@@ -98,10 +100,11 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	public String executeButonAction() {
 		String query = super.executeButonAction();
-		historyListView.getItems().add(query);
-		if (historyListView.getItems().size() == 10) {
-			historyListView.getItems().clear();
+		if (historyListView.getItems().size() == MAX_HISTORY) {
+			historyListView.getItems().remove(MAX_HISTORY - 1);
 		}
+		historyListView.getItems().add(query);
+		historyListView.scrollTo(historyListView.getItems().size()-1);
 		return query;
 	}
 	

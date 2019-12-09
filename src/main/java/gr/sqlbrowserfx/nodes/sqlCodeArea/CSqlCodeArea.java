@@ -25,7 +25,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 	}
 
 	@Override
-	protected ContextMenu createContextMenu() {
+	public ContextMenu createContextMenu() {
 		ContextMenu menu = super.createContextMenu();
 		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.icon("/res/check.png"));
 		menuItemSave.setOnAction(action -> this.saveQueryAction());

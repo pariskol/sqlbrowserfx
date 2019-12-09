@@ -105,10 +105,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			    });
 		
 		toolbar = this.createToolbar();
-//		bottomBar = new FlowPane(autoCompleteOnTypeCheckBox);
 		
 		this.setCenter(splitPane);
-//		this.setBottom(bottomBar);
 		this.setLeft(toolbar);
 
 		// initial create one tab

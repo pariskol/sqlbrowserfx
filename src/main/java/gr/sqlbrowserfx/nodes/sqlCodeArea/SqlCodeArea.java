@@ -2,6 +2,7 @@ package gr.sqlbrowserfx.nodes.sqlCodeArea;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,12 +10,14 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
 
+import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -26,14 +29,15 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 
-public class SqlCodeArea extends CodeArea {
+public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 
-    private static final int LIST_ITEM_HEIGHT = 30;
-    private static final int LIST_MAX_HEIGHT = 120;
-    
+	private static final int LIST_ITEM_HEIGHT = 30;
+	private static final int LIST_MAX_HEIGHT = 120;
+
 	private Runnable enterAction;
 	private boolean auoCompletePopupShowing = false;
 	private AtomicReference<Popup> auoCompletePopup;
@@ -56,8 +60,7 @@ public class SqlCodeArea extends CodeArea {
 		findField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
 				searchAndReplacePopOver.hide();
-			}
-			else if (keyEvent.getCode() == KeyCode.ENTER) {
+			} else if (keyEvent.getCode() == KeyCode.ENTER) {
 				this.findButtonAction();
 			}
 		});
@@ -71,7 +74,7 @@ public class SqlCodeArea extends CodeArea {
 //			}
 		});
 		replaceField.setPromptText("Replace...");
-		
+
 		findButton = new Button("Find", JavaFXUtils.icon("/res/magnify.png"));
 		findButton.setOnMouseClicked(mouseEvent -> this.findButtonAction());
 		findButton.setOnKeyPressed(keyEvent -> {
@@ -88,14 +91,14 @@ public class SqlCodeArea extends CodeArea {
 				keyEvent.consume();
 			}
 		});
-		findButton.prefWidthProperty().bind(findField.widthProperty());
-		replaceButton.prefWidthProperty().bind(findField.widthProperty());
+//		findButton.prefWidthProperty().bind(findField.widthProperty());
+//		replaceButton.prefWidthProperty().bind(findField.widthProperty());
 
 		searchAndReplacePopOver = new PopOver();
 		searchAndReplacePopOver.setArrowSize(0);
-		searchAndReplacePopOver.setContentNode(new VBox(findField, replaceField, findButton, replaceButton));
+		searchAndReplacePopOver.setContentNode(new VBox(findField, replaceField, new HBox(findButton, replaceButton)));
 		searchAndReplacePopOver.setAutoHide(true);
-		
+
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.ENTER) {
 				enterAction.run();
@@ -141,30 +144,31 @@ public class SqlCodeArea extends CodeArea {
 			findField.setText(this.getSelectedText());
 			findField.selectAll();
 		}
-		Bounds boundsInScene = this.localToScene(this.getBoundsInLocal());
-		searchAndReplacePopOver.show(this, boundsInScene.getMinX()+searchAndReplacePopOver.getWidth()/3, boundsInScene.getMinY()-searchAndReplacePopOver.getHeight()/2);
+		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		searchAndReplacePopOver.show(this, boundsInScene.getMinX() + searchAndReplacePopOver.getWidth() / 3,
+				boundsInScene.getMinY() - searchAndReplacePopOver.getHeight() / 2);
 	}
-	
+
 	private void findButtonAction() {
 		if (!findField.getText().isEmpty()) {
 			lastPos = this.getText().indexOf(findField.getText(), this.getCaretPosition());
 			if (lastPos != -1) {
 				this.moveTo(lastPos + findField.getText().length());
 				this.selectRange(lastPos, lastPos + findField.getText().length());
-			}
-			else if (lastPos == -1) {
+			} else if (lastPos == -1) {
 				lastPos = 0;
 				this.moveTo(0);
 			}
 		}
 	}
-	
+
 	private void replaceButtonAction() {
 		if (!replaceField.getText().isEmpty() && !this.getSelectedText().isEmpty())
 			this.replaceSelection(replaceField.getText());
 	}
-	
-	protected ContextMenu createContextMenu() {
+
+	@Override
+	public ContextMenu createContextMenu() {
 		ContextMenu menu = new ContextMenu();
 
 		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/res/copy.png"));
@@ -179,7 +183,7 @@ public class SqlCodeArea extends CodeArea {
 		MenuItem menuItemSuggestions = new MenuItem("Suggestions", JavaFXUtils.icon("/res/suggestion.png"));
 		menuItemSuggestions
 				.setOnAction(event -> this.autoCompleteAction(this.simulateControlSpaceEvent(), auoCompletePopup));
-		
+
 		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.icon("/res/magnify.png"));
 		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
@@ -191,23 +195,24 @@ public class SqlCodeArea extends CodeArea {
 		return new KeyEvent(KeyEvent.KEY_TYPED, " ", " ", null, false, true, false, false);
 	}
 
-	private ListView<String> createListView(List<String> suggestions){
-        ListView<String> suggestionsList = new ListView<>();
-        suggestionsList.getItems().addAll(FXCollections.observableList(new ArrayList<>(new HashSet<>(suggestions))));
-        int suggestionsNum = suggestions.size();
-        int listViewLength = ((suggestionsNum * LIST_ITEM_HEIGHT) > LIST_MAX_HEIGHT) ? LIST_MAX_HEIGHT : suggestionsNum * LIST_ITEM_HEIGHT;
-        suggestionsList.setPrefHeight(listViewLength);
-        return suggestionsList;
-    }
-	
+	private ListView<String> createListView(List<String> suggestions) {
+		ListView<String> suggestionsList = new ListView<>();
+		suggestionsList.getItems().addAll(FXCollections.observableList(new ArrayList<>(new HashSet<>(suggestions))));
+		int suggestionsNum = suggestions.size();
+		int listViewLength = ((suggestionsNum * LIST_ITEM_HEIGHT) > LIST_MAX_HEIGHT) ? LIST_MAX_HEIGHT
+				: suggestionsNum * LIST_ITEM_HEIGHT;
+		suggestionsList.setPrefHeight(listViewLength);
+		return suggestionsList;
+	}
+
 	private void autoCompleteAction(KeyEvent event, AtomicReference<Popup> auoCompletePopup) {
 		String ch = event.getCharacter();
 		// for some reason keycode does not work
-		if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType && !event.isControlDown() )
-				|| (event.isControlDown() && ch.equals(" "))
+		if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType && !event.isControlDown())
+				|| (event.isControlDown() && ch.equals(" ")) || ch.equals(".")
 				|| event.getCode() == KeyCode.BACK_SPACE) {
-			int position = this.getCaretPosition();
-			String query = CodeAreaAutoComplete.getQuery(this, position);
+			int caretPosition = this.getCaretPosition();
+			String query = CodeAreaAutoComplete.getQuery(this, caretPosition);
 			if (auoCompletePopup.get() == null) {
 				Popup popup = new Popup();
 				popup.setAutoHide(true);
@@ -216,7 +221,24 @@ public class SqlCodeArea extends CodeArea {
 			}
 
 			if (!query.trim().isEmpty()) {
-				ListView<String> suggestionsList = this.createListView(CodeAreaAutoComplete.getQuerySuggestions(query));
+				List<String> suggestions = null;
+				if (ch.equals(".")) {
+					query = "";
+					ch = "";
+					caretPosition--;
+					do {
+						System.out.println(ch);
+						ch = this.getText(caretPosition - 1, caretPosition--);
+						query += ch;
+					} while (!ch.equals(" ") && !(caretPosition == 0));
+
+					query = StringUtils.reverse(query);
+					// TODO load actual table columns
+					suggestions = Arrays.asList(query + "colums");
+				} else
+					suggestions = CodeAreaAutoComplete.getQuerySuggestions(query);
+
+				ListView<String> suggestionsList = this.createListView(suggestions);
 				if (suggestionsList.getItems().size() != 0) {
 					auoCompletePopup.get().getContent().setAll(suggestionsList);
 					Bounds pointer = this.caretBoundsProperty().getValue().get();
@@ -224,6 +246,8 @@ public class SqlCodeArea extends CodeArea {
 						auoCompletePopup.get().show(this, pointer.getMaxX(), pointer.getMinY() + 20);
 						auoCompletePopupShowing = true;
 					}
+					final String fQuery = query;
+					final int fCaretPosition = caretPosition;
 					suggestionsList.setOnKeyPressed(keyEvent -> {
 						if (keyEvent.getCode() == KeyCode.ENTER) {
 							AtomicReference<String> word = new AtomicReference<>();
@@ -232,9 +256,10 @@ public class SqlCodeArea extends CodeArea {
 							} else {
 								word.set(suggestionsList.getItems().get(0).toString());
 							}
+
 							Platform.runLater(() -> {
-								this.replaceText(position - query.length(), position, word.get());
-								this.moveTo(position + word.get().length() - query.length());
+								this.replaceText(fCaretPosition - fQuery.length(), fCaretPosition, word.get());
+								this.moveTo(fCaretPosition + word.get().length() - fQuery.length());
 							});
 							auoCompletePopup.get().hide();
 							auoCompletePopupShowing = false;
@@ -252,7 +277,7 @@ public class SqlCodeArea extends CodeArea {
 				auoCompletePopup.get().hide();
 				auoCompletePopupShowing = false;
 			}
-		} else if (!event.isControlDown()){
+		} else if (!event.isControlDown()) {
 			if (auoCompletePopup.get() != null) {
 				auoCompletePopup.get().hide();
 				auoCompletePopupShowing = false;
@@ -294,6 +319,5 @@ public class SqlCodeArea extends CodeArea {
 	public void setAutoCompleteOnType(boolean autoCompleteOnType) {
 		this.autoCompleteOnType = autoCompleteOnType;
 	}
-	
-	
+
 }

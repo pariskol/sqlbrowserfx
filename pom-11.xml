@@ -2,26 +2,18 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>gr.paris</groupId>
-	<artifactId>sqlite-browser</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<groupId>gr.sqlbrowserfx</groupId>
+	<artifactId>sqlbrowserfx</artifactId>
+	<version>1.0.1-SNAPSHOT</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
 	</properties>
 
 	<build>
 		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.0</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
@@ -50,15 +42,16 @@
 					<compress>2</compress>
 					<noHeaderFiles>true</noHeaderFiles>
 					<noManPages>true</noManPages>
-					<launcher>hellofx</launcher>
-					<jlinkImageName>hello</jlinkImageName>
-					<jlinkZipName>hellozip</jlinkZipName>
-					<mainClass>gr.paris.SqlBrowserApp</mainClass>
+					<launcher>sqlbrowserfx</launcher>
+					<jlinkImageName>sqlbrowserfx</jlinkImageName>
+					<jlinkZipName>sqlbrowserfx</jlinkZipName>
+					<mainClass>gr.sqlbrowserfx.SqlBrowserFXApp</mainClass>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.1.2</version>
 				<configuration>
 					<archive>
 						<manifest>
@@ -75,13 +68,6 @@
 		</plugins>
 	</build>
 	<dependencies>
-		<!-- https://mvnrepository.com/artifact/com.aquafx-project/aquafx -->
-		<dependency>
-			<groupId>com.aquafx-project</groupId>
-			<artifactId>aquafx</artifactId>
-			<version>0.2</version>
-		</dependency>
-
 		<!-- https://mvnrepository.com/artifact/org.fxmisc.richtext/richtextfx -->
 		<dependency>
 			<groupId>org.fxmisc.richtext</groupId>
@@ -130,14 +116,20 @@
 			<version>1.2.17</version>
 		</dependency>
 		<dependency>
-			<groupId>gr.paris</groupId>
-			<artifactId>sqlfx</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.25.2</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>8.0.17</version>
 		</dependency>
 		<dependency>
-			<groupId>org.dockfx</groupId>
-			<artifactId>moded-dockfx</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
+			<version>2.6.0</version>
 		</dependency>
 	</dependencies>
 

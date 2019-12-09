@@ -29,7 +29,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.KeyCode;
 
-public class DBTreeView extends TreeView<String> implements SimpleChangeListener<String>, SimpleObservable<String> {
+public class DBTreeView extends TreeView<String> implements ContextMenuOwner, SimpleChangeListener<String>, SimpleObservable<String> {
 
 	private Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 	private SqlConnector sqlConnector;
@@ -256,7 +256,8 @@ public class DBTreeView extends TreeView<String> implements SimpleChangeListener
 		});
 	}
 
-	protected ContextMenu createContextMenu() {
+	@Override
+	public ContextMenu createContextMenu() {
 		ContextMenu contextMenu = new ContextMenu();
 
 		MenuItem menuItemCopy = new MenuItem("Copy text", JavaFXUtils.icon("/res/copy.png"));

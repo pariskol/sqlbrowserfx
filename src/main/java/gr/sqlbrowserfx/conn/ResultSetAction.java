@@ -6,5 +6,5 @@ import java.sql.SQLException;
 @FunctionalInterface
 public interface ResultSetAction {
 
-	public void use(ResultSet rset) throws SQLException;
+	public void onResultSet(ResultSet rset) throws SQLException;
 }

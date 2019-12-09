@@ -6,6 +6,8 @@ import java.sql.Statement;
 
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.factories.DialogFactory;
+
 public class MemoryGuard {
 
 	private static int MEMORY_DIVIDER = 5;
@@ -24,12 +26,13 @@ public class MemoryGuard {
 					long currentUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
 					if (currentUsage > heapMaxSize - heapMaxSize / MEMORY_DIVIDER) {
 						rset.close();
-						LoggerFactory.getLogger(MemoryGuard.class).debug("Canceled Query", "Your query was canceled due to fast growing memory consumption");
+						LoggerFactory.getLogger(MemoryGuard.class).debug("Query was canceled due to fast growing memory consumption of ResultSet");
+						System.gc();
+						DialogFactory.createErrorDialog(new OutOfMemoryError("Fast growing memory consumption of ResultSet"));
+						return;
 					}
 					Thread.sleep(100);
 				}
-				
-				System.gc();
 			} catch (SQLException | InterruptedException e) {
 				LoggerFactory.getLogger(MemoryGuard.class).error(e.getMessage(), e);
 			} finally {
@@ -56,13 +59,14 @@ public class MemoryGuard {
 				while ((statement != null && !statement.isClosed()) ) {
 					long currentUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
 					if (currentUsage > heapMaxSize - heapMaxSize / MEMORY_DIVIDER) {
-						LoggerFactory.getLogger(MemoryGuard.class).debug("Canceled Query. Your query was canceled due to fast growing memory consumption");
+						LoggerFactory.getLogger(MemoryGuard.class).debug("Query was canceled due to fast growing memory consumption of Statement");
 						statement.cancel();
+						System.gc();
+						DialogFactory.createErrorDialog(new OutOfMemoryError("Fast growing memory consumption of Statement"));
+						return;
 					}
 					Thread.sleep(100);
 				}
-				
-				System.gc();
 			} catch (SQLException | InterruptedException e) {
 				LoggerFactory.getLogger(MemoryGuard.class).error(e.getMessage(), e);
 			} finally {

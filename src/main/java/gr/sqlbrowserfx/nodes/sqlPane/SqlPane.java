@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.ToolbarOwner;
 import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
@@ -66,7 +67,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-public class SqlPane extends BorderPane implements ToolbarOwner{
+public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwner{
 
 	protected SqlTableView sqlTableViewRef;
 	protected FlowPane toolBar;
@@ -368,7 +369,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner{
 		}
 	}
 
-	private ContextMenu createContextMenu() {
+	@Override
+	public ContextMenu createContextMenu() {
 		contextMenu = new ContextMenu();
 
 		MenuItem menuItemEdit = new MenuItem("Edit", JavaFXUtils.icon("/res/edit.png"));

@@ -76,7 +76,7 @@ public abstract class SqlConnector {
 		try (Connection conn = dataSource.getConnection();
 				Statement statement = conn.createStatement();
 				ResultSet rset = statement.executeQuery(query);) {
-			action.use(rset);
+			action.onResultSet(rset);
 		}
 	}
 
@@ -93,7 +93,7 @@ public abstract class SqlConnector {
 		try (Connection conn = dataSource.getConnection();
 				PreparedStatement statement = prepareStatementWithParams(conn, query, params);
 				ResultSet rset = statement.executeQuery(query);) {
-			action.use(rset);
+			action.onResultSet(rset);
 			System.gc();
 		}
 	}
@@ -114,10 +114,10 @@ public abstract class SqlConnector {
 			 Statement statement = conn.createStatement();) {
 			MemoryGuard.startMemoryGuard(statement);
 			rset = statement.executeQuery(query);
-			action.use(rset);
+			action.onResultSet(rset);
 			System.gc();
 		} finally {
-			rset.close();
+			this.closeQuitely(rset);
 		}
 	}
 
@@ -134,7 +134,7 @@ public abstract class SqlConnector {
 				Statement statement = conn.createStatement();
 				ResultSet rset = statement.executeQuery(query);) {
 			while (rset.next()) {
-				action.use(rset);
+				action.onResultSet(rset);
 			}
 		}
 	}
@@ -152,7 +152,7 @@ public abstract class SqlConnector {
 				PreparedStatement statement = prepareStatementWithParams(conn, query, params);
 				ResultSet rset = statement.executeQuery();) {
 			while (rset.next()) {
-				action.use(rset);
+				action.onResultSet(rset);
 			}
 		}
 	}
@@ -170,13 +170,12 @@ public abstract class SqlConnector {
 		ResultSet rset = null;
 		try (Connection conn = dataSource.getConnection();
 				Statement statement = conn.createStatement();) {
-			statementAction.use(statement);
+			statementAction.onStatement(statement);
 			MemoryGuard.startMemoryGuard(statement);
 			rset = statement.executeQuery(query);
-			action.use(rset);
+			action.onResultSet(rset);
 		} finally {
-			if (rset != null)
-				rset.close();
+			this.closeQuitely(rset);
 		}
 	}
 
@@ -267,6 +266,13 @@ public abstract class SqlConnector {
 			conn.rollback();
 		} catch (SQLException e) {
 			LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+		}
+	}
+	
+	private void closeQuitely(AutoCloseable closeable) {
+		try {
+			closeable.close();
+		} catch (Throwable e) {
 		}
 	}
 

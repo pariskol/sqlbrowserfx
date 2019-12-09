@@ -288,10 +288,10 @@ public class DockEvent extends Event {
     this.sceneY = y;
     this.pickResult = pickResult != null ? pickResult : new PickResult(target, x, y);
     // comment from here for java 11
-    final Point3D p = InputEventUtils.recomputeCoordinates(this.pickResult, null);
-    this.x = p.getX();
-    this.y = p.getY();
-    this.z = p.getZ();
+//    final Point3D p = InputEventUtils.recomputeCoordinates(this.pickResult, null);
+//    this.x = p.getX();
+//    this.y = p.getY();
+//    this.z = p.getZ();
     this.contents = contents;
     // comment until here for java 11
   }
