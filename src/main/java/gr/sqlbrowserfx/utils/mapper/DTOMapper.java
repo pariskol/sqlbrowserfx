@@ -2,6 +2,7 @@ package gr.sqlbrowserfx.utils.mapper;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -44,14 +45,18 @@ public class DTOMapper {
 	 * @throws SQLException 
 	 * @throws IllegalAccessException 
 	 * @throws InstantiationException 
+	 * @throws SecurityException 
+	 * @throws NoSuchMethodException 
+	 * @throws InvocationTargetException 
+	 * @throws IllegalArgumentException 
 	 */
-	public static Object map(ResultSet rset, Class<?> clazz) throws SQLException, IllegalAccessException, InstantiationException{
+	public static Object map(ResultSet rset, Class<?> clazz) throws Exception {
 
 		if (clazz.getAnnotation(DTO.class) == null)
 			throw new IllegalAccessException(
 					"Class " + clazz.getSimpleName() + " has no annotation " + DTO.class.getName());
 
-		Object dto = clazz.newInstance();
+		Object dto = clazz.getDeclaredConstructor().newInstance();
 
 		for (Field field : clazz.getDeclaredFields()) {
 			field.setAccessible(true);

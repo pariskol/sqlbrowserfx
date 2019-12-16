@@ -85,7 +85,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			}
 		});
 
-		SplitPane splitPane = new SplitPane(historyArea, queryTabPane);
+		SplitPane splitPane = new SplitPane(queryTabPane, historyArea);
 		splitPane.setOrientation(Orientation.VERTICAL);
 		historyArea.prefHeightProperty().bind(splitPane.heightProperty().multiply(0.65));
 		queryTabPane.prefHeightProperty().bind(splitPane.heightProperty().multiply(0.35));

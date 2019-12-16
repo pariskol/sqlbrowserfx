@@ -73,7 +73,7 @@ public class QueriesMenu extends Menu{
 							}
 							queryMenuItem.show();
 						});
-					} catch (IllegalAccessException | InstantiationException e) {
+					} catch (Throwable e) {
 						logger.error(e.getMessage(), e);
 					}
 				});
