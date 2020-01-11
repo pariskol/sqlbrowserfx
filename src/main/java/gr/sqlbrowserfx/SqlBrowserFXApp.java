@@ -58,7 +58,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
@@ -68,7 +67,7 @@ public class SqlBrowserFXApp extends Application {
 
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
 //	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/basic.css");
-	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/flat-light.css");
+	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/flat-dark-theme.css");
 	private static String DB;
 	private static RESTfulServiceConfig restServiceConfig;
 
@@ -121,7 +120,7 @@ public class SqlBrowserFXApp extends Application {
 	}
 
 	private void createDBselectBox() {
-		Text selectedDBtext = new Text("No database selected");
+		Label selectedDBtext = new Label("No database selected");
 		Button openButton = new Button("Open", new ImageView(new Image("/res/database.png")));
 		openButton.setOnAction(actionEvent -> dbSelectionAction(selectedDBtext.getText()));
 		HBox bottomBox = new HBox(selectedDBtext, openButton);
@@ -130,7 +129,7 @@ public class SqlBrowserFXApp extends Application {
 		bottomBox.setAlignment(Pos.CENTER_RIGHT);
 
 		VBox rightBox = new VBox();
-		Text text = new Text("Browse system for database...");
+		Label text = new Label("Browse system for database...");
 		Button fileChooserButton = new Button("Search", new ImageView(new Image("/res/magnify.png")));
 		fileChooserButton.setOnAction(actionEvent -> {
 			FileChooser fileChooser = new FileChooser();
@@ -144,7 +143,7 @@ public class SqlBrowserFXApp extends Application {
 		rightBox.setAlignment(Pos.CENTER);
 		rightBox.setSpacing(5);
 
-		Text recentDBsText = new Text("Recently opened");
+		Label recentDBsText = new Label("Recently opened");
 		recentDBsText.setTextAlignment(TextAlignment.CENTER);
 
 		ListView<String> recentDBsList = new ListView<>();
@@ -244,6 +243,9 @@ public class SqlBrowserFXApp extends Application {
 
 		ddbTreeView = new DDBTreeView(DB, sqlConnector);
 		CodeAreaKeywords.bind(ddbTreeView.getContentNames());
+		for (String table : ddbTreeView.getContentNames()) {
+			CodeAreaKeywords.bind(table, ddbTreeView.getColumnsForTable(table));
+		}
 		ddbTreeView.addListener(value -> CodeAreaKeywords.bind(ddbTreeView.getContentNames()));
 		mainSqlPane.getSqlConsoleBox().addListener(ddbTreeView);
 		ddbTreeView.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));

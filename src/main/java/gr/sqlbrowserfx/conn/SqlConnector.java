@@ -197,6 +197,16 @@ public abstract class SqlConnector {
 			}
 		});
 	}
+	
+	public void executeQueryRawAsync(String query, ResultSetAction action) {
+		executorService.execute(() -> {
+			try {
+				this.executeQueryRaw(query, action);
+			} catch (SQLException e) {
+				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+			}
+		});
+	}
 
 	public int executeUpdate(String query) throws SQLException {
 		int result = 0;

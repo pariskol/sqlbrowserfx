@@ -12,6 +12,13 @@
 		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>jcenter</id>
+			<url>https://jcenter.bintray.com/</url>
+		</repository>
+	</repositories>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -60,7 +67,11 @@
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.26</version>
 		</dependency>
-
+		<dependency>
+			<groupId>net.kurobako</groupId>
+			<artifactId>gesturefx</artifactId>
+			<version>0.5.0</version>
+		</dependency>
 		<dependency>
 			<groupId>com.sparkjava</groupId>
 			<artifactId>spark-core</artifactId>

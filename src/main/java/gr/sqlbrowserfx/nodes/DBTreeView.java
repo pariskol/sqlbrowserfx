@@ -186,7 +186,6 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		TreeItem<String> columnsTree = new TreeItem<>("columns", JavaFXUtils.icon("/res/columns.png"));
 		treeItem.getChildren().add(columnsTree);
 
-		//TODO maybe executeAsync?
 		sqlConnector.executeQueryRaw("select * from " + treeItem.getValue() + " limit 1", rset -> {
 			SqlTable sqlTable = new SqlTable(rset.getMetaData());
 			sqlTable.setPrimaryKey(sqlConnector.findPrimaryKey(treeItem.getValue()));
@@ -352,6 +351,23 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 
 	public List<String> getContentNames() {
 		return allItems;
+	}
+	
+	public List<String> getColumnsForTable(String table) {
+		List<String> colums = new ArrayList<>();
+		for (TreeItem<String> ti : tablesRootItem.getChildren()) {
+			if (ti.getValue().equals(table)) {
+				ti.getChildren().forEach(c -> {
+					if (c.getValue().contentEquals("columns")) {
+						c.getChildren().forEach(cc -> {
+							colums.add(cc.getValue());
+						});
+						return;
+					}
+				});
+			}
+		}
+		return colums;
 	}
 
 	@Override

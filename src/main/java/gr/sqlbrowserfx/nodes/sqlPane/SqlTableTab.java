@@ -8,6 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import net.kurobako.gesturefx.GesturePane;
 
 public class SqlTableTab extends Tab {
 
@@ -24,6 +25,17 @@ public class SqlTableTab extends Tab {
 	public SqlTableTab(String text, SqlTableView sqlTableView) {
 		super(text, sqlTableView);
 		this.sqlTableView = sqlTableView;
+
+		Node graphic = JavaFXUtils.icon("res/table-e.png");
+		label = new Label(text, graphic);
+		label.textProperty().bind(this.getSqlTableView().titleProperty());
+		this.setText(null);
+		this.setGraphic(label);
+	}
+	
+	public SqlTableTab(String text, GesturePane sqlTableView) {
+		super(text, sqlTableView);
+		this.sqlTableView = (SqlTableView) sqlTableView.getContent();
 
 		Node graphic = JavaFXUtils.icon("res/table-e.png");
 		label = new Label(text, graphic);

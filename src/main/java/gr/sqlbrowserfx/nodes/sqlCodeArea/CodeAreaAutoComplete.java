@@ -24,4 +24,8 @@ public class CodeAreaAutoComplete {
 //        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
         return suggestions;
     }
+    
+    public static List<String> getColumnsSuggestions(String table) {
+    	return CodeAreaSyntax.COLUMNS_MAP.get(table);
+    }
 }

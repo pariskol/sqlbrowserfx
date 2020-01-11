@@ -17,4 +17,8 @@ public class CodeAreaKeywords {
     public static void bind(List<String> list) {
         CodeAreaSyntax.KEYWORDS_lIST.addAll(list);
     }
+    
+    public static void bind(String table, List<String> columns) {
+		CodeAreaSyntax.COLUMNS_MAP.put(table, columns);
+	}
 }

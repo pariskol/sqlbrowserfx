@@ -179,7 +179,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 			List<String> foreignKeys = sqlConnector.findForeignKeys(sqlTable.getName());
 			sqlTable.setForeignKeys(foreignKeys);
 		} catch (SQLException e) {
-			logger.error(e.getMessage(), e);
+			logger.info(e.getMessage());
 		}
 		
 		MemoryGuard.startMemoryGuard(rs);

@@ -62,10 +62,10 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import net.kurobako.gesturefx.GesturePane;
 
 public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwner{
 
@@ -134,7 +134,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		tablesTabPane = new TabPane();
 
-		addTableTab = new Tab("Add");
+		addTableTab = new Tab("");
 		addTableTab.setGraphic(JavaFXUtils.icon("/res/add.png"));
 		addTableTab.setClosable(false);
 		tablesTabPane.getTabs().add(addTableTab);
@@ -337,7 +337,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				}
 				sqlTableViewRef.requestFocus();
 			});
-			SqlTableTab tab = new SqlTableTab(EMPTY, sqlTableViewRef);
+			SqlTableTab tab = new SqlTableTab(EMPTY, new GesturePane(sqlTableViewRef));
 			tab.customTextProperty().addListener((observable, oldValue, newValue) -> {
 				if (sqlTableViewRef.isFilledByQuery()) {
 					tab.setCustomGraphic(JavaFXUtils.icon("res/table-y.png"));
@@ -877,7 +877,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		ComboBox<String> viewsBox = this.createViewsBox();
 		viewsBox.prefWidthProperty().bind(tablesBox.widthProperty());
 		
-		popOver = new PopOver(new VBox(new Text("Select"), tablesBox, viewsBox));
+		popOver = new PopOver(new VBox(new Label("Select"), tablesBox, viewsBox));
 		popOver.setDetachable(false);
 		popOver.show(tableSelectButton);
 	}
@@ -913,7 +913,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 
 		searchButton.requestFocus();
-		VBox searchBox = new VBox(new Text("Type and press enter"), searchField);
+		VBox searchBox = new VBox(new Label("Type and press enter"), searchField);
 		searchBox.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
 				popOver.hide();

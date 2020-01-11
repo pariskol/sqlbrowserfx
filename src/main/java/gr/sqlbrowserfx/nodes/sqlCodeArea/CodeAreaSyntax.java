@@ -22,6 +22,8 @@ public class CodeAreaSyntax {
 	public static final String[] KEYWORDS = getAutocomplteWords("sql");
 
 	public static final List<String> KEYWORDS_lIST = new ArrayList<>();
+	public static final HashMap<String, List<String>> COLUMNS_MAP = new HashMap<>(); 
+
 
 	private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
 	private static final String PAREN_PATTERN = "\\(|\\)";

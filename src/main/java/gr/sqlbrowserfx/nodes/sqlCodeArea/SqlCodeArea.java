@@ -2,11 +2,11 @@ package gr.sqlbrowserfx.nodes.sqlCodeArea;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 
@@ -197,15 +197,18 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 
 	private ListView<String> createListView(List<String> suggestions) {
 		ListView<String> suggestionsList = new ListView<>();
-		suggestionsList.getItems().addAll(FXCollections.observableList(new ArrayList<>(new HashSet<>(suggestions))));
-		int suggestionsNum = suggestions.size();
-		int listViewLength = ((suggestionsNum * LIST_ITEM_HEIGHT) > LIST_MAX_HEIGHT) ? LIST_MAX_HEIGHT
-				: suggestionsNum * LIST_ITEM_HEIGHT;
-		suggestionsList.setPrefHeight(listViewLength);
+		if (suggestions != null) {
+			suggestionsList.getItems().addAll(FXCollections.observableList(new ArrayList<>(new HashSet<>(suggestions))));
+			int suggestionsNum = suggestions.size();
+			int listViewLength = ((suggestionsNum * LIST_ITEM_HEIGHT) > LIST_MAX_HEIGHT) ? LIST_MAX_HEIGHT
+					: suggestionsNum * LIST_ITEM_HEIGHT;
+			suggestionsList.setPrefHeight(listViewLength);
+		}
 		return suggestionsList;
 	}
 
 	private void autoCompleteAction(KeyEvent event, AtomicReference<Popup> auoCompletePopup) {
+		AtomicBoolean insertMode = new AtomicBoolean(false);
 		String ch = event.getCharacter();
 		// for some reason keycode does not work
 		if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType && !event.isControlDown())
@@ -223,18 +226,17 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 			if (!query.trim().isEmpty()) {
 				List<String> suggestions = null;
 				if (ch.equals(".")) {
+					insertMode.set(true);
 					query = "";
 					ch = "";
 					caretPosition--;
 					do {
-						System.out.println(ch);
 						ch = this.getText(caretPosition - 1, caretPosition--);
 						query += ch;
 					} while (!ch.equals(" ") && !(caretPosition == 0));
 
-					query = StringUtils.reverse(query);
-					// TODO load actual table columns
-					suggestions = Arrays.asList(query + "colums");
+					query = StringUtils.reverse(query).trim();
+					suggestions = CodeAreaAutoComplete.getColumnsSuggestions(query);
 				} else
 					suggestions = CodeAreaAutoComplete.getQuerySuggestions(query);
 
@@ -258,8 +260,13 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 							}
 
 							Platform.runLater(() -> {
-								this.replaceText(fCaretPosition - fQuery.length(), fCaretPosition, word.get());
-								this.moveTo(fCaretPosition + word.get().length() - fQuery.length());
+								if (insertMode.get()) {
+									this.insertText(this.getCaretPosition(), word.get());
+								}
+								else {
+									this.replaceText(fCaretPosition - fQuery.length(), fCaretPosition, word.get());
+									this.moveTo(fCaretPosition + word.get().length() - fQuery.length());
+								}
 							});
 							auoCompletePopup.get().hide();
 							auoCompletePopupShowing = false;
