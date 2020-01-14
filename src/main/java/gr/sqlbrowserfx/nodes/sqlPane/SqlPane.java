@@ -65,7 +65,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import net.kurobako.gesturefx.GesturePane;
 
 public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwner{
 
@@ -337,7 +336,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				}
 				sqlTableViewRef.requestFocus();
 			});
-			SqlTableTab tab = new SqlTableTab(EMPTY, new GesturePane(sqlTableViewRef));
+			SqlTableTab tab = new SqlTableTab(EMPTY, sqlTableViewRef);
 			tab.customTextProperty().addListener((observable, oldValue, newValue) -> {
 				if (sqlTableViewRef.isFilledByQuery()) {
 					tab.setCustomGraphic(JavaFXUtils.icon("res/table-y.png"));
@@ -756,8 +755,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		sqlTableRow.addListener(editBox);
 
 		popOver = new PopOver(editBox);
-		popOver.prefWidth(editBox.getMainBox().getPrefWidth());
-		popOver.setPrefHeight(50);
 
 		if (sqlTableViewRef.getPrimaryKey() != null) {
 			Button editBtn = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
