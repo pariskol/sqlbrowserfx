@@ -67,7 +67,7 @@ public class SqlBrowserFXApp extends Application {
 
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
 //	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/basic.css");
-	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/flat-dark-theme.css");
+	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/flat-dark.css");
 	private static String DB;
 	private static RESTfulServiceConfig restServiceConfig;
 
