@@ -5,8 +5,8 @@ SqlBrowserFX is a feature rich sql client for SQLite , MySQL.
 
 ![](images/sqlbrowserfx.png)
 
-
-![](images/sqlbrowserfx2.png)
+NEW! Dark Theme
+![](images/sqlbrowserfx3.png)
 
 ### Features
 
@@ -20,6 +20,7 @@ SqlBrowserFX is a feature rich sql client for SQLite , MySQL.
 * Support for SQLite.
 * Basic support for MySQL.
 * Cross Platform.
+* Charting
 
 
 ### Prerequisites
@@ -42,7 +43,7 @@ Run sql-browser.exe for Windows, or run sqlbrowser.sh for Linux.
 
 * [DockFX](https://github.com/RobertBColton/DockFX) - The docking framework used (a moded version actually)
 * [RichTextFΧ](https://github.com/FXMisc/RichTextFX) - Library which provides editor with syntax highlighting feature.
-* [Spark](https://github.com/perwendel/spark)  - The web framework used
+* [Spark Java](https://github.com/perwendel/spark)  - The web framework used
 
 
 
