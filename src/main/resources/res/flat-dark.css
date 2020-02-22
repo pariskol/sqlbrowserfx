@@ -126,10 +126,7 @@ dock-area-indicator {
 .text-field {
 	-fx-background-color: transparent;
 	-fx-border-color: -fx-base;
-	-fx-background-radius: 3.0;
-	-fx-border-radius: 0.0;
 	-fx-border-width: 0.0 0.0 2.0 0.0;
-	-fx-background-insets: 0.0;
 	-fx-prompt-text-fill: derive(-fx-base,80%);
 
 }
@@ -230,6 +227,10 @@ dock-area-indicator {
 }
 .button:hover {
 	-fx-background-color: -fx-focus-color;
+}
+
+.button:focused {
+    -fx-background-color: -fx-focus-color; 
 }
 .button:default {
     -fx-base: -fx-accent ;
