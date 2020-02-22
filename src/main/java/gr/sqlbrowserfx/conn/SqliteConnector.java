@@ -8,8 +8,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.slf4j.LoggerFactory;
-import org.sqlite.SQLiteDataSource;
 
 public class SqliteConnector extends SqlConnector {
 
@@ -45,22 +45,22 @@ public class SqliteConnector extends SqlConnector {
 		updatesExecutorThread.start();
 	}
 
-	@Override
-	protected DataSource initDatasource() {
-		SQLiteDataSource datasource = new SQLiteDataSource();
-		datasource.setUrl(this.getUrl());
-		return datasource;
-	}
-	
 //	@Override
 //	protected DataSource initDatasource() {
-//		BasicDataSource dbcp2DataSource = new BasicDataSource();
-//		dbcp2DataSource.setDriverClassName(this.getDriver());
-//		dbcp2DataSource.setUrl(this.getUrl());
-//		dbcp2DataSource.setInitialSize(2);
-//		dbcp2DataSource.setMaxTotal(5);
-//		return dbcp2DataSource;
+//		SQLiteDataSource datasource = new SQLiteDataSource();
+//		datasource.setUrl(this.getUrl());
+//		return datasource;
 //	}
+	
+	@Override
+	protected DataSource initDatasource() {
+		BasicDataSource dbcp2DataSource = new BasicDataSource();
+		dbcp2DataSource.setDriverClassName(this.getDriver());
+		dbcp2DataSource.setUrl(this.getUrl());
+		dbcp2DataSource.setInitialSize(2);
+		dbcp2DataSource.setMaxTotal(4);
+		return dbcp2DataSource;
+	}
 	
 	public int executeUpdateSerially(String query, List<Object> params) throws SQLException {
 		try {

@@ -43,6 +43,7 @@ public class QueriesMenu extends Menu{
 			sqlConnector.executeQuery("select distinct category from saved_queries", rset -> {
 				String category = rset.getString(1); 
 				Menu categorySubMenu =  new Menu(category);
+				categorySubMenu.setGraphic(JavaFXUtils.icon("/res/folder.png"));
 				menuItemsMap.put(category, categorySubMenu);
 				this.getItems().add(categorySubMenu);
 				
