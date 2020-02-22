@@ -290,11 +290,13 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				sqlTableViewRef.requestFocus();
 				if (mouseEvent.getClickCount() == 2) {
 					if (sqlTableViewRef.getSelectionModel().getSelectedItem() != null) {
-						if (isFullMode()) {
-							this.fullModeAction();
-						} else {
-							this.editButtonAction(mouseEvent);
-						}
+						sqlTableViewRef.getSelectedCell().startEdit();
+
+//						if (isFullMode()) {
+//							this.fullModeAction();
+//						} else {
+//							this.editButtonAction(mouseEvent);
+//						}
 						sqlTableViewRef.requestFocus();
 					}
 				}
@@ -774,7 +776,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		popOver.setDetachable(false);
 		// remove listener on close
 		popOver.setOnHidden(windowEvent -> sqlTableRow.removeListener(editBox));
-		popOver.show(editButton, event.getScreenX(), event.getScreenY());
+// IS THIS A BETTER APPROACH?		
+//		popOver.show(editButton, event.getScreenX(), event.getScreenY());
+		popOver.show(sqlTableViewRef.getSelectedCell());
 		editBox.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
 				popOver.hide();
@@ -959,7 +963,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 							String[] values = line.split(",");
 							HashMap<String, Object> map = new HashMap<>();
 							for (int i = 0; i < columns.length; i++) {
-								map.put(columns[i], values[i]);
+								Object tempValue = (values.length-1 >= i) ? values[i] : null;
+									
+								map.put(columns[i], tempValue);
 							}
 							try {
 								sqlTableViewRef.insertRecord(map);
