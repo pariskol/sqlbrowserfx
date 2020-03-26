@@ -3,7 +3,7 @@ package gr.sqlbrowserfx.nodes.sqlTableView;
 import javafx.geometry.Pos;
 import javafx.scene.control.TableCell;
 
-public class SqlTableViewCell extends TableCell<SqlTableRow, Object> {
+public class SqlTableViewCell extends TableCell<MapTableViewRow, Object> {
 
 	public SqlTableViewCell() {
 		super();

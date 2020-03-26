@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.LoggerFactory;
 
-import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
+import gr.sqlbrowserfx.nodes.sqlTableView.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
@@ -136,11 +136,11 @@ public class DialogFactory {
 		return null;
 	}
 	
-	public static int createDeleteDialog(Node owner, ObservableList<SqlTableRow> rows, String message) {
+	public static int createDeleteDialog(Node owner, ObservableList<MapTableViewRow> rows, String message) {
 		return createDeleteDialog(owner, rows, message, null);
 	}
 	
-	public static int createDeleteDialog(Node owner, ObservableList<SqlTableRow> rows, String message, String stylesheet) {
+	public static int createDeleteDialog(Node owner, ObservableList<MapTableViewRow> rows, String message, String stylesheet) {
 		SqlTableView sqlTableView = new SqlTableView();
 		sqlTableView.createColumns(rows.get(0).getColumns());
 		sqlTableView.setItems(rows);

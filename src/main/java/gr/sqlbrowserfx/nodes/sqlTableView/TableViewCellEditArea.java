@@ -1,11 +1,12 @@
 package gr.sqlbrowserfx.nodes.sqlTableView;
 
-import javafx.scene.control.TextField;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 
-public class SqlTableViewCellEditField extends TextField{
+public class TableViewCellEditArea extends TextArea {
 
-	public SqlTableViewCellEditField(String text, SqlTableViewEditableCell cell) {
+	public TableViewCellEditArea(String text, TableCell<MapTableViewRow, Object> cell) {
 		super(text);
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {

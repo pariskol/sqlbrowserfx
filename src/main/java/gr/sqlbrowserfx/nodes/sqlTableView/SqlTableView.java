@@ -31,9 +31,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 
-public class SqlTableView extends TableView<SqlTableRow> {
+public class SqlTableView extends TableView<MapTableViewRow> {
 
-	protected ObservableList<SqlTableRow> rows;
+	protected ObservableList<MapTableViewRow> rows;
 	protected SimpleStringProperty titleProperty;
 	protected SqlTable sqlTable;
 	protected List<String> columns;
@@ -41,7 +41,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 	double minWidth, prefWidth, maxWidth;
 	protected boolean autoResize;
 	int currentColumnPos = 0;
-	private TableCell<SqlTableRow, Object> selectedCell;
+	private TableCell<MapTableViewRow, Object> selectedCell;
 	protected boolean filledByQuery = false;
 	protected boolean areCellsEditableByClick;
 
@@ -124,15 +124,15 @@ public class SqlTableView extends TableView<SqlTableRow> {
 					entry.put(columnLabel, rs.getObject(columnLabel));
 				}
 	
-				rows.add(new SqlTableRow(entry));
+				rows.add(new MapTableViewRow(entry));
 			}
 		} catch (Exception e) {
 			rows.clear();
 		}
 
-		List<TableColumn<SqlTableRow, Object>> tableColumns = new ArrayList<>();
+		List<TableColumn<MapTableViewRow, Object>> tableColumns = new ArrayList<>();
 		for (String column : sqlTable.getColumns()) {
-			TableColumn<SqlTableRow, Object> col = new TableColumn<>(column);
+			TableColumn<MapTableViewRow, Object> col = new TableColumn<>(column);
 			col.setCellValueFactory(param -> {
 				return param.getValue().getObjectProperty(column);
 			});
@@ -190,7 +190,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 					entry.put(columnLabel, rs.getObject(columnLabel));
 				}
 	
-				rows.add(new SqlTableRow(entry));
+				rows.add(new MapTableViewRow(entry));
 			}
 		} catch (Throwable e) {
 			rows.clear();
@@ -199,11 +199,10 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		Platform.runLater(() -> {
 			super.setItems(FXCollections.emptyObservableList());
 			this.getColumns().clear();
-			super.setItems(rows);
 			titleProperty.set(sqlTable.getName());
 			
 			for (String column : sqlTable.getColumns()) {
-				TableColumn<SqlTableRow, Object> col = new TableColumn<>(column);
+				TableColumn<MapTableViewRow, Object> col = new TableColumn<>(column);
 				col.setCellValueFactory(param -> {
 					return param.getValue().getObjectProperty(column);
 				});
@@ -216,10 +215,10 @@ public class SqlTableView extends TableView<SqlTableRow> {
 			this.autoResizedColumns(autoResize);
 			this.setColumnWidth(10, NOT_SET, 300);
 			this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+			super.setItems(rows);
 		});
 	}
-
-
+	
 	public List<String> getColumnsNames() {
 		return columns;
 	}
@@ -256,7 +255,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 	}
 	
 	public void bindColumsVisibility(Collection<CheckBox> columCheckBoxes) {
-		for (TableColumn<SqlTableRow, ?> tableColumn: this.getColumns()) {
+		for (TableColumn<MapTableViewRow, ?> tableColumn: this.getColumns()) {
 			for (CheckBox checkBox: columCheckBoxes) {
 				if (tableColumn.getText().equals(checkBox.getText())) {
 					tableColumn.visibleProperty().unbind();
@@ -269,7 +268,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 
 	public void createColumns(List<String> colums) {
 		for (String column : colums) {
-			TableColumn<SqlTableRow, Object> col = new TableColumn<>(column);
+			TableColumn<MapTableViewRow, Object> col = new TableColumn<>(column);
 			col.setCellValueFactory(param -> {
 				return param.getValue().getObjectProperty(column);
 			});
@@ -281,7 +280,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 	}
 	
 	public int updateSelectedRow() {
-		SqlTableRow sqlTableRow = this.getSelectionModel().getSelectedItem();
+		MapTableViewRow sqlTableRow = this.getSelectionModel().getSelectedItem();
 		Set<String> columns = this.getSqlTable().getColumns();
 		String query = "update " + this.getTableName() + " set ";
 		List<Object> params = new ArrayList<>();
@@ -334,7 +333,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		return 1;
 	}
 	
-	public int deleteRecord(SqlTableRow sqlTableRow) {
+	public int deleteRecord(MapTableViewRow sqlTableRow) {
 		String query = "delete from " + this.getTableName() + " where ";
 		List<Object> params = new ArrayList<>();
 		Set<String> columns = this.getSqlTable().getColumns();
@@ -402,7 +401,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		logger.debug(message);
 		final String query = sqlQuery;
 		sqlConnector.executeUpdate(query, params);
-		this.getSqlTableRows().add(new SqlTableRow(entry));
+		this.getSqlTableRows().add(new MapTableViewRow(entry));
 		this.sort(this);
 	}
 
@@ -432,7 +431,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		sqlConnector.executeUpdate(query, params);
 	}
 
-	public void updateRecord(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) throws SQLException {
+	public void updateRecord(SqlTableRowEditBox editBox, MapTableViewRow sqlTableRow) throws SQLException {
 		Set<String> columns = this.getSqlTable().getColumns();
 		String query = "update " + this.getTableName() + " set ";
 		List<Object> params = new ArrayList<>();
@@ -493,7 +492,7 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		});
 	}
 	
-	public ObservableList<SqlTableRow> getSqlTableRows() {
+	public ObservableList<MapTableViewRow> getSqlTableRows() {
 		return rows;
 	}
 
@@ -521,11 +520,11 @@ public class SqlTableView extends TableView<SqlTableRow> {
 		this.sqlTable = sqlTable;
 	}
 
-	public TableCell<SqlTableRow, Object> getSelectedCell() {
+	public TableCell<MapTableViewRow, Object> getSelectedCell() {
 		return selectedCell;
 	}
 	
-	public void setSelectedCell(TableCell<SqlTableRow, Object> sqlTableViewEditCell) {
+	public void setSelectedCell(TableCell<MapTableViewRow, Object> sqlTableViewEditCell) {
 		this.selectedCell = sqlTableViewEditCell;
 	}
 

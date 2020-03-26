@@ -25,7 +25,7 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 			for (SqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
 				MenuItem item = new MenuItem("SqlPane " + i++);
 				item.setOnAction(action2 -> {
-					sqlPane.createTableViewWithData(this.getSelectionModel().getSelectedItem().getValue());
+					sqlPane.createSqlTableViewWithData(this.getSelectionModel().getSelectedItem().getValue());
 				});
 				openInSqlPaneMenu.getItems().add(item);
 			}
@@ -50,7 +50,7 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 			for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
 				MenuItem item = new MenuItem(sqlPane.asDockNode().getTitle());
 				item.setOnAction(action2 -> {
-					sqlPane.createTableViewWithData(this.getSelectionModel().getSelectedItem().getValue());
+					sqlPane.createSqlTableViewWithData(this.getSelectionModel().getSelectedItem().getValue());
 				});
 				openInSqlPaneMenu.getItems().add(item);
 			}

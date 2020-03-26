@@ -10,18 +10,18 @@ import gr.sqlbrowserfx.listeners.SimpleObservable;
 import javafx.beans.property.SimpleObjectProperty;
 
 
-public class SqlTableRow implements SimpleObservable<SqlTableRow> {
+public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 
 	protected LinkedHashMap<String,SimpleObjectProperty<Object>> propertiesMap = new LinkedHashMap<>();
 	protected List<String> columns;
-	private List<SimpleChangeListener<SqlTableRow>> listeners;
+	private List<SimpleChangeListener<MapTableViewRow>> listeners;
 	
-	public SqlTableRow() {
+	public MapTableViewRow() {
 		columns = new ArrayList<>();
 		listeners = new ArrayList<>();
 	}
 	
-	public SqlTableRow(Map<String,Object> entry) {
+	public MapTableViewRow(Map<String,Object> entry) {
 		this();
 		this.columns.addAll(entry.keySet());
 //		Collections.reverse(this.columns);
@@ -32,7 +32,7 @@ public class SqlTableRow implements SimpleObservable<SqlTableRow> {
 		}
 	}
 	
-	public SqlTableRow(SqlTableRow sqlTableRow) {
+	public MapTableViewRow(MapTableViewRow sqlTableRow) {
 		this();
 		this.propertiesMap = sqlTableRow.getStringPropertiesMap();
 		this.columns = sqlTableRow.getColumns();
@@ -79,18 +79,18 @@ public class SqlTableRow implements SimpleObservable<SqlTableRow> {
 	}
 
 	@Override
-	public void changed(SqlTableRow data) {
+	public void changed(MapTableViewRow data) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public synchronized void addListener(SimpleChangeListener<SqlTableRow> listener) {
+	public synchronized void addListener(SimpleChangeListener<MapTableViewRow> listener) {
 		listeners.add(listener);
 	}
 
 	@Override
-	public synchronized void removeListener(SimpleChangeListener<SqlTableRow> listener) {
+	public synchronized void removeListener(SimpleChangeListener<MapTableViewRow> listener) {
 		listeners.remove(listener);
 	}
 

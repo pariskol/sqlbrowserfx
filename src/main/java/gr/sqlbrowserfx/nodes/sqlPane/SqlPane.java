@@ -29,7 +29,7 @@ import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.ToolbarOwner;
-import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
+import gr.sqlbrowserfx.nodes.sqlTableView.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
@@ -87,7 +87,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	protected ComboBox<String> viewsBox;
 	protected ProgressIndicator progressIndicator;
 	protected TabPane recordsTabPaneRef;
-	protected ContextMenu contextMenu;
 	private TextField pathField;
 	protected ListView<String> logListView;
 	private Button exportCsvButton;
@@ -357,7 +356,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	//FIXME Is it buggy?
-	public void createTableViewWithData(String table) {
+	public void createSqlTableViewWithData(String table) {
 		if (sqlQueryRunning.get()) {
 			return;
 		} else {
@@ -372,7 +371,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	@Override
 	public ContextMenu createContextMenu() {
-		contextMenu = new ContextMenu();
+		ContextMenu contextMenu = new ContextMenu();
 
 		MenuItem menuItemEdit = new MenuItem("Edit", JavaFXUtils.icon("/res/edit.png"));
 		menuItemEdit.setOnAction(event -> {
@@ -416,21 +415,21 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	@SuppressWarnings("unused")
-	private SqlTableRowEditBox createEditBox(SqlTableRow sqlTableRow) {
+	private SqlTableRowEditBox createEditBox(MapTableViewRow sqlTableRow) {
 		return isFullMode() ? createEditBox(sqlTableRow, true) : createEditBox(sqlTableRow, false);
 	}
 
 	@SuppressWarnings("unused")
-	private SqlTableRowEditBox createEditBox(SqlTableRow sqlTableRow, Orientation toolBarOrientation) {
+	private SqlTableRowEditBox createEditBox(MapTableViewRow sqlTableRow, Orientation toolBarOrientation) {
 		return isFullMode() ? createEditBox(sqlTableRow, true, toolBarOrientation)
 				: createEditBox(sqlTableRow, false, toolBarOrientation);
 	}
 
-	private SqlTableRowEditBox createEditBox(SqlTableRow sqlTableRow, boolean resizeable) {
+	private SqlTableRowEditBox createEditBox(MapTableViewRow sqlTableRow, boolean resizeable) {
 		return createEditBox(sqlTableRow, resizeable, Orientation.HORIZONTAL);
 	}
 
-	private SqlTableRowEditBox createEditBox(SqlTableRow sqlTableRow, boolean resizeable, Orientation toolBarOrientation) {
+	private SqlTableRowEditBox createEditBox(MapTableViewRow sqlTableRow, boolean resizeable, Orientation toolBarOrientation) {
 		SqlTableRowEditBox editBox = new SqlTableRowEditBox(sqlTableViewRef, sqlTableRow, resizeable);
 
 		Button copyButton = new Button("", JavaFXUtils.icon("/res/copy.png"));
@@ -531,7 +530,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			sqlConnector.executeQueryRawSafely(query, resultSet -> {
 				sqlTableViewRef.setItems(resultSet);
 				sqlTableViewRef.setTableName(table);
-				this.fillColumnCheckBoxes();
+				Platform.runLater(() -> this.fillColumnCheckBoxes());
 			});
 
 		} catch (SQLException e) {
@@ -570,16 +569,18 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	public void fillColumnCheckBoxes() {
-		columnCheckBoxesMap.clear();
-		for (String column : sqlTableViewRef.getSqlTable().getColumns()) {
-			CheckBox columnCheckBox = new CheckBox(column);
-			columnCheckBox.setSelected(false);
-			columnCheckBoxesMap.put(column, columnCheckBox);
-		}
-		for (TableColumn<SqlTableRow, ?> column : sqlTableViewRef.getVisibleLeafColumns()) {
-			columnCheckBoxesMap.get(column.getText()).setSelected(true);
-		}
-		sqlTableViewRef.bindColumsVisibility(columnCheckBoxesMap.values());
+//		Platform.runLater(() -> {
+			columnCheckBoxesMap.clear();
+			for (String column : sqlTableViewRef.getSqlTable().getColumns()) {
+				CheckBox columnCheckBox = new CheckBox(column);
+				columnCheckBox.setSelected(false);
+				columnCheckBoxesMap.put(column, columnCheckBox);
+			}
+			for (TableColumn<MapTableViewRow, ?> column : sqlTableViewRef.getVisibleLeafColumns()) {
+				columnCheckBoxesMap.get(column.getText()).setSelected(true);
+			}
+			sqlTableViewRef.bindColumsVisibility(columnCheckBoxesMap.values());
+//		});
 	}
 
 	private void searchFieldAction() {
@@ -587,24 +588,24 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		// use executor service of sqlConnector
 		sqlConnector.executeAsync(() -> {
 			Platform.runLater(() -> sqlTableViewRef.setItems(sqlTableViewRef.getSqlTableRows()));
-			ObservableList<SqlTableRow> searchRows = FXCollections.observableArrayList();
+			ObservableList<MapTableViewRow> searchRows = FXCollections.observableArrayList();
 
 			String[] split = searchField.getText().split(":");
 			String columnRegex = split.length > 1 ? split[0] : null;
 			String regex = split.length > 1 ? split[1] : split[0];
 			
-			for (SqlTableRow row : sqlTableViewRef.getSqlTableRows()) {
-				for (TableColumn<SqlTableRow, ?> column : sqlTableViewRef.getVisibleLeafColumns()) {
+			for (MapTableViewRow row : sqlTableViewRef.getSqlTableRows()) {
+				for (TableColumn<MapTableViewRow, ?> column : sqlTableViewRef.getVisibleLeafColumns()) {
 
 					if (columnRegex != null && column.getText().equals(columnRegex) && row.get(column.getText()) != null) {
 						if (row.get(column.getText()).toString().matches("(?i:.*" + regex + ".*)")) {
-							searchRows.add(new SqlTableRow(row));
+							searchRows.add(new MapTableViewRow(row));
 							break;
 						}
 					}
 					else if (columnRegex == null && row.get(column.getText()) != null) {
 						if (row.get(column.getText()).toString().matches("(?i:.*" + regex + ".*)")) {
-							searchRows.add(new SqlTableRow(row));
+							searchRows.add(new MapTableViewRow(row));
 							break;
 						}
 					}
@@ -615,8 +616,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	public void setInProgress() {
-		Platform.runLater(
-				() -> tablesTabPane.getSelectionModel().getSelectedItem().setContent(new StackPane(progressIndicator)));
+		Platform.runLater(() -> tablesTabPane.getSelectionModel().getSelectedItem().setContent(new StackPane(progressIndicator)));
 	}
 
 	// Buttons' actions -------------------------------------------------------
@@ -639,7 +639,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	private void fullModeAction() {
-		SqlTableRow sqlTableRow = sqlTableViewRef.getSelectionModel().getSelectedItem();
+		MapTableViewRow sqlTableRow = sqlTableViewRef.getSelectionModel().getSelectedItem();
 		if (sqlTableRow == null)
 			return;
 
@@ -749,7 +749,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		if (editButton.isFocused() && popOver.isShowing())
 			return;
 
-		SqlTableRow sqlTableRow = sqlTableViewRef.getSelectionModel().getSelectedItem();
+		MapTableViewRow sqlTableRow = sqlTableViewRef.getSelectionModel().getSelectedItem();
 		if (sqlTableRow == null)
 			return;
 
@@ -769,7 +769,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				}
 			});
 
-//			editBox.getToolbar().getChildren().add(editBtn);
 			editBox.getMainBox().getChildren().add(editBtn);
 		}
 
@@ -777,8 +776,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		// remove listener on close
 		popOver.setOnHidden(windowEvent -> sqlTableRow.removeListener(editBox));
 // IS THIS A BETTER APPROACH?		
-//		popOver.show(editButton, event.getScreenX(), event.getScreenY());
-		popOver.show(sqlTableViewRef.getSelectedCell());
+		popOver.show(editButton, event.getScreenX(), event.getScreenY());
+//		popOver.show(sqlTableViewRef.getSelectedCell());
 		editBox.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
 				popOver.hide();
@@ -788,7 +787,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	protected void deleteButtonAction() {
 		{
-			ObservableList<SqlTableRow> sqlTableRows = sqlTableViewRef.getSelectionModel().getSelectedItems();
+			ObservableList<MapTableViewRow> sqlTableRows = sqlTableViewRef.getSelectionModel().getSelectedItems();
 
 			if (sqlTableRows.size() == 0)
 				return;
@@ -796,9 +795,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			if (DialogFactory.createDeleteDialog(sqlTableViewRef, sqlTableRows, "Do you want to delete records?") == 0)
 				return;
 
-			List<SqlTableRow> toRemove = new ArrayList<>();
+			List<MapTableViewRow> toRemove = new ArrayList<>();
 			sqlConnector.executeAsync(() -> {
-				for (SqlTableRow sqlTableRow : sqlTableRows) {
+				for (MapTableViewRow sqlTableRow : sqlTableRows) {
 					if (this.deleteRecord(sqlTableRow) == 1)
 						toRemove.add(sqlTableRow);
 				}
@@ -817,7 +816,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		VBox compareBox = new VBox();
 		HBox compareRowBox = null;
 		int cells = 2;
-		for (SqlTableRow row : sqlTableViewRef.getSelectionModel().getSelectedItems()) {
+		for (MapTableViewRow row : sqlTableViewRef.getSelectionModel().getSelectedItems()) {
 			if (cells == 2) {
 				compareRowBox = new HBox();
 				// compareRowBox.prefWidthProperty().bind(compareBox.widthProperty());
@@ -953,7 +952,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				String filePath = selectedFile.getAbsolutePath();
 
 				String[] columns = null;
-				ObservableList<SqlTableRow> rows = FXCollections.observableArrayList();
+				ObservableList<MapTableViewRow> rows = FXCollections.observableArrayList();
 				try (Scanner scanner = new Scanner(new File(filePath))) {
 					while (scanner.hasNext()) {
 						String line = scanner.nextLine();
@@ -969,7 +968,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 							}
 							try {
 								sqlTableViewRef.insertRecord(map);
-								rows.add(new SqlTableRow(map));
+								rows.add(new MapTableViewRow(map));
 							} catch (Exception e) {
 								logger.error(e.getMessage(), e);
 							}
@@ -1071,7 +1070,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		}
 	}
 
-	public int deleteRecord(SqlTableRow sqlTableRow) {
+	public int deleteRecord(MapTableViewRow sqlTableRow) {
 		String query = "delete from " + sqlTableViewRef.getTableName() + " where ";
 		List<Object> params = new ArrayList<>();
 		Set<String> columns = sqlTableViewRef.getSqlTable().getColumns();
@@ -1110,7 +1109,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	}
 
-	public void updateRecordOfSqlTableViewRef(SqlTableRowEditBox editBox, SqlTableRow sqlTableRow) {
+	public void updateRecordOfSqlTableViewRef(SqlTableRowEditBox editBox, MapTableViewRow sqlTableRow) {
 		try {
 			sqlTableViewRef.updateRecord(editBox, sqlTableRow);
 		} catch (Throwable e) {
@@ -1119,8 +1118,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	protected MouseEvent simulateClickEvent() {
-		return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, contextMenu.getX(), contextMenu.getY(),
-				MouseButton.PRIMARY, 1, true, true, true, true, true, true, true, true, true, true, null);
+		return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, sqlTableViewRef.getContextMenu().getX(), sqlTableViewRef.getContextMenu().getY(),
+				MouseButton.PRIMARY, 1, false, false, false, false, false, false, false, false, false, false, null);
 		// new MouseEvent(source, target, eventType, x, y, screenX, screenY, button,
 		// clickCount, shiftDown, controlDown, altDown, metaDown, primaryButtonDown,
 		// middleButtonDown, secondaryButtonDown, synthesized, popupTrigger,

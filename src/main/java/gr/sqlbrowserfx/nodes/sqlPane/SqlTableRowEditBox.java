@@ -11,7 +11,7 @@ import org.controlsfx.control.PopOver;
 
 import gr.sqlbrowserfx.listeners.CloseAction;
 import gr.sqlbrowserfx.listeners.SimpleChangeListener;
-import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableRow;
+import gr.sqlbrowserfx.nodes.sqlTableView.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.geometry.Insets;
@@ -30,17 +30,17 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListener<SqlTableRow> {
+public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListener<MapTableViewRow> {
 
 	private HashMap<String, TextField> fieldsMap;
 	private List<String> columns;
 	private CloseAction closeAction;
-	private SqlTableRow sqlTableRow;
+	private MapTableViewRow sqlTableRow;
 	private VBox centerBox;
 	private FlowPane toolbar;
 	private ScrollPane scrollPane;
 
-	public SqlTableRowEditBox(SqlTableView sqlTableView, SqlTableRow sqlTableRow, boolean resizeable) {
+	public SqlTableRowEditBox(SqlTableView sqlTableView, MapTableViewRow sqlTableRow, boolean resizeable) {
 		centerBox = new VBox();
 		fieldsMap = new HashMap<>();
 		columns = sqlTableView.getColumnsNames();
@@ -192,7 +192,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListen
 	}
 
 	@Override
-	public void onChange(SqlTableRow newValue) {
+	public void onChange(MapTableViewRow newValue) {
 		for (String column : columns) {
 			TextField textField = fieldsMap.get(column);
 			String newText = newValue.get(column) != null ? newValue.get(column).toString() : null;
