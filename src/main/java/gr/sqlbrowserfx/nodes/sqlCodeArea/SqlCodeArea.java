@@ -42,19 +42,23 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 	private boolean auoCompletePopupShowing = false;
 	private AtomicReference<Popup> auoCompletePopup;
 	private boolean autoCompleteOnType = true;
-	private TextField findField;
-	private TextField replaceField;
-	private Button findButton;
-	private Button replaceButton;
-	private PopOver searchAndReplacePopOver;
+	protected TextField findField;
+	protected TextField replaceField;
+	protected Button findButton;
+	protected Button replaceButton;
+	protected PopOver searchAndReplacePopOver;
 	private volatile int lastPos;
 
 	public SqlCodeArea() {
-		super();
-		this.setContextMenu(this.createContextMenu());
+		this(null);
+	}
+	
+	public SqlCodeArea(String text) {
 		auoCompletePopup = new AtomicReference<Popup>();
 		this.setOnKeyTyped(keyEvent -> this.autoCompleteAction(keyEvent, auoCompletePopup));
 
+		this.setContextMenu(this.createContextMenu());
+		
 		findField = new TextField();
 		findField.setPromptText("Search...");
 		findField.setOnKeyPressed(keyEvent -> {
@@ -124,7 +128,45 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 			}
 			searchAndReplacePopOver.hide();
 		});
-//FIXME no need for this listener to be removed
+
+		this.enableHighlighting();
+	}
+	
+	private int countLines(String str) {
+		String[] lines = str.split("\r\n|\r|\n");
+		return lines.length;
+	}
+	
+	public SqlCodeArea(String text, boolean editable, boolean withMenu) {
+		super();
+
+		if (!withMenu)
+			this.setContextMenu(null);
+		
+		this.enableHighlighting();
+		if (text != null) {
+			this.replaceText(text);
+			this.setPrefHeight(countLines(text)*18);
+		}
+		
+		this.setEditable(editable);
+		
+
+		this.setOnMouseClicked(mouseEvent -> {
+			this.requestFocus();
+			if (mouseEvent.getClickCount() == 2) {
+				this.selectAll();
+			}
+		});
+		this.focusedProperty().addListener((ov, oldV, newV) -> {
+			if (!newV) { // focus lost
+				this.deselect();
+			}
+		});
+	}
+
+	private void enableHighlighting() {
+		//FIXME no need for this listener to be removed
 //		this.caretPositionProperty().addListener((observable, oldPosition, newPosition) -> {
 //			if (auoCompletePopup.get() != null) {
 //				auoCompletePopup.get().hide();
@@ -136,17 +178,16 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 		@SuppressWarnings("unused")
 		Subscription subscription = this.multiPlainChanges().successionEnds(Duration.ofMillis(100))
 				.subscribe(ignore -> this.setStyleSpans(0, computeHighlighting(this.getText())));
-
 	}
-
-	private void showSearchAndReplacePopup() {
+	
+	protected void showSearchAndReplacePopup() {
 		if (!this.getSelectedText().isEmpty()) {
 			findField.setText(this.getSelectedText());
 			findField.selectAll();
 		}
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-		searchAndReplacePopOver.show(this, boundsInScene.getMinX() + searchAndReplacePopOver.getWidth() / 3,
-				boundsInScene.getMinY() - searchAndReplacePopOver.getHeight() / 2);
+		searchAndReplacePopOver.show(this, boundsInScene.getMaxX() - searchAndReplacePopOver.getWidth(),
+				boundsInScene.getMinY());
 	}
 
 	private void findButtonAction() {
@@ -154,6 +195,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 			lastPos = this.getText().indexOf(findField.getText(), this.getCaretPosition());
 			if (lastPos != -1) {
 				this.moveTo(lastPos + findField.getText().length());
+				this.requestFollowCaret();
 				this.selectRange(lastPos, lastPos + findField.getText().length());
 			} else if (lastPos == -1) {
 				lastPos = 0;

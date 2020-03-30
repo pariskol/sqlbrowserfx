@@ -67,7 +67,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 			DialogFactory.createErrorDialog(e);
 		}
 
-		this.createContextMenu();
+		this.setContextMenu(this.createContextMenu());
 		this.setRoot(rootItem);
 		this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		
@@ -180,7 +180,11 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		sqlConnector.getSchemas(treeItem.getValue(), rset -> {
 			// TODO handle differnet queries of mysql
 			String schema = rset.getString(schemaColumn);
-			schemaTree.getChildren().add(new TreeItem<String>(schema));
+			TreeItem<String> schemaItem =  new TreeItem<String>(schema);
+//			SqlCodeArea sqlCodeArea = new SqlCodeArea(schema, false, false);
+//			sqlCodeArea.prefWidthProperty().bind(this.widthProperty());
+//			schemaItem.setGraphic(sqlCodeArea);
+			schemaTree.getChildren().add(schemaItem);
 		});
 
 		TreeItem<String> columnsTree = new TreeItem<>("columns", JavaFXUtils.icon("/res/columns.png"));
@@ -261,6 +265,9 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 
 		MenuItem menuItemCopy = new MenuItem("Copy text", JavaFXUtils.icon("/res/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copyAction());
+		
+		MenuItem menuItemCopyScema = new MenuItem("Copy schema", JavaFXUtils.icon("/res/copy.png"));
+		menuItemCopyScema.setOnAction(event -> this.copyScemaAction());
 
 		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.icon("/res/minus.png"));
 		menuItemDrop.setOnAction(event -> {
@@ -320,12 +327,32 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 				DialogFactory.createErrorDialog(e);
 			} 
 		});
-		contextMenu.getItems().addAll(menuItemCopy, menuItemDrop, menuItemSearch, menuItemRefresh);
-		this.setContextMenu(contextMenu);
+		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemDrop, menuItemSearch, menuItemRefresh);
 
 		return contextMenu;
 	}
 
+	private void copyScemaAction() {
+		try {
+			TreeItem<String> startItem = this.getSelectionModel().getSelectedItems().get(0);
+			
+			String text = "";
+			if (tablesRootItem.getChildren().contains(startItem) ||
+				viewsRootItem.getChildren().contains(startItem) ||
+				indicesRootItem.getChildren().contains(startItem))
+			{
+				text = startItem.getChildren().get(0)
+					  	   .getChildren().get(0).getValue();
+			}
+			
+			StringSelection stringSelection = new StringSelection(text);
+			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			clipboard.setContents(stringSelection, null);
+		} catch (Exception e) {
+			// Ignore
+		}
+	}
+	
 	private void copyAction() {
 		String text = "";
 		for (TreeItem<String> treeItem : this.getSelectionModel().getSelectedItems()) {

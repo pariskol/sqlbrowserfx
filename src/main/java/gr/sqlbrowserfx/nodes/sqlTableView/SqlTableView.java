@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.nodes.sqlPane.SqlTableRowEditBox;
+import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.MemoryGuard;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -31,6 +32,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 
+//TODO use deleteRow, log log4j in ui
 public class SqlTableView extends TableView<MapTableViewRow> {
 
 	protected ObservableList<MapTableViewRow> rows;
@@ -71,6 +73,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			}
 		});
 		
+		JavaFXUtils.addMouseScrolling(this);
 		titleProperty = new SimpleStringProperty("empty");
 	}
 

@@ -5,43 +5,41 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import org.dockfx.DockNode;
 import org.dockfx.DockPos;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.DockWeights;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
+import gr.sqlbrowserfx.nodes.sqlCodeArea.HistorySqlCodeArea;
+import gr.sqlbrowserfx.nodes.sqlCodeArea.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.FlowPane;
 
 public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
-	private static final int MAX_HISTORY = 20;
 	private DockNode thisDockNode;
 	private SqlPane sqlPane;
 	private Button historyButton;
 	private boolean historyShowing = false;
-	private ListView<String> historyListView;
+	private HistorySqlCodeArea historyCodeArea;
  
 	public DSqlConsolePane(SqlConnector sqlConnector, DSqlPane sqlPane) {
 		super(sqlConnector);
+		historyCodeArea = new HistorySqlCodeArea();
+		historyCodeArea.setEditable(false);
 		this.sqlPane = sqlPane;
 		thisDockNode = new DockNode(this, sqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.icon("/res/console.png"));
-		historyListView = new ListView<String>();
-		historyListView.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.C && keyEvent.isControlDown())
-				this.copyAction(historyListView);
-		});
-//		historyListView.setContextMenu(new ContextMenu(items));
 		this.getChildren().clear();
 		this.setCenter(getQueryTabPane());
 		this.setBottom(getBottomBar());
@@ -49,10 +47,10 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		thisDockNode.setOnClose(() -> this.listeners.clear()); 
 	}
 	
-	protected void copyAction(ListView<String> listView) {
+	protected void copyAction(ListView<SqlCodeArea> listView) {
 		StringBuilder content = new StringBuilder();
 
-		listView.getSelectionModel().getSelectedItems().forEach(row -> content.append(row.toString() + "\n"));
+		listView.getSelectionModel().getSelectedItems().forEach(row -> content.append(row.getText() + "\n"));
 
 		StringSelection stringSelection = new StringSelection(content.toString());
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -73,7 +71,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		historyButton.setOnMouseClicked(mouseEvent -> {
 			if (!historyShowing) {
 				historyShowing = true;
-				DockNode dockNode = new DockNode(historyListView, "Query history", JavaFXUtils.icon("/res/monitor.png"));
+				DockNode dockNode = new DockNode(new VirtualizedScrollPane<SqlCodeArea>(historyCodeArea), "Query history", JavaFXUtils.icon("/res/monitor.png"));
 				dockNode.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),DockWeights.asDoubleArrray(0.7f, 0.3f));
 				dockNode.setOnClose(() -> historyShowing = false);
 			}
@@ -100,11 +98,11 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	public String executeButonAction() {
 		String query = super.executeButonAction();
-		if (historyListView.getItems().size() == MAX_HISTORY) {
-			historyListView.getItems().remove(MAX_HISTORY - 1);
-		}
-		historyListView.getItems().add(query);
-		historyListView.scrollTo(historyListView.getItems().size()-1);
+		historyCodeArea.appendText("\n -- Executed at : " + new Timestamp(System.currentTimeMillis()).toString() + " --\n");
+		historyCodeArea.appendText(query);
+		historyCodeArea.appendText("\n");
+		historyCodeArea.moveTo(historyCodeArea.getLength());
+		historyCodeArea.requestFollowCaret();
 		return query;
 	}
 	

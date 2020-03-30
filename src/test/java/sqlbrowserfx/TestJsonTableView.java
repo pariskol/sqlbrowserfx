@@ -7,6 +7,8 @@ import org.json.JSONArray;
 import gr.sqlbrowserfx.nodes.sqlTableView.MapTableView;
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import kong.unirest.Unirest;
 
@@ -27,7 +29,7 @@ public class TestJsonTableView extends Application{
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		primaryStage.setScene(new Scene(tableView));
+		primaryStage.setScene(new Scene(new VBox(new TextField(), tableView)));
 		primaryStage.show();
 
 	}

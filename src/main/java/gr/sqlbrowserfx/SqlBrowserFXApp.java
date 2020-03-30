@@ -1,6 +1,9 @@
 
 package gr.sqlbrowserfx;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,6 +17,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
+import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.MysqlConnector;
@@ -30,6 +34,8 @@ import gr.sqlbrowserfx.nodes.queriesMenu.QueriesMenu;
 import gr.sqlbrowserfx.nodes.sqlCodeArea.CodeAreaKeywords;
 import gr.sqlbrowserfx.nodes.sqlPane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
+import gr.sqlbrowserfx.nodes.sqlTableView.MapTableView;
+import gr.sqlbrowserfx.nodes.sqlTableView.MapTableViewRow;
 import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
 import gr.sqlbrowserfx.rest.SparkRESTfulService;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -62,6 +68,7 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import kong.unirest.Unirest;
 
 public class SqlBrowserFXApp extends Application {
 
@@ -229,6 +236,38 @@ public class SqlBrowserFXApp extends Application {
 			});
 	}
 
+	private VBox createJsonTableView() {
+		MapTableView tableView = new MapTableView();
+		tableView.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.C) {
+				StringBuilder content = new StringBuilder();
+				for (MapTableViewRow row :tableView.getSelectionModel().getSelectedItems()) {
+					content.append(row.toString());
+				}
+				
+				StringSelection stringSelection = new StringSelection(content.toString());
+				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				clipboard.setContents(stringSelection, null);
+			}
+		});
+		TextField requestField = new TextField();
+		requestField.setPromptText("Enter url ...");
+		requestField.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ENTER) {
+				try {
+					JSONArray jsonArray = new JSONArray(Unirest.get(requestField.getText()).asString().getBody());
+					tableView.setItemsLater(jsonArray);
+				} catch (Throwable e) {
+					DialogFactory.createErrorDialog(e);
+				}
+			}
+		});
+		
+		VBox vbox = new VBox(requestField, tableView);
+		VBox.setVgrow(tableView, Priority.ALWAYS);
+		return vbox;
+	}
+	
 	private void createAppView(SqlConnector sqlConnector) {
 		primaryStage.setMaximized(true);
 		DockPane dockPane = new DockPane();
@@ -238,7 +277,7 @@ public class SqlBrowserFXApp extends Application {
 		SqlBrowserFXAppManager.addSqlPane(mainSqlPane);
 		mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, DockWeights.asDoubleArrray(0.8f));
-		mainSqlPane.asDockNode().setClosable(false);
+//		mainSqlPane.asDockNode().setClosable(false);
 		mainSqlPane.showConsole();
 
 		ddbTreeView = new DDBTreeView(DB, sqlConnector);
@@ -249,7 +288,7 @@ public class SqlBrowserFXApp extends Application {
 		ddbTreeView.addListener(value -> CodeAreaKeywords.bind(ddbTreeView.getContentNames()));
 		mainSqlPane.getSqlConsoleBox().addListener(ddbTreeView);
 		ddbTreeView.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
-		ddbTreeView.asDockNode().setClosable(false);
+//		ddbTreeView.asDockNode().setClosable(false);
 		// fixed size 
 		SplitPane.setResizableWithParent(ddbTreeView.asDockNode(), Boolean.FALSE);
 		
@@ -272,6 +311,7 @@ public class SqlBrowserFXApp extends Application {
 
 	private MenuBar createMenu(DockPane dockPane) {
 		final Menu menu1 = new Menu("Views", JavaFXUtils.icon("/res/open-view.png"));
+		
 		MenuItem sqlPaneViewItem = new MenuItem("Open Table View", JavaFXUtils.icon("/res/database.png"));
 		sqlPaneViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
@@ -282,6 +322,7 @@ public class SqlBrowserFXApp extends Application {
 				
 			});
 		});
+		
 		MenuItem sqlConsoleViewItem = new MenuItem("Open Console View", JavaFXUtils.icon("/res/console.png"));
 		sqlConsoleViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
@@ -297,6 +338,15 @@ public class SqlBrowserFXApp extends Application {
 			dockNode.dock(dockPane, DockPos.LEFT);	
 		});
 		
+		MenuItem jsonTableViewItem = new MenuItem("Open JSON Table View", JavaFXUtils.icon("/res/web.png"));
+		jsonTableViewItem.setOnAction(event -> {
+			Platform.runLater(() -> {
+				VBox jsonTableView = this.createJsonTableView();
+				DockNode dockNode = new DockNode(jsonTableView, "JSON table", JavaFXUtils.icon("/res/web.png"));
+				dockNode.dock(dockPane, DockPos.LEFT);	
+			});
+		});
+		
 		MenuItem webViewItem = new MenuItem("Open Docs", JavaFXUtils.icon("/res/web.png"));
 		webViewItem.setOnAction(event -> {
 			WebView docsView = new WebView();
@@ -305,7 +355,7 @@ public class SqlBrowserFXApp extends Application {
 			dockNode.dock(dockPane, DockPos.LEFT);	
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, webViewItem);
+		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem, jsonTableViewItem, webViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/res/spark.png", 16.0, 16.0));
