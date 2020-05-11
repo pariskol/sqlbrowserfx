@@ -8,8 +8,8 @@ import org.apache.commons.dbcp2.BasicDataSource;
 
 public class MysqlConnector extends SqlConnector {
 
-	private final String SCHEMA_VIEW_QUERY = "SHOW CREATE VIEW employees.";
-	private final String SCHEMA_TABLE_QUERY = "SHOW CREATE TABLE employees.";
+	private String SCHEMA_VIEW_QUERY;
+	private String SCHEMA_TABLE_QUERY;
 
 	private String database;
 
@@ -18,12 +18,16 @@ public class MysqlConnector extends SqlConnector {
 				"jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
 				user, password);
 		this.database = database;
+		SCHEMA_VIEW_QUERY = "SHOW CREATE VIEW " + database + ".";
+		SCHEMA_TABLE_QUERY = "SHOW CREATE TABLE " + database + ".";
 		
 	}
 	
 	public MysqlConnector(String url, String database, String user, String password) {
 		super("com.mysql.cj.jdbc.Driver", url, user, password);
 		this.database = database;
+		SCHEMA_VIEW_QUERY = "SHOW CREATE VIEW " + database + ".";
+		SCHEMA_TABLE_QUERY = "SHOW CREATE TABLE " + database + ".";
 	}
 
 	
@@ -44,6 +48,12 @@ public class MysqlConnector extends SqlConnector {
 	 */
 	@Override
 	public Object castToDBType(SqlTable sqlTable, String columnName, String text) {
+		if ("true".equals(text)) {
+			return 1;
+		}
+		else if ("false".equals(text)) {
+			return 0;
+		}
 		return text;
 	}
 

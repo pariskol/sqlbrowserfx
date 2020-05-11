@@ -20,12 +20,9 @@
 
 package org.dockfx;
 
-import com.sun.javafx.scene.input.InputEventUtils;
-
 import javafx.event.Event;
 import javafx.event.EventTarget;
 import javafx.event.EventType;
-import javafx.geometry.Point3D;
 import javafx.scene.Node;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.PickResult;

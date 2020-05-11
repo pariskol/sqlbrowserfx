@@ -178,12 +178,8 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		treeItem.getChildren().add(schemaTree);
 
 		sqlConnector.getSchemas(treeItem.getValue(), rset -> {
-			// TODO handle differnet queries of mysql
 			String schema = rset.getString(schemaColumn);
 			TreeItem<String> schemaItem =  new TreeItem<String>(schema);
-//			SqlCodeArea sqlCodeArea = new SqlCodeArea(schema, false, false);
-//			sqlCodeArea.prefWidthProperty().bind(this.widthProperty());
-//			schemaItem.setGraphic(sqlCodeArea);
 			schemaTree.getChildren().add(schemaItem);
 		});
 

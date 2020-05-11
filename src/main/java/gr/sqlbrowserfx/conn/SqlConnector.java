@@ -357,9 +357,7 @@ public abstract class SqlConnector {
 		this.executorService = executorService;
 	}
 
-	public String getContentsQuery() {
-		return null;
-	}
+	abstract public String getContentsQuery();
 
 	abstract public void getSchemas(String name, ResultSetAction action) throws SQLException;
 

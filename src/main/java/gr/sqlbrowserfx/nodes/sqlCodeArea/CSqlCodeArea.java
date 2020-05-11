@@ -76,7 +76,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 			}
 		});
 		popOver.setArrowSize(0);
-		Bounds boundsInScene = this.localToScene(this.getBoundsInLocal());
+		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
 		popOver.show(this, boundsInScene.getMinX()+popOver.getWidth()/3, boundsInScene.getMinY()-popOver.getHeight()/2);
 
 	}

@@ -23,6 +23,16 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 	
 	public MapTableViewRow(Map<String,Object> entry) {
 		this();
+		setMap(entry);
+	}
+
+	public void refreshMap(Map<String, Object> entry) {
+		for (String key : entry.keySet()) {
+			propertiesMap.get(key).set(entry.get(key));
+		}
+	}
+	
+	public void setMap(Map<String, Object> entry) {
 		this.columns.addAll(entry.keySet());
 //		Collections.reverse(this.columns);
 		

@@ -5,11 +5,15 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
@@ -20,6 +24,7 @@ import org.dockfx.DockPos;
 import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
 
+import gr.bashfx.BashFXApp;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
@@ -41,6 +46,7 @@ import gr.sqlbrowserfx.rest.SparkRESTfulService;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -68,6 +74,8 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 import kong.unirest.Unirest;
 
 public class SqlBrowserFXApp extends Application {
@@ -75,6 +83,9 @@ public class SqlBrowserFXApp extends Application {
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
 //	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/basic.css");
 	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/flat-blue.css");
+	private static final boolean ENABLE_JMETRO = System.getProperty("jmetro") != null;
+	private static final String JMETRO = System.getProperty("jmetro");
+
 	private static String DB;
 	private static RESTfulServiceConfig restServiceConfig;
 
@@ -153,22 +164,21 @@ public class SqlBrowserFXApp extends Application {
 		Label recentDBsText = new Label("Recently opened");
 		recentDBsText.setTextAlignment(TextAlignment.CENTER);
 
-		ListView<String> recentDBsList = new ListView<>();
+		ListView<String> recentDBsListView = new ListView<>();
 		try (Stream<String> stream = Files.lines(Paths.get(RECENT_DBS_PATH))) {
-			stream.forEach(line -> recentDBsList.getItems().add(line));
+			stream.forEach(line -> recentDBsListView.getItems().add(line));
 		} catch (IOException e) {
 			DialogFactory.createErrorDialog(e);
 		}
 
-		recentDBsList.setOnMouseClicked(
-				mouseEvent -> selectedDBtext.setText(recentDBsList.getSelectionModel().getSelectedItem()));
-		VBox leftBox = new VBox(recentDBsText, recentDBsList);
+		recentDBsListView.setOnMouseClicked(
+				mouseEvent -> selectedDBtext.setText(recentDBsListView.getSelectionModel().getSelectedItem()));
+		VBox leftBox = new VBox(recentDBsText, recentDBsListView);
 		leftBox.setAlignment(Pos.CENTER);
 		leftBox.setPadding(new Insets(5));
 		leftBox.setSpacing(5);
 
 		BorderPane borderPane = new BorderPane();
-		borderPane.setPrefSize(600, 400);
 		borderPane.setCenter(rightBox);
 		borderPane.setLeft(leftBox);
 		borderPane.setBottom(bottomBox);
@@ -181,11 +191,20 @@ public class SqlBrowserFXApp extends Application {
 			mySqlConfigBox.showLoader(true);
 			dbSelectionAction(mySqlConfigBox);
 		});
+		mySqlConfigBox.getChildren().add(new ListView<String>(FXCollections.observableArrayList(Arrays.asList("Yesterday", "jdbc:mysql://localhost:3306/sakila?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"))));
 		Tab mysqlTab = new Tab("MySQL", mySqlConfigBox);
 		mysqlTab.setGraphic(JavaFXUtils.createImageView("/res/mysql.png", 28.0, 28.0));
 		mysqlTab.setClosable(false);
 		TabPane dbTabPane = new TabPane(sqliteTab, mysqlTab);
+		
+		if (ENABLE_JMETRO && JMETRO.equals("dark"))
+			new JMetro(Style.DARK).setParent(dbTabPane);	
+		else if (ENABLE_JMETRO && JMETRO.equals("light"))
+			new JMetro(Style.LIGHT).setParent(dbTabPane);
+		
 		primaryScene = new Scene(dbTabPane, 600, 400);
+		leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
+		leftBox.prefWidthProperty().bind(primaryScene.widthProperty().divide(2));
 		primaryScene.getStylesheets().add(DockPane.class.getResource("default.css").toExternalForm());
 		primaryScene.getStylesheets().add(CSS_THEME);
 		primaryScene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
@@ -203,6 +222,10 @@ public class SqlBrowserFXApp extends Application {
 		if (dbPath.equals("No database selected"))
 			return;
 
+		if (Files.notExists(Paths.get(dbPath), LinkOption.NOFOLLOW_LINKS)) {
+			DialogFactory.createErrorDialog(new FileNotFoundException("File does not exists"));
+			return;
+		}
 		DB = dbPath;
 		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
 
@@ -224,6 +247,10 @@ public class SqlBrowserFXApp extends Application {
 			Executors.newSingleThreadExecutor().execute(() -> {
 				try {
 					mysqlConnector.checkConnection();
+					SqlBrowserFXAppManager.getConfigSqlConnector()
+										  .executeUpdate("insert into mysql_history (date,url,usenrname,database) values (?,?,?)",
+												  Arrays.asList(new Timestamp(System.currentTimeMillis()),
+														  		configBox.getUrl(), configBox.getUserField().getText(), configBox.getDatabaseField().getText()));
 				} catch (SQLException e) {
 					LoggerFactory.getLogger("SQLBROWSER").error(e.getMessage(), e);
 					configBox.showLoader(false);
@@ -251,18 +278,21 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 		TextField requestField = new TextField();
-		requestField.setPromptText("Enter url ...");
+//		requestField.setPromptText("Enter url ...");
+		requestField.setPromptText("Enter url...");
 		requestField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
-				try {
-					JSONArray jsonArray = new JSONArray(Unirest.get(requestField.getText()).asString().getBody());
-					tableView.setItemsLater(jsonArray);
-				} catch (Throwable e) {
-					DialogFactory.createErrorDialog(e);
-				}
+				Executors.newSingleThreadExecutor().execute(() -> {
+					try {
+						
+						JSONArray jsonArray = new JSONArray(Unirest.get(requestField.getText()).asString().getBody());
+						tableView.setItemsLater(jsonArray);
+					} catch (Throwable e) {
+						DialogFactory.createErrorDialog(e);
+					}
+				});
 			}
 		});
-		
 		VBox vbox = new VBox(requestField, tableView);
 		VBox.setVgrow(tableView, Priority.ALWAYS);
 		return vbox;
@@ -277,7 +307,7 @@ public class SqlBrowserFXApp extends Application {
 		SqlBrowserFXAppManager.addSqlPane(mainSqlPane);
 		mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, DockWeights.asDoubleArrray(0.8f));
-//		mainSqlPane.asDockNode().setClosable(false);
+		mainSqlPane.asDockNode().setClosable(false);
 		mainSqlPane.showConsole();
 
 		ddbTreeView = new DDBTreeView(DB, sqlConnector);
@@ -288,7 +318,7 @@ public class SqlBrowserFXApp extends Application {
 		ddbTreeView.addListener(value -> CodeAreaKeywords.bind(ddbTreeView.getContentNames()));
 		mainSqlPane.getSqlConsoleBox().addListener(ddbTreeView);
 		ddbTreeView.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
-//		ddbTreeView.asDockNode().setClosable(false);
+		ddbTreeView.asDockNode().setClosable(false);
 		// fixed size 
 		SplitPane.setResizableWithParent(ddbTreeView.asDockNode(), Boolean.FALSE);
 		
@@ -298,6 +328,12 @@ public class SqlBrowserFXApp extends Application {
 		vbox.setAlignment(Pos.CENTER);
 		vbox.getChildren().addAll(menuBar, dockPane);
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
+		
+		if (ENABLE_JMETRO && JMETRO.equals("dark"))
+			new JMetro(Style.DARK).setParent(vbox);	
+		else if (ENABLE_JMETRO && JMETRO.equals("light"))
+			new JMetro(Style.LIGHT).setParent(vbox);
+		
 		primaryScene.setRoot(vbox);
 		primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> {
 			SplitPane.setResizableWithParent(ddbTreeView.asDockNode(), Boolean.TRUE);
@@ -318,7 +354,7 @@ public class SqlBrowserFXApp extends Application {
 				DSqlPane newSqlPane = new DSqlPane(sqlConnector);
 				SqlBrowserFXAppManager.addSqlPane(newSqlPane);
 				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
-				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT, mainSqlPane.asDockNode());
+				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
 				
 			});
 		});
@@ -331,11 +367,19 @@ public class SqlBrowserFXApp extends Application {
 
 			});
 		});
+		MenuItem bashCodeAreaItem = new MenuItem("Open BashCodeArea", JavaFXUtils.icon("/res/console.png"));
+		bashCodeAreaItem.setOnAction(event -> {
+			Platform.runLater(() -> {
+				DockNode dockNode = new DockNode(new BashFXApp().createBashFXAppBox(primaryStage), "BashFX", JavaFXUtils.icon("/res/console.png"));
+				dockNode.dock(dockPane, DockPos.RIGHT);
+
+			});
+		});
 		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.icon("/res/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
 			TreeView<String> treeView = new DBTreeView(DB, sqlConnector);
 			DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
-			dockNode.dock(dockPane, DockPos.LEFT);	
+			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 		
 		MenuItem jsonTableViewItem = new MenuItem("Open JSON Table View", JavaFXUtils.icon("/res/web.png"));
@@ -343,7 +387,7 @@ public class SqlBrowserFXApp extends Application {
 			Platform.runLater(() -> {
 				VBox jsonTableView = this.createJsonTableView();
 				DockNode dockNode = new DockNode(jsonTableView, "JSON table", JavaFXUtils.icon("/res/web.png"));
-				dockNode.dock(dockPane, DockPos.LEFT);	
+				dockNode.dock(dockPane, DockPos.RIGHT);	
 			});
 		});
 		
@@ -352,10 +396,10 @@ public class SqlBrowserFXApp extends Application {
 			WebView docsView = new WebView();
 			docsView.getEngine().load("https://www.sqlite.org/index.html");
 			DockNode dockNode = new DockNode(docsView, "Docs", JavaFXUtils.icon("/res/web.png"));
-			dockNode.dock(dockPane, DockPos.LEFT);	
+			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem, jsonTableViewItem, webViewItem);
+		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, bashCodeAreaItem, tablesTreeViewItem, jsonTableViewItem, webViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/res/spark.png", 16.0, 16.0));

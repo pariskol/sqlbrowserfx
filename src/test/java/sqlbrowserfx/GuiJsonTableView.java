@@ -12,7 +12,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import kong.unirest.Unirest;
 
-public class TestJsonTableView extends Application{
+public class GuiJsonTableView extends Application{
 
 	public static void main(String[] args) {
 //		BasicConfigurator.configure();

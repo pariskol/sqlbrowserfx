@@ -43,6 +43,8 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 
 /**
  * Base class for a dock node that provides the layout of the content along with
@@ -79,6 +81,9 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 	 * The dock pane this dock node belongs to when not floating.
 	 */
 	private DockPane dockPane;
+	
+	private static final boolean ENABLE_JMETRO = System.getProperty("jmetro") != null;
+	private static final String JMETRO = System.getProperty("jmetro");
 
 	/**
 	 * CSS pseudo class selector representing whether this node is currently
@@ -293,6 +298,11 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 			borderPane = new BorderPane();
 			borderPane.getStyleClass().add("dock-node-border");
 			borderPane.setCenter(this);
+			
+			if (ENABLE_JMETRO && JMETRO.equals("dark"))
+				new JMetro(Style.DARK).setParent(this);	
+			else if (ENABLE_JMETRO && JMETRO.equals("light"))
+				new JMetro(Style.LIGHT).setParent(this);
 
 			Scene scene = new Scene(borderPane);
 			for (String styleSheet : dockPane.getStylesheets())

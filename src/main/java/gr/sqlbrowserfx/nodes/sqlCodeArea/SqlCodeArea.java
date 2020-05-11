@@ -11,26 +11,22 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 
 import org.apache.commons.lang3.StringUtils;
-import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
 
+import gr.bashfx.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Bounds;
-import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 
 public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
@@ -42,11 +38,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 	private boolean auoCompletePopupShowing = false;
 	private AtomicReference<Popup> auoCompletePopup;
 	private boolean autoCompleteOnType = true;
-	protected TextField findField;
-	protected TextField replaceField;
-	protected Button findButton;
-	protected Button replaceButton;
-	protected PopOver searchAndReplacePopOver;
+	protected SearchAndReplacePopOver searchAndReplacePopOver;
 	private volatile int lastPos;
 
 	public SqlCodeArea() {
@@ -55,58 +47,17 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 	
 	public SqlCodeArea(String text) {
 		auoCompletePopup = new AtomicReference<Popup>();
+		searchAndReplacePopOver = new SearchAndReplacePopOver(this);
+
 		this.setOnKeyTyped(keyEvent -> this.autoCompleteAction(keyEvent, auoCompletePopup));
 
 		this.setContextMenu(this.createContextMenu());
 		
-		findField = new TextField();
-		findField.setPromptText("Search...");
-		findField.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ESCAPE) {
-				searchAndReplacePopOver.hide();
-			} else if (keyEvent.getCode() == KeyCode.ENTER) {
-				this.findButtonAction();
-			}
-		});
-		replaceField = new TextField();
-		replaceField.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ESCAPE) {
-				searchAndReplacePopOver.hide();
-			}
-//			else if (keyEvent.getCode() == KeyCode.ENTER) {
-//				this.replaceButtonAction();
-//			}
-		});
-		replaceField.setPromptText("Replace...");
-
-		findButton = new Button("Find", JavaFXUtils.icon("/res/magnify.png"));
-		findButton.setOnMouseClicked(mouseEvent -> this.findButtonAction());
-		findButton.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				this.findButtonAction();
-				keyEvent.consume();
-			}
-		});
-		replaceButton = new Button("Replace", JavaFXUtils.icon("/res/replace.png"));
-		replaceButton.setOnMouseClicked(mouseEvent -> this.replaceButtonAction());
-		replaceButton.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				this.replaceButtonAction();
-				keyEvent.consume();
-			}
-		});
-//		findButton.prefWidthProperty().bind(findField.widthProperty());
-//		replaceButton.prefWidthProperty().bind(findField.widthProperty());
-
-		searchAndReplacePopOver = new PopOver();
-		searchAndReplacePopOver.setArrowSize(0);
-		searchAndReplacePopOver.setContentNode(new VBox(findField, replaceField, new HBox(findButton, replaceButton)));
-		searchAndReplacePopOver.setAutoHide(true);
-
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.ENTER) {
 				enterAction.run();
-			} else if (keyEvent.getCode() == KeyCode.BACK_SPACE) {
+			} 
+			else if (keyEvent.getCode() == KeyCode.BACK_SPACE) {
 				if (auoCompletePopupShowing) {
 					auoCompletePopup.get().hide();
 					auoCompletePopup.set(null);
@@ -114,10 +65,27 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 				}
 				// uncomment this to activate autocomplete on backspace
 //				this.autoCompleteAction(keyEvent, auoCompletePopup);
-			} else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.Q) {
+			
+			}
+			else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.Q) {
 				// TODO go to query x tab
-			} else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.F) {
+			}
+			else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.F) {
 				this.showSearchAndReplacePopup();
+			}
+			else if (keyEvent.getCode() == KeyCode.D) {
+				boolean hasInitialSelectedText = false;
+				if (this.getSelectedText().isEmpty())
+					this.selectLine();
+				else
+					hasInitialSelectedText = true;
+				
+				this.replaceSelection("");
+				
+				if (!hasInitialSelectedText && this.getCaretPosition() != 0) {
+					this.deletePreviousChar();
+					this.moveTo(this.getCaretPosition() + 1);
+				}
 			}
 		});
 
@@ -166,15 +134,6 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 	}
 
 	private void enableHighlighting() {
-		//FIXME no need for this listener to be removed
-//		this.caretPositionProperty().addListener((observable, oldPosition, newPosition) -> {
-//			if (auoCompletePopup.get() != null) {
-//				auoCompletePopup.get().hide();
-//				auoCompletePopupShowing = false;
-//			}
-//		});
-
-		// Unsubscribe when not needed
 		@SuppressWarnings("unused")
 		Subscription subscription = this.multiPlainChanges().successionEnds(Duration.ofMillis(100))
 				.subscribe(ignore -> this.setStyleSpans(0, computeHighlighting(this.getText())));
@@ -182,31 +141,12 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner {
 	
 	protected void showSearchAndReplacePopup() {
 		if (!this.getSelectedText().isEmpty()) {
-			findField.setText(this.getSelectedText());
-			findField.selectAll();
+			searchAndReplacePopOver.getFindField().setText(this.getSelectedText());
+			searchAndReplacePopOver.getFindField().selectAll();
 		}
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
 		searchAndReplacePopOver.show(this, boundsInScene.getMaxX() - searchAndReplacePopOver.getWidth(),
 				boundsInScene.getMinY());
-	}
-
-	private void findButtonAction() {
-		if (!findField.getText().isEmpty()) {
-			lastPos = this.getText().indexOf(findField.getText(), this.getCaretPosition());
-			if (lastPos != -1) {
-				this.moveTo(lastPos + findField.getText().length());
-				this.requestFollowCaret();
-				this.selectRange(lastPos, lastPos + findField.getText().length());
-			} else if (lastPos == -1) {
-				lastPos = 0;
-				this.moveTo(0);
-			}
-		}
-	}
-
-	private void replaceButtonAction() {
-		if (!replaceField.getText().isEmpty() && !this.getSelectedText().isEmpty())
-			this.replaceSelection(replaceField.getText());
 	}
 
 	@Override

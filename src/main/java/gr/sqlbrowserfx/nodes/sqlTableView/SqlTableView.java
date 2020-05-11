@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -405,7 +407,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		final String query = sqlQuery;
 		sqlConnector.executeUpdate(query, params);
 		this.getSqlTableRows().add(new MapTableViewRow(entry));
-		this.sort(this);
+//		this.sort();
 	}
 
 	public void insertRecord(Map<String, Object> map) throws SQLException {
@@ -466,27 +468,26 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
 		logger.debug(message);
 
-		sqlConnector.executeUpdate(query, params);
-
-		for (String column : columns) {
-			TextField elm = editBox.getMap().get(column);
-			Object actualValue = null;
-			if (elm != null && elm.getText() != null && !elm.getText().equals("")) {
-				actualValue = sqlConnector.castToDBType(this.getSqlTable(), column,
-						editBox.getMap().get(column).getText());
-			}
-			sqlTableRow.set(column, actualValue);
-
+		if (sqlConnector.executeUpdate(query, params) > 0) {
+			sqlConnector.executeQuery("select " + StringUtils.join(columns, ",") + " from " + this.getSqlTable().getName() + " where " + this.getPrimaryKey() + " = ?", Arrays.asList(sqlTableRow.get(this.getPrimaryKey())),
+				rset -> {
+					LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
+					for (String columnLabel : sqlTable.getColumns()) {
+						entry.put(columnLabel, rset.getObject(columnLabel));
+					}
+					sqlTableRow.refreshMap(entry);
+				});
 		}
+
 		// notify listeners
 		sqlTableRow.changed();
 	}
 	
-	private void sort(SqlTableView sqlTableView) {
-		sqlTableView.getSqlTableRows().sort((o1, o2) -> {
-			if (o1.get(sqlTableView.getPrimaryKey()) != null && o2.get(sqlTableView.getPrimaryKey()) != null) {
-				if (o1.get(sqlTableView.getPrimaryKey()).toString()
-						.compareTo(o2.get(sqlTableView.getPrimaryKey()).toString()) > 0) {
+	private void customSort() {
+		this.getSqlTableRows().sort((o1, o2) -> {
+			if (o1.get(this.getPrimaryKey()) != null && o2.get(this.getPrimaryKey()) != null) {
+				if (o1.get(this.getPrimaryKey()).toString()
+						.compareTo(o2.get(this.getPrimaryKey()).toString()) > 0) {
 
 					return 1;
 				}

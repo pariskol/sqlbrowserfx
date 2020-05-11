@@ -124,7 +124,7 @@
 	-fx-background-color: -fx-background;
 	-fx-padding: 2.0;
 	-fx-spacing: 3.0;
-	-fx-border-width: 1.0 0.0 1.0 0.0;
+	-fx-border-width: 0.0 0.0 0.0 0.0;
 	-fx-border-color: -fx-outer-border;
 }
 

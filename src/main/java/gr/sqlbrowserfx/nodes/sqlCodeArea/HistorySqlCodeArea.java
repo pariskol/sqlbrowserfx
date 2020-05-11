@@ -1,15 +1,15 @@
 package gr.sqlbrowserfx.nodes.sqlCodeArea;
 
+import gr.bashfx.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
-import javafx.scene.layout.VBox;
 
 public class HistorySqlCodeArea extends SqlCodeArea {
 
 	public HistorySqlCodeArea() {
 		super();
-		searchAndReplacePopOver.setContentNode(new VBox(findField, findButton));
+		searchAndReplacePopOver = new SearchAndReplacePopOver(this, false);
 	}
 	
 	@Override

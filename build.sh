@@ -31,5 +31,3 @@ cd dist
 
 latest_tag=$(git describe)
 tar -czvf sqlbrowserfx-$latest_tag.tar.gz *
-
-

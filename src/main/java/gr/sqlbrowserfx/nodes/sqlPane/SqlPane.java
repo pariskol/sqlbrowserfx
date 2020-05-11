@@ -487,10 +487,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		Button clearBtn = new Button("", JavaFXUtils.icon("/res/clear.png"));
 		clearBtn.setTooltip(new Tooltip("Clear"));
 		clearBtn.setOnAction(event -> editBox.clear());
-		addBtn.setOnMouseClicked(event2 -> sqlConnector.executeAsync(() -> this.insertRecordToSqlTableViewRef(editBox)));
+		addBtn.setOnMouseClicked(event2 -> this.insertRecordToSqlTableViewRef(editBox));
 		addBtn.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
-				sqlConnector.executeAsync(() -> this.insertRecordToSqlTableViewRef(editBox));
+				this.insertRecordToSqlTableViewRef(editBox);
 			}
 		});
 	
@@ -668,7 +668,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		Button editButton = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
 		editButton.setTooltip(new Tooltip("Edit"));
-		editButton.setOnAction(event -> sqlConnector.executeAsync(() -> this.updateRecordOfSqlTableViewRef(editBox, sqlTableRow)));
+		editButton.setOnAction(event -> this.updateRecordOfSqlTableViewRef(editBox, sqlTableRow));
 		editButton.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				editButton.getOnAction().handle(new ActionEvent());
@@ -730,7 +730,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		popOver = new PopOver(editBox);
 		popOver.setHeight(editBox.getMainBox().getHeight());
 
-		addBtn.setOnAction(submitEvent -> sqlConnector.executeAsync(() -> this.insertRecordToSqlTableViewRef(editBox)));
+		addBtn.setOnAction(submitEvent -> this.insertRecordToSqlTableViewRef(editBox));
 		addBtn.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				addBtn.getOnAction().handle(new ActionEvent());
@@ -761,8 +761,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		if (sqlTableViewRef.getPrimaryKey() != null) {
 			Button editBtn = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
 			editBtn.setTooltip(new Tooltip("Edit"));
-			editBtn.setOnAction(submitEvent -> sqlConnector.getExecutorService()
-					.execute(() -> this.updateRecordOfSqlTableViewRef(editBox, sqlTableRow)));
+			editBtn.setOnAction(submitEvent -> this.updateRecordOfSqlTableViewRef(editBox, sqlTableRow));
 			editBtn.setOnKeyPressed(keyEvent -> {
 				if (keyEvent.getCode() == KeyCode.ENTER) {
 					editBtn.getOnAction().handle(new ActionEvent());
@@ -827,7 +826,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			row.addListener(editBox);
 			Button editButton = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
 			editButton.setTooltip(new Tooltip("Edit"));
-			editButton.setOnAction(event -> sqlConnector.executeAsync(() -> this.updateRecordOfSqlTableViewRef(editBox, row)));
+			editButton.setOnAction(event -> this.updateRecordOfSqlTableViewRef(editBox, row));
 			editBox.getMainBox().getChildren().add(editButton);
 			editBox.prefWidthProperty().bind(compareBox.widthProperty().divide(2));
 			compareRowBox.getChildren().add(editBox);
@@ -1070,6 +1069,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		}
 	}
 
+	//TODO replace with method deleteRecord of SqlTableView
 	public int deleteRecord(MapTableViewRow sqlTableRow) {
 		String query = "delete from " + sqlTableViewRef.getTableName() + " where ";
 		List<Object> params = new ArrayList<>();
@@ -1101,20 +1101,24 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	public void insertRecordToSqlTableViewRef(SqlTableRowEditBox editBox) {
-		try {
-			sqlTableViewRef.insertRecord(editBox);
-		} catch (Throwable e) {
-			DialogFactory.createErrorDialog(e);
-		}
+		sqlConnector.executeAsync(() -> {
+			try {
+				sqlTableViewRef.insertRecord(editBox);
+			} catch (Throwable e) {
+				DialogFactory.createErrorDialog(e);
+			}
+		});
 
 	}
 
 	public void updateRecordOfSqlTableViewRef(SqlTableRowEditBox editBox, MapTableViewRow sqlTableRow) {
-		try {
-			sqlTableViewRef.updateRecord(editBox, sqlTableRow);
-		} catch (Throwable e) {
-			DialogFactory.createErrorDialog(e);
-		}
+		sqlConnector.executeAsync(() -> {
+			try {
+				sqlTableViewRef.updateRecord(editBox, sqlTableRow);
+			} catch (SQLException e) {
+				DialogFactory.createErrorDialog(e);
+			}
+		});
 	}
 
 	protected MouseEvent simulateClickEvent() {
