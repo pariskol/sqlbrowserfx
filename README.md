@@ -38,10 +38,11 @@ Run SqlBrowserFX.exe for Windows, or run sqlbrowserfx.sh for Linux.
 
 ## Awesome projects used
 
-* [DockFX](https://github.com/RobertBColton/DockFX) - The docking framework used (a moded version actually)
+* [DockFX](https://github.com/RobertBColton/DockFX) - The docking framework used (a moded version actually).
 * [RichTextFΧ](https://github.com/FXMisc/RichTextFX) - Library which provides editor with syntax highlighting feature.
-* [Spark Java](https://github.com/perwendel/spark)  - The web framework used
-
+* [ControlsFX](https://github.com/controlsfx/controlsfx) - Library which provides many useful custom gui components.
+* [Spark Java](https://github.com/perwendel/spark)  - The web framework used.
+* [JMetro](https://pixelduke.com/java-javafx-theme-jmetro/)  - Windows like theme.
 
 
 
