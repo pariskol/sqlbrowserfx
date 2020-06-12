@@ -144,6 +144,11 @@ dock-area-indicator {
 	-fx-background-color: transparent;
 }
 
+.border-pane {
+	-fx-background-color: transparent;
+	-fx-border-color: transparent;
+}
+
 .scroll-pane {
 	-fx-background-color: transparent;
 	-fx-border-color: transparent;
@@ -183,8 +188,7 @@ dock-area-indicator {
 
 .list-view {
     -fx-background-color: transparent, -fx-control-inner-background;
-    -fx-background-insets: 0, 1;
-    -fx-padding: 1;
+    -fx-border-color: transparent;
     -fx-focus-color: black;
 	-fx-faint-focus-color: transparent;
 }
@@ -200,11 +204,10 @@ dock-area-indicator {
 }
 
 .table-view {
+	-fx-border-color: transparent;
 	-fx-focus-color: transparent;
 	-fx-faint-focus-color: transparent;
 	-fx-background-color: transparent, -fx-control-inner-background;
-    -fx-background-insets: 0, 1;
-    -fx-padding: 1;
 }
 
 .table-view .column-header .label{

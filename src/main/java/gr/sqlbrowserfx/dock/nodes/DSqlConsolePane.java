@@ -11,14 +11,15 @@ import org.dockfx.DockNode;
 import org.dockfx.DockPos;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
+import gr.sqlbrowserfx.SqlPaneState;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.DockWeights;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
-import gr.sqlbrowserfx.nodes.sqlCodeArea.HistorySqlCodeArea;
-import gr.sqlbrowserfx.nodes.sqlCodeArea.SqlCodeArea;
-import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
+import gr.sqlbrowserfx.nodes.sqlcodearea.HistorySqlCodeArea;
+import gr.sqlbrowserfx.nodes.sqlcodearea.SqlCodeArea;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
@@ -83,15 +84,16 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	protected void handleSelectResult(String query, ResultSet rset) throws SQLException {
 //		sqlPane.setInProgress();
-		sqlPane.getSelectedSqlTableView().setItemsLater(rset);
+		sqlPane.createSqlTableViewLater();
 		sqlPane.getSelectedSqlTableView().setFilledByQuery(true);
-		
+		sqlPane.getSelectedSqlTableView().setItemsLater(rset);
 		Platform.runLater(() -> {
-			sqlPane.fillColumnCheckBoxes();
+			SqlPaneState guiState = new SqlPaneState(sqlPane.getSelectedSqlTableView(), sqlPane.getSelectedTableTab());
+			sqlPane.fillColumnCheckBoxes(guiState);
 			if (sqlPane.isFullMode()) {
-				sqlPane.enableFullMode();
+				sqlPane.enableFullMode(guiState);
 			}
-			sqlPane.updateRowsCountLabel();
+			sqlPane.updateRowsCountLabel(guiState.getSqlTableView());
 		});
 	}
 	

@@ -24,7 +24,6 @@ import org.dockfx.DockPos;
 import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
 
-import gr.bashfx.BashFXApp;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
@@ -35,12 +34,12 @@ import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
-import gr.sqlbrowserfx.nodes.queriesMenu.QueriesMenu;
-import gr.sqlbrowserfx.nodes.sqlCodeArea.CodeAreaKeywords;
-import gr.sqlbrowserfx.nodes.sqlPane.DraggingTabPaneSupport;
-import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
-import gr.sqlbrowserfx.nodes.sqlTableView.MapTableView;
-import gr.sqlbrowserfx.nodes.sqlTableView.MapTableViewRow;
+import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
+import gr.sqlbrowserfx.nodes.sqlcodearea.CodeAreaKeywords;
+import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
+import gr.sqlbrowserfx.nodes.tableviews.MapTableView;
+import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
 import gr.sqlbrowserfx.rest.SparkRESTfulService;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -367,14 +366,14 @@ public class SqlBrowserFXApp extends Application {
 
 			});
 		});
-		MenuItem bashCodeAreaItem = new MenuItem("Open BashCodeArea", JavaFXUtils.icon("/res/console.png"));
-		bashCodeAreaItem.setOnAction(event -> {
-			Platform.runLater(() -> {
-				DockNode dockNode = new DockNode(new BashFXApp().createBashFXAppBox(primaryStage), "BashFX", JavaFXUtils.icon("/res/console.png"));
-				dockNode.dock(dockPane, DockPos.RIGHT);
-
-			});
-		});
+//		MenuItem bashCodeAreaItem = new MenuItem("Open BashCodeArea", JavaFXUtils.icon("/res/console.png"));
+//		bashCodeAreaItem.setOnAction(event -> {
+//			Platform.runLater(() -> {
+//				DockNode dockNode = new DockNode(new BashFXApp().createBashFXAppBox(primaryStage), "BashFX", JavaFXUtils.icon("/res/console.png"));
+//				dockNode.dock(dockPane, DockPos.RIGHT);
+//
+//			});
+//		});
 		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.icon("/res/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
 			TreeView<String> treeView = new DBTreeView(DB, sqlConnector);
@@ -399,7 +398,7 @@ public class SqlBrowserFXApp extends Application {
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, bashCodeAreaItem, tablesTreeViewItem, jsonTableViewItem, webViewItem);
+		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem, jsonTableViewItem, webViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/res/spark.png", 16.0, 16.0));

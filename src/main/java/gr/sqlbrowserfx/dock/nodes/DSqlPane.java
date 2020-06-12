@@ -13,6 +13,7 @@ import org.dockfx.DockPos;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.SqlPaneState;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.DockWeights;
@@ -21,8 +22,9 @@ import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleChangeListener;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.nodes.LineChartBox;
-import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
-import gr.sqlbrowserfx.nodes.sqlPane.SqlTableTab;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
+import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -146,7 +148,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 				return;
 
 			chartButton.requestFocus();
-			this.fillChartColumnBoxes();
+			this.fillChartColumnBoxes(getSelectedSqlTableView());
 			PopOver popOver = new PopOver(new VBox(new Label("Select display column"), nameColumnsBox,
 					new Label("Select plot column"), columnsBox, showChartButton));
 			popOver.setDetachable(false);
@@ -188,7 +190,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 
 			lineChartBoxes.clear();
 			lineChartButton.requestFocus();
-			this.fillChartColumnBoxes();
+			this.fillChartColumnBoxes(getSelectedSqlTableView());
 			PopOver popOver = new PopOver();
 			LineChartBox contentBox = new LineChartBox(columnNames);
 			lineChartBoxes.add(contentBox);
@@ -319,23 +321,24 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	}
 
 	@Override
-	protected void getDataFromDB(String table) {
+	protected void getDataFromDB(String table, SqlTableView sqlTableViewRef) {
+		final SqlTableView sqlTableView = sqlTableViewRef;
 		if (table != null && !table.equals("empty")) {
-			super.getDataFromDB(table);
-			this.fillChartColumnBoxes();
+			super.getDataFromDB(table, sqlTableView);
+			this.fillChartColumnBoxes(sqlTableView);
 		}
 	}
 
-	private void fillChartColumnBoxes() {
-		columnNames = getSelectedSqlTableView().getColumnsNames();
+	private void fillChartColumnBoxes(SqlTableView sqlTableView) {
+		columnNames = sqlTableView.getColumnsNames();
 		columnsBox.setItems(FXCollections.observableList(columnNames));
 		nameColumnsBox.setItems(FXCollections.observableList(columnNames));
 	}
 
 	@Override
-	public void enableFullMode() {
+	public void enableFullMode(SqlPaneState guiState) {
 		Platform.runLater(() -> {
-			tablesTabPane.getSelectionModel().getSelectedItem().setContent(sqlTableViewRef);
+			guiState.getTableTab().setContent(guiState.getSqlTableView());
 			if (isFullMode()) {
 				this.createRecordsTabPane();
 				this.createRecordsAddTab();
@@ -351,8 +354,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 				} else {
 					dRecordsTabPane.setContents(recordsTabPaneRef);
 				}
-				((SqlTableTab) tablesTabPane.getSelectionModel().getSelectedItem())
-						.setRecordsTabPane(recordsTabPaneRef);
+				guiState.getTableTab().setRecordsTabPane(recordsTabPaneRef);
 			}
 
 			sqlQueryRunning.set(false);

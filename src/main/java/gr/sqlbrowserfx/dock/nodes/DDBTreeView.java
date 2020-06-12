@@ -6,7 +6,7 @@ import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.nodes.DBTreeView;
-import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;

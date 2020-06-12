@@ -6,7 +6,7 @@ import java.util.List;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
-import gr.sqlbrowserfx.nodes.sqlPane.SqlPane;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 
 public class SqlBrowserFXAppManager {
 

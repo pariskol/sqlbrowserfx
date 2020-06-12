@@ -4,7 +4,7 @@ import java.sql.SQLException;
 
 import org.json.JSONArray;
 
-import gr.sqlbrowserfx.nodes.sqlTableView.MapTableView;
+import gr.sqlbrowserfx.nodes.tableviews.MapTableView;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;

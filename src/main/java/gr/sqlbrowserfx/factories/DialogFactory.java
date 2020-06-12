@@ -7,8 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.LoggerFactory;
 
-import gr.sqlbrowserfx.nodes.sqlTableView.MapTableViewRow;
-import gr.sqlbrowserfx.nodes.sqlTableView.SqlTableView;
+import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
+import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -31,10 +31,14 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 
 public class DialogFactory {
 
 	private static String DEFAULT_STYLESHEET;
+	private static final boolean ENABLE_JMETRO = System.getProperty("jmetro") != null;
+	private static final String JMETRO = System.getProperty("jmetro");
 	
 	public static void createErrorDialog(Throwable e) {
 		createErrorDialog(e, null);
@@ -71,6 +75,12 @@ public class DialogFactory {
 				alert.getDialogPane().getStylesheets().add(stylesheet);
 			else if (DEFAULT_STYLESHEET != null)
 				alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+			
+			if (ENABLE_JMETRO && JMETRO.equals("dark"))
+				new JMetro(Style.DARK).setParent(alert.getDialogPane());	
+			else if (ENABLE_JMETRO && JMETRO.equals("light"))
+				new JMetro(Style.LIGHT).setParent(alert.getDialogPane());
+			
 			alert.showAndWait();
 		});
 	}
@@ -90,6 +100,11 @@ public class DialogFactory {
 			alert.getDialogPane().getStylesheets().add(stylesheet);
 		else if (DEFAULT_STYLESHEET != null)
 			alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+		
+		if (ENABLE_JMETRO && JMETRO.equals("dark"))
+			new JMetro(Style.DARK).setParent(alert.getDialogPane());	
+		else if (ENABLE_JMETRO && JMETRO.equals("light"))
+			new JMetro(Style.LIGHT).setParent(alert.getDialogPane());
 		
 		Optional<ButtonType> res = alert.showAndWait();
 		if (res.get() == ButtonType.OK){
@@ -115,6 +130,11 @@ public class DialogFactory {
 				alert.getDialogPane().getStylesheets().add(stylesheet);
 			else if (DEFAULT_STYLESHEET != null)
 				alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+			
+			if (ENABLE_JMETRO && JMETRO.equals("dark"))
+				new JMetro(Style.DARK).setParent(alert.getDialogPane());	
+			else if (ENABLE_JMETRO && JMETRO.equals("light"))
+				new JMetro(Style.LIGHT).setParent(alert.getDialogPane());
 
 			LoggerFactory.getLogger(DialogFactory.class).info(message);
 			alert.showAndWait();
@@ -189,6 +209,11 @@ public class DialogFactory {
                     }
                 });
 
+		if (ENABLE_JMETRO && JMETRO.equals("dark"))
+			new JMetro(Style.DARK).setParent(dialogVbox);	
+		else if (ENABLE_JMETRO && JMETRO.equals("light"))
+			new JMetro(Style.LIGHT).setParent(dialogVbox);
+		
         Scene dialogScene = new Scene(dialogVbox, 400, 200);
         if (stylesheet != null)
         	dialogScene.getStylesheets().add(stylesheet);
