@@ -480,10 +480,11 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return editBox;
 	}
 
-	protected void createRecordsTabPane() {
-		recordsTabPaneRef = new TabPane();
+	protected TabPane createRecordsTabPane() {
+		TabPane recordsTabPane = new TabPane();
 		DraggingTabPaneSupport draggingSupport = new DraggingTabPaneSupport();
-		draggingSupport.addSupport(recordsTabPaneRef);
+		draggingSupport.addSupport(recordsTabPane);
+		return recordsTabPane;
 	}
 
 	protected void createRecordsAddTab() {
@@ -557,7 +558,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		}
 	}
 
-	public void updateRowsCountLabel(SqlTableView sqlTableView) {
+	public void updateRowsCountLabel(final SqlTableView sqlTableView) {
 		Platform.runLater(() -> this.rowsCountLabel.setText(sqlTableViewRef.getSqlTableRows().size() + " rows"));
 		
 	}
@@ -565,13 +566,14 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	public void enableFullMode(SqlPaneState guiState) {
 		Platform.runLater(() -> {
 			if (isFullMode()) {
-				this.createRecordsTabPane();
+				final TabPane recordsTabPane = this.createRecordsTabPane();
+				recordsTabPaneRef = recordsTabPane;
 				this.createRecordsAddTab();
-				fullModeSplitPaneRef = new SplitPane(guiState.getSqlTableView(), recordsTabPaneRef);
+				fullModeSplitPaneRef = new SplitPane(guiState.getSqlTableView(), recordsTabPane);
 				fullModeSplitPaneRef.setDividerPositions(0.7, 0.3);
 				fullModeSplitPaneRef.setOrientation(Orientation.HORIZONTAL);
 				guiState.getTableTab().setContent(fullModeSplitPaneRef);
-				guiState.getTableTab().setRecordsTabPane(recordsTabPaneRef);
+				guiState.getTableTab().setRecordsTabPane(recordsTabPane);
 			} else
 				guiState.getTableTab().setContent(guiState.getSqlTableView());
 
@@ -647,13 +649,11 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	protected void tablesTabPaneClickAction() {
 		if (tablesTabPane.getSelectionModel().getSelectedItem() == addTableTab)
 			this.createSqlTableView();
-		Platform.runLater(() -> {
-			Tab selectedTab = tablesTabPane.getSelectionModel().getSelectedItem();
-			sqlTableViewRef = ((SqlTableTab) selectedTab).getSqlTableView();
-			fullModeSplitPaneRef = ((SqlTableTab) selectedTab).getSplitPane();
-			recordsTabPaneRef = ((SqlTableTab) selectedTab).getRecordsTabPane();
+			final SqlTableTab selectedTab = (SqlTableTab) tablesTabPane.getSelectionModel().getSelectedItem();
+			sqlTableViewRef = selectedTab.getSqlTableView();
+			fullModeSplitPaneRef = selectedTab.getSplitPane();
+			recordsTabPaneRef = selectedTab.getRecordsTabPane();
 			this.updateRowsCountLabel(sqlTableViewRef);
-		});
 	}
 
 	private void fullModeAction() {

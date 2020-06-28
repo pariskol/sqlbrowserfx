@@ -39,6 +39,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TabPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -340,10 +341,11 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 		Platform.runLater(() -> {
 			guiState.getTableTab().setContent(guiState.getSqlTableView());
 			if (isFullMode()) {
-				this.createRecordsTabPane();
+				TabPane recordsTabPane = this.createRecordsTabPane();
+				recordsTabPaneRef = recordsTabPane;
 				this.createRecordsAddTab();
 				if (dRecordsTabPane == null) {
-					dRecordsTabPane = new DockNode(recordsTabPaneRef, this.asDockNode().getTitle() + " : Full mode",
+					dRecordsTabPane = new DockNode(recordsTabPane, this.asDockNode().getTitle() + " : Full mode",
 							JavaFXUtils.icon("/res/details.png"));
 					dRecordsTabPane.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),
 							DockWeights.asDoubleArrray(0.7f, 0.3f));
@@ -352,9 +354,9 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 						this.setFullMode(false);
 					});
 				} else {
-					dRecordsTabPane.setContents(recordsTabPaneRef);
+					dRecordsTabPane.setContents(recordsTabPane);
 				}
-				guiState.getTableTab().setRecordsTabPane(recordsTabPaneRef);
+				guiState.getTableTab().setRecordsTabPane(recordsTabPane);
 			}
 
 			sqlQueryRunning.set(false);

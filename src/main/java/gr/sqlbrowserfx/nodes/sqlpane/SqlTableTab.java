@@ -21,7 +21,7 @@ public class SqlTableTab extends Tab {
 		super();
 	}
 
-	public SqlTableTab(String text, SqlTableView sqlTableView) {
+	public SqlTableTab(String text, final SqlTableView sqlTableView) {
 		super(text, sqlTableView);
 		this.sqlTableView = sqlTableView;
 
@@ -36,7 +36,7 @@ public class SqlTableTab extends Tab {
 		return sqlTableView;
 	}
 
-	public void setSqlTableView(SqlTableView sqlTableView) {
+	public void setSqlTableView(final SqlTableView sqlTableView) {
 		this.sqlTableView = sqlTableView;
 	}
 
@@ -44,7 +44,7 @@ public class SqlTableTab extends Tab {
 		return splitPane;
 	}
 
-	public void setSplitPane(SplitPane splitPane) {
+	public void setSplitPane(final SplitPane splitPane) {
 		this.splitPane = splitPane;
 	}
 
@@ -52,7 +52,7 @@ public class SqlTableTab extends Tab {
 		return recordsTabPane;
 	}
 
-	public void setRecordsTabPane(TabPane tabPane) {
+	public void setRecordsTabPane(final TabPane tabPane) {
 		this.recordsTabPane = tabPane;
 	}
 	
