@@ -20,7 +20,6 @@ import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.sqlcodearea.HistorySqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlcodearea.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
-import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
