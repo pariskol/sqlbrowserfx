@@ -109,6 +109,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	private String EMPTY = "empty";
 	private String whereFilter = "";
+	private int linesLimit = 50000;
 
 	public SqlPane() {
 		this(null);
@@ -160,7 +161,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		});
 
-		limitModeCheckBox = new CheckBox("Set limit");
+		limitModeCheckBox = new CheckBox("Lines limit " + linesLimit );
 		rowsCountLabel = new Label("0 rows");
 		
 		this.setLeft(toolBar);
@@ -536,7 +537,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		String query = "select " + columnsFilter + " from " + table + whereFilter;
 
 		if (this.isLimitSet()) {
-			query += " limit 50000";
+			query += " limit " + linesLimit;
 		}
 
 		String message = "Executing : " + query;

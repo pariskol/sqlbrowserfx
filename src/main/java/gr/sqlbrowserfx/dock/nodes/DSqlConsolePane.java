@@ -20,6 +20,7 @@ import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.sqlcodearea.HistorySqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlcodearea.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
+import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
@@ -87,10 +88,11 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		if (this.openInNewTableView())
 			sqlPane.createSqlTableViewLater();
 
-		sqlPane.getSelectedSqlTableView().setFilledByQuery(true);
-		sqlPane.getSelectedSqlTableView().setItemsLater(rset);
+		SqlPaneState guiState = new SqlPaneState(sqlPane.getSelectedSqlTableView(), sqlPane.getSelectedTableTab());
+
+		guiState.getSqlTableView().setFilledByQuery(true);
+		guiState.getSqlTableView().setItemsLater(rset);
 		Platform.runLater(() -> {
-			SqlPaneState guiState = new SqlPaneState(sqlPane.getSelectedSqlTableView(), sqlPane.getSelectedTableTab());
 			sqlPane.fillColumnCheckBoxes(guiState);
 			if (sqlPane.isFullMode()) {
 				sqlPane.enableFullMode(guiState);
