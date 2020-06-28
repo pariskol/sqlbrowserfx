@@ -43,6 +43,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private Button executeButton;
 	private CSqlCodeArea codeAreaRef;
 	private CheckBox autoCompleteOnTypeCheckBox;
+	private CheckBox openInNewTableViewCheckBox;
 	private FlowPane toolbar;
 	private FlowPane bottomBar;
 	
@@ -52,6 +53,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private Button stopExecutionButton;
 	private Button settingsButton;
 	private boolean popOverIsShowing = false;
+
 
 	@SuppressWarnings("unchecked")
 	public SqlConsolePane(SqlConnector sqlConnector) {
@@ -95,6 +97,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		autoCompleteOnTypeCheckBox.setOnAction(event -> {
 			codeAreaRef.setAutoCompleteOnType(autoCompleteOnTypeCheckBox.isSelected());
 		});
+		
+		openInNewTableViewCheckBox = new CheckBox("Open in new table");
+		openInNewTableViewCheckBox.setSelected(true);
+		
 		queryTabPane.getSelectionModel().selectedItemProperty().addListener(
 			    (ChangeListener<Tab>) (ov, oldTab, newTab) -> {
 			    	if ((VirtualizedScrollPane<SqlCodeArea>)newTab.getContent() != null) {
@@ -150,7 +156,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		settingsButton.setOnMouseClicked(mouseEvent -> {
 			if (!popOverIsShowing) {
 				popOverIsShowing = true;
-				PopOver popOver = new PopOver(new VBox(autoCompleteOnTypeCheckBox));
+				PopOver popOver = new PopOver(new VBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox));
 				popOver.setOnHidden(event -> popOverIsShowing = false);
 				popOver.show(settingsButton);
 			}
@@ -296,6 +302,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		listeners.remove(listener);
 	}
 
+	public boolean openInNewTableView() {
+		return openInNewTableViewCheckBox.isSelected();
+	}
+	
 	public CodeArea getCodeAreaRef() {
 		return codeAreaRef;
 	}

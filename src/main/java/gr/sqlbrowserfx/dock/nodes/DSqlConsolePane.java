@@ -84,7 +84,9 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	protected void handleSelectResult(String query, ResultSet rset) throws SQLException {
 //		sqlPane.setInProgress();
-		sqlPane.createSqlTableViewLater();
+		if (this.openInNewTableView())
+			sqlPane.createSqlTableViewLater();
+
 		sqlPane.getSelectedSqlTableView().setFilledByQuery(true);
 		sqlPane.getSelectedSqlTableView().setItemsLater(rset);
 		Platform.runLater(() -> {
