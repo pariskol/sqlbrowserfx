@@ -1,5 +1,6 @@
 package gr.sqlbrowserfx.nodes;
 
+import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
@@ -49,7 +50,7 @@ public class MySqlConfigBox extends VBox {
 			}
 		});
 		this.getChildren().add(databaseField);
-		connectButton = new Button("Connect");
+		connectButton = new Button("Connect", JavaFXUtils.icon("/res/database.png"));
 		this.getChildren().add(connectButton);
 
 		this.loader = new ProgressIndicator();

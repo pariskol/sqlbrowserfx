@@ -14,13 +14,16 @@ import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
-import org.apache.log4j.BasicConfigurator;
+import org.apache.commons.io.input.Tailer;
+import org.apache.commons.io.input.TailerListener;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
 
@@ -28,14 +31,14 @@ import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.DockWeights;
-import gr.sqlbrowserfx.dock.nodes.DDBTreeView;
+import gr.sqlbrowserfx.dock.nodes.DBTreePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsoleView;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
+import gr.sqlbrowserfx.nodes.codeareas.log.LogCodeArea;
+import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
-import gr.sqlbrowserfx.nodes.sqlcodearea.CodeAreaKeywords;
 import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableView;
@@ -45,7 +48,6 @@ import gr.sqlbrowserfx.rest.SparkRESTfulService;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -60,7 +62,6 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -73,8 +74,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import jfxtras.styles.jmetro.JMetro;
-import jfxtras.styles.jmetro.Style;
 import kong.unirest.Unirest;
 
 public class SqlBrowserFXApp extends Application {
@@ -82,8 +81,6 @@ public class SqlBrowserFXApp extends Application {
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
 //	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/basic.css");
 	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/flat-blue.css");
-	private static final boolean ENABLE_JMETRO = System.getProperty("jmetro") != null;
-	private static final String JMETRO = System.getProperty("jmetro");
 
 	private static String DB;
 	private static RESTfulServiceConfig restServiceConfig;
@@ -95,12 +92,13 @@ public class SqlBrowserFXApp extends Application {
 	
 	private SqlConnector sqlConnector;
 	private boolean restServiceStarted;
-	private DDBTreeView ddbTreeView;
+	private DBTreePane ddbTreePane;
+	private boolean isInternalDBShowing = false;
+	private boolean isRestConfigurationShowing = false;
 
 	public static void main(String[] args) {
-		BasicConfigurator.configure();
+//		BasicConfigurator.configure();
 		DialogFactory.setDialogStyleSheet(CSS_THEME);
-		CodeAreaKeywords.onKeywordsBind();
 		launch(args);
 	}
 
@@ -190,16 +188,13 @@ public class SqlBrowserFXApp extends Application {
 			mySqlConfigBox.showLoader(true);
 			dbSelectionAction(mySqlConfigBox);
 		});
-		mySqlConfigBox.getChildren().add(new ListView<String>(FXCollections.observableArrayList(Arrays.asList("Yesterday", "jdbc:mysql://localhost:3306/sakila?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"))));
+//		mySqlConfigBox.getChildren().add(new ListView<String>(FXCollections.observableArrayList(Arrays.asList("Yesterday", "jdbc:mysql://localhost:3306/sakila?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"))));
 		Tab mysqlTab = new Tab("MySQL", mySqlConfigBox);
 		mysqlTab.setGraphic(JavaFXUtils.createImageView("/res/mysql.png", 28.0, 28.0));
 		mysqlTab.setClosable(false);
 		TabPane dbTabPane = new TabPane(sqliteTab, mysqlTab);
 		
-		if (ENABLE_JMETRO && JMETRO.equals("dark"))
-			new JMetro(Style.DARK).setParent(dbTabPane);	
-		else if (ENABLE_JMETRO && JMETRO.equals("light"))
-			new JMetro(Style.LIGHT).setParent(dbTabPane);
+		JavaFXUtils.applyJMetro(dbTabPane);
 		
 		primaryScene = new Scene(dbTabPane, 600, 400);
 		leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
@@ -309,17 +304,17 @@ public class SqlBrowserFXApp extends Application {
 		mainSqlPane.asDockNode().setClosable(false);
 		mainSqlPane.showConsole();
 
-		ddbTreeView = new DDBTreeView(DB, sqlConnector);
-		CodeAreaKeywords.bind(ddbTreeView.getContentNames());
-		for (String table : ddbTreeView.getContentNames()) {
-			CodeAreaKeywords.bind(table, ddbTreeView.getColumnsForTable(table));
+		ddbTreePane = new DBTreePane(DB, sqlConnector);
+		SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames());
+		for (String table : ddbTreePane.getDBTreeView().getContentNames()) {
+			SqlCodeAreaSyntax.bind(table, ddbTreePane.getDBTreeView().getColumnsForTable(table));
 		}
-		ddbTreeView.addListener(value -> CodeAreaKeywords.bind(ddbTreeView.getContentNames()));
-		mainSqlPane.getSqlConsoleBox().addListener(ddbTreeView);
-		ddbTreeView.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
-		ddbTreeView.asDockNode().setClosable(false);
+		ddbTreePane.getDBTreeView().addListener(value -> SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames()));
+		mainSqlPane.getSqlConsoleBox().addListener(ddbTreePane.getDBTreeView());
+		ddbTreePane.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
+		ddbTreePane.asDockNode().setClosable(false);
 		// fixed size 
-		SplitPane.setResizableWithParent(ddbTreeView.asDockNode(), Boolean.FALSE);
+		SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
 		
 		MenuBar menuBar = createMenu(dockPane);
 
@@ -328,19 +323,16 @@ public class SqlBrowserFXApp extends Application {
 		vbox.getChildren().addAll(menuBar, dockPane);
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
 		
-		if (ENABLE_JMETRO && JMETRO.equals("dark"))
-			new JMetro(Style.DARK).setParent(vbox);	
-		else if (ENABLE_JMETRO && JMETRO.equals("light"))
-			new JMetro(Style.LIGHT).setParent(vbox);
+		JavaFXUtils.applyJMetro(vbox);
 		
 		primaryScene.setRoot(vbox);
 		primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> {
-			SplitPane.setResizableWithParent(ddbTreeView.asDockNode(), Boolean.TRUE);
+			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.TRUE);
 			for (SplitPane split : dockPane.getSplitPanes()) {
 			    double[] positions = split.getDividerPositions(); // reccord the current ratio
 			    Platform.runLater(() -> split.setDividerPositions(positions)); // apply the now former ratio
 			}
-			SplitPane.setResizableWithParent(ddbTreeView.asDockNode(), Boolean.FALSE);
+			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
 		});
 	}
 
@@ -376,7 +368,7 @@ public class SqlBrowserFXApp extends Application {
 //		});
 		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.icon("/res/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
-			TreeView<String> treeView = new DBTreeView(DB, sqlConnector);
+			DBTreePane treeView = new DBTreePane(DB, sqlConnector);
 			DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
@@ -397,8 +389,33 @@ public class SqlBrowserFXApp extends Application {
 			DockNode dockNode = new DockNode(docsView, "Docs", JavaFXUtils.icon("/res/web.png"));
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
+		
+		MenuItem logItem = new MenuItem("Open Log View", JavaFXUtils.icon("/res/monitor.png"));
+		logItem.setOnAction(actionEvent -> {
+			LogCodeArea logArea = new LogCodeArea();
+			TailerListener listener = new CodeAreaTailerListener(logArea);
+		    Tailer tailer = new Tailer(new File("./log/sql-browser.log"), listener, 0);
 
-		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem, jsonTableViewItem, webViewItem);
+		    Executor executor = Executors.newSingleThreadExecutor();
+		    executor.execute(tailer);
+		      
+		    VirtualizedScrollPane<LogCodeArea> virtualizedScrollPane =new VirtualizedScrollPane<>(logArea);
+		    JavaFXUtils.applyJMetro(virtualizedScrollPane);
+//		    Scene scene = new Scene(virtualizedScrollPane, 800, 600);
+//		    for (String styleSheet : primaryScene.getStylesheets())
+//		  	  scene.getStylesheets().add(styleSheet);
+//		    Stage stage = new Stage();
+//		    stage.setTitle("SqlBrowserFX Log");
+//		    stage.setScene(scene);
+//		    stage.show();
+		    
+		    DockNode dockNode = new DockNode(virtualizedScrollPane, "SqlBrowserFX Log", JavaFXUtils.icon("/res/monitor.png"));
+			dockNode.dock(dockPane, DockPos.RIGHT);	
+		});
+
+		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem, logItem, jsonTableViewItem);
+		if (sqlConnector instanceof SqliteConnector)
+			menu1.getItems().add(webViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/res/spark.png", 16.0, 16.0));
@@ -418,7 +435,7 @@ public class SqlBrowserFXApp extends Application {
 
 		MenuItem restServiceConfigItem = new MenuItem("Configure Rest Service", JavaFXUtils.icon("res/settings.png"));
 		restServiceConfigItem.setOnAction(actionEvent -> createRestServiceConfigBox());
-
+		
 		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
 
 		Menu menu3 = new Menu();
@@ -426,8 +443,21 @@ public class SqlBrowserFXApp extends Application {
 		customGraphic.setSpacing(5);
 		menu3.setGraphic(customGraphic);
 		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
-			DockNode dockNode = new DockNode(new SqlPane(SqlBrowserFXAppManager.getConfigSqlConnector()), "Internal DB");
-			dockNode.dock(dockPane, DockPos.BOTTOM, ddbTreeView.asDockNode());
+			if (!isInternalDBShowing) {
+				SqlPane sqlPane = new SqlPane(SqlBrowserFXAppManager.getConfigSqlConnector());
+				JavaFXUtils.applyJMetro(sqlPane);
+				Scene scene = new Scene(sqlPane, 800, 600);
+				for (String styleSheet : primaryScene.getStylesheets())
+					scene.getStylesheets().add(styleSheet);
+				Stage stage = new Stage();
+				stage.setTitle("SqlBrowserFX Internal Database");
+				stage.setScene(scene);
+				stage.show();
+				isInternalDBShowing  = true;
+				stage.setOnCloseRequest(windowEvent -> {
+					isInternalDBShowing = false;
+				});
+			}
 		});
 		
 		MenuBar menuBar = new MenuBar();
@@ -437,18 +467,18 @@ public class SqlBrowserFXApp extends Application {
 	}
 
 	private void createRestServiceConfigBox() {
+		if (isRestConfigurationShowing)
+			return;
+		
 		ImageView bottleLogo = JavaFXUtils.createImageView("/res/spark-logo.png", 0.0, 200.0);
 		Label ipLabel = new Label("Ip address");
 		TextField ipField = new TextField(restServiceConfig.getIp());
 		Label portLabel = new Label("Port");
 		TextField portField = new TextField(restServiceConfig.getPort().toString());
 		Button saveButton = new Button("Save", JavaFXUtils.icon("/res/check.png"));
-		saveButton.setOnAction(actionEvent -> {
-			restServiceConfig.setIp(ipField.getText());
-			restServiceConfig.setPort(Integer.parseInt(portField.getText()));
-		});
 
 		VBox vBox = new VBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
+		JavaFXUtils.applyJMetro(vBox);
 		vBox.setPadding(new Insets(15));
 
 		Stage stage = new Stage();
@@ -458,6 +488,14 @@ public class SqlBrowserFXApp extends Application {
 		stage.setTitle("Rest service configuration");
 		stage.setScene(scene);
 		stage.show();
+		
+		saveButton.setOnAction(actionEvent -> {
+			restServiceConfig.setIp(ipField.getText());
+			restServiceConfig.setPort(Integer.parseInt(portField.getText()));
+			stage.close();
+		});
+		isRestConfigurationShowing = true;
+		stage.setOnCloseRequest(windowEvent -> isRestConfigurationShowing  = false);
 	}
 
 }

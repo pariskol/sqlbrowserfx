@@ -18,6 +18,7 @@ import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleChangeListener;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
+import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.collections.ObservableList;
@@ -125,6 +126,8 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 						this.fillTableTreeItem(treeItem);
 						tablesRootItem.getChildren().add(treeItem);
 						treeItem.setGraphic(JavaFXUtils.icon("/res/table.png"));
+						//TODO find another way with no calls to static class SqlCodeAreaSyntax
+						SqlCodeAreaSyntax.bind(name, this.getColumnsForTable(name));
 					} else if (type.contains("view") || type.contains("VIEW")) {
 						this.fillViewTreeItem(treeItem);
 						viewsRootItem.getChildren().add(treeItem);
@@ -266,50 +269,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		menuItemCopyScema.setOnAction(event -> this.copyScemaAction());
 
 		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.icon("/res/minus.png"));
-		menuItemDrop.setOnAction(event -> {
-			if (tablesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
-				String table = this.getSelectionModel().getSelectedItem().getValue();
-				String message = "Do you want to delete " + table;
-				int result = DialogFactory.createConfirmationDialog("Drop Table", message);
-				if (result == 1) {
-					try {
-						//TODO maybe execute async?
-						sqlConnector.dropTable(table);
-						this.fillTreeView();
-					} catch (SQLException e) {
-						DialogFactory.createErrorDialog(e);
-					}
-				}
-			}
-			else if (viewsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
-				String view = this.getSelectionModel().getSelectedItem().getValue();
-				String message = "Do you want to delete " + view;
-				int result = DialogFactory.createConfirmationDialog("Drop View", message);
-				if (result == 1) {
-					try {
-						//TODO maybe execute async?
-						sqlConnector.dropView(view);
-						this.fillTreeView();
-					} catch (SQLException e) {
-						DialogFactory.createErrorDialog(e);
-					}
-				}
-			}
-			else if (indicesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
-				String index = this.getSelectionModel().getSelectedItem().getValue();
-				String message = "Do you want to delete " + index;
-				int result = DialogFactory.createConfirmationDialog("Drop Index", message);
-				if (result == 1) {
-					try {
-						//TODO maybe execute async?
-						sqlConnector.dropIndex(index);
-						this.fillTreeView();
-					} catch (SQLException e) {
-						DialogFactory.createErrorDialog(e);
-					}
-				}
-			}
-		});
+		menuItemDrop.setOnAction(event -> dropAction());
 
 		MenuItem menuItemSearch = new MenuItem("Search...", JavaFXUtils.icon("/res/magnify.png"));
 		menuItemSearch.setOnAction(event -> this.showSearch());
@@ -326,6 +286,51 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemDrop, menuItemSearch, menuItemRefresh);
 
 		return contextMenu;
+	}
+
+	public void dropAction() {
+		if (tablesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
+			String table = this.getSelectionModel().getSelectedItem().getValue();
+			String message = "Do you want to delete " + table;
+			int result = DialogFactory.createConfirmationDialog("Drop Table", message);
+			if (result == 1) {
+				try {
+					//TODO maybe execute async?
+					sqlConnector.dropTable(table);
+					this.fillTreeView();
+				} catch (SQLException e) {
+					DialogFactory.createErrorDialog(e);
+				}
+			}
+		}
+		else if (viewsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
+			String view = this.getSelectionModel().getSelectedItem().getValue();
+			String message = "Do you want to delete " + view;
+			int result = DialogFactory.createConfirmationDialog("Drop View", message);
+			if (result == 1) {
+				try {
+					//TODO maybe execute async?
+					sqlConnector.dropView(view);
+					this.fillTreeView();
+				} catch (SQLException e) {
+					DialogFactory.createErrorDialog(e);
+				}
+			}
+		}
+		else if (indicesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
+			String index = this.getSelectionModel().getSelectedItem().getValue();
+			String message = "Do you want to delete " + index;
+			int result = DialogFactory.createConfirmationDialog("Drop Index", message);
+			if (result == 1) {
+				try {
+					//TODO maybe execute async?
+					sqlConnector.dropIndex(index);
+					this.fillTreeView();
+				} catch (SQLException e) {
+					DialogFactory.createErrorDialog(e);
+				}
+			}
+		}
 	}
 
 	private void copyScemaAction() {
@@ -364,10 +369,13 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	private void searchFieldAction() {
 		sqlConnector.executeAsync(() -> {
 			this.getSelectionModel().clearSelection();
+			int i = 0;
 			for (TreeItem<String> t : tablesRootItem.getChildren()) {
 				if(t.getValue().matches("(?i:.*" + searchField.getText() + ".*)")) {
 					this.getSelectionModel().select(t);
+					this.scrollTo(i);
 				}
+				i++;
 			}
 		});
 	}

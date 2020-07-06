@@ -29,7 +29,7 @@ public class QueriesMenu extends Menu{
 		menuItemsMap = new HashMap<>();
 		queriesMap = new HashMap<>();
 		
-		MenuItem refreshMenuItem = new MenuItem("Refresh", JavaFXUtils.icon("/res/refresh.png"));
+		MenuItem refreshMenuItem = new MenuItem("Refresh Queries", JavaFXUtils.icon("/res/refresh.png"));
 		refreshMenuItem.setOnAction(action -> this.loadQueries());
 		this.getItems().add(refreshMenuItem);
 		this.loadQueries();

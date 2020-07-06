@@ -1,12 +1,18 @@
 package gr.sqlbrowserfx.utils;
 
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.ScrollEvent;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 
 public class JavaFXUtils {
 
+	private static final boolean ENABLE_JMETRO = System.getProperty("jmetro") != null;
+	private static final String JMETRO = System.getProperty("jmetro");
+	
 	public static ImageView icon(String url) {
 		return new ImageView(new Image(url));
 	}
@@ -29,5 +35,13 @@ public class JavaFXUtils {
 	            event.consume();
         	}
         });
+	}
+	
+	public static void applyJMetro(Node node) {
+		Parent parent = (Parent) node;
+		if (ENABLE_JMETRO && JMETRO.equals("dark"))
+			new JMetro(Style.DARK).setParent(parent);	
+		else if (ENABLE_JMETRO && JMETRO.equals("light"))
+			new JMetro(Style.LIGHT).setParent(parent);
 	}
 }

@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.nodes.sqlcodearea;
+package gr.sqlbrowserfx.nodes.codeareas.sql;
 
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
