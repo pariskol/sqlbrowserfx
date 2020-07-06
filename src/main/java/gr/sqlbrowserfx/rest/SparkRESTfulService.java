@@ -4,23 +4,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import spark.Spark;
 
-//TODO implement delete 
 public class SparkRESTfulService {
 
 	static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 
 	public static void init(SqlConnector sqlConnector) {
-		StringTransformer stringTransformer = new StringTransformer();
+		JsonTransformer jsonTransformer = new JsonTransformer();
 		
 		Spark.initExceptionHandler((e) -> logger.error(e.getMessage(), e));
 		Spark.after((request, response) -> {
@@ -30,11 +27,25 @@ public class SparkRESTfulService {
 					"Authorization, Origin, Accept, Content-Type, X-Requested-With");
 		});
 		
+		Spark.options("/*", (request, response) -> {
+
+		    String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
+		    if (accessControlRequestHeaders != null) {
+		        response.header("Access-Control-Allow-Headers", accessControlRequestHeaders);
+		    }
+
+		    String accessControlRequestMethod = request.headers("Access-Control-Request-Method");
+		    if (accessControlRequestMethod != null) {
+		        response.header("Access-Control-Allow-Methods", accessControlRequestMethod);
+		    }
+		    return "OK";
+		});
+		
 		Spark.get("/tables", (request, response) -> {
 			List<String> data = new ArrayList<>(sqlConnector.getTables());
 			data.addAll(sqlConnector.getViews());
-			return new JSONArray(data).toString();
-		}, stringTransformer);
+			return data;
+		}, jsonTransformer);
 
 		
 		Spark.post("/save", (request, response) -> {
@@ -57,13 +68,27 @@ public class SparkRESTfulService {
 			
 			String query = "insert into " + table + " (" + columns
 					+ ") values (" + values + ")";
-			if (sqlConnector instanceof SqliteConnector)
-				((SqliteConnector)sqlConnector).executeUpdateSerially(query, params);
-			else
-				sqlConnector.executeUpdate(query, params);
+			sqlConnector.executeUpdate(query, params);
 			
-			return "Data has been saved";
-		}, stringTransformer);
+			return "{ message: \"Data has been saved\"}";
+		}, jsonTransformer);
+		
+		Spark.post("/delete", (request, response) -> {
+			JSONObject jsonObject = new JSONObject(request.body());
+			
+			String table = request.queryParams("table");
+			
+			List<Object> params = new ArrayList<>();
+			String primaryKey = sqlConnector.findPrimaryKey(table);
+			String query = "delete from  " + table + " where " + primaryKey + " = ?";
+			for (String key : jsonObject.keySet()) {
+				if (key.equals(primaryKey)) {
+					params.add(jsonObject.get(key));
+				}
+			}
+			sqlConnector.executeUpdate(query, params);
+			return "{ message: \"Data has been deleted\"}";
+		}, jsonTransformer);
 		
 		Spark.get("/get/:table", (request, response) -> {
 			String table = request.params(":table");
@@ -98,12 +123,12 @@ public class SparkRESTfulService {
 				Spark.halt(500);
 			}
 
-			return new JSONArray(data).toString();
-		}, stringTransformer);
+			return data;
+		}, jsonTransformer);
 
 		Spark.exception(Exception.class, (exception, request, response) -> {
 			logger.error(exception.getMessage(), exception);
-//			response.body("Ops something went wrong!");
+			response.body("Ops something went wrong!");
 			Spark.halt(500);
 		});
 		
