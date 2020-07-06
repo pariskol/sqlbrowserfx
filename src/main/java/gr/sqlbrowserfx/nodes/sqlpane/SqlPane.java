@@ -902,6 +902,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	protected void refreshButtonAction() {
+		//TODO rerun original query in case an sqlcodearea is involved
 		refreshButton.requestFocus();
 //		if (tablesBox != null && tablesBox.getSelectionModel().getSelectedItem() != null && !sqlQueryRunning.get()) {
 //			tablesBox.getOnAction().handle(new ActionEvent());

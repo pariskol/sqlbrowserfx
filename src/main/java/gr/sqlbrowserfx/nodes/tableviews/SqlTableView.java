@@ -358,6 +358,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 
 		try {
 			sqlConnector.executeUpdate(query, params);
+			this.getSqlTableRows().remove(sqlTableRow);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			return 0;

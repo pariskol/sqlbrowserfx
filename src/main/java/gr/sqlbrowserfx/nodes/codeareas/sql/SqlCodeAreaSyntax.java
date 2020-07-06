@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.nodes.sqlcodearea;
+package gr.sqlbrowserfx.nodes.codeareas.sql;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 
-public class CodeAreaSyntax {
+public class SqlCodeAreaSyntax {
 
 	private static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 	
@@ -22,8 +22,7 @@ public class CodeAreaSyntax {
 	public static final String[] KEYWORDS = getAutocomplteWords("sql");
 
 	public static final List<String> KEYWORDS_lIST = new ArrayList<>();
-	public static final HashMap<String, List<String>> COLUMNS_MAP = new HashMap<>(); 
-
+	public static final HashMap<String, List<String>> COLUMNS_MAP = new HashMap<>();
 
 	private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
 	private static final String PAREN_PATTERN = "\\(|\\)";
@@ -61,16 +60,24 @@ public class CodeAreaSyntax {
 //                    + "|(?<NUMBER>" + NUMBERS_PATTERN + ")"
 					+ "|(?<METHOD>" + METHOD_PATTERN + ")" + "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
 	
+	static {
+		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.KEYWORDS));
+        KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.FUNCTIONS));
+        KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.TYPES));
+	}
+	
 	private static String[] getAutocomplteWords(String category) {
 		List<String> list = new ArrayList<>();
 		try {
-			SqlBrowserFXAppManager.getConfigSqlConnector().executeQuery("select name from autocomplete where category= ?", Arrays.asList(new String[]{category}), rset -> {
-				try {
-					HashMap<String, Object> dto = DTOMapper.map(rset);
-					list.add((String)dto.get("name"));
-				} catch (Exception e) {
-					logger.error(e.getMessage(), e);
-				}
+			SqlBrowserFXAppManager.getConfigSqlConnector()
+								  .executeQuery("select name from autocomplete where category= ?", 
+										  Arrays.asList(new String[]{category}), rset -> {
+											try {
+												HashMap<String, Object> dto = DTOMapper.map(rset);
+												list.add((String)dto.get("name"));
+											} catch (Exception e) {
+												logger.error(e.getMessage(), e);
+											}
 			});
 		} catch (SQLException e) {
 			logger.error(e.getMessage(), e);
@@ -78,5 +85,13 @@ public class CodeAreaSyntax {
 		
 		String[] array = new String[list.size()];
 		return list.toArray(array);
+	}
+	
+    public static void bind(List<String> list) {
+        KEYWORDS_lIST.addAll(list);
+    }
+    
+    public static void bind(String table, List<String> columns) {
+		COLUMNS_MAP.put(table, columns);
 	}
 }
