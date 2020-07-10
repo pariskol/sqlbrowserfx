@@ -46,22 +46,25 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner {
 		Button addButton = new Button("", JavaFXUtils.icon("/res/add.png"));
 		addButton.setOnMouseClicked(mouseEvent -> {
 			ColumnCreationBox columnCreationBox = new ColumnCreationBox(sqlConnector);
-			TableCreationPane.this.columnBoxesListView.getItems().add(columnCreationBox);
+			columnBoxesListView.getItems().add(columnCreationBox);
 		});
 		Button deleteButton = new Button("", JavaFXUtils.icon("/res/minus.png"));
-		deleteButton.setOnAction(actionEvent -> columnBoxesListView.getItems().remove(columnBoxesListView.getSelectionModel().getSelectedIndex()));
+		deleteButton.setOnAction(actionEvent -> {
+			if (columnBoxesListView.getSelectionModel().getSelectedItem() != null)
+				columnBoxesListView.getItems().remove(columnBoxesListView.getSelectionModel().getSelectedIndex());	
+		});
 		Button createQueryButton = new Button("", JavaFXUtils.icon("/res/details.png"));
 		createQueryButton.setOnAction(actionEvent -> {
-			TableCreationPane.this.sqlCodeArea.clear();
-			TableCreationPane.this.sqlCodeArea.appendText(TableCreationPane.this.createCreateQuery());
+			sqlCodeArea.clear();
+			sqlCodeArea.appendText(createCreateQuery());
 		});
 		Button createTableButton = new Button("", JavaFXUtils.icon("/res/check.png"));
 		createTableButton.setOnAction(actionEvent -> {
-			TableCreationPane.this.sqlCodeArea.clear();
-			TableCreationPane.this.sqlCodeArea.appendText(TableCreationPane.this.createCreateQuery());
+			sqlCodeArea.clear();
+			sqlCodeArea.appendText(createCreateQuery());
 			sqlConnector.executeAsync(() -> {
 				try {
-					sqlConnector.executeUpdate(TableCreationPane.this.sqlCodeArea.getText());
+					sqlConnector.executeUpdate(sqlCodeArea.getText());
 					DialogFactory.createInfoDialog("Table creation", "Table " + tableNameField.getText() + " has been created!");
 				} catch (SQLException e) {
 					DialogFactory.createErrorDialog(e);
