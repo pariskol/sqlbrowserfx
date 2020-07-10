@@ -177,7 +177,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		String query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
 		final String fixedQuery = this.fixQuery(query);
 		if (fixedQuery.startsWith("select") || fixedQuery.startsWith("SELECT")) {
-
 			sqlConnector.executeAsync(() -> {
 				if (sqlQueryRunning.get())
 					return;

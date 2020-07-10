@@ -85,14 +85,14 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	protected void handleSelectResult(String query, ResultSet rset) throws SQLException {
 //		sqlPane.setInProgress();
 		if (this.openInNewTableView())
-			sqlPane.createSqlTableViewLater();
+			sqlPane.addSqlTableTabLater();
 
 		SqlPaneState guiState = new SqlPaneState(sqlPane.getSelectedSqlTableView(), sqlPane.getSelectedTableTab());
 
 		guiState.getSqlTableView().setFilledByQuery(true);
 		guiState.getSqlTableView().setItemsLater(rset);
 		Platform.runLater(() -> {
-			sqlPane.fillColumnCheckBoxes(guiState);
+			sqlPane.fillColumnCheckBoxes(guiState.getSqlTableView());
 			if (sqlPane.isFullMode()) {
 				sqlPane.enableFullMode(guiState);
 			}

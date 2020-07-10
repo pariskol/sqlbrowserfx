@@ -141,7 +141,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		tablesTabPane.setOnMouseClicked(mouseEvent -> this.tablesTabPaneClickAction());
 
-		this.createSqlTableView();
+		this.addSqlTableTab();
 
 		resizeModeCheckBox = new CheckBox("Auto resize");
 		resizeModeCheckBox.setOnMouseClicked(event -> {
@@ -284,7 +284,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return viewsBox;
 	}
 
-	private SqlTableTab createSqlTableViewInternal() {
+	private SqlTableTab createSqlTableTab() {
 		sqlTableViewRef = new SqlTableView();
 		sqlTableViewRef.setSqlConnector(sqlConnector);
 		sqlTableViewRef.setOnMouseClicked(mouseEvent -> {
@@ -355,14 +355,14 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return tab;
 	}
 	
-	public void createSqlTableView() {
-		SqlTableTab tab = this.createSqlTableViewInternal();
+	public void addSqlTableTab() {
+		SqlTableTab tab = this.createSqlTableTab();
 		tablesTabPane.getTabs().add(tab);
 		tablesTabPane.getSelectionModel().select(tab);
 	}
 	
-	public void createSqlTableViewLater() {
-		SqlTableTab tab = this.createSqlTableViewInternal();
+	public void addSqlTableTabLater() {
+		SqlTableTab tab = this.createSqlTableTab();
 		
 		Platform.runLater(() -> {
 			tablesTabPane.getTabs().add(tab);
@@ -376,7 +376,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 		} else {
 			tablesTabPane.getSelectionModel().select(addTableTab);
-			this.createSqlTableView();
+			this.addSqlTableTab();
 			this.createTablesBox();
 			this.createViewsBox();
 			this.setInProgress();
@@ -530,9 +530,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return limitModeCheckBox.isSelected();
 	}
 
-	protected void getDataFromDB(String table, SqlTableView sqlTableViewRef) {
+	protected void getDataFromDB(String table, final SqlTableView sqlTableView) {
 		SqlTableTab sqlTableTab = (SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem();
-		SqlPaneState guiState = new SqlPaneState(sqlTableViewRef, sqlTableTab);
+		SqlPaneState guiState = new SqlPaneState(sqlTableView, sqlTableTab);
 		sqlQueryRunning.set(true);
 		String query = "select " + columnsFilter + " from " + table + whereFilter;
 
@@ -546,15 +546,15 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			Platform.runLater(() -> logListView.getItems().add(message));
 		try {
 			sqlConnector.executeQueryRawSafely(query, resultSet -> {
-				guiState.getSqlTableView().setItems(resultSet);
-				guiState.getSqlTableView().setTableName(table);
-				Platform.runLater(() -> this.fillColumnCheckBoxes(guiState));
+				sqlTableView.setItems(resultSet);
+				sqlTableView.setTableName(table);
+				Platform.runLater(() -> this.fillColumnCheckBoxes(sqlTableView));
 			});
 
 		} catch (SQLException e) {
 			DialogFactory.createErrorDialog(e);
 		} finally {
-			this.updateRowsCountLabel(guiState.getSqlTableView());
+			this.updateRowsCountLabel(sqlTableView);
 			this.enableFullMode(guiState);
 		}
 	}
@@ -586,22 +586,23 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		tablesTabPane.getSelectionModel().getSelectedItem().setContent(sqlTableViewRef);
 	}
 
-	public void fillColumnCheckBoxes(SqlPaneState guiState) {
+	public void fillColumnCheckBoxes(final SqlTableView sqlTableView) {
 //		Platform.runLater(() -> {
 			columnCheckBoxesMap.clear();
-			for (String column : guiState.getSqlTableView().getSqlTable().getColumns()) {
+			for (String column : sqlTableView.getSqlTable().getColumns()) {
 				CheckBox columnCheckBox = new CheckBox(column);
 				columnCheckBox.setSelected(false);
 				columnCheckBoxesMap.put(column, columnCheckBox);
 			}
-			for (TableColumn<MapTableViewRow, ?> column : guiState.getSqlTableView().getVisibleLeafColumns()) {
+			for (TableColumn<MapTableViewRow, ?> column : sqlTableView.getVisibleLeafColumns()) {
 				columnCheckBoxesMap.get(column.getText()).setSelected(true);
 			}
-			guiState.getSqlTableView().bindColumsVisibility(columnCheckBoxesMap.values());
+			sqlTableView.bindColumsVisibility(columnCheckBoxesMap.values());
 //		});
 	}
 
 	private void searchFieldAction() {
+		final SqlTableView sqlTableViewRef = this.sqlTableViewRef;
 		sqlTableViewRef.getSelectionModel().clearSelection();
 		// use executor service of sqlConnector
 		sqlConnector.executeAsync(() -> {
@@ -649,7 +650,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	protected void tablesTabPaneClickAction() {
 		if (tablesTabPane.getSelectionModel().getSelectedItem() == addTableTab)
-			this.createSqlTableView();
+			this.addSqlTableTab();
 			final SqlTableTab selectedTab = (SqlTableTab) tablesTabPane.getSelectionModel().getSelectedItem();
 			sqlTableViewRef = selectedTab.getSqlTableView();
 			fullModeSplitPaneRef = selectedTab.getSplitPane();
@@ -953,8 +954,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		columnsSettingsButton.requestFocus();
 
 		if (sqlTableViewRef.getSqlTable() != null) {
-			SqlTableTab selectedTab = (SqlTableTab) tablesTabPane.getSelectionModel().getSelectedItem();
-			this.fillColumnCheckBoxes(new SqlPaneState(sqlTableViewRef, selectedTab));
+			this.fillColumnCheckBoxes(sqlTableViewRef);
 			VBox vBox = new VBox();
 			for (CheckBox checkBox : columnCheckBoxesMap.values()) {
 				vBox.getChildren().add(checkBox);

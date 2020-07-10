@@ -158,7 +158,6 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 		}
 		
 		this.setEditable(editable);
-		
 
 		this.setOnMouseClicked(mouseEvent -> {
 			this.requestFocus();

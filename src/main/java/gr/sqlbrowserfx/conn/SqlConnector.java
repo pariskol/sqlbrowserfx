@@ -279,7 +279,7 @@ public abstract class SqlConnector {
 		}
 	}
 	
-	private void closeQuitely(AutoCloseable closeable) {
+	protected void closeQuitely(AutoCloseable closeable) {
 		try {
 			closeable.close();
 		} catch (Throwable e) {
@@ -324,6 +324,10 @@ public abstract class SqlConnector {
 
 	public Connection getConnection() throws SQLException {
 		return dataSource.getConnection();
+	}
+	
+	protected DataSource getDataSource() {
+		return this.dataSource;
 	}
 
 	public List<String> getTVTypes(String[] types) throws SQLException {
@@ -409,6 +413,12 @@ public abstract class SqlConnector {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public void commitAll() {
+	}
+
+	public void rollbackAll() {
 	}
 
 }

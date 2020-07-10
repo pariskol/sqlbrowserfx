@@ -2,6 +2,7 @@ package gr.sqlbrowserfx.conn;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -57,9 +58,51 @@ public class SqliteConnector extends SqlConnector {
 		BasicDataSource dbcp2DataSource = new BasicDataSource();
 		dbcp2DataSource.setDriverClassName(this.getDriver());
 		dbcp2DataSource.setUrl(this.getUrl());
-		dbcp2DataSource.setInitialSize(2);
+		dbcp2DataSource.setInitialSize(4);
+		dbcp2DataSource.setMinIdle(4);
 		dbcp2DataSource.setMaxTotal(4);
+//		dbcp2DataSource.setAutoCommitOnReturn(false);
+//		dbcp2DataSource.setDefaultAutoCommit(false);
 		return dbcp2DataSource;
+	}
+	
+	@Override
+	public void rollbackAll() {
+		BasicDataSource dataSource = (BasicDataSource) this.getDataSource();
+		List<Connection> connections = new ArrayList<>();
+		Connection conn = null;
+		try {
+			for (int i = 0; i < dataSource.getNumActive(); i++) {
+					conn = dataSource.getConnection();
+					conn.rollback();
+					connections.add(conn);
+			}
+		} catch (SQLException e) {
+			LoggerFactory.getLogger(getClass()).error("Failed to commit changes , about to rollback", e);
+			this.rollbackQuitely(conn);
+		}
+		for (Connection conn2 : connections)
+			this.closeQuitely(conn2);
+	}
+	
+	@Override
+	public void commitAll() {
+		BasicDataSource dataSource = (BasicDataSource) this.getDataSource();
+		List<Connection> connections = new ArrayList<>();
+		Connection conn = null;
+		try {
+			int activeConnections = dataSource.getNumIdle();
+			for (int i = 0; i < activeConnections; i++) {
+					conn = dataSource.getConnection();
+					conn.commit();
+					connections.add(conn);
+			}
+		} catch (SQLException e) {
+			LoggerFactory.getLogger(getClass()).error("Failed to commit changes , about to rollback", e);
+			this.rollbackQuitely(conn);
+		}
+		for (Connection conn2 : connections)
+			this.closeQuitely(conn2);
 	}
 	
 	public int executeUpdateSerially(String query, List<Object> params) throws SQLException {

@@ -1,16 +1,16 @@
 package sqlbrowserfx;
 
 import gr.sqlbrowserfx.conn.SqliteConnector;
-import gr.sqlbrowserfx.nodes.TableCreationPane;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class Gui1 extends Application {
+public class Gui2 extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws Exception {
-		primaryStage.setScene(new Scene(new TableCreationPane(new SqliteConnector("/home/paris/sqlite-dbs/chinook.db"))));
+		primaryStage.setScene(new Scene(new SqlPane(new SqliteConnector("/home/paris/sqlite-dbs/chinook.db"))));
 		primaryStage.show();
 	}
 	

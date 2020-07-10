@@ -27,6 +27,7 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
 
+import gr.bashfx.BashFXApp;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
@@ -358,14 +359,20 @@ public class SqlBrowserFXApp extends Application {
 
 			});
 		});
-//		MenuItem bashCodeAreaItem = new MenuItem("Open BashCodeArea", JavaFXUtils.icon("/res/console.png"));
-//		bashCodeAreaItem.setOnAction(event -> {
-//			Platform.runLater(() -> {
-//				DockNode dockNode = new DockNode(new BashFXApp().createBashFXAppBox(primaryStage), "BashFX", JavaFXUtils.icon("/res/console.png"));
-//				dockNode.dock(dockPane, DockPos.RIGHT);
-//
-//			});
-//		});
+		MenuItem bashCodeAreaItem = new MenuItem("Open BashCodeArea", JavaFXUtils.icon("/res/console.png"));
+		bashCodeAreaItem.setOnAction(event -> {
+			Platform.runLater(() -> {
+				VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
+			    JavaFXUtils.applyJMetro(vb);
+			    Scene scene = new Scene(vb, 800, 600);
+			    for (String styleSheet : primaryScene.getStylesheets())
+			  	  scene.getStylesheets().add(styleSheet);
+			    Stage stage = new Stage();
+			    stage.setTitle("SqlBrowserFX Log");
+			    stage.setScene(scene);
+			    stage.show();
+			});
+		});
 		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.icon("/res/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
 			DBTreePane treeView = new DBTreePane(DB, sqlConnector);
@@ -413,7 +420,7 @@ public class SqlBrowserFXApp extends Application {
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem, logItem, jsonTableViewItem);
+		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem, logItem, jsonTableViewItem, bashCodeAreaItem);
 		if (sqlConnector instanceof SqliteConnector)
 			menu1.getItems().add(webViewItem);
 
@@ -460,8 +467,13 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 		
+		Menu menu4 = new Menu();
+		Button saveButton = new Button("", JavaFXUtils.icon("/res/check.png"));
+		menu4.setGraphic(saveButton);
+		saveButton.setOnMouseClicked(mouseEvent -> sqlConnector.commitAll());
+		
 		MenuBar menuBar = new MenuBar();
-		menuBar.getMenus().addAll(menu1, menu2, new QueriesMenu(), menu3);
+		menuBar.getMenus().addAll(menu1, menu2, new QueriesMenu(), menu3, menu4);
 
 		return menuBar;
 	}
