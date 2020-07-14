@@ -26,6 +26,7 @@ public abstract class SqlConnector {
 	private String user;
 	private String password;
 	private ExecutorService executorService;
+	private boolean isAutoCommitModeEnabled = true;
 
 	public SqlConnector() {
 		executorService = Executors.newCachedThreadPool();
@@ -40,16 +41,16 @@ public abstract class SqlConnector {
 		dataSource = this.initDatasource();
 	}
 
-	abstract protected DataSource initDatasource();
+	protected abstract DataSource initDatasource();
 
-	private PreparedStatement prepareStatementWithParams(Connection conn, String query, List<Object> params)
+	protected PreparedStatement prepareStatementWithParams(Connection conn, String query, List<Object> params)
 			throws SQLException {
 		PreparedStatement statement = conn.prepareStatement(query);
 		int i = 1;
 		for (Object param : params) {
 			if (param == null || param.toString().equals(""))
 				statement.setNull(i++, Types.VARCHAR);
-			else if (param instanceof Byte) {
+			else if (param instanceof Byte[]) {
 				statement.setBytes(i++, (byte[]) param);
 			} else
 				statement.setObject(i++, param);
@@ -274,6 +275,7 @@ public abstract class SqlConnector {
 	public void rollbackQuitely(Connection conn) {
 		try {
 			conn.rollback();
+			LoggerFactory.getLogger(getClass().getName()).debug("Successful rollback");
 		} catch (SQLException e) {
 			LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
 		}
@@ -322,10 +324,6 @@ public abstract class SqlConnector {
 
 	public abstract Object castToDBType(SqlTable sqlTable, String columnName, String text);
 
-	public Connection getConnection() throws SQLException {
-		return dataSource.getConnection();
-	}
-	
 	protected DataSource getDataSource() {
 		return this.dataSource;
 	}
@@ -415,10 +413,24 @@ public abstract class SqlConnector {
 		this.password = password;
 	}
 
-	public void commitAll() {
+	
+	public boolean isAutoCommitModeEnabled() {
+		return isAutoCommitModeEnabled;
 	}
 
-	public void rollbackAll() {
+	/**
+	 * 
+	 * This method must be called before trying to get any connection
+	 * from datasource otherwise it will not work.
+	 * 
+	 * @param isAutoCommitModeEnabled
+	 */
+	public void setAutoCommitModeEnabled(boolean isAutoCommitModeEnabled) {
+		this.isAutoCommitModeEnabled = isAutoCommitModeEnabled;
 	}
+
+	public abstract void commitAll();
+
+	public abstract void rollbackAll();
 
 }

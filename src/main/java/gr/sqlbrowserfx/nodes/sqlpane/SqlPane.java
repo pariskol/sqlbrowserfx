@@ -1127,8 +1127,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		sqlConnector.executeAsync(() -> {
 			try {
 				sqlTableViewRef.insertRecord(editBox);
+				editBox.updateMessageLabel("Succeed");
 			} catch (Throwable e) {
 				DialogFactory.createErrorDialog(e);
+				editBox.updateMessageLabel("Failed");
 			}
 		});
 
@@ -1138,8 +1140,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		sqlConnector.executeAsync(() -> {
 			try {
 				sqlTableViewRef.updateRecord(editBox, sqlTableRow);
+				editBox.updateMessageLabel("Succeed");
 			} catch (SQLException e) {
 				DialogFactory.createErrorDialog(e);
+				editBox.updateMessageLabel("Failed");
 			}
 		});
 	}

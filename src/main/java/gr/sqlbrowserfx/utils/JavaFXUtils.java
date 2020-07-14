@@ -10,8 +10,9 @@ import jfxtras.styles.jmetro.Style;
 
 public class JavaFXUtils {
 
-	private static final boolean ENABLE_JMETRO = System.getProperty("jmetro") != null;
-	private static final String JMETRO = System.getProperty("jmetro");
+	private static final boolean ENABLE_JMETRO =  PropertiesLoader.getProperty("sqlbrowsefx.jmetro.theme", String.class) != null;
+	private static final String JMETRO = (String) PropertiesLoader.getProperty("sqlbrowsefx.jmetro.theme", String.class);
+
 	
 	public static ImageView icon(String url) {
 		return new ImageView(new Image(url));

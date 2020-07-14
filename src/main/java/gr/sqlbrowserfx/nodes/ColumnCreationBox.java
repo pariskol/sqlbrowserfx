@@ -29,13 +29,15 @@ public class ColumnCreationBox extends HBox {
 	private ComboBox<String> tablesComboBox;
 	private TextField columnNameField;
 	private CheckBox fkCheckBox;
-	private CheckBox auCheckBox;
+	private CheckBox nnCheckBox;
 	private CheckBox pkCheckBox;
+	private CheckBox uCheckBox;
 	
 	public ColumnCreationBox(SqlConnector sqlConnector) {
 		List<String> types = this.getTypes();
 		typeComboBox = new ComboBox<>();
 		typeComboBox.setItems(FXCollections.observableArrayList(types));
+		typeComboBox.setPromptText("Column type...");
 		
 		List<String> tables = null;
 		try {
@@ -45,6 +47,8 @@ public class ColumnCreationBox extends HBox {
 		}
 		columnsComboBox = new ComboBox<>();
 		tablesComboBox = new ComboBox<>();
+		tablesComboBox.setPromptText("Referenced table...");
+		columnsComboBox.setPromptText("Referenced column...");
 		tablesComboBox.setItems(FXCollections.observableArrayList(tables));
 		tablesComboBox.setOnAction(actionEvent -> {
 			sqlConnector.executeQueryRawAsync("select * from " + tablesComboBox.getSelectionModel().getSelectedItem() + " where 1=2",
@@ -64,11 +68,12 @@ public class ColumnCreationBox extends HBox {
 		columnNameField = new TextField();
 		columnNameField.setPromptText("Column name...");
 		pkCheckBox = new CheckBox("PK");
-		auCheckBox = new CheckBox("NN");
+		nnCheckBox = new CheckBox("NN");
+		uCheckBox = new CheckBox("U");
 		this.getChildren().addAll(columnNameField, typeComboBox, 
-				pkCheckBox, fkCheckBox, tablesComboBox, columnsComboBox,  auCheckBox);
+				pkCheckBox, fkCheckBox, tablesComboBox, columnsComboBox,  nnCheckBox, uCheckBox);
 		this.setSpacing(10);
-		this.setAlignment(Pos.CENTER);
+		this.setAlignment(Pos.BASELINE_LEFT);
 	}
 	
 	private List<String> getTypes() {
@@ -117,7 +122,11 @@ public class ColumnCreationBox extends HBox {
 		return columnsComboBox.getSelectionModel().getSelectedItem();
 	}
 	
-	public Boolean isAutoIncrement() {
-		return auCheckBox.isSelected();
+	public Boolean isNotNull() {
+		return nnCheckBox.isSelected();
+	}
+	
+	public Boolean isUnique() {
+		return uCheckBox.isSelected();
 	}
 }

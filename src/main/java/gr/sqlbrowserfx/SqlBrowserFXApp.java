@@ -12,14 +12,13 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
+import org.apache.log4j.BasicConfigurator;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
@@ -47,6 +46,7 @@ import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
 import gr.sqlbrowserfx.rest.SparkRESTfulService;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import gr.sqlbrowserfx.utils.PropertiesLoader;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -80,8 +80,8 @@ import kong.unirest.Unirest;
 public class SqlBrowserFXApp extends Application {
 
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
-//	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/basic.css");
-	private static final String CSS_THEME = System.getProperty("themeCSS", "/res/flat-blue.css");
+	private static final String CSS_THEME = (String) PropertiesLoader.getProperty("sqlbrowsefx.css.theme", String.class, "/res/flat-blue.css");
+	private static final Boolean AUTO_COMMIT_IS_ENABLED = (Boolean) PropertiesLoader.getProperty("sqlconnector.enable.autocommit", Boolean.class, true);
 
 	private static String DB;
 	private static RESTfulServiceConfig restServiceConfig;
@@ -98,7 +98,7 @@ public class SqlBrowserFXApp extends Application {
 	private boolean isRestConfigurationShowing = false;
 
 	public static void main(String[] args) {
-//		BasicConfigurator.configure();
+		BasicConfigurator.configure();
 		DialogFactory.setDialogStyleSheet(CSS_THEME);
 		launch(args);
 	}
@@ -225,6 +225,7 @@ public class SqlBrowserFXApp extends Application {
 		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
 
 		SqlConnector sqliteConnector = new SqliteConnector(dbPath);
+		sqliteConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
 		this.sqlConnector = sqliteConnector;
 		createAppView(sqliteConnector);
 
@@ -241,11 +242,12 @@ public class SqlBrowserFXApp extends Application {
 			
 			Executors.newSingleThreadExecutor().execute(() -> {
 				try {
+					mysqlConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
 					mysqlConnector.checkConnection();
-					SqlBrowserFXAppManager.getConfigSqlConnector()
-										  .executeUpdate("insert into mysql_history (date,url,usenrname,database) values (?,?,?)",
-												  Arrays.asList(new Timestamp(System.currentTimeMillis()),
-														  		configBox.getUrl(), configBox.getUserField().getText(), configBox.getDatabaseField().getText()));
+//					SqlBrowserFXAppManager.getConfigSqlConnector()
+//										  .executeUpdate("insert into mysql_history (date,url,usenrname,database) values (?,?,?)",
+//												  Arrays.asList(new Timestamp(System.currentTimeMillis()),
+//														  		configBox.getUrl(), configBox.getUserField().getText(), configBox.getDatabaseField().getText()));
 				} catch (SQLException e) {
 					LoggerFactory.getLogger("SQLBROWSER").error(e.getMessage(), e);
 					configBox.showLoader(false);
@@ -273,11 +275,11 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 		TextField requestField = new TextField();
-//		requestField.setPromptText("Enter url ...");
 		requestField.setPromptText("Enter url...");
+		final Executor executor = Executors.newSingleThreadExecutor();
 		requestField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
-				Executors.newSingleThreadExecutor().execute(() -> {
+				executor.execute(() -> {
 					try {
 						
 						JSONArray jsonArray = new JSONArray(Unirest.get(requestField.getText()).asString().getBody());
@@ -289,11 +291,13 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 		VBox vbox = new VBox(requestField, tableView);
+		requestField.prefWidthProperty().bind(tableView.widthProperty());
 		VBox.setVgrow(tableView, Priority.ALWAYS);
 		return vbox;
 	}
 	
 	private void createAppView(SqlConnector sqlConnector) {
+		
 		primaryStage.setMaximized(true);
 		DockPane dockPane = new DockPane();
 		dockPane.getStylesheets().add(CSS_THEME);
@@ -408,16 +412,16 @@ public class SqlBrowserFXApp extends Application {
 		      
 		    VirtualizedScrollPane<LogCodeArea> virtualizedScrollPane =new VirtualizedScrollPane<>(logArea);
 		    JavaFXUtils.applyJMetro(virtualizedScrollPane);
-//		    Scene scene = new Scene(virtualizedScrollPane, 800, 600);
-//		    for (String styleSheet : primaryScene.getStylesheets())
-//		  	  scene.getStylesheets().add(styleSheet);
-//		    Stage stage = new Stage();
-//		    stage.setTitle("SqlBrowserFX Log");
-//		    stage.setScene(scene);
-//		    stage.show();
+		    Scene scene = new Scene(virtualizedScrollPane, 800, 600);
+		    for (String styleSheet : primaryScene.getStylesheets())
+		  	  scene.getStylesheets().add(styleSheet);
+		    Stage stage = new Stage();
+		    stage.setTitle("SqlBrowserFX Log");
+		    stage.setScene(scene);
+		    stage.show();
 		    
-		    DockNode dockNode = new DockNode(virtualizedScrollPane, "SqlBrowserFX Log", JavaFXUtils.icon("/res/monitor.png"));
-			dockNode.dock(dockPane, DockPos.RIGHT);	
+//		    DockNode dockNode = new DockNode(virtualizedScrollPane, "SqlBrowserFX Log", JavaFXUtils.icon("/res/monitor.png"));
+//			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 
 		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem, logItem, jsonTableViewItem, bashCodeAreaItem);
@@ -467,10 +471,16 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 		
-		Menu menu4 = new Menu();
-		Button saveButton = new Button("", JavaFXUtils.icon("/res/check.png"));
-		menu4.setGraphic(saveButton);
-		saveButton.setOnMouseClicked(mouseEvent -> sqlConnector.commitAll());
+		Menu menu4 = new Menu("Transactions");
+		MenuItem commitAllItem = new MenuItem("Commit all", JavaFXUtils.icon("res/check.png"));
+		commitAllItem.setOnAction(actionEvent -> sqlConnector.commitAll());
+		
+		MenuItem rollbackAllItem = new MenuItem("Rollback all", JavaFXUtils.icon("res/refresh.png"));
+		rollbackAllItem.setOnAction(actionEvent -> sqlConnector.rollbackAll());
+		
+		menu4.getItems().addAll(commitAllItem, rollbackAllItem);
+		if (!sqlConnector.isAutoCommitModeEnabled())
+			menu4.setDisable(true);
 		
 		MenuBar menuBar = new MenuBar();
 		menuBar.getMenus().addAll(menu1, menu2, new QueriesMenu(), menu3, menu4);

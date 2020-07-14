@@ -252,7 +252,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		}
 		query = query.substring(spacesNum, query.length());
 		//FIXME find right pattern to ignore comments 
-		query.replaceAll("--.*\n", "");
+		query = query.replaceAll("--.*\n", "");
 		return query;
 	}
 
@@ -339,6 +339,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 	public void setBottomBar(FlowPane bottomBar) {
 		this.bottomBar = bottomBar;
+	}
+
+	public List<SimpleChangeListener<String>> getListeners() {
+		return listeners;
 	}
 	
 

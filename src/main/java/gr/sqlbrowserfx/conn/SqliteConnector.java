@@ -1,16 +1,17 @@
 package gr.sqlbrowserfx.conn;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbcp2.BasicDataSource;
 import org.slf4j.LoggerFactory;
+import org.sqlite.SQLiteDataSource;
 
 public class SqliteConnector extends SqlConnector {
 
@@ -18,6 +19,7 @@ public class SqliteConnector extends SqlConnector {
 	private final String SCHEMA_QUERY = "select sql from sqlite_master where name = ?";
 	
 	private LinkedBlockingQueue<UpdateQuery> updateQueriesQueue;
+	private Connection updateConnection;
 	
 	public SqliteConnector(String database) {
 		super("org.sqlite.JDBC", "jdbc:sqlite:" + database, null, null);
@@ -46,63 +48,96 @@ public class SqliteConnector extends SqlConnector {
 		updatesExecutorThread.start();
 	}
 
-//	@Override
-//	protected DataSource initDatasource() {
-//		SQLiteDataSource datasource = new SQLiteDataSource();
-//		datasource.setUrl(this.getUrl());
-//		return datasource;
-//	}
-	
 	@Override
 	protected DataSource initDatasource() {
-		BasicDataSource dbcp2DataSource = new BasicDataSource();
-		dbcp2DataSource.setDriverClassName(this.getDriver());
-		dbcp2DataSource.setUrl(this.getUrl());
-		dbcp2DataSource.setInitialSize(4);
-		dbcp2DataSource.setMinIdle(4);
-		dbcp2DataSource.setMaxTotal(4);
-//		dbcp2DataSource.setAutoCommitOnReturn(false);
-//		dbcp2DataSource.setDefaultAutoCommit(false);
-		return dbcp2DataSource;
+		SQLiteDataSource datasource = new SQLiteDataSource();
+		datasource.setUrl(this.getUrl());
+		try {
+			this.updateConnection = datasource.getConnection();
+		} catch (SQLException e) {
+			LoggerFactory.getLogger(getClass()).error("Could not initialize connection", e);
+		}
+		return datasource;
+	}
+	
+	@Override
+	public void setAutoCommitModeEnabled(boolean isAutoCommitModeEnabled) {
+		super.setAutoCommitModeEnabled(isAutoCommitModeEnabled);
+		try {
+			this.updateConnection.setAutoCommit(false);
+		} catch (SQLException e) {
+			LoggerFactory.getLogger(getClass()).error("Could not initialize connection", e);
+		}
+	}
+	
+	
+	protected Connection getConnection() {
+		return this.updateConnection;
+	}
+	
+	@Override
+	public int executeUpdate(String query) throws SQLException {
+		int result = 0;
+		if (isAutoCommitModeEnabled()) {
+			result = super.executeUpdate(query);
+		}
+		else {
+			Connection conn = getConnection();
+			try (Statement statement = conn.createStatement();) {
+				result = statement.executeUpdate(query);
+			}
+		}
+
+		return result;
+	}
+
+	@Override
+	public int executeUpdate(String query, List<Object> params) throws SQLException {
+		int result = 0;
+		if (isAutoCommitModeEnabled()) {
+			result = super.executeUpdate(query);
+		}
+		else {
+			Connection conn = getConnection();
+			try (PreparedStatement statement = prepareStatementWithParams(conn, query, params);) {
+				result = statement.executeUpdate();
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public int executeUpdate(Connection conn, String query, List<Object> params) throws SQLException {
+		int result = 0;
+		if (isAutoCommitModeEnabled()) {
+			result = super.executeUpdate(query);
+		}
+		else {
+			try (PreparedStatement statement = prepareStatementWithParams(conn, query, params);) {
+				result = statement.executeUpdate();
+			}
+		}
+
+		return result;
 	}
 	
 	@Override
 	public void rollbackAll() {
-		BasicDataSource dataSource = (BasicDataSource) this.getDataSource();
-		List<Connection> connections = new ArrayList<>();
-		Connection conn = null;
 		try {
-			for (int i = 0; i < dataSource.getNumActive(); i++) {
-					conn = dataSource.getConnection();
-					conn.rollback();
-					connections.add(conn);
-			}
+			this.updateConnection.rollback();
 		} catch (SQLException e) {
 			LoggerFactory.getLogger(getClass()).error("Failed to commit changes , about to rollback", e);
-			this.rollbackQuitely(conn);
 		}
-		for (Connection conn2 : connections)
-			this.closeQuitely(conn2);
 	}
 	
 	@Override
 	public void commitAll() {
-		BasicDataSource dataSource = (BasicDataSource) this.getDataSource();
-		List<Connection> connections = new ArrayList<>();
-		Connection conn = null;
 		try {
-			int activeConnections = dataSource.getNumIdle();
-			for (int i = 0; i < activeConnections; i++) {
-					conn = dataSource.getConnection();
-					conn.commit();
-					connections.add(conn);
-			}
+			this.updateConnection.commit();
 		} catch (SQLException e) {
 			LoggerFactory.getLogger(getClass()).error("Failed to commit changes , about to rollback", e);
-			this.rollbackQuitely(conn);
+			this.rollbackQuitely(this.updateConnection);
 		}
-		for (Connection conn2 : connections)
-			this.closeQuitely(conn2);
 	}
 	
 	public int executeUpdateSerially(String query, List<Object> params) throws SQLException {

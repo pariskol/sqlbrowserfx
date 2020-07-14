@@ -15,8 +15,12 @@ public class PropertiesLoader {
 
 	private static HashMap<String, Properties> propertiesMap = new HashMap<>();
 	private static Logger logger;
+	private static Boolean IS_ENABLED = true;
 	static {
-		loadProperties("./");
+		if (System.getProperty("load.props") != null)
+			IS_ENABLED = Boolean.parseBoolean(System.getProperty("load.props"));
+		if (IS_ENABLED)
+			loadProperties("./");
 	}
 	
 	public static void setLogger(Logger logger) {
@@ -48,7 +52,7 @@ public class PropertiesLoader {
 		}
 	}
 	
-	public static Object resolveProperty(String fileKey, String key, Class<?> clazz) {
+	public static Object getProperty(String fileKey, String key, Class<?> clazz) {
 		Object value = propertiesMap.get(fileKey).get(key);
 		try {
 			Constructor<?> cons = clazz.getConstructor(String.class);
@@ -59,6 +63,63 @@ public class PropertiesLoader {
     			logger.error(e.getMessage());
         	else
         		e.printStackTrace();
+		}
+		return null;
+	}
+	
+	public static Object getProperty(String fileKey, String key, Class<?> clazz, Object defaultValue) {
+		Object value = getProperty(fileKey, key, clazz);
+		return value != null ? value : defaultValue;
+	}
+	
+	/**
+	 * Returns the first matching key from all loaded properties
+	 * 
+	 * @param key
+	 * @param clazz
+	 * @return
+	 */
+	public static Object getProperty(String key, Class<?> clazz) {
+		Object value = null;
+		if (IS_ENABLED) {
+			for (Properties props : propertiesMap.values()) {
+				value = props.get(key);
+				if (value != null)
+					break;
+			}
+		}
+		else {
+			value = System.getProperty(key);
+		}
+		try {
+			Constructor<?> cons = clazz.getConstructor(String.class);
+			Object returnedValue = cons.newInstance(value.toString());
+			return returnedValue;
+		} catch (Exception e) {
+			if (logger != null)
+    			logger.error(e.getMessage());
+        	else
+        		e.printStackTrace();
+		}
+		return null;
+	}
+	
+	/**
+	 * Returns the first matching key from all loaded properties
+	 * 
+	 * @param key
+	 * @param clazz
+	 * @return
+	 */
+	public static Object getProperty(String key, Class<?> clazz, Object defaultValue) {
+		Object value = getProperty(key, clazz);
+		return value != null ? value : defaultValue;
+	}
+	
+	public static Properties getPropertiesFromFile(String fileNamePart) {
+		for (String key : propertiesMap.keySet()) {
+			if (key.contains(fileNamePart))
+				return propertiesMap.get(key);
 		}
 		return null;
 	}

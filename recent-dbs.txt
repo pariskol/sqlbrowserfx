@@ -1,10 +1,1 @@
-/home/paris/sqllite-dbs/users.db
-/home/paris/sqllite-dbs/chinook.db
-/home/paris/eclipse-workspace/sql-lite-bowser/sqlbrowser.db
-/home/paris/eclipse-workspace/sql-lite-bowser/pass.db/home/paris/eclipse-workspace/sqlbrowserfx/sqlbrowser.db
-/home/paris/eclipse-workspace/sqlbrowser/sqlbrowser.db
-/home/paris/Downloads/chinook.db
-/home/paris/sqllite-dbs/psanta.db
-/home/paris/sqlite-dbs/chinook.db/home/paris/sqlite-dbs/psanta.db
 /home/paris/sqlite-dbs/chinook.db
-/home/paris/sqlite-dbs/psanta.db

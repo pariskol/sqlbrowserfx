@@ -1,10 +1,14 @@
 package gr.sqlbrowserfx.conn;
 
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSource;
+import org.slf4j.LoggerFactory;
 
 public class MysqlConnector extends SqlConnector {
 
@@ -38,8 +42,9 @@ public class MysqlConnector extends SqlConnector {
 		dbcp2DataSource.setUrl(this.getUrl());
 		dbcp2DataSource.setUsername(this.getUser());
 		dbcp2DataSource.setPassword(this.getPassword());
-		dbcp2DataSource.setInitialSize(2);
-		dbcp2DataSource.setMaxTotal(5);
+		dbcp2DataSource.setInitialSize(4);
+		dbcp2DataSource.setMaxTotal(4);
+		
 		return dbcp2DataSource;
 	}
 
@@ -57,6 +62,59 @@ public class MysqlConnector extends SqlConnector {
 		return text;
 	}
 
+	@Override
+	public void setAutoCommitModeEnabled(boolean isAutoCommitModeEnabled) {
+		super.setAutoCommitModeEnabled(isAutoCommitModeEnabled);
+		if (!isAutoCommitModeEnabled && this.getDataSource() instanceof BasicDataSource) {
+			BasicDataSource basicDataSource = (BasicDataSource) this.getDataSource();
+			basicDataSource.setAutoCommitOnReturn(false);
+			basicDataSource.setDefaultAutoCommit(false);
+			basicDataSource.setRollbackOnReturn(false);
+			LoggerFactory.getLogger(getClass().getName()).debug("Detected Apache BasicDataSource");
+			LoggerFactory.getLogger(getClass().getName()).debug("Disable autoCommit for all connections");
+		}
+	}
+	
+	@Override
+	public void commitAll() {
+		BasicDataSource dataSource = (BasicDataSource) this.getDataSource();
+		List<Connection> connections = new ArrayList<>();
+		Connection conn = null;
+		try {
+			int activeConnections = dataSource.getNumIdle();
+			for (int i = 0; i < activeConnections; i++) {
+					conn = dataSource.getConnection();
+					conn.commit();
+					connections.add(conn);
+			}
+			LoggerFactory.getLogger(getClass().getName()).debug(activeConnections + " connections commited");
+		} catch (SQLException e) {
+			LoggerFactory.getLogger(getClass()).error("Failed to commit changes , about to rollback", e);
+			this.rollbackQuitely(conn);
+		}
+		for (Connection conn2 : connections)
+			this.closeQuitely(conn2);
+	}
+
+	@Override
+	public void rollbackAll() {
+		BasicDataSource dataSource = (BasicDataSource) this.getDataSource();
+		List<Connection> connections = new ArrayList<>();
+		Connection conn = null;
+		try {
+			int activeConnections = dataSource.getNumIdle();
+			for (int i = 0; i < activeConnections; i++) {
+					conn = dataSource.getConnection();
+					conn.rollback();
+					connections.add(conn);
+			}
+		} catch (SQLException e) {
+			LoggerFactory.getLogger(getClass()).error("Failed to rollback changes", e);
+		}
+		for (Connection conn2 : connections)
+			this.closeQuitely(conn2);
+	}
+	
 	@Override
 	public String getContentsQuery() {
 		return "show full tables in " + database;
@@ -88,11 +146,11 @@ public class MysqlConnector extends SqlConnector {
 	
 	@Override
 	public String getName() {
-		return "TABLE_NAME";
+		return "Tables_in_" + database;
 	}
 	
 	@Override
 	public String getType() {
-		return "TABLE_TYPE";
+		return "Table_type";
 	}
 }

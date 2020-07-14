@@ -1,10 +1,10 @@
 package gr.sqlbrowserfx.nodes;
 
 
-import java.sql.SQLException;
-
 import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
+import gr.sqlbrowserfx.listeners.SimpleChangeListener;
+import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.geometry.Orientation;
@@ -17,13 +17,14 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-public class TableCreationPane extends BorderPane implements ToolbarOwner {
+public class TableCreationPane extends BorderPane implements ToolbarOwner, SimpleObservable<String> {
 	
 	private FlowPane toolbar;
 	private ListView<ColumnCreationBox> columnBoxesListView;
 	private TextField tableNameField;
 	private SqlConnector sqlConnector;
 	private SqlCodeArea sqlCodeArea;
+	private DSqlConsolePane sqlConsolePane;
 
 	public TableCreationPane(SqlConnector sqlConnector) {
 		toolbar = this.createToolbar();
@@ -32,7 +33,10 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner {
 		tableNameField = new TextField();
 		tableNameField.setPromptText("Enter table name...");
 		this.columnBoxesListView = new ListView<>();
-		sqlCodeArea = new SqlCodeArea();
+		ColumnCreationBox columnCreationBox = new ColumnCreationBox(sqlConnector);
+		columnBoxesListView.getItems().add(columnCreationBox);
+		sqlConsolePane = new DSqlConsolePane(sqlConnector, null);
+		sqlCodeArea = (SqlCodeArea) sqlConsolePane.getCodeAreaRef();
 		SplitPane splitPane = new SplitPane(
 				new VBox(tableNameField, columnBoxesListView),
 				sqlCodeArea);
@@ -60,16 +64,7 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner {
 		});
 		Button createTableButton = new Button("", JavaFXUtils.icon("/res/check.png"));
 		createTableButton.setOnAction(actionEvent -> {
-			sqlCodeArea.clear();
-			sqlCodeArea.appendText(createCreateQuery());
-			sqlConnector.executeAsync(() -> {
-				try {
-					sqlConnector.executeUpdate(sqlCodeArea.getText());
-					DialogFactory.createInfoDialog("Table creation", "Table " + tableNameField.getText() + " has been created!");
-				} catch (SQLException e) {
-					DialogFactory.createErrorDialog(e);
-				}
-			});
+			sqlConsolePane.executeButonAction();
 		});
 		FlowPane toolbar = new FlowPane(addButton, deleteButton, createQueryButton, createTableButton);
 		toolbar.setPrefWidth(addButton.getWidth());
@@ -83,8 +78,10 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner {
 		for (ColumnCreationBox cb : columnBoxesListView.getItems()) {
 			query += "    " + cb.getColumnName() + " " + cb.getColumnType();
 			
-			if (cb.isAutoIncrement())
+			if (cb.isNotNull())
 				query += " NOT NULL";
+			if (cb.isUnique())
+				query += " UNIQUE";
 			if (cb.isColumnPrimaryKey())
 				primaryKey += cb.getColumnName() + ",";
 			if (cb.isColumnForeignKey())
@@ -109,4 +106,25 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner {
 
 		return query;
 	}
+
+	@Override
+	public void changed() {
+		sqlConsolePane.getListeners().forEach(listener -> listener.onChange(null));
+	}
+
+	@Override
+	public void changed(String data) {
+		sqlConsolePane.getListeners().forEach(listener -> listener.onChange(data));
+	}
+
+	@Override
+	public void addListener(SimpleChangeListener<String> listener) {
+		sqlConsolePane.getListeners().add(listener);
+	}
+
+	@Override
+	public void removeListener(SimpleChangeListener<String> listener) {
+		sqlConsolePane.getListeners().remove(listener);
+	}
+	
 }

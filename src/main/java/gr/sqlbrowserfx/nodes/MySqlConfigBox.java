@@ -18,7 +18,7 @@ public class MySqlConfigBox extends VBox {
 	private TextField databaseField;
 	private Button connectButton;
 	private ProgressIndicator loader;
-	String lastDatabase = "@databse@";
+	String lastDatabase = "@database@";
 
 	public MySqlConfigBox() {
 		this.setPadding(new Insets(5));

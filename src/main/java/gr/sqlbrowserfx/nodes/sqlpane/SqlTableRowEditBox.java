@@ -14,6 +14,7 @@ import gr.sqlbrowserfx.listeners.SimpleChangeListener;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
 import javafx.geometry.Orientation;
@@ -21,14 +22,15 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 
 public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListener<MapTableViewRow> {
 
@@ -39,8 +41,12 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListen
 	private VBox centerBox;
 	private FlowPane toolbar;
 	private ScrollPane scrollPane;
+	private Label messageLabel;
 
 	public SqlTableRowEditBox(SqlTableView sqlTableView, MapTableViewRow sqlTableRow, boolean resizeable) {
+		
+		messageLabel = new Label();
+		messageLabel.setTextFill(Color.GREEN);
 		centerBox = new VBox();
 		fieldsMap = new HashMap<>();
 		columns = sqlTableView.getColumnsNames();
@@ -99,6 +105,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListen
 			centerBox.getChildren().add(node);
 		}
 		
+		this.setBottom(messageLabel);
 		if (resizeable) {
 			scrollPane = new ScrollPane(centerBox);
 			scrollPane.hbarPolicyProperty().set(ScrollBarPolicy.NEVER);
@@ -180,6 +187,11 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListen
 
 	public ScrollPane getScrollPane() {
 		return scrollPane;
+	}
+	
+	public void updateMessageLabel(String text) {
+		Platform.runLater(() -> messageLabel.setText(text));
+		
 	}
 
 	

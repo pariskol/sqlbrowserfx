@@ -30,22 +30,24 @@ import javafx.scene.layout.FlowPane;
 public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
 	private DockNode thisDockNode;
-	private SqlPane sqlPane;
+	private DSqlPane sqlPane;
 	private Button historyButton;
 	private boolean historyShowing = false;
 	private HistorySqlCodeArea historyCodeArea;
  
+	public DSqlConsolePane(SqlConnector sqlConnector) {
+		this(sqlConnector, null);
+	}
+	
 	public DSqlConsolePane(SqlConnector sqlConnector, DSqlPane sqlPane) {
 		super(sqlConnector);
 		historyCodeArea = new HistorySqlCodeArea();
 		historyCodeArea.setEditable(false);
 		this.sqlPane = sqlPane;
-		thisDockNode = new DockNode(this, sqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.icon("/res/console.png"));
 		this.getChildren().clear();
 		this.setCenter(getQueryTabPane());
 		this.setBottom(getBottomBar());
 		this.setLeft(getToolbar());
-		thisDockNode.setOnClose(() -> this.listeners.clear()); 
 	}
 	
 	protected void copyAction(ListView<SqlCodeArea> listView) {
@@ -60,6 +62,12 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
 	@Override
 	public DockNode asDockNode() {
+		if (thisDockNode == null) {
+			if (sqlPane != null) {
+				thisDockNode = new DockNode(this, sqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.icon("/res/console.png"));
+				thisDockNode.setOnClose(() -> this.listeners.clear());
+			}
+		}
 		return thisDockNode;
 	}
 	

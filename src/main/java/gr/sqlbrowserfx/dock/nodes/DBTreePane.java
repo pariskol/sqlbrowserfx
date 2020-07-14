@@ -42,14 +42,13 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner, Co
 		Button addButton = new Button("", JavaFXUtils.icon("res/add.png"));
 		addButton.setOnAction(actionEvent -> {
 			TableCreationPane tableCreationPane = new TableCreationPane(this.sqlConnector);
+			tableCreationPane.addListener(this.dbTreeView);
 			JavaFXUtils.applyJMetro(tableCreationPane);
-		    Scene scene = new Scene(tableCreationPane, 800, 600);
-		    for (String styleSheet : this.getScene().getStylesheets()) {
+		    Scene scene = new Scene(tableCreationPane, 1000, 600);
+		    for (String styleSheet : this.getScene().getStylesheets())
 		  	  scene.getStylesheets().add(styleSheet);
-		  	  System.out.println(styleSheet);
-		    }
 		    Stage stage = new Stage();
-		    stage.setTitle("SqlBrowserFX Log");
+		    stage.setTitle("Create New Table");
 		    stage.setScene(scene);
 		    stage.show();
 		});

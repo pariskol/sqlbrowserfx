@@ -50,7 +50,6 @@ public class SparkRESTfulService {
 		
 		Spark.post("/save", (request, response) -> {
 			JSONObject jsonObject = new JSONObject(request.body());
-			System.out.println(jsonObject.toString());
 			
 			String table = request.queryParams("table");
 			String columns = "";

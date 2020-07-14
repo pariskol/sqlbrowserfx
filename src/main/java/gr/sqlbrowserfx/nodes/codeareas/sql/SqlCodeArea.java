@@ -93,9 +93,15 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 	@Override
 	public void appendText(String text) {
 		super.appendText(text);
-		System.out.println("appending text");
 		this.analyzeTextForTablesAliases(text);
 	}
+	
+	@Override
+	public void paste() {
+		super.paste();
+		this.analyzeTextForTablesAliases(this.getText());
+	}
+	
 	
 	private void setKeys() {
 		this.setOnKeyPressed(keyEvent -> {
@@ -257,16 +263,15 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 			if (autoCompletePopup == null)
 				autoCompletePopup = this.createPopup();
 
-			if (!query.trim().isEmpty()) {
+			if (!query.isEmpty()) {
 				List<String> suggestions = null;
 				if (ch.equals(".")) {
 					insertMode = true;
-					query = this.calculateQuery(ch, caretPosition);
+					query = this.calculateQuery(caretPosition);
 					suggestions = this.getColumnsSuggestions(query);
 				}
 				else if ( (ch.equals(",") || ch.equals(" ") || event.getCode() == KeyCode.ENTER) && saveTableShortcut != null) {
-					query = this.calculateQuery(ch, caretPosition);
-					System.out.println("Proccessing " + query);
+					query = this.calculateQuery( caretPosition);
 					if (!query.isEmpty() && !query.equals(saveTableShortcut.trim()) && !query.equals("as")) {
 						this.cacheTableAlias(query, saveTableShortcut);
 						saveTableShortcut = null;
@@ -276,9 +281,7 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 				else if (event.getCode() == KeyCode.ENTER) {
 					if (word.get() != null) {
 						query = word.get();
-						System.out.println("'" + query + "'");
 						if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(query)) {
-							System.out.println("Detected table " + query);
 							if (!tableAliases.containsKey(query))
 								tableAliases.put(query, new HashSet<>());
 							saveTableShortcut = query;
@@ -289,7 +292,6 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 				}
 				else {
 					if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(query)) {
-						System.out.println("Detected table " + query);
 						if (!tableAliases.containsKey(query))
 							tableAliases.put(query, new HashSet<>());
 						saveTableShortcut = query;
@@ -370,9 +372,9 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 		}
 	}
 
-	private String calculateQuery(String ch, int caretPosition) {
+	private String calculateQuery(int caretPosition) {
 		String query = "";
-		ch = "";
+		String ch = "";
 		caretPosition--;
 		do {
 			ch = this.getText(caretPosition - 1, caretPosition--);
@@ -435,12 +437,12 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
         //keywords = keywords.replaceAll("\\p{Punct}", " ").trim();
         keywords = keywords.replaceAll("\\n", " ").trim();
         int last = keywords.lastIndexOf(" ");
-        return keywords.substring(last + 1);
+        return keywords.substring(last + 1).trim();
     }
 
     public List<String> getQuerySuggestions(String query) {
         List<String> suggestions = SqlCodeAreaSyntax.KEYWORDS_lIST.parallelStream()
-        							.filter(keyword -> keyword.startsWith(query)).collect(Collectors.toList());
+        							.filter(keyword -> keyword != null && keyword.startsWith(query)).collect(Collectors.toList());
 //        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
         return suggestions;
     }
@@ -475,12 +477,10 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 		String saveTableShortcut = null;
 		for (String word : words) {
 			if (!word.isEmpty() && saveTableShortcut != null && !word.equals(saveTableShortcut.trim()) && !word.equals("as")) {
-				System.out.println("Proccessing '" + word + "'");
 				this.cacheTableAlias(word,saveTableShortcut);
 				saveTableShortcut = null;
 			}
 			else if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(word)) {
-				System.out.println("Detected table '" + word + "'");
 				if (!tableAliases.containsKey(word))
 					tableAliases.put(word, new HashSet<>());
 				saveTableShortcut = word;
