@@ -9,8 +9,7 @@ import java.util.List;
 
 import org.controlsfx.control.PopOver;
 
-import gr.sqlbrowserfx.listeners.CloseAction;
-import gr.sqlbrowserfx.listeners.SimpleChangeListener;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -32,11 +31,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
-public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListener<MapTableViewRow> {
+public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<MapTableViewRow> {
 
 	private HashMap<String, TextField> fieldsMap;
 	private List<String> columns;
-	private CloseAction closeAction;
+	private Runnable closeAction;
 	private MapTableViewRow sqlTableRow;
 	private VBox centerBox;
 	private FlowPane toolbar;
@@ -144,12 +143,12 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListen
 		}
 	}
 
-	public void setOnClose(CloseAction closeAction) {
+	public void setOnClose(Runnable closeAction) {
 		this.closeAction = closeAction;
 	}
 
 	public void close() {
-		closeAction.close();
+		closeAction.run();
 	}
 	
 	public void put(String columnName, String value) {
@@ -204,7 +203,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleChangeListen
 	}
 
 	@Override
-	public void onChange(MapTableViewRow newValue) {
+	public void onObservaleChange(MapTableViewRow newValue) {
 		for (String column : columns) {
 			TextField textField = fieldsMap.get(column);
 			String newText = newValue.get(column) != null ? newValue.get(column).toString() : null;

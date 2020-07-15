@@ -7,7 +7,7 @@ import java.util.concurrent.Executors;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
 
-import gr.sqlbrowserfx.listeners.SimpleChangeListener;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.Button;
@@ -25,7 +25,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	protected TextField replaceField;
 	protected Button findButton;
 	protected Button replaceButton;
-	private List<SimpleChangeListener<String>> listeners;
+	private List<SimpleObserver<String>> listeners;
 	
 	public SearchAndReplacePopOver(CodeArea codeArea) {
 		this(codeArea, true);
@@ -33,8 +33,8 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	@SuppressWarnings("unchecked")
 	public SearchAndReplacePopOver(CodeArea codeArea, boolean enableReplace) {
 		this.codeArea = codeArea;
-		if (codeArea instanceof SimpleChangeListener) {
-			this.addListener((SimpleChangeListener<String>)codeArea);
+		if (codeArea instanceof SimpleObserver) {
+			this.addObserver((SimpleObserver<String>)codeArea);
 		}
 		findField = new TextField();
 		findField.setPromptText("Search...");
@@ -117,18 +117,18 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	@Override
 	public void changed(String data) {
 		Executors.newSingleThreadExecutor()
-				 .execute(() -> listeners.forEach(l -> l.onChange(data)));
+				 .execute(() -> listeners.forEach(l -> l.onObservaleChange(data)));
 		
 	}
 	@Override
-	public void addListener(SimpleChangeListener<String> listener) {
+	public void addObserver(SimpleObserver<String> listener) {
 		if (this.listeners == null)
 			this.listeners = new ArrayList<>();
 		this.listeners.add(listener);
 		
 	}
 	@Override
-	public void removeListener(SimpleChangeListener<String> listener) {
+	public void removeObserver(SimpleObserver<String> listener) {
 		this.listeners.remove(listener);
 	}
 	

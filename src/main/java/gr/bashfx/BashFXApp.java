@@ -10,6 +10,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 
+import gr.bashfx.codeareas.bash.BashCodeArea;
+import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
+import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
@@ -28,15 +31,13 @@ import javafx.stage.Stage;
 
 public class BashFXApp extends Application{
 	
-	private static BashCodeArea currentBashCodeArea;
-	
 	public static void main(String[] args) {
 //		BasicConfigurator.configure();
 		launch(args);
 	}
 
-	private static TabPane tabPane;
-	private static TreeView<String> dirTreeView;
+	private TabPane tabPane;
+	private TreeView<String> dirTreeView;
 
 	@Override
 	public void start(Stage primaryStage) {
@@ -111,6 +112,7 @@ public class BashFXApp extends Application{
 	}
 
 	
+	@SuppressWarnings("unchecked")
 	private BashCodeArea getSelectedCodeArea() {
 		return (BashCodeArea)((VirtualizedScrollPane<CodeArea>) tabPane.getSelectionModel().getSelectedItem().getContent()).getContent();
 	}
@@ -122,7 +124,7 @@ public class BashFXApp extends Application{
 		
 	}
 	
-	private static void openFolderAction(Stage primaryStage) {
+	private void openFolderAction(Stage primaryStage) {
 		DirectoryChooser dirChooser = new DirectoryChooser();
 		File selectedDir = dirChooser.showDialog(primaryStage);
 		fillTreeView(selectedDir.getAbsolutePath());
@@ -159,7 +161,7 @@ public class BashFXApp extends Application{
 	    }
 	}
 	
-	public static TreeView<String> fillTreeView(String inputDirectoryLocation) {
+	public TreeView<String> fillTreeView(String inputDirectoryLocation) {
 	    if (dirTreeView == null) {
 	    	dirTreeView = new TreeView<>();
 	    	// Hides the root item of the tree view.

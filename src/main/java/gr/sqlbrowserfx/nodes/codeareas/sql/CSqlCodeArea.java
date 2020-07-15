@@ -8,6 +8,7 @@ import org.controlsfx.control.PopOver;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
@@ -51,15 +52,19 @@ public class CSqlCodeArea extends SqlCodeArea {
 
 		Button addButton = new Button("Save", JavaFXUtils.icon("/res/check.png"));
 		addButton.setOnAction(event -> {
-			try {
-				sqlConnector.executeUpdate("insert into saved_queries (query,category,description) values (?,?,?)",
-						Arrays.asList(!this.getSelectedText().isEmpty() ? this.getSelectedText() : this.getText(),
-								categoryField.getSelectionModel().getSelectedItem(),
-								descriptionField.getText()));
-				DialogFactory.createInfoDialog("Info", "Query has been saved successfuly");
-			} catch (SQLException e) {
-				DialogFactory.createErrorDialog(e);
-			}
+			sqlConnector.executeAsync(() -> {
+				try {
+					String query = !this.getSelectedText().isEmpty() ? this.getSelectedText() : this.getText();
+					sqlConnector.executeUpdate("insert into saved_queries (query,category,description) values (?,?,?)",
+							Arrays.asList(query,
+									categoryField.getSelectionModel().getSelectedItem(),
+									descriptionField.getText()));
+					DialogFactory.createInfoDialog("Info", "Query has been saved successfuly");
+					this.fireEvent(new SimpleEvent());
+				} catch (SQLException e) {
+					DialogFactory.createErrorDialog(e);
+				}
+			});
 		});
 
 		VBox vb = new VBox(categoryField, descriptionField, addButton);

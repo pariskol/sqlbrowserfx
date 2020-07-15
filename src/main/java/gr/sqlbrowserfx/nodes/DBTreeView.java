@@ -16,7 +16,7 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.listeners.SimpleChangeListener;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -30,7 +30,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.KeyCode;
 
-public class DBTreeView extends TreeView<String> implements ContextMenuOwner, SimpleChangeListener<String>, SimpleObservable<String> {
+public class DBTreeView extends TreeView<String> implements ContextMenuOwner, SimpleObserver<String>, SimpleObservable<String> {
 
 	private Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 	private SqlConnector sqlConnector;
@@ -40,7 +40,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	TreeItem<String> viewsRootItem;
 	TreeItem<String> indicesRootItem;
 	private List<String> allItems;
-	private List<SimpleChangeListener<String>> listeners;
+	private List<SimpleObserver<String>> listeners;
 	
 	TextField searchField;
 
@@ -402,10 +402,10 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	}
 
 	@Override
-	public void onChange(String newValue) {
+	public void onObservaleChange(String newValue) {
 		try {
 			this.fillTreeView();
-			if (newValue.contains("trigger") || newValue.contains("trigger".toUpperCase()))
+			if (newValue != null && (newValue.contains("trigger") || newValue.contains("trigger".toUpperCase())))
 				this.updateTriggers();
 		} catch (SQLException e) {
 			DialogFactory.createErrorDialog(e);
@@ -414,7 +414,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 
 	@Override
 	public void changed() {
-		listeners.forEach(listener -> listener.onChange(null));
+		listeners.forEach(listener -> listener.onObservaleChange(null));
 	}
 
 	@Override
@@ -424,12 +424,12 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	}
 
 	@Override
-	public void addListener(SimpleChangeListener<String> listener) {
+	public void addObserver(SimpleObserver<String> listener) {
 		listeners.add(listener);
 	}
 
 	@Override
-	public void removeListener(SimpleChangeListener<String> listener) {
+	public void removeObserver(SimpleObserver<String> listener) {
 		listeners.remove(listener);
 	}
 }

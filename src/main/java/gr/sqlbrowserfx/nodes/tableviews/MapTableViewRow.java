@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import gr.sqlbrowserfx.listeners.SimpleChangeListener;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import javafx.beans.property.SimpleObjectProperty;
 
@@ -14,7 +14,7 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 
 	protected LinkedHashMap<String,SimpleObjectProperty<Object>> propertiesMap = new LinkedHashMap<>();
 	protected List<String> columns;
-	private List<SimpleChangeListener<MapTableViewRow>> listeners;
+	private List<SimpleObserver<MapTableViewRow>> listeners;
 	
 	public MapTableViewRow() {
 		columns = new ArrayList<>();
@@ -85,7 +85,7 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 
 	@Override
 	public void changed() {
-		listeners.forEach(listener -> listener.onChange(this));
+		listeners.forEach(listener -> listener.onObservaleChange(this));
 	}
 
 	@Override
@@ -95,12 +95,12 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 	}
 
 	@Override
-	public synchronized void addListener(SimpleChangeListener<MapTableViewRow> listener) {
+	public synchronized void addObserver(SimpleObserver<MapTableViewRow> listener) {
 		listeners.add(listener);
 	}
 
 	@Override
-	public synchronized void removeListener(SimpleChangeListener<MapTableViewRow> listener) {
+	public synchronized void removeObserver(SimpleObserver<MapTableViewRow> listener) {
 		listeners.remove(listener);
 	}
 

@@ -71,7 +71,7 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	
 	@Override
 	public StyleSpans<Collection<String>> computeHighlighting(String text) {
-		Matcher matcher = LogAreaSyntax.PATTERN.matcher(text);
+		Matcher matcher = LogCodeAreaSyntax.PATTERN.matcher(text);
 		int lastKwEnd = 0;
 		StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
 		while (matcher.find()) {

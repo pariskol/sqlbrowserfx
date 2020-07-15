@@ -685,7 +685,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		SqlTableRowEditBox editBox = this.createEditBox(sqlTableRow, true);
 
-		sqlTableRow.addListener(editBox);
+		sqlTableRow.addObserver(editBox);
 
 		Button editButton = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
 		editButton.setTooltip(new Tooltip("Edit"));
@@ -710,7 +710,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		Tab editTab = new Tab(tabTitle);
 		editTab.setGraphic(JavaFXUtils.icon("res/record-edit.png"));
 		editTab.setContent(editBox);
-		editTab.setOnCloseRequest(closeEvent -> sqlTableRow.removeListener(editBox));
+		editTab.setOnCloseRequest(closeEvent -> sqlTableRow.removeObserver(editBox));
 
 		recordsTabPaneRef.getTabs().add(editTab);
 		recordsTabPaneRef.getSelectionModel().select(editTab);
@@ -775,7 +775,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 
 		SqlTableRowEditBox editBox = this.createEditBox(sqlTableRow, false);
-		sqlTableRow.addListener(editBox);
+		sqlTableRow.addObserver(editBox);
 
 		popOver = new PopOver(editBox);
 
@@ -794,7 +794,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		popOver.setDetachable(false);
 		// remove listener on close
-		popOver.setOnHidden(windowEvent -> sqlTableRow.removeListener(editBox));
+		popOver.setOnHidden(windowEvent -> sqlTableRow.removeObserver(editBox));
 // IS THIS A BETTER APPROACH?		
 		popOver.show(editButton, event.getScreenX(), event.getScreenY());
 //		popOver.show(sqlTableViewRef.getSelectedCell());
@@ -844,7 +844,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 			SqlTableRowEditBox editBox = createEditBox(row, true);
 
-			row.addListener(editBox);
+			row.addObserver(editBox);
 			Button editButton = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
 			editButton.setTooltip(new Tooltip("Edit"));
 			editButton.setOnAction(event -> this.updateRecordOfSqlTableViewRef(editBox, row));
@@ -856,7 +856,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			if (cells == 0)
 				cells = 2;
 
-			editBox.setOnClose(() -> row.removeListener(editBox));
+			editBox.setOnClose(() -> row.removeObserver(editBox));
 		}
 
 		if (isFullMode()) {

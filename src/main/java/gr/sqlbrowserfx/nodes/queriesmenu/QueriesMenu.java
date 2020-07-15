@@ -13,13 +13,14 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 
-public class QueriesMenu extends Menu{
+public class QueriesMenu extends Menu implements SimpleObserver<String> {
 
 	HashMap<String, Menu> menuItemsMap;
 	HashMap<String, String> queriesMap;
@@ -83,5 +84,10 @@ public class QueriesMenu extends Menu{
 		} catch (SQLException e) {
 			logger.error(e.getMessage(), e);
 		}
+	}
+
+	@Override
+	public void onObservaleChange(String newValue) {
+		this.loadQueries();	
 	}
 }

@@ -4,6 +4,6 @@ public interface SimpleObservable<T> {
 
 	public void changed();
 	public void changed(T data);
-	public void addListener(SimpleChangeListener<T> listener);
-	public void removeListener(SimpleChangeListener<T> listener);
+	public void addObserver(SimpleObserver<T> listener);
+	public void removeObserver(SimpleObserver<T> listener);
 }

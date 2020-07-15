@@ -1,4 +1,4 @@
-package gr.bashfx;
+package gr.bashfx.codeareas.bash;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,6 +21,7 @@ import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
 
+import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Bounds;
@@ -138,13 +139,13 @@ public class BashCodeArea extends CodeArea{
     }
 
     private static List<String> getQuerySuggestions(String query) {
-        List<String> suggestions = BashSyntaxUtils.KEYWORDS_lIST.parallelStream()
+        List<String> suggestions = BashCodeAreaSyntax.KEYWORDS_lIST.parallelStream()
         							.filter(keyword -> keyword.startsWith(query)).collect(Collectors.toList());
 //        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
         return suggestions;
     }
     
-	protected void showSearchAndReplacePopup() {
+	public void showSearchAndReplacePopup() {
 		if (!this.getSelectedText().isEmpty()) {
 			searchAndReplacePopOver.getFindField().setText(this.getSelectedText());
 			searchAndReplacePopOver.getFindField().selectAll();
@@ -218,8 +219,8 @@ public class BashCodeArea extends CodeArea{
 							AtomicReference<String> word = new AtomicReference<>();
 							if (suggestionsList.getSelectionModel().getSelectedItem() != null) {
 								String selected  = suggestionsList.getSelectionModel().getSelectedItem().toString();
-								if (BashSyntaxUtils.TEMPLATES_MAP.containsKey(selected))
-									selected = BashSyntaxUtils.TEMPLATES_MAP.get(selected);
+								if (BashCodeAreaSyntax.TEMPLATES_MAP.containsKey(selected))
+									selected = BashCodeAreaSyntax.TEMPLATES_MAP.get(selected);
 								word.set(selected);
 							} else {
 								word.set(suggestionsList.getItems().get(0).toString());
@@ -243,7 +244,7 @@ public class BashCodeArea extends CodeArea{
 	}
 
 	private static StyleSpans<Collection<String>> computeHighlighting(String text) {
-		Matcher matcher = BashSyntaxUtils.PATTERN.matcher(text);
+		Matcher matcher = BashCodeAreaSyntax.PATTERN.matcher(text);
 		int lastKwEnd = 0;
 		StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
 		while (matcher.find()) {

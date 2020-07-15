@@ -1,16 +1,14 @@
 package sqlbrowserfx;
 
-import java.sql.SQLException;
-
 import org.json.JSONArray;
 
 import gr.sqlbrowserfx.nodes.tableviews.MapTableView;
+import gr.sqlbrowserfx.utils.HTTPUtils;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import kong.unirest.Unirest;
 
 public class GuiJsonTableView extends Application{
 
@@ -21,16 +19,17 @@ public class GuiJsonTableView extends Application{
 
 	@Override
 	public void start(Stage primaryStage) {
-		primaryStage.setTitle("SqlBrowser");
-		JSONArray jsonArray = new JSONArray(Unirest.get("https://www.psantamouris.gr/get/customers").asString().getBody());
-		MapTableView tableView = new MapTableView();
 		try {
+			primaryStage.setTitle("SqlBrowser");
+			JSONArray jsonArray = new JSONArray(HTTPUtils.GET("https://www.psantamouris.gr/get/customers"));
+			MapTableView tableView = new MapTableView();
 			tableView.setItemsLater(jsonArray);
-		} catch (SQLException e) {
+			primaryStage.setScene(new Scene(new VBox(new TextField(), tableView)));
+			primaryStage.show();
+		} catch (Throwable e) {
 			e.printStackTrace();
 		}
-		primaryStage.setScene(new Scene(new VBox(new TextField(), tableView)));
-		primaryStage.show();
+
 
 	}
 }

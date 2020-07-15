@@ -305,8 +305,10 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 				new JMetro(Style.LIGHT).setParent(this);
 
 			Scene scene = new Scene(borderPane);
-			for (String styleSheet : dockPane.getStylesheets())
-				scene.getStylesheets().add(styleSheet);
+			if (dockPane != null) {
+				for (String styleSheet : dockPane.getStylesheets())
+					scene.getStylesheets().add(styleSheet);
+			}
 
 			// apply the border pane css so that we can get the insets and
 			// position the stage properly
@@ -623,7 +625,8 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 			return "docked";
 		}
 	};
-	private CloseAction closeAction;
+	private Runnable onCloseAction;
+	private Runnable onDockAction;
 
 	public final boolean isDocked() {
 		return dockedProperty.get();
@@ -680,6 +683,8 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 		}
 		this.dockPane = dockPane;
 		this.dockedProperty.set(true);
+		if (this.onDockAction != null)
+			this.onDockAction.run();
 	}
 
 	/**
@@ -697,8 +702,8 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 	 * detached from any dock pane.
 	 */
 	public void close() {
-		if (closeAction != null)
-			closeAction.close();
+		if (onCloseAction != null)
+			onCloseAction.run();
 		if (isFloating()) {
 			setFloating(false);
 		} else if (isDocked()) {
@@ -706,8 +711,12 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 		}
 	}
 
-	public void setOnClose(CloseAction closeAction) {
-		this.closeAction = closeAction;
+	public void setOnClose(Runnable closeAction) {
+		this.onCloseAction = closeAction;
+	}
+	
+	public void setOnDock(Runnable dockAction) {
+		this.onDockAction = dockAction;
 	}
 
 	/**

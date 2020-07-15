@@ -13,8 +13,9 @@ import org.fxmisc.richtext.CodeArea;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.listeners.SimpleChangeListener;
+import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.CSqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
@@ -49,7 +50,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	
 	private SqlConnector sqlConnector;
 	protected AtomicBoolean sqlQueryRunning;
-	protected List<SimpleChangeListener<String>> listeners;
+	protected List<SimpleObserver<String>> listeners;
 	private Button stopExecutionButton;
 	private Button settingsButton;
 	private boolean popOverIsShowing = false;
@@ -133,7 +134,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private void createSqlConsoleTab() {
 		CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
 		sqlCodeArea.setEnterAction(() -> this.executeButonAction());
-
+		sqlCodeArea.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> {
+			SqlConsolePane.this.changed();
+		});
 		VirtualizedScrollPane<CodeArea> scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
 		Tab newTab = new Tab("query " + queryTabPane.getTabs().size(), scrollPane);
 
@@ -282,22 +285,22 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 	@Override
 	public void changed() {
-		listeners.forEach(listener -> listener.onChange(null));
+		listeners.forEach(listener -> listener.onObservaleChange(null));
 	}
 
 	@Override
 	public void changed(String data) {
-		listeners.forEach(listener -> listener.onChange(data));
+		listeners.forEach(listener -> listener.onObservaleChange(data));
 		
 	}
 
 	@Override
-	public void addListener(SimpleChangeListener<String> listener) {
+	public void addObserver(SimpleObserver<String> listener) {
 		listeners.add(listener);
 	}
 
 	@Override
-	public void removeListener(SimpleChangeListener<String> listener) {
+	public void removeObserver(SimpleObserver<String> listener) {
 		listeners.remove(listener);
 	}
 
@@ -341,7 +344,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		this.bottomBar = bottomBar;
 	}
 
-	public List<SimpleChangeListener<String>> getListeners() {
+	public List<SimpleObserver<String>> getListeners() {
 		return listeners;
 	}
 	

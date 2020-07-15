@@ -2,6 +2,7 @@ package gr.bashfx;
 
 import java.io.File;
 
+import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.TreeItem;
 
 public class FileTreeItem extends TreeItem<String> {

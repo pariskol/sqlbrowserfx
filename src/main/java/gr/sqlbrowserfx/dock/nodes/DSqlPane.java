@@ -19,7 +19,7 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.DockWeights;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.listeners.SimpleChangeListener;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.nodes.LineChartBox;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
@@ -44,13 +44,13 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<String>, SimpleObservable<String> {
+public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String>, SimpleObservable<String> {
 
 	private Button chartButton;
 	private Button logButton;
 	private ComboBox<String> columnsBox;
 	private ComboBox<String> nameColumnsBox;
-	private List<SimpleChangeListener<String>> listeners;
+	private List<SimpleObserver<String>> listeners;
 	private List<PieChart> charts;
 	private List<String> chartColumns;
 	private List<DockNode> chartsDNs;
@@ -403,14 +403,14 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	}
 
 	@Override
-	public void onChange(String tableName) {
+	public void onObservaleChange(String tableName) {
 		if (tablesBox.getSelectionModel().getSelectedItem().equals(tableName))
 			tablesBox.getOnAction().handle(new ActionEvent());
 	}
 
 	@Override
 	public void changed() {
-		listeners.forEach(listener -> listener.onChange(getTablesBox().getValue()));
+		listeners.forEach(listener -> listener.onObservaleChange(getTablesBox().getValue()));
 	}
 
 	@Override
@@ -418,12 +418,12 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleChangeListener<
 	}
 
 	@Override
-	public void addListener(SimpleChangeListener<String> listener) {
+	public void addObserver(SimpleObserver<String> listener) {
 		listeners.add(listener);
 	}
 
 	@Override
-	public void removeListener(SimpleChangeListener<String> listener) {
+	public void removeObserver(SimpleObserver<String> listener) {
 		listeners.remove(listener);
 	}
 

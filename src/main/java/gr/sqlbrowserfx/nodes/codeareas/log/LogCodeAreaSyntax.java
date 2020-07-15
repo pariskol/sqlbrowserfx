@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 
-public class LogAreaSyntax {
+public class LogCodeAreaSyntax {
 
 	public static final String[] FUNCTIONS = {"INFO", "DEBUG"};
 	public static final String[] KEYWORDS = {"ERROR", "FATAL"};

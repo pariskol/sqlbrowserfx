@@ -8,17 +8,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
 
-import gr.sqlbrowserfx.listeners.SimpleChangeListener;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
@@ -33,7 +30,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Popup;
 
-public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String>, ContextMenuOwner, HighLighter {
+public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLighter {
 
 	private static final int LIST_ITEM_HEIGHT = 30;
 	private static final int LIST_MAX_HEIGHT = 120;
@@ -43,10 +40,10 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 	private Popup autoCompletePopup;
 	private boolean autoCompleteOnType = true;
 	protected SearchAndReplacePopOver searchAndReplacePopOver;
-	private String saveTableShortcut;
+//	private String tableAliasToSave;
 	private ListView<String> suggestionsList;
-	private AtomicReference<String> word = new AtomicReference<>();
 	public final HashMap<String, Set<String>> tableAliases = new HashMap<>();
+	private boolean insertMode = false;
 
 	public SqlCodeArea() {
 		this(null);
@@ -76,7 +73,7 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 		Thread th = new Thread(() -> {
 			while (true) {
 				try {
-					Thread.sleep(10*60*1000);
+					Thread.sleep(1000);
 					//TODO Create a new map an d whenready then switch the pointer
 					SqlCodeArea.this.tableAliases.clear();
 					SqlCodeArea.this.analyzeTextForTablesAliases(this.getText());
@@ -237,65 +234,52 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 
 	private void autoCompleteAction(KeyEvent event) {
 		
-		boolean insertMode = false;
 		String ch = event.getCharacter();
 		if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType && !event.isControlDown())
 				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
 				|| ch.equals(".") || ch.equals(",") || ch.equals("_")
-				|| (ch.equals(" ") && saveTableShortcut != null)
+//				|| (ch.equals(" ") && tableAliasToSave != null)
 				|| event.getCode() == KeyCode.ENTER
 				|| event.getCode() == KeyCode.BACK_SPACE) {
 
 			int caretPosition = this.getCaretPosition();
 			String query = this.getQuery(caretPosition);
-//			final String fQuery = query;
-//			if (autoCompletePopupShowing) {
-//				suggestionsList.setItems(
-//					FXCollections.observableArrayList(suggestionsList
-//								 .getItems()
-//						         .stream()
-//						         .filter(e -> e.contains(fQuery))
-//						         .collect(Collectors.toList())
-//				));
-//				return;
-//			}
 			
 			if (autoCompletePopup == null)
 				autoCompletePopup = this.createPopup();
 
 			if (!query.isEmpty()) {
 				List<String> suggestions = null;
-				if (ch.equals(".")) {
-					insertMode = true;
-					query = this.calculateQuery(caretPosition);
-					suggestions = this.getColumnsSuggestions(query);
-				}
-				else if ( (ch.equals(",") || ch.equals(" ") || event.getCode() == KeyCode.ENTER) && saveTableShortcut != null) {
-					query = this.calculateQuery( caretPosition);
-					if (!query.isEmpty() && !query.equals(saveTableShortcut.trim()) && !query.equals("as")) {
-						this.cacheTableAlias(query, saveTableShortcut);
-						saveTableShortcut = null;
-						return;
-					}
-				}
-				else if (event.getCode() == KeyCode.ENTER) {
-					if (word.get() != null) {
-						query = word.get();
-						if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(query)) {
-							if (!tableAliases.containsKey(query))
-								tableAliases.put(query, new HashSet<>());
-							saveTableShortcut = query;
-						}
-						word.set(null);
-					}
+				if (event.getCode() == KeyCode.ENTER) {
+//					if (word.get() != null) {
+//						query = word.get();
+//						if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(query)) {
+//							if (!tableAliases.containsKey(query))
+//								tableAliases.put(query, new HashSet<>());
+//							saveTableShortcut = query;
+//						}
+//						word.set(null);
+//					}
 					return;
 				}
+//				else if ( (ch.equals(",") || ch.equals(" ") || event.getCode() == KeyCode.ENTER) && saveTableShortcut != null) {
+//					query = this.calculateQuery( caretPosition);
+//					if (!query.isEmpty() && !query.equals(saveTableShortcut.trim()) && !query.equals("as")) {
+//						this.cacheTableAlias(query, saveTableShortcut);
+//						saveTableShortcut = null;
+//						return;
+//					}
+//				}
+				else if (query.contains(".")) {
+					insertMode  = true;
+					suggestions = this.getColumnsSuggestions(query);
+				}
 				else {
-					if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(query)) {
-						if (!tableAliases.containsKey(query))
-							tableAliases.put(query, new HashSet<>());
-						saveTableShortcut = query;
-					}
+//					if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(query)) {
+//						if (!tableAliases.containsKey(query))
+//							tableAliases.put(query, new HashSet<>());
+//						saveTableShortcut = query;
+//					}
 					suggestions = this.getQuerySuggestions(query);
 				}
 				
@@ -303,7 +287,7 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 				if (suggestionsList.getItems().size() != 0) {
 					autoCompletePopup.getContent().setAll(suggestionsList);
 					this.showAutoCompletePopup();
-					this.setOnSuggestionListKeyPressed(suggestionsList, insertMode, query, caretPosition);
+					this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
 				} else {
 					this.hideAutocompletePopup();
 				}
@@ -333,26 +317,30 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 		}
 	}
 
-	private void setOnSuggestionListKeyPressed(ListView<String> suggestionsList, boolean insertMode,
-			final String fQuery, final int fCaretPosition) {
+	private void setOnSuggestionListKeyPressed(ListView<String> suggestionsList,
+			final String query, final int caretPosition) {
 		
 		suggestionsList.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
-				if (suggestionsList.getSelectionModel().getSelectedItem() != null) {
-					word.set(suggestionsList.getSelectionModel().getSelectedItem().toString());
-				}
-				else {
-					word.set(suggestionsList.getItems().get(0).toString());
-				}
-	
-				final String fWord = word.get();
+				final String word = (suggestionsList.getSelectionModel().getSelectedItem() != null) ?
+										suggestionsList.getSelectionModel().getSelectedItem() :
+											suggestionsList.getItems().get(0);
+
 				Platform.runLater(() -> {
 					if (insertMode) {
-						this.insertText(this.getCaretPosition(), fWord);
+						int trl = 0;
+						if (query.contains(".")) {
+							String[] split = query.split("\\.");
+							if (split.length > 1) {
+								trl = split[1].length();
+							}
+						}
+						this.insertText(this.getCaretPosition(), word.substring(0 + trl));
 					} else {
-						this.replaceText(fCaretPosition - fQuery.length(), fCaretPosition, fWord);
-						this.moveTo(fCaretPosition + fWord.length() - fQuery.length());
+						this.replaceText(caretPosition - query.length(), caretPosition, word);
+						this.moveTo(caretPosition + word.length() - query.length());
 					}
+					insertMode = false;
 				});
 				
 				SqlCodeArea.this.hideAutocompletePopup();
@@ -372,20 +360,6 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
 		}
 	}
 
-	private String calculateQuery(int caretPosition) {
-		String query = "";
-		String ch = "";
-		caretPosition--;
-		do {
-			ch = this.getText(caretPosition - 1, caretPosition--);
-			query += ch;
-		} while (!ch.equals(" ") && !(caretPosition == 0));
-
-		query = StringUtils.reverse(query).trim();
-		
-		return query;
-	}
-	
 	private Popup createPopup() {
 		Popup popup = new Popup();
 		popup.setAutoHide(true);
@@ -440,36 +414,49 @@ public class SqlCodeArea extends CodeArea implements SimpleChangeListener<String
         return keywords.substring(last + 1).trim();
     }
 
-    public List<String> getQuerySuggestions(String query) {
+	public List<String> getQuerySuggestions(String query) {
         List<String> suggestions = SqlCodeAreaSyntax.KEYWORDS_lIST.parallelStream()
         							.filter(keyword -> keyword != null && keyword.startsWith(query)).collect(Collectors.toList());
 //        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
         return suggestions;
     }
     
-    public List<String> getColumnsSuggestions(String table) {
+    public List<String> getColumnsSuggestions(String query) {
+    	String[] split = query.split("\\.");
+    	
+    	String tableAlias = split[0];
+    	String columnPattern = split.length > 1 ? split[1] : null;
+    	
     	for (String knownTable : tableAliases.keySet()) {
     		Collection<String> shortcuts = tableAliases.get(knownTable);
     		for (String s : shortcuts) {
-    			if (s.trim().equals(table.trim()))
-        	    	return SqlCodeAreaSyntax.COLUMNS_MAP.get(knownTable);
+    			if (s.equals(tableAlias)) {
+        	    	if (columnPattern != null) {
+        	    		return SqlCodeAreaSyntax.COLUMNS_MAP.get(knownTable)
+        	    							.parallelStream().filter(col -> col.contains(columnPattern))
+        	    							.collect(Collectors.toList());
+        	    	}
+        	    	else {
+        	    		return SqlCodeAreaSyntax.COLUMNS_MAP.get(knownTable);
+        	    	}
+    			}
     		}
     	}
-    	return SqlCodeAreaSyntax.COLUMNS_MAP.get(table);
+    	return SqlCodeAreaSyntax.COLUMNS_MAP.get(tableAlias);
     }
 
-	@Override
-	public void onChange(String newValue) {
-		String[] split = newValue.split(">");
-		String oldShortcut = split[0];
-		String newShorcut = split[1];
-		for (String table : tableAliases.keySet()) {
-			if (tableAliases.get(table).remove(oldShortcut)) {
-				tableAliases.get(table).add(newShorcut);
-				return;
-			}
-		}
-	}
+//	@Override
+//	public void onChange(String newValue) {
+//		String[] split = newValue.split(">");
+//		String oldShortcut = split[0];
+//		String newShorcut = split[1];
+//		for (String table : tableAliases.keySet()) {
+//			if (tableAliases.get(table).remove(oldShortcut)) {
+//				tableAliases.get(table).add(newShorcut);
+//				return;
+//			}
+//		}
+//	}
 	
 	
 	public void analyzeTextForTablesAliases(String text) {

@@ -1,4 +1,4 @@
-package gr.bashfx;
+package gr.bashfx.codeareas.bash;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -12,12 +12,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+public class BashCodeAreaSyntax {
 
-public class BashSyntaxUtils {
-
-	private static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 	public static final List<String> KEYWORDS_lIST = new ArrayList<>();
 
 	public static final String[] FUNCTIONS = getAutocomplteWords(Arrays.asList("ls /bin"), false);

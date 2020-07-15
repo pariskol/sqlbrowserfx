@@ -1,21 +1,19 @@
 package gr.sqlbrowserfx.listeners;
 
-public class SimpleEvent<T, D> {
+import javafx.event.Event;
+import javafx.event.EventType;
 
-	private T type;
-	private D data;
-
-	SimpleEvent(T type, D data) {
-		this.type = type;
-		this.data = data;
-	}
+public class SimpleEvent extends Event {
 	
-	public T getType() {
-		return type;
-	}
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	
+	public static final EventType<?> EVENT_TYPE = new EventType<>("SimpleEvent");
 
-	public D getData() {
-		return data;
-	}
-
+    public SimpleEvent() {
+        super(EVENT_TYPE);
+    }
+    
 }

@@ -3,7 +3,7 @@ package gr.sqlbrowserfx.nodes;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
-import gr.sqlbrowserfx.listeners.SimpleChangeListener;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -109,21 +109,21 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner, Simpl
 
 	@Override
 	public void changed() {
-		sqlConsolePane.getListeners().forEach(listener -> listener.onChange(null));
+		sqlConsolePane.getListeners().forEach(listener -> listener.onObservaleChange(null));
 	}
 
 	@Override
 	public void changed(String data) {
-		sqlConsolePane.getListeners().forEach(listener -> listener.onChange(data));
+		sqlConsolePane.getListeners().forEach(listener -> listener.onObservaleChange(data));
 	}
 
 	@Override
-	public void addListener(SimpleChangeListener<String> listener) {
+	public void addObserver(SimpleObserver<String> listener) {
 		sqlConsolePane.getListeners().add(listener);
 	}
 
 	@Override
-	public void removeListener(SimpleChangeListener<String> listener) {
+	public void removeObserver(SimpleObserver<String> listener) {
 		sqlConsolePane.getListeners().remove(listener);
 	}
 	

@@ -45,6 +45,7 @@ import gr.sqlbrowserfx.nodes.tableviews.MapTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
 import gr.sqlbrowserfx.rest.SparkRESTfulService;
+import gr.sqlbrowserfx.utils.HTTPUtils;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
 import javafx.application.Application;
@@ -75,7 +76,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import kong.unirest.Unirest;
 
 public class SqlBrowserFXApp extends Application {
 
@@ -96,6 +96,7 @@ public class SqlBrowserFXApp extends Application {
 	private DBTreePane ddbTreePane;
 	private boolean isInternalDBShowing = false;
 	private boolean isRestConfigurationShowing = false;
+	private QueriesMenu queriesMenu;
 
 	public static void main(String[] args) {
 		BasicConfigurator.configure();
@@ -282,7 +283,7 @@ public class SqlBrowserFXApp extends Application {
 				executor.execute(() -> {
 					try {
 						
-						JSONArray jsonArray = new JSONArray(Unirest.get(requestField.getText()).asString().getBody());
+						JSONArray jsonArray = new JSONArray(HTTPUtils.GET(requestField.getText()));
 						tableView.setItemsLater(jsonArray);
 					} catch (Throwable e) {
 						DialogFactory.createErrorDialog(e);
@@ -291,7 +292,6 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 		VBox vbox = new VBox(requestField, tableView);
-		requestField.prefWidthProperty().bind(tableView.widthProperty());
 		VBox.setVgrow(tableView, Priority.ALWAYS);
 		return vbox;
 	}
@@ -300,6 +300,8 @@ public class SqlBrowserFXApp extends Application {
 		
 		primaryStage.setMaximized(true);
 		DockPane dockPane = new DockPane();
+		MenuBar menuBar = createMenu(dockPane);
+
 		dockPane.getStylesheets().add(CSS_THEME);
 
 		mainSqlPane = new DSqlPane(sqlConnector);
@@ -314,15 +316,14 @@ public class SqlBrowserFXApp extends Application {
 		for (String table : ddbTreePane.getDBTreeView().getContentNames()) {
 			SqlCodeAreaSyntax.bind(table, ddbTreePane.getDBTreeView().getColumnsForTable(table));
 		}
-		ddbTreePane.getDBTreeView().addListener(value -> SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames()));
-		mainSqlPane.getSqlConsoleBox().addListener(ddbTreePane.getDBTreeView());
+		ddbTreePane.getDBTreeView().addObserver(value -> SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames()));
+		mainSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
+		mainSqlPane.getSqlConsoleBox().addObserver(queriesMenu);
 		ddbTreePane.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
 		ddbTreePane.asDockNode().setClosable(false);
 		// fixed size 
 		SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
 		
-		MenuBar menuBar = createMenu(dockPane);
-
 		VBox vbox = new VBox();
 		vbox.setAlignment(Pos.CENTER);
 		vbox.getChildren().addAll(menuBar, dockPane);
@@ -351,7 +352,8 @@ public class SqlBrowserFXApp extends Application {
 				SqlBrowserFXAppManager.addSqlPane(newSqlPane);
 				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
-				
+				newSqlPane.getSqlConsoleBox().addObserver(queriesMenu);
+				newSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
 			});
 		});
 		
@@ -388,8 +390,19 @@ public class SqlBrowserFXApp extends Application {
 		jsonTableViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				VBox jsonTableView = this.createJsonTableView();
-				DockNode dockNode = new DockNode(jsonTableView, "JSON table", JavaFXUtils.icon("/res/web.png"));
-				dockNode.dock(dockPane, DockPos.RIGHT);	
+
+			    JavaFXUtils.applyJMetro(jsonTableView);
+			    Scene scene = new Scene(jsonTableView, 800, 600);
+			    for (String styleSheet : primaryScene.getStylesheets())
+			  	  scene.getStylesheets().add(styleSheet);
+			    Stage stage = new Stage();
+			    stage.setTitle("SqlBrowserFX Log");
+			    stage.setScene(scene);
+			    stage.setOnCloseRequest(closeEvent -> {
+					DockNode dockNode = new DockNode(jsonTableView, "JSON table", JavaFXUtils.icon("/res/web.png"));
+					dockNode.dock(dockPane, DockPos.RIGHT);	
+			    });
+			    stage.show();
 			});
 		});
 		
@@ -418,10 +431,13 @@ public class SqlBrowserFXApp extends Application {
 		    Stage stage = new Stage();
 		    stage.setTitle("SqlBrowserFX Log");
 		    stage.setScene(scene);
+		    stage.setOnCloseRequest(closeEvent -> {
+			    DockNode dockNode = new DockNode(virtualizedScrollPane, "SqlBrowserFX Log", JavaFXUtils.icon("/res/monitor.png"));
+				dockNode.dock(dockPane, DockPos.RIGHT);	
+		    });
 		    stage.show();
 		    
-//		    DockNode dockNode = new DockNode(virtualizedScrollPane, "SqlBrowserFX Log", JavaFXUtils.icon("/res/monitor.png"));
-//			dockNode.dock(dockPane, DockPos.RIGHT);	
+
 		});
 
 		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem, logItem, jsonTableViewItem, bashCodeAreaItem);
@@ -483,7 +499,8 @@ public class SqlBrowserFXApp extends Application {
 			menu4.setDisable(true);
 		
 		MenuBar menuBar = new MenuBar();
-		menuBar.getMenus().addAll(menu1, menu2, new QueriesMenu(), menu3, menu4);
+		queriesMenu = new QueriesMenu();
+		menuBar.getMenus().addAll(menu1, menu2, queriesMenu, menu3, menu4);
 
 		return menuBar;
 	}

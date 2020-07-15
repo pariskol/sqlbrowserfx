@@ -95,7 +95,7 @@ public class SqliteConnector extends SqlConnector {
 	public int executeUpdate(String query, List<Object> params) throws SQLException {
 		int result = 0;
 		if (isAutoCommitModeEnabled()) {
-			result = super.executeUpdate(query);
+			result = super.executeUpdate(query,params);
 		}
 		else {
 			Connection conn = getConnection();
@@ -110,7 +110,7 @@ public class SqliteConnector extends SqlConnector {
 	public int executeUpdate(Connection conn, String query, List<Object> params) throws SQLException {
 		int result = 0;
 		if (isAutoCommitModeEnabled()) {
-			result = super.executeUpdate(query);
+			result = super.executeUpdate(conn, query, params);
 		}
 		else {
 			try (PreparedStatement statement = prepareStatementWithParams(conn, query, params);) {
