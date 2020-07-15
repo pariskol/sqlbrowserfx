@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableRowEditBox;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.MemoryGuard;
 import javafx.application.Platform;
@@ -52,6 +53,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 	protected final static int NOT_SET = 0;
 
 	private Logger logger = LoggerFactory.getLogger("SQLBROWSER");
+	private SqlTableTab parent;
 
 	public SqlTableView() {
 
@@ -95,6 +97,10 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		setItems(rs);
 	}
 
+	public void setParent(SqlTableTab tab) {
+		this.parent = tab;
+	}
+	
 	public void clear() {
 
 		this.getItems().clear();
@@ -157,7 +163,10 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 	
 	public synchronized void setItemsLater(ResultSet rs) throws SQLException {
 
-		this.filledByQuery = true;
+		if (parent != null)
+			Platform.runLater(() -> parent.startLoading());
+		
+//		this.filledByQuery = true;
 		rows.clear();
 
 		HashSet<String> tablesSet = new HashSet<>();
@@ -221,6 +230,9 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			this.setColumnWidth(10, NOT_SET, 300);
 			this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 			super.setItems(rows);
+			
+			if (parent != null)
+				parent.load();
 		});
 	}
 	

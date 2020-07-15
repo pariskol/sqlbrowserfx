@@ -365,7 +365,7 @@ public class SqlBrowserFXApp extends Application {
 
 			});
 		});
-		MenuItem bashCodeAreaItem = new MenuItem("Open BashCodeArea", JavaFXUtils.icon("/res/console.png"));
+		MenuItem bashCodeAreaItem = new MenuItem("Open BashFX", JavaFXUtils.icon("/res/console.png"));
 		bashCodeAreaItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
@@ -374,7 +374,7 @@ public class SqlBrowserFXApp extends Application {
 			    for (String styleSheet : primaryScene.getStylesheets())
 			  	  scene.getStylesheets().add(styleSheet);
 			    Stage stage = new Stage();
-			    stage.setTitle("SqlBrowserFX Log");
+			    stage.setTitle("BashFX");
 			    stage.setScene(scene);
 			    stage.show();
 			});
@@ -440,7 +440,7 @@ public class SqlBrowserFXApp extends Application {
 
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, sqlConsoleViewItem, tablesTreeViewItem, logItem, jsonTableViewItem, bashCodeAreaItem);
+		menu1.getItems().addAll(bashCodeAreaItem, logItem, sqlPaneViewItem, jsonTableViewItem);
 		if (sqlConnector instanceof SqliteConnector)
 			menu1.getItems().add(webViewItem);
 

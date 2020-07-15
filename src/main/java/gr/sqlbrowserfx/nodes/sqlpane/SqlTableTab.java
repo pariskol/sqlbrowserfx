@@ -5,9 +5,11 @@ import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.StackPane;
 
 public class SqlTableTab extends Tab {
 
@@ -70,6 +72,17 @@ public class SqlTableTab extends Tab {
 	
 	public void setCustomGraphic(Node graphic) {
 		label.setGraphic(graphic);
+	}
+	
+	public void startLoading() {
+		ProgressIndicator progressIndicator = new ProgressIndicator();
+		progressIndicator.setMaxHeight(40);
+		progressIndicator.setMaxWidth(40);
+		this.setContent(new StackPane(progressIndicator));
+	}
+	
+	public void load() {
+		this.setContent(sqlTableView);
 	}
 
 }

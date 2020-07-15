@@ -13,14 +13,14 @@ import org.dockfx.DockPos;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.LoggerFactory;
 
-import gr.sqlbrowserfx.SqlPaneState;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
+import gr.sqlbrowserfx.SqlPaneState;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.DockWeights;
 import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.LineChartBox;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
@@ -338,12 +338,14 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 
 	@Override
 	public void enableFullMode(SqlPaneState guiState) {
+//		super.enableFullMode(guiState);
 		Platform.runLater(() -> {
 			guiState.getTableTab().setContent(guiState.getSqlTableView());
 			if (isFullMode()) {
-				TabPane recordsTabPane = this.createRecordsTabPane();
+				final TabPane recordsTabPane = guiState.getTableTab().getRecordsTabPane() != null ?
+						guiState.getTableTab().getRecordsTabPane() :
+						this.createRecordsTabPane();
 				recordsTabPaneRef = recordsTabPane;
-				this.createRecordsAddTab();
 				if (dRecordsTabPane == null) {
 					dRecordsTabPane = new DockNode(recordsTabPane, this.asDockNode().getTitle() + " : Full mode",
 							JavaFXUtils.icon("/res/details.png"));
@@ -367,8 +369,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	public void disableFullMode() {
 		if (dRecordsTabPane != null)
 			dRecordsTabPane.close();
-
-		super.disableFullMode();
+//		super.disableFullMode();
 	}
 
 	@Override

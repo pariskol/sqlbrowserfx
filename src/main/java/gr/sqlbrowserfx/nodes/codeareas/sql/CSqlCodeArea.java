@@ -23,6 +23,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 
 	public CSqlCodeArea() {
 		super();
+		this.startTextAnalyzerDaemon();
 	}
 
 	@Override

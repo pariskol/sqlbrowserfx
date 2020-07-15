@@ -65,11 +65,9 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		});
 
 		this.enableHighlighting();
-		if (this.isEditable())
-			this.startTextAnalyzerDaemon();
 	}
 
-	private void startTextAnalyzerDaemon() {
+	protected void startTextAnalyzerDaemon() {
 		Thread th = new Thread(() -> {
 			while (true) {
 				try {
