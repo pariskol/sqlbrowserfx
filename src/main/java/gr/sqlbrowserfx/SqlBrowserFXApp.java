@@ -263,18 +263,7 @@ public class SqlBrowserFXApp extends Application {
 
 	private VBox createJsonTableView() {
 		MapTableView tableView = new MapTableView();
-		tableView.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.C) {
-				StringBuilder content = new StringBuilder();
-				for (MapTableViewRow row :tableView.getSelectionModel().getSelectedItems()) {
-					content.append(row.toString());
-				}
-				
-				StringSelection stringSelection = new StringSelection(content.toString());
-				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-				clipboard.setContents(stringSelection, null);
-			}
-		});
+		
 		TextField requestField = new TextField();
 		requestField.setPromptText("Enter url...");
 		final Executor executor = Executors.newSingleThreadExecutor();
@@ -289,6 +278,22 @@ public class SqlBrowserFXApp extends Application {
 						DialogFactory.createErrorDialog(e);
 					}
 				});
+			}
+		});
+		tableView.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.C) {
+				StringBuilder content = new StringBuilder();
+				for (MapTableViewRow row :tableView.getSelectionModel().getSelectedItems()) {
+					content.append(row.toString());
+				}
+				
+				StringSelection stringSelection = new StringSelection(content.toString());
+				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				clipboard.setContents(stringSelection, null);
+			}
+			else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.F) {
+				requestField.requestFocus();
+				requestField.selectAll();
 			}
 		});
 		VBox vbox = new VBox(requestField, tableView);
@@ -394,22 +399,9 @@ public class SqlBrowserFXApp extends Application {
 		
 		MenuItem jsonTableViewItem = new MenuItem("Open JSON Table View", JavaFXUtils.icon("/res/web.png"));
 		jsonTableViewItem.setOnAction(event -> {
-			Platform.runLater(() -> {
-				VBox jsonTableView = this.createJsonTableView();
-
-			    JavaFXUtils.applyJMetro(jsonTableView);
-			    Scene scene = new Scene(jsonTableView, 800, 600);
-			    for (String styleSheet : primaryScene.getStylesheets())
-			  	  scene.getStylesheets().add(styleSheet);
-			    Stage stage = new Stage();
-			    stage.setTitle("SqlBrowserFX Log");
-			    stage.setScene(scene);
-			    stage.setOnCloseRequest(closeEvent -> {
-					DockNode dockNode = new DockNode(jsonTableView, "JSON table", JavaFXUtils.icon("/res/web.png"));
-					dockNode.dock(dockPane, DockPos.RIGHT);	
-			    });
-			    stage.show();
-			});
+			VBox jsonTableView = this.createJsonTableView();
+		    JavaFXUtils.applyJMetro(jsonTableView);
+			new DockNode(dockPane, jsonTableView, "JSON table", JavaFXUtils.icon("/res/web.png"));
 		});
 		
 		MenuItem webViewItem = new MenuItem("Open Docs", JavaFXUtils.icon("/res/web.png"));
