@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.dock;
+package org.dockfx;
 
 public class DockWeights {
 

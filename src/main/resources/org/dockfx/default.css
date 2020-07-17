@@ -12,7 +12,7 @@
 /* JavaFX developers really seem to have fat fingers? */
 .dock-pos-indicator .button {
 	-fx-padding: 4.0;
-	-fx-background-color: transparent;
+	/*-fx-background-color: transparent;*/
 	-fx-border-color: transparent;
 }
 
@@ -32,10 +32,10 @@
 	-fx-border-color: transparent;
 }
 
-/* Set the icons for the indicator buttons here. 
+/* Set the icons for the indicator buttons here. */
 .dock-center {
   -fx-graphic: url(pin.png);
-}*/
+}
 
 .dock-top {
   -fx-graphic: url(pin.png);

@@ -164,6 +164,12 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 
 		this.getStyleClass().add("dock-node");
 	}
+	
+	public DockNode(DockPane dockPane, Node contents, String title, Node graphic) {
+		this(contents, title, graphic);
+		this.dockPane = dockPane;
+		setFloating(true);
+	}
 
 	/**
 	 * Creates a default DockNode with a default title bar and layout.
@@ -204,10 +210,16 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 	 * @param contents The new contents of this dock node.
 	 */
 	public void setContents(Node contents) {
-		this.getChildren().set(this.getChildren().indexOf(this.contents), contents);
+		if (this.getChildren().indexOf(this.contents) != -1)
+			this.getChildren().set(this.getChildren().indexOf(this.contents), contents);
+		else
+			this.getChildren().add(contents);
 		this.contents = contents;
 	}
 
+	public void setDockPane(DockPane dockPane) {
+		this.dockPane = dockPane;
+	}
 	/**
 	 * Changes the title bar in the layout of this dock node. This can be used to
 	 * remove the dock title bar from the dock node by passing null.
@@ -299,12 +311,11 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 			borderPane.getStyleClass().add("dock-node-border");
 			borderPane.setCenter(this);
 			
+			Scene scene = new Scene(borderPane, 600, 400);
 			if (ENABLE_JMETRO && JMETRO.equals("dark"))
-				new JMetro(Style.DARK).setParent(this);	
+				new JMetro(Style.DARK).setParent(borderPane);	
 			else if (ENABLE_JMETRO && JMETRO.equals("light"))
-				new JMetro(Style.LIGHT).setParent(this);
-
-			Scene scene = new Scene(borderPane);
+				new JMetro(Style.LIGHT).setParent(borderPane);
 			if (dockPane != null) {
 				for (String styleSheet : dockPane.getStylesheets())
 					scene.getStylesheets().add(styleSheet);
@@ -318,8 +329,10 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 			double insetsWidth = insetsDelta.getLeft() + insetsDelta.getRight();
 			double insetsHeight = insetsDelta.getTop() + insetsDelta.getBottom();
 
-			stage.setX(stagePosition.getX() - insetsDelta.getLeft());
-			stage.setY(stagePosition.getY() - insetsDelta.getTop());
+			if (stagePosition != null)  {
+				stage.setX(stagePosition.getX() - insetsDelta.getLeft());
+				stage.setY(stagePosition.getY() - insetsDelta.getTop());
+			}
 
 			stage.setMinWidth(borderPane.minWidth(this.getHeight()) + insetsWidth);
 			stage.setMinHeight(borderPane.minHeight(this.getWidth()) + insetsHeight);
@@ -659,6 +672,9 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 
 	public SplitPane dock(DockPane dockPane, DockPos dockPos, Node sibling, double[] dividers) {
 		dockImpl(dockPane);
+		if (dockPos == DockPos.CENTER) {
+			getChildren().remove(dockTitleBar);
+		}
 		return dockPane.dock(this, dockPos, sibling, dividers);
 	}
 
@@ -677,6 +693,16 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 		return dockPane.dock(this, dockPos, weight);
 	}
 
+	public void hideTitleBar() {
+		if (getChildren().contains(dockTitleBar))
+			getChildren().remove(dockTitleBar);
+	}
+	
+	public void showTitleBar() {
+		if (!getChildren().contains(dockTitleBar))
+			getChildren().add(0, dockTitleBar);
+	}
+	
 	private final void dockImpl(DockPane dockPane) {
 		if (isFloating()) {
 			setFloating(false);
@@ -711,6 +737,10 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 		}
 	}
 
+	public Runnable getOnCloseAction() {
+		return onCloseAction;
+	}
+	
 	public void setOnClose(Runnable closeAction) {
 		this.onCloseAction = closeAction;
 	}
@@ -828,4 +858,5 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 			}
 		}
 	}
+
 }

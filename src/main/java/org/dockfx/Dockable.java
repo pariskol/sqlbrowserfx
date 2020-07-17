@@ -1,6 +1,4 @@
-package gr.sqlbrowserfx.dock;
-
-import org.dockfx.DockNode;
+package org.dockfx;
 
 public interface Dockable {
 
@@ -12,4 +10,8 @@ public interface Dockable {
 	 * @return
 	 */
 	public DockNode asDockNode();
+	
+	default public void resetDockNode() {
+		
+	}
 }

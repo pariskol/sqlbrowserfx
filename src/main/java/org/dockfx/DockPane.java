@@ -23,6 +23,7 @@ package org.dockfx;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -39,6 +40,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.TabPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
@@ -280,7 +282,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 		dockLeftRoot.getStyleClass().add("dock-left-root");
 
 		// TODO: dockCenter goes first when tabs are added in a future version
-		dockPosButtons = FXCollections.observableArrayList(dockTop, dockRight, dockBottom, dockLeft, dockTopRoot,
+		dockPosButtons = FXCollections.observableArrayList(dockCenter, dockTop, dockRight, dockBottom, dockLeft, dockTopRoot,
 				dockRightRoot, dockBottomRoot, dockLeftRoot);
 
 		dockPosIndicator = new GridPane();
@@ -288,7 +290,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 		dockPosIndicator.add(dockRight, 2, 1);
 		dockPosIndicator.add(dockBottom, 1, 2);
 		dockPosIndicator.add(dockLeft, 0, 1);
-		// dockPosIndicator.add(dockCenter, 1, 1);
+		dockPosIndicator.add(dockCenter, 1, 1);
 
 		dockRootPane.getChildren().addAll(dockAreaIndicator, dockTopRoot, dockRightRoot, dockBottomRoot, dockLeftRoot);
 
@@ -406,35 +408,25 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 		}
 
 		// find the parent of the sibling
-		if (sibling != null && sibling != root) {
-			Stack<Parent> stack = new Stack<Parent>();
-			stack.push((Parent) root);
-			while (!stack.isEmpty()) {
-				Parent parent = stack.pop();
+		Parent dockTabPaneParent = findParent(sibling);
+		if (dockTabPaneParent instanceof SplitPane)
+			split = (SplitPane) dockTabPaneParent;
 
-				ObservableList<Node> children = parent.getChildrenUnmodifiable();
-
-				if (parent instanceof SplitPane) {
-					SplitPane splitPane = (SplitPane) parent;
-					children = splitPane.getItems();
-				}
-
-				for (int i = 0; i < children.size(); i++) {
-					if (children.get(i) == sibling) {
-						split = (SplitPane) parent;
-					} else if (children.get(i) instanceof Parent) {
-						stack.push((Parent) children.get(i));
-					}
-				}
-			}
-		}
 
 		Orientation requestedOrientation = (dockPos == DockPos.LEFT || dockPos == DockPos.RIGHT)
 				? Orientation.HORIZONTAL
 				: Orientation.VERTICAL;
 
+		ObservableList<Node> splitItems = null;
 		// if the orientation is different then reparent the split pane
 //		if (split.getOrientation() != requestedOrientation) {
+		if (dockTabPaneParent instanceof SplitPane || dockPos != DockPos.CENTER) {
+			while(dockTabPaneParent instanceof DockTabPane) {
+				sibling = ((DockTabPane)dockTabPaneParent).asDockNode();
+				dockTabPaneParent = findParent(sibling);
+				if (dockTabPaneParent instanceof SplitPane)
+					split = (SplitPane) dockTabPaneParent;
+			}
 			if (split.getItems().size() > 1) {
 				SplitPane splitPane = new SplitPane();
 				splitPanes.add(splitPane);
@@ -450,26 +442,12 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 				}
 
 				split = splitPane;
-			}
+			} //TODO set orientation if differnet
 			split.setOrientation(requestedOrientation);
-//		}
-
-		// finally dock the node to the correct split pane
-		ObservableList<Node> splitItems = split.getItems();
-
-		double magnitude = 0;
-
-		if (splitItems.size() > 0) {
-			if (split.getOrientation() == Orientation.HORIZONTAL) {
-				for (Node splitItem : splitItems) {
-					magnitude += splitItem.prefWidth(0);
-				}
-			} else {
-				for (Node splitItem : splitItems) {
-					magnitude += splitItem.prefHeight(0);
-				}
-			}
+			// finally dock the node to the correct split pane
+			splitItems = split.getItems();
 		}
+//		}
 
 		if (dockPos == DockPos.LEFT || dockPos == DockPos.TOP) {
 			int relativeIndex = 0;
@@ -485,15 +463,6 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 			else if (dividers != null && dividers.length > 0) {
 				split.setDividerPosition(relativeIndex, dividers[0]);
 			}
-//      if (splitItems.size() > 1) {
-//        if (split.getOrientation() == Orientation.HORIZONTAL) {
-//          split.setDividerPosition(relativeIndex,
-//              node.prefWidth(0) / (magnitude + node.prefWidth(0)));
-//        } else {
-//          split.setDividerPosition(relativeIndex,
-//              node.prefHeight(0) / (magnitude + node.prefHeight(0)));
-//        }
-//      }
 		} else if (dockPos == DockPos.RIGHT || dockPos == DockPos.BOTTOM) {
 			int relativeIndex = splitItems.size();
 			if (sibling != null && sibling != root) {
@@ -508,18 +477,55 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 			else if (dividers != null && dividers.length > 0) {
 				split.setDividerPosition(relativeIndex, dividers[0]);
 			}
-//      if (splitItems.size() > 1) {
-//        if (split.getOrientation() == Orientation.HORIZONTAL) {
-//          split.setDividerPosition(relativeIndex - 1,
-//              1 - node.prefWidth(0) / (magnitude + node.prefWidth(0)));
-//        } else {
-//          split.setDividerPosition(relativeIndex - 1,
-//              1 - node.prefHeight(0) / (magnitude + node.prefHeight(0)));
-//        }
-//      }
 		}
+		else if (dockPos == DockPos.CENTER) {
+			if (dockTabPaneParent instanceof DockTabPane || ((DockNode)sibling).getContents() instanceof DockTabPane) {
+				
+				DockTabPane tabPane = dockTabPaneParent instanceof DockTabPane ? tabPane = (DockTabPane) dockTabPaneParent :
+										(DockTabPane) ((DockNode)sibling).getContents();
+				tabPane.addTab((DockNode) node);
+			}
+			else {				
+				DockNode dockNode = new DockTabPane().asDockNode();
+				split = dockNode.dock(this, DockPos.TOP, splitItems.get(0), dividers);
+				this.undock((DockNode) sibling);
+				((DockNode)sibling).dock(this, DockPos.CENTER, dockNode, dividers);
+				((DockNode)node).dock(this, DockPos.CENTER, dockNode, dividers);
+			}
+		} 
 
 		return split;
+	}
+
+	private Parent findParent(Node sibling) {
+		Parent targetParent = null;
+		if (sibling != null && sibling != root) {
+			Stack<Parent> stack = new Stack<Parent>();
+			stack.push((Parent) root);
+			while (!stack.isEmpty()) {
+				Parent parent = stack.pop();
+
+				ObservableList<Node> children = parent.getChildrenUnmodifiable();
+
+				if (parent instanceof SplitPane) {
+					SplitPane splitPane = (SplitPane) parent;
+					children = splitPane.getItems();
+				} else if (parent instanceof TabPane) {
+					TabPane tabPane = (TabPane) parent;
+					children = FXCollections.observableArrayList(
+							tabPane.getTabs().stream().map(tab -> tab.getContent()).collect(Collectors.toList()));
+				}
+
+				for (int i = 0; i < children.size(); i++) {
+					if (children.get(i) == sibling) {
+						targetParent = parent;
+					} else if (children.get(i) instanceof Parent) {
+						stack.push((Parent) children.get(i));
+					}
+				}
+			}
+		}
+		return targetParent;
 	}
 
 	public SplitPane dock(Node node, DockPos dockPos) {
