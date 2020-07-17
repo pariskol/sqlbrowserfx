@@ -9,12 +9,12 @@ import java.sql.Timestamp;
 
 import org.dockfx.DockNode;
 import org.dockfx.DockPos;
+import org.dockfx.DockWeights;
+import org.dockfx.Dockable;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
 import gr.sqlbrowserfx.SqlPaneState;
 import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.dock.DockWeights;
-import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.codeareas.sql.HistorySqlCodeArea;

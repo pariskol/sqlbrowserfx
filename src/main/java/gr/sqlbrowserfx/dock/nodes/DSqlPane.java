@@ -10,14 +10,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.controlsfx.control.PopOver;
 import org.dockfx.DockNode;
 import org.dockfx.DockPos;
+import org.dockfx.DockWeights;
+import org.dockfx.Dockable;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.SqlPaneState;
 import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.dock.DockWeights;
-import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
@@ -402,7 +402,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 		}
 		return thisDockNode;
 	}
-
+	
 	@Override
 	public void onObservaleChange(String tableName) {
 		if (tablesBox.getSelectionModel().getSelectedItem().equals(tableName))

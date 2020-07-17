@@ -10,8 +10,4 @@ public interface Dockable {
 	 * @return
 	 */
 	public DockNode asDockNode();
-	
-	default public void resetDockNode() {
-		
-	}
 }

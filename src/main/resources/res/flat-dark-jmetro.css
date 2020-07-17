@@ -22,7 +22,7 @@ dock-area-indicator {
 /* JavaFX developers really seem to have fat fingers? */
 .dock-pos-indicator .button {
 	-fx-padding: 4.0;
-	-fx-background-color: transparent;
+	/*-fx-background-color: transparent;*/
 	-fx-border-color: transparent;
 }
 

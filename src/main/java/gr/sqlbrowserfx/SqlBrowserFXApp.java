@@ -18,10 +18,10 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
-import org.apache.log4j.BasicConfigurator;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
+import org.dockfx.DockWeights;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,6 @@ import gr.bashfx.BashFXApp;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
-import gr.sqlbrowserfx.dock.DockWeights;
 import gr.sqlbrowserfx.dock.nodes.DBTreePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsoleView;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
@@ -99,7 +98,8 @@ public class SqlBrowserFXApp extends Application {
 	private QueriesMenu queriesMenu;
 
 	public static void main(String[] args) {
-		BasicConfigurator.configure();
+//		BasicConfigurator.configure();
+		PropertiesLoader.setLogger(LoggerFactory.getLogger(PropertiesLoader.class));
 		DialogFactory.setDialogStyleSheet(CSS_THEME);
 		launch(args);
 	}
@@ -351,9 +351,11 @@ public class SqlBrowserFXApp extends Application {
 				DSqlPane newSqlPane = new DSqlPane(sqlConnector);
 				SqlBrowserFXAppManager.addSqlPane(newSqlPane);
 				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
-				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
-				newSqlPane.getSqlConsoleBox().addObserver(queriesMenu);
-				newSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
+				newSqlPane.asDockNode().setDockPane(dockPane);
+				newSqlPane.asDockNode().setFloating(true);
+//				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
+//				newSqlPane.getSqlConsoleBox().addObserver(queriesMenu);
+//				newSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
 			});
 		});
 		
@@ -367,17 +369,21 @@ public class SqlBrowserFXApp extends Application {
 		});
 		MenuItem bashCodeAreaItem = new MenuItem("Open BashFX", JavaFXUtils.icon("/res/console.png"));
 		bashCodeAreaItem.setOnAction(event -> {
-			Platform.runLater(() -> {
-				VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
-			    JavaFXUtils.applyJMetro(vb);
-			    Scene scene = new Scene(vb, 800, 600);
-			    for (String styleSheet : primaryScene.getStylesheets())
-			  	  scene.getStylesheets().add(styleSheet);
-			    Stage stage = new Stage();
-			    stage.setTitle("BashFX");
-			    stage.setScene(scene);
-			    stage.show();
-			});
+			VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
+		    JavaFXUtils.applyJMetro(vb);
+			new DockNode(dockPane, vb, "BashFX", JavaFXUtils.icon("/res/console.png"));
+
+//			Platform.runLater(() -> {
+//				VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
+//			    JavaFXUtils.applyJMetro(vb);
+//			    Scene scene = new Scene(vb, 800, 600);
+//			    for (String styleSheet : primaryScene.getStylesheets())
+//			  	  scene.getStylesheets().add(styleSheet);
+//			    Stage stage = new Stage();
+//			    stage.setTitle("BashFX");
+//			    stage.setScene(scene);
+//			    stage.show();
+//			});
 		});
 		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.icon("/res/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
@@ -420,8 +426,9 @@ public class SqlBrowserFXApp extends Application {
 			TailerListener listener = new CodeAreaTailerListener(logArea);
 		    Tailer tailer = new Tailer(new File("./log/sql-browser.log"), listener, 0);
 
-		    Executor executor = Executors.newSingleThreadExecutor();
-		    executor.execute(tailer);
+		    Thread tailerDaemon = new Thread(tailer, "Logfile Tailer Daemon");
+		    tailerDaemon.setDaemon(true);
+		    tailerDaemon.start();
 		      
 		    VirtualizedScrollPane<LogCodeArea> virtualizedScrollPane =new VirtualizedScrollPane<>(logArea);
 		    JavaFXUtils.applyJMetro(virtualizedScrollPane);
@@ -433,7 +440,11 @@ public class SqlBrowserFXApp extends Application {
 		    stage.setScene(scene);
 		    stage.setOnCloseRequest(closeEvent -> {
 			    DockNode dockNode = new DockNode(virtualizedScrollPane, "SqlBrowserFX Log", JavaFXUtils.icon("/res/monitor.png"));
-				dockNode.dock(dockPane, DockPos.RIGHT);	
+				dockNode.dock(dockPane, DockPos.RIGHT);
+				dockNode.setOnClose(() -> {
+					tailer.stop();
+					tailerDaemon.interrupt();
+				});
 		    });
 		    stage.show();
 		    

@@ -1,9 +1,9 @@
 package gr.sqlbrowserfx.dock.nodes;
 
 import org.dockfx.DockNode;
+import org.dockfx.Dockable;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.dock.Dockable;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.TableCreationPane;
