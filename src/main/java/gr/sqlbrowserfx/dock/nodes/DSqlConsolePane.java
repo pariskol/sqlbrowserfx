@@ -13,7 +13,6 @@ import org.dockfx.DockWeights;
 import org.dockfx.Dockable;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
-import gr.sqlbrowserfx.SqlPaneState;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
@@ -94,19 +93,20 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	protected void handleSelectResult(String query, ResultSet rset) throws SQLException {
 		SqlTableView sqlTableView = sqlPane.getSelectedSqlTableView();
-		SqlTableTab tab = null;
+		SqlTableTab tab = sqlPane.getSelectedTableTab();
 		if (this.openInNewTableView()) {
 			tab = sqlPane.addSqlTableTabLater();
 			sqlTableView = tab.getSqlTableView();
 		}
 
-		SqlPaneState guiState = new SqlPaneState(sqlTableView, tab);
 
-		guiState.getSqlTableView().setFilledByQuery(true);
-		guiState.getSqlTableView().setItemsLater(rset);
+		sqlTableView.setFilledByQuery(true);
+		sqlTableView.setItemsLater(rset);
+		
+		final SqlTableTab fTab = tab;
 		Platform.runLater(() -> {
 			if (sqlPane.isFullMode()) {
-				sqlPane.enableFullMode(guiState);
+				sqlPane.enableFullMode(fTab);
 			}
 			sqlPane.updateRowsCountLabel();
 		});

@@ -16,7 +16,6 @@ import org.fxmisc.richtext.CodeArea;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
-import gr.sqlbrowserfx.SqlPaneState;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
@@ -83,31 +82,31 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 				switch (keyEvent.getCode()) {
 				case F:
 					this.searchButtonAction();
-					sqlTableViewRef.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 					break;
 				case C:
 					this.copyAction();
-					sqlTableViewRef.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 					break;
 				case D:
 					this.deleteButtonAction();
-					sqlTableViewRef.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 					break;
 				case E:
 					this.editButtonAction(simulateClickEvent(editButton));
-					sqlTableViewRef.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 					break;
 				case Q:
 					this.addButtonAction();
-					sqlTableViewRef.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 					break;
 				case I:
 					this.importCsvAction();
-					sqlTableViewRef.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 					break;
 				case R:
 					this.refreshButtonAction();
-					sqlTableViewRef.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 					break;
 				case T:
 					this.sqlConsoleButtonAction();
@@ -116,7 +115,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 					break;
 				}
 			}
-			sqlTableViewRef.requestFocus();
+			getSelectedSqlTableView().requestFocus();
 		});
 
 	}
@@ -322,8 +321,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	}
 
 	@Override
-	protected void getDataFromDB(String table, SqlTableView sqlTableViewRef) {
-		final SqlTableView sqlTableView = sqlTableViewRef;
+	protected void getDataFromDB(String table, final SqlTableView sqlTableView) {
 		if (table != null && !table.equals("empty")) {
 			super.getDataFromDB(table, sqlTableView);
 			this.fillChartColumnBoxes(sqlTableView);
@@ -337,15 +335,15 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	}
 
 	@Override
-	public void enableFullMode(SqlPaneState guiState) {
-//		super.enableFullMode(guiState);
+	public void enableFullMode(final SqlTableTab tab) {
+//		super.enableFullMode(tab);
 		Platform.runLater(() -> {
-			guiState.getTableTab().setContent(guiState.getSqlTableView());
+//			tab.setContent(guiState.getSqlTableView());
 			if (isFullMode()) {
-				final TabPane recordsTabPane = guiState.getTableTab().getRecordsTabPane() != null ?
-						guiState.getTableTab().getRecordsTabPane() :
-						this.createRecordsTabPane();
-				recordsTabPaneRef = recordsTabPane;
+//				final TabPane recordsTabPane = tab.getRecordsTabPane() != null ?
+//						tab.getRecordsTabPane() :
+//						this.createRecordsTabPane();
+				TabPane recordsTabPane = this.createRecordsTabPane();
 				if (dRecordsTabPane == null) {
 					dRecordsTabPane = new DockNode(recordsTabPane, this.asDockNode().getTitle() + " : Full mode",
 							JavaFXUtils.icon("/res/details.png"));
@@ -358,10 +356,10 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 				} else {
 					dRecordsTabPane.setContents(recordsTabPane);
 				}
-				guiState.getTableTab().setRecordsTabPane(recordsTabPane);
+				tab.setRecordsTabPane(recordsTabPane);
 			}
 
-			sqlQueryRunning.set(false);
+			sqlQueryRunning = false;
 		});
 	}
 
@@ -375,8 +373,8 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	@Override
 	protected void tablesTabPaneClickAction() {
 		super.tablesTabPaneClickAction();
-		if (dRecordsTabPane != null && recordsTabPaneRef != null)
-			dRecordsTabPane.setContents(recordsTabPaneRef);
+		if (dRecordsTabPane != null && getSelectedRecordsTabPane() != null)
+			dRecordsTabPane.setContents(getSelectedRecordsTabPane());
 	}
 
 	@Override

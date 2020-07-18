@@ -668,14 +668,14 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 			if (dockNodeDrag != null) {
 				Point2D originToScreen = dockNodeDrag.localToScreen(0, 0);
 
-				dockBottom.prefWidthProperty()
-						.set(((DockNode) dockNodeDrag).widthProperty().get() - dockLeftRoot.getWidth() * 3);
-				dockTop.prefWidthProperty()
-						.set(((DockNode) dockNodeDrag).widthProperty().get() - dockLeftRoot.getWidth() * 3);
-				dockLeft.prefHeightProperty()
-						.set(((DockNode) dockNodeDrag).heightProperty().get() - dockTopRoot.getHeight() * 3);
-				dockRight.prefHeightProperty()
-						.set(((DockNode) dockNodeDrag).heightProperty().get() - dockTopRoot.getHeight() * 3);
+//				dockBottom.prefWidthProperty()
+//						.set(((DockNode) dockNodeDrag).widthProperty().get() - dockLeftRoot.getWidth() * 3);
+//				dockTop.prefWidthProperty()
+//						.set(((DockNode) dockNodeDrag).widthProperty().get() - dockLeftRoot.getWidth() * 3);
+//				dockLeft.prefHeightProperty()
+//						.set(((DockNode) dockNodeDrag).heightProperty().get() - dockTopRoot.getHeight() * 3);
+//				dockRight.prefHeightProperty()
+//						.set(((DockNode) dockNodeDrag).heightProperty().get() - dockTopRoot.getHeight() * 3);
 
 				double posX = originToScreen.getX() + dockNodeDrag.getLayoutBounds().getWidth() / 2
 						- dockPosIndicator.getWidth() / 2;
