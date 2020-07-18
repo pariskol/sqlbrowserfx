@@ -484,6 +484,7 @@ public class DockPane extends StackPane implements EventHandler<DockEvent> {
 				DockTabPane tabPane = dockTabPaneParent instanceof DockTabPane ? tabPane = (DockTabPane) dockTabPaneParent :
 										(DockTabPane) ((DockNode)sibling).getContents();
 				tabPane.addTab((DockNode) node);
+				((DockNode) node).hideTitleBar();
 			}
 			else {				
 				DockNode dockNode = new DockTabPane().asDockNode();

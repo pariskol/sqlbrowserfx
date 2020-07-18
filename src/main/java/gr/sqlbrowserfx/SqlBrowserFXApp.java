@@ -358,9 +358,6 @@ public class SqlBrowserFXApp extends Application {
 				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 				newSqlPane.asDockNode().setDockPane(dockPane);
 				newSqlPane.asDockNode().setFloating(true);
-//				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
-//				newSqlPane.getSqlConsoleBox().addObserver(queriesMenu);
-//				newSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
 			});
 		});
 		
@@ -377,18 +374,6 @@ public class SqlBrowserFXApp extends Application {
 			VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
 		    JavaFXUtils.applyJMetro(vb);
 			new DockNode(dockPane, vb, "BashFX", JavaFXUtils.icon("/res/console.png"));
-
-//			Platform.runLater(() -> {
-//				VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
-//			    JavaFXUtils.applyJMetro(vb);
-//			    Scene scene = new Scene(vb, 800, 600);
-//			    for (String styleSheet : primaryScene.getStylesheets())
-//			  	  scene.getStylesheets().add(styleSheet);
-//			    Stage stage = new Stage();
-//			    stage.setTitle("BashFX");
-//			    stage.setScene(scene);
-//			    stage.show();
-//			});
 		});
 		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.icon("/res/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {

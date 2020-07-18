@@ -72,7 +72,8 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
 
 		label = new Label("Dock Title Bar");
 		label.textProperty().bind(dockNode.titleProperty());
-		label.graphicProperty().bind(dockNode.graphicProperty());
+//		label.graphicProperty().bind(dockNode.graphicProperty());
+		label.setGraphic(dockNode.getGraphic());
 
 		stateButton = new Button();
 		stateButton.setOnAction(new EventHandler<ActionEvent>() {
@@ -112,6 +113,9 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
 		this.getStyleClass().add("dock-title-bar");
 	}
 
+	public void setGraphic(Node node) {
+		label.setGraphic(node);
+	}
 	/**
 	 * Whether this title bar is currently being dragged.
 	 *

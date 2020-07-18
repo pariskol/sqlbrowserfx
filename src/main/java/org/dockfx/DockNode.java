@@ -450,6 +450,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 
 	public final void setGraphic(Node graphic) {
 		this.graphicProperty.setValue(graphic);
+		this.dockTitleBar.setGraphic(graphic);
 	}
 
 	/**
@@ -672,9 +673,6 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 
 	public SplitPane dock(DockPane dockPane, DockPos dockPos, Node sibling, double[] dividers) {
 		dockImpl(dockPane);
-		if (dockPos == DockPos.CENTER) {
-			getChildren().remove(dockTitleBar);
-		}
 		return dockPane.dock(this, dockPos, sibling, dividers);
 	}
 

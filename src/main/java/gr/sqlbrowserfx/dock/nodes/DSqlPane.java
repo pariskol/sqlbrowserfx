@@ -37,7 +37,6 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -46,7 +45,6 @@ import javafx.scene.layout.VBox;
 public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String>, SimpleObservable<String> {
 
 	private Button chartButton;
-	private Button logButton;
 	private ComboBox<String> columnsBox;
 	private ComboBox<String> nameColumnsBox;
 	private List<SimpleObserver<String>> listeners;
@@ -61,7 +59,6 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	private Button showChartButton;
 	private List<String> columnNames;
 	private DockNode dRecordsTabPane = null;
-	private DockNode dLogListView;;
 
 	public DSqlPane() {
 		this(null);
@@ -209,24 +206,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 			this.getPopOver().show(lineChartButton);
 		});
 
-		logButton = new Button("", JavaFXUtils.icon("/res/monitor.png"));
-		logButton.setOnAction(actionEvent -> {
-			logListView = new ListView<>();
-			uiLogging = true;
-			dLogListView = new DockNode(logListView, "Log", JavaFXUtils.icon("/res/monitor.png"));
-			dLogListView.setOnClose(() -> {
-				logListView = null;
-				dLogListView = null;
-				uiLogging = false;
-			});
-			if (sqlConsoleBox != null)
-				dLogListView.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, sqlConsoleBox.asDockNode(),
-						DockWeights.asDoubleArrray(0.7f, 0.3f));
-			else
-				dLogListView.dock(this.asDockNode().getDockPane(), DockPos.BOTTOM, DockWeights.asDoubleArrray(0.7f, 0.3f));
-
-		});
-		flowPane.getChildren().addAll(chartButton, lineChartButton, logButton);
+		flowPane.getChildren().addAll(chartButton, lineChartButton);
 		return flowPane;
 	}
 
