@@ -205,8 +205,8 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 			this.setPopOver(popOver);
 			this.getPopOver().show(lineChartButton);
 		});
-
-		flowPane.getChildren().addAll(chartButton, lineChartButton);
+//		TODO uncomment this to enable chart buttons
+//		flowPane.getChildren().addAll(chartButton, lineChartButton);
 		return flowPane;
 	}
 

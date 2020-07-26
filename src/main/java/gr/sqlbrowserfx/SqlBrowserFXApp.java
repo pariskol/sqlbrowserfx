@@ -409,28 +409,10 @@ public class SqlBrowserFXApp extends Application {
 		      
 		    VirtualizedScrollPane<LogCodeArea> virtualizedScrollPane =new VirtualizedScrollPane<>(logArea);
 		    JavaFXUtils.applyJMetro(virtualizedScrollPane);
-		    Scene scene = new Scene(virtualizedScrollPane, 800, 600);
-		    for (String styleSheet : primaryScene.getStylesheets())
-		  	  scene.getStylesheets().add(styleSheet);
-		    Stage stage = new Stage();
-		    stage.setTitle("SqlBrowserFX Log");
-		    stage.setScene(scene);
-		    stage.setOnCloseRequest(closeEvent -> {
-			    DockNode dockNode = new DockNode(virtualizedScrollPane, "SqlBrowserFX Log", JavaFXUtils.icon("/res/monitor.png"));
-				dockNode.dock(dockPane, DockPos.RIGHT);
-				dockNode.setOnClose(() -> {
-					tailer.stop();
-					tailerDaemon.interrupt();
-				});
-		    });
-		    stage.show();
-		    
-
+			new DockNode(dockPane, virtualizedScrollPane, "Log", JavaFXUtils.icon("/res/monitor.png"));
 		});
 
 		menu1.getItems().addAll(bashCodeAreaItem, logItem, sqlPaneViewItem, jsonTableViewItem);
-		if (sqlConnector instanceof SqliteConnector)
-			menu1.getItems().add(webViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/res/spark.png", 16.0, 16.0));

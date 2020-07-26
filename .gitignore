@@ -7,3 +7,6 @@ target
 lib
 *.log
 dist
+.gradle/
+.idea/
+sqlbrowserfx.iml
