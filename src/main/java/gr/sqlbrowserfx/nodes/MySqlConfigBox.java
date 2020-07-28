@@ -50,7 +50,7 @@ public class MySqlConfigBox extends VBox {
 			}
 		});
 		this.getChildren().add(databaseField);
-		connectButton = new Button("Connect", JavaFXUtils.icon("/icons/database.png"));
+		connectButton = new Button("Connect", JavaFXUtils.createIcon("/icons/database.png"));
 		this.getChildren().add(connectButton);
 
 		this.loader = new ProgressIndicator();

@@ -29,7 +29,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 	@Override
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = super.createContextMenu();
-		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.icon("/icons/check.png"));
+		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/check.png"));
 		menuItemSave.setOnAction(action -> this.saveQueryAction());
 
 		menu.getItems().addAll(menuItemSave);
@@ -51,7 +51,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 			DialogFactory.createErrorDialog(e);
 		}
 
-		Button addButton = new Button("Save", JavaFXUtils.icon("/icons/check.png"));
+		Button addButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
 		addButton.setOnAction(event -> {
 			sqlConnector.executeAsync(() -> {
 				try {

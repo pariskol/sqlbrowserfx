@@ -65,7 +65,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 
 			fieldsMap.put(columnName, textField);
 
-			Button infoButton = new Button("", JavaFXUtils.icon("/icons/zoom.png"));
+			Button infoButton = new Button("", JavaFXUtils.createIcon("/icons/zoom.png"));
 			infoButton.setFocusTraversable(false);
 			infoButton.setOnMouseClicked(event2 -> {
 				infoButton.requestFocus();
@@ -76,7 +76,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 				infoText.setWrapText(true);
 				infoText.setPrefColumnCount(20);
 				infoText.setPrefRowCount(5);
-				Button submitButton = new Button("Save", JavaFXUtils.icon("/icons/check.png"));
+				Button submitButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
 				submitButton.setOnAction(event -> textField.setText(infoText.getText()));
 				PopOver info = new PopOver(new VBox(infoText, submitButton));
 //				info.setArrowSize(0);
@@ -87,10 +87,10 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			if (sqlTableRow != null && columnName.equals(sqlTableView.getPrimaryKey())) {
 				textField.setEditable(false);
 				textField.setTooltip(new Tooltip("Primary key can't be edit"));
-				label.setGraphic(JavaFXUtils.icon("/icons/primary-key.png"));
+				label.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
 			} else if (sqlTableRow != null && sqlTableView.getSqlTable().isForeignKey(columnName)) {
 				textField.setTooltip(new Tooltip("Foreign key"));
-				label.setGraphic(JavaFXUtils.icon("/icons/foreign-key.png"));
+				label.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
 			}
 			HBox node = new HBox(label, textField, infoButton);
 

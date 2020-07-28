@@ -157,7 +157,6 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		super.setItems(rows);
 
 		this.autoResizedColumns(autoResize);
-		this.setColumnWidth(10, NOT_SET, 300);
 		this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 	}
 	
@@ -227,7 +226,6 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			}
 
 			this.autoResizedColumns(autoResize);
-			this.setColumnWidth(10, NOT_SET, 300);
 			this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 			super.setItems(rows);
 			

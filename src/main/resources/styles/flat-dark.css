@@ -20,39 +20,39 @@
 }
 
 .dock-top {
-  -fx-graphic: url(../icons/pin.png);
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
 }
 
 .dock-right {
-  -fx-graphic: url(../icons/pin.png);
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
 }
 
 .dock-bottom {
-  -fx-graphic: url(../icons/pin.png);
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
 }
 
 .dock-left {
-  -fx-graphic: url(../icons/pin.png);
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
 }
 
 .dock-center {
-  -fx-graphic: url(../icons/pin.png);
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
 }
 
 .dock-top-root {
-  -fx-graphic: url(../icons/pin.png);
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
 }
 
 .dock-right-root {
-  -fx-graphic: url(../icons/pin.png);
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
 }
 
 .dock-bottom-root {
-  -fx-graphic: url(../icons/pin.png);
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
 }
 
 .dock-left-root {
-  -fx-graphic: url(../icons/pin.png);
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
 }
 
 /* JavaFX developers really seem to have fat fingers? */
@@ -127,22 +127,22 @@
 
 /* Set the icons for the dock title bar's buttons here. */
 .dock-state-button {
-	-fx-graphic: url(../icons/restore.png);
+	-fx-graphic: url(../themes/flat-dark/icons/restore-win-w.png);
 	-fx-background-color: transparent;
 }
 
 .dock-node:floating .dock-state-button {
-	-fx-graphic: url(../icons/maximize.png);
+	-fx-graphic: url(../themes/flat-dark/icons/maximize-win-w.png);
 	-fx-background-color: transparent;
 }
 
 .dock-node:maximized .dock-state-button {
-	-fx-graphic: url(../icons/restore.png);
+	-fx-graphic: url(../themes/flat-dark/icons/restore-win-w.png);
 	-fx-background-color: transparent;
 }
 
 .dock-close-button {
-	-fx-graphic: url(../icons/close.png);
+	-fx-graphic: url(../themes/flat-dark/icons/close-win-w.png);
 	-fx-background-color: transparent;
 }
 

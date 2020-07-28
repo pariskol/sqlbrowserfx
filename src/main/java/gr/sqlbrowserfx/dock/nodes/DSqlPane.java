@@ -73,7 +73,6 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 		chartColumns = new ArrayList<>();
 		lineChartBoxes = new ArrayList<>();
 
-		this.getSelectedSqlTableView().setColumnWidth(1, 100, 300);
 		this.getSelectedSqlTableView().setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
 				switch (keyEvent.getCode()) {
@@ -122,7 +121,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 		FlowPane flowPane = super.createToolbar();
 		nameColumnsBox = new ComboBox<>();
 		columnsBox = new ComboBox<>();
-		showChartButton = new Button("Show", JavaFXUtils.icon("/icons/chart-pie.png"));
+		showChartButton = new Button("Show", JavaFXUtils.createIcon("/icons/chart-pie.png"));
 		showChartButton.setOnAction(event -> {
 			PieChart chart = new PieChart();
 			chart.setClockwise(true);
@@ -132,13 +131,13 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 			charts.add(chart);
 			chartColumns.add(nameColumnsBox.getSelectionModel().getSelectedItem());
 
-			DockNode chartDockNode = new DockNode(chart, "Chart", JavaFXUtils.icon("/icons/chart-pie.png"));
+			DockNode chartDockNode = new DockNode(chart, "Chart", JavaFXUtils.createIcon("/icons/chart-pie.png"));
 			chartDockNode.setPrefSize(100, 100);
 			chartDockNode.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode());
 			chartsDNs.add(chartDockNode);
 		});
 
-		chartButton = new Button("", JavaFXUtils.icon("/icons/chart-pie.png"));
+		chartButton = new Button("", JavaFXUtils.createIcon("/icons/chart-pie.png"));
 		chartButton.setOnMouseClicked(mouseEvent -> {
 
 			if (chartButton.isFocused() && this.getPopOver().isShowing() || ((SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem()).getCustomText().isEmpty())
@@ -154,7 +153,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 			this.getPopOver().show(chartButton);
 		});
 
-		Button showLineChartButton = new Button("Show", JavaFXUtils.icon("/icons/chart.png"));
+		Button showLineChartButton = new Button("Show", JavaFXUtils.createIcon("/icons/chart.png"));
 		showLineChartButton.setOnMouseClicked(actionEvent -> {
 			ObservableList<XYChart.Series<String, Number>> data = FXCollections.<XYChart.Series<String, Number>>observableArrayList();
 
@@ -178,7 +177,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 			});
 		});
 
-		lineChartButton = new Button("", JavaFXUtils.icon("/icons/chart.png"));
+		lineChartButton = new Button("", JavaFXUtils.createIcon("/icons/chart.png"));
 		lineChartButton.setOnMouseClicked(mouseEvent -> {
 
 			if (lineChartButton.isFocused() && this.getPopOver().isShowing() || this.getTablesBox() == null
@@ -192,7 +191,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 			LineChartBox contentBox = new LineChartBox(columnNames);
 			lineChartBoxes.add(contentBox);
 			HBox hbox = new HBox(contentBox);
-			Button addBoxButton = new Button("", JavaFXUtils.icon("/icons/add.png"));
+			Button addBoxButton = new Button("", JavaFXUtils.createIcon("/icons/add.png"));
 			addBoxButton.setOnAction(actionEvent -> {
 				LineChartBox tContentBox = new LineChartBox(columnNames);
 				hbox.getChildren().addAll(tContentBox);
@@ -326,7 +325,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 				TabPane recordsTabPane = this.createRecordsTabPane();
 				if (dRecordsTabPane == null) {
 					dRecordsTabPane = new DockNode(recordsTabPane, this.asDockNode().getTitle() + " : Full mode",
-							JavaFXUtils.icon("/icons/details.png"));
+							JavaFXUtils.createIcon("/icons/details.png"));
 					dRecordsTabPane.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),
 							DockWeights.asDoubleArrray(0.7f, 0.3f));
 					dRecordsTabPane.setOnClose(() -> {
@@ -360,7 +359,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	@Override
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
-			thisDockNode = new DockNode(this, "Data explorer", JavaFXUtils.icon("/icons/table.png"));
+			thisDockNode = new DockNode(this, "Data explorer", JavaFXUtils.createIcon("/icons/table.png"));
 			thisDockNode.setOnClose(() -> {
 				chartsDNs.forEach(chart -> chart.close());
 				chartsDNs.clear();

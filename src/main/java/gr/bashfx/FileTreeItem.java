@@ -14,11 +14,11 @@ public class FileTreeItem extends TreeItem<String> {
 		this.file = file;
 		
 		if (file.getName().contains(".sh"))
-			this.setGraphic(JavaFXUtils.icon("/icons/file-sh.png"));
+			this.setGraphic(JavaFXUtils.createIcon("/icons/file-sh.png"));
 		else if (file.getName().contains(".")) 
-			this.setGraphic(JavaFXUtils.icon("/icons/file-extension.png"));
+			this.setGraphic(JavaFXUtils.createIcon("/icons/file-extension.png"));
 		else 
-			this.setGraphic(JavaFXUtils.icon("/icons/file.png"));
+			this.setGraphic(JavaFXUtils.createIcon("/icons/file.png"));
 	}
 
 	public File getFile() {

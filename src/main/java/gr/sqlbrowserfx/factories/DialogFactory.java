@@ -172,8 +172,8 @@ public class DialogFactory {
 
         final Stage dialog = new Stage();
         dialog.setTitle("Confirmation");
-        Button yes = new Button("Yes", JavaFXUtils.icon("/icons/yes.png"));
-        Button no = new Button("No", JavaFXUtils.icon("/icons/no.png"));
+        Button yes = new Button("Yes", JavaFXUtils.createIcon("/icons/yes.png"));
+        Button no = new Button("No", JavaFXUtils.createIcon("/icons/no.png"));
 
         Label displayLabel = new Label(message);
         displayLabel.setFont(Font.font(null, FontWeight.BOLD, 14));

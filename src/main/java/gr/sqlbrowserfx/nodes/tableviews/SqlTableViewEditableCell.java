@@ -76,8 +76,8 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 			parentTableView.getSelectionModel().getSelectedItem().set(column, newValue);
 			try {
 				parentTableView.updateSelectedRow();
-				parentTableView.getSelectionModel().getSelectedItem().set(column, oldValue);
 			} catch (Exception e) {
+				parentTableView.getSelectionModel().getSelectedItem().set(column, oldValue);
 				DialogFactory.createErrorDialog(e);
 			}
 		}

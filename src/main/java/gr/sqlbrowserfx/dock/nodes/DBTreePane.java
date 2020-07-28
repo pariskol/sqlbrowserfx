@@ -1,20 +1,21 @@
 package gr.sqlbrowserfx.dock.nodes;
 
+import org.controlsfx.control.PopOver;
 import org.dockfx.DockNode;
 import org.dockfx.Dockable;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.TableCreationPane;
 import gr.sqlbrowserfx.nodes.ToolbarOwner;
+import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
-import javafx.stage.Stage;
 
 public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner, ContextMenuOwner{
 
@@ -39,23 +40,35 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner, Co
 
 	@Override
 	public FlowPane createToolbar() {
-		Button addButton = new Button("", JavaFXUtils.icon("/icons/add.png"));
+		Button searchButton = new Button("", JavaFXUtils.createIcon("/icons/magnify.png"));
+		searchButton.setOnAction(actionEvent -> dbTreeView.showSearchField());
+		Button addButton = new Button("", JavaFXUtils.createIcon("/icons/add.png"));
 		addButton.setOnAction(actionEvent -> {
 			TableCreationPane tableCreationPane = new TableCreationPane(this.sqlConnector);
 			tableCreationPane.addObserver(this.dbTreeView);
 			JavaFXUtils.applyJMetro(tableCreationPane);
-		    Scene scene = new Scene(tableCreationPane, 1000, 600);
-		    for (String styleSheet : this.getScene().getStylesheets())
-		  	  scene.getStylesheets().add(styleSheet);
-		    Stage stage = new Stage();
-		    stage.setTitle("Create New Table");
-		    stage.setScene(scene);
-		    stage.show();
+//		    Scene scene = new Scene(tableCreationPane, 1000, 600);
+//		    for (String styleSheet : this.getScene().getStylesheets())
+//		  	  scene.getStylesheets().add(styleSheet);
+//		    Stage stage = new Stage();
+//		    stage.setTitle("Create New Table");
+//		    stage.setScene(scene);
+//		    stage.show();
+			new DockNode(asDockNode().getDockPane(), tableCreationPane, "Create New Table", JavaFXUtils.createIcon("/icons/add.png"), 1000.0, 600.0);
 		});
-		Button deleteButton = new Button("", JavaFXUtils.icon("/icons/minus.png"));
+		Button deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
 		deleteButton.setOnAction(action -> this.dbTreeView.dropAction());
-		FlowPane toolbar =  new FlowPane(addButton, deleteButton,
-				new Button("", JavaFXUtils.icon("/icons/details.png")));
+		Button scemaDetailsButton = new Button("", JavaFXUtils.createIcon("/icons/details.png"));
+		scemaDetailsButton.setOnAction(actionEvent -> {
+			SqlCodeArea codeArea = new SqlCodeArea(dbTreeView.copyScemaAction(), false, false);
+			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
+			scrollPane.setPrefWidth(500);
+
+			PopOver popOver = new PopOver(scrollPane);
+			popOver.setDetachable(false);
+			popOver.show(scemaDetailsButton);
+		});
+		FlowPane toolbar =  new FlowPane(searchButton, addButton, deleteButton, scemaDetailsButton);
 		toolbar.setPrefWidth(addButton.getWidth());
 		return toolbar;
 	}
@@ -63,7 +76,7 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner, Co
 	@Override
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
-			thisDockNode = new DockNode(this, "Structure", JavaFXUtils.icon("/icons/structure.png"));
+			thisDockNode = new DockNode(this, "Structure", JavaFXUtils.createIcon("/icons/structure.png"));
 		}
 		return thisDockNode;
 	}

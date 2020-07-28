@@ -101,7 +101,7 @@ public class DraggingTabPaneSupport {
 
         // move text to label graphic:
         if (tab.getText() != null && ! tab.getText().isEmpty()) {
-        	Node graphic = tab.getGraphic() != null ? tab.getGraphic() : dragIconUrl != null ? JavaFXUtils.icon(dragIconUrl) : null;
+        	Node graphic = tab.getGraphic() != null ? tab.getGraphic() : dragIconUrl != null ? JavaFXUtils.createIcon(dragIconUrl) : null;
             Label label = new Label(tab.getText(), graphic);
             
             tab.setText(null);
@@ -144,7 +144,7 @@ public class DraggingTabPaneSupport {
 
         // move text to label graphic:
         if (tab.getText() != null && ! tab.getText().isEmpty() && !tab.getText().equals("Add")) {
-        	Node graphic = tab.getGraphic() != null ? tab.getGraphic() : JavaFXUtils.icon(dragIconUrl);
+        	Node graphic = tab.getGraphic() != null ? tab.getGraphic() : JavaFXUtils.createIcon(dragIconUrl);
 //            Label label = new Label(tab.getText(), graphic);
 //            label.textProperty().bind(sqlPane.getSqlTableView().titleProperty());
 //            tab.textProperty().unbind();

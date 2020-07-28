@@ -196,20 +196,20 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = new ContextMenu();
 
-		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/icons/copy.png"));
+		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copy());
 
-		MenuItem menuItemCut = new MenuItem("Cut", JavaFXUtils.icon("/icons/cut.png"));
+		MenuItem menuItemCut = new MenuItem("Cut", JavaFXUtils.createIcon("/icons/cut.png"));
 		menuItemCut.setOnAction(event -> this.cut());
 
-		MenuItem menuItemPaste = new MenuItem("Paste", JavaFXUtils.icon("/icons/paste.png"));
+		MenuItem menuItemPaste = new MenuItem("Paste", JavaFXUtils.createIcon("/icons/paste.png"));
 		menuItemPaste.setOnAction(event -> this.paste());
 
-		MenuItem menuItemSuggestions = new MenuItem("Suggestions", JavaFXUtils.icon("/icons/suggestion.png"));
+		MenuItem menuItemSuggestions = new MenuItem("Suggestions", JavaFXUtils.createIcon("/icons/suggestion.png"));
 		menuItemSuggestions
 				.setOnAction(event -> this.autoCompleteAction(this.simulateControlSpaceEvent()));
 
-		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.icon("/icons/magnify.png"));
+		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
 		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
 		menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste, menuItemSuggestions, menuItemSearchAndReplace);

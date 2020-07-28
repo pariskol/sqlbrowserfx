@@ -69,7 +69,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		DraggingTabPaneSupport draggingSupport = new DraggingTabPaneSupport("/icons/thunder.png");
 		draggingSupport.addSupport(queryTabPane);
 		newConsoleTab = new Tab("");
-		newConsoleTab.setGraphic(JavaFXUtils.icon("/icons/add.png"));
+		newConsoleTab.setGraphic(JavaFXUtils.createIcon("/icons/add.png"));
 		queryTabPane.setOnMouseClicked(MouseEvent -> addTab());
 		newConsoleTab.setClosable(false);
 		queryTabPane.getTabs().add(newConsoleTab);
@@ -148,14 +148,14 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	
 	@Override
 	public FlowPane createToolbar() {
-		executeButton = new Button("", JavaFXUtils.icon("/icons/play.png"));
+		executeButton = new Button("", JavaFXUtils.createIcon("/icons/play.png"));
 		executeButton.setTooltip(new Tooltip("Execute"));
 		executeButton.setOnAction(actionEvent -> executeButonAction());
 		
-		stopExecutionButton = new Button("", JavaFXUtils.icon("/icons/stop.png"));
+		stopExecutionButton = new Button("", JavaFXUtils.createIcon("/icons/stop.png"));
 		executeButton.setTooltip(new Tooltip("Stop execution"));
 		
-		settingsButton = new Button("", JavaFXUtils.icon("/icons/settings.png"));
+		settingsButton = new Button("", JavaFXUtils.createIcon("/icons/settings.png"));
 		settingsButton.setOnMouseClicked(mouseEvent -> {
 			if (!popOverIsShowing) {
 				popOverIsShowing = true;

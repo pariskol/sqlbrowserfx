@@ -170,6 +170,13 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 		this.dockPane = dockPane;
 		setFloating(true);
 	}
+	
+	public DockNode(DockPane dockPane, Node contents, String title, Node graphic, Double width, Double height) {
+		this(contents, title, graphic);
+		this.dockPane = dockPane;
+		setFloating(true, null, width, height);
+	}
+
 
 	/**
 	 * Creates a default DockNode with a default title bar and layout.
@@ -250,6 +257,9 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 		maximizedProperty.set(maximized);
 	}
 
+	public void setFloating(boolean floating, Point2D translation) {
+		setFloating(floating, translation, 600.0, 400.0);
+	}
 	/**
 	 * Whether the node is currently floating.
 	 * 
@@ -259,7 +269,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 	 *                    pane when it becomes detached. Can be null indicating no
 	 *                    translation.
 	 */
-	public void setFloating(boolean floating, Point2D translation) {
+	public void setFloating(boolean floating, Point2D translation, Double width, Double height) {
 		if (floating && !this.isFloating()) {
 			// position the new stage relative to the old scene offset
 			Point2D floatScene = this.localToScene(0, 0);
@@ -311,7 +321,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 			borderPane.getStyleClass().add("dock-node-border");
 			borderPane.setCenter(this);
 			
-			Scene scene = new Scene(borderPane, 600, 400);
+			Scene scene = new Scene(borderPane, width, height);
 			if (ENABLE_JMETRO && JMETRO.equals("dark"))
 				new JMetro(Style.DARK).setParent(borderPane);	
 			else if (ENABLE_JMETRO && JMETRO.equals("light"))
