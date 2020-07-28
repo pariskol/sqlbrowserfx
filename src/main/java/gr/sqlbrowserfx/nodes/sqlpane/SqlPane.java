@@ -123,7 +123,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		tablesTabPane = new TabPane();
 
 		addTableTab = new Tab("");
-		addTableTab.setGraphic(JavaFXUtils.icon("/res/add.png"));
+		addTableTab.setGraphic(JavaFXUtils.icon("/icons/add.png"));
 		addTableTab.setClosable(false);
 		tablesTabPane.getTabs().add(addTableTab);
 
@@ -156,21 +156,21 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		this.setCenter(tablesTabPane);
 		this.setBottom(rowsCountLabel);
 
-		DraggingTabPaneSupport dragingSupport = new DraggingTabPaneSupport("res/table.png");
+		DraggingTabPaneSupport dragingSupport = new DraggingTabPaneSupport("/icons/table.png");
         dragingSupport.addSupport(this);
 	}
 
 	@Override
 	public FlowPane createToolbar() {
-		addButton = new Button("", JavaFXUtils.icon("/res/add.png"));
+		addButton = new Button("", JavaFXUtils.icon("/icons/add.png"));
 		addButton.setOnMouseClicked(event -> addButtonAction());
 		addButton.setOnAction(event -> addButtonAction());
 
-		deleteButton = new Button("", JavaFXUtils.icon("/res/minus.png"));
+		deleteButton = new Button("", JavaFXUtils.icon("/icons/minus.png"));
 		deleteButton.setOnMouseClicked(event -> deleteButtonAction());
 		deleteButton.setOnAction(event -> deleteButtonAction());
 
-		editButton = new Button("", JavaFXUtils.icon("/res/edit.png"));
+		editButton = new Button("", JavaFXUtils.icon("/icons/edit.png"));
 		editButton.setOnMouseClicked(mouseEvent -> editButtonAction(mouseEvent));
 		editButton.setOnAction(mouseEvent -> editButtonAction(this.simulateClickEvent(editButton)));
 
@@ -186,30 +186,30 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 		});
 
-		settingsButton = new Button("", JavaFXUtils.icon("/res/settings.png"));
+		settingsButton = new Button("", JavaFXUtils.icon("/icons/settings.png"));
 		settingsButton.setOnMouseClicked(event -> this.settingsButtonAction());
 		settingsButton.setOnAction(event -> this.settingsButtonAction());
 
-		searchButton = new Button("", JavaFXUtils.icon("/res/magnify.png"));
+		searchButton = new Button("", JavaFXUtils.icon("/icons/magnify.png"));
 		searchButton.setOnAction(actionEvent -> this.searchButtonAction());
 		searchButton.setOnMouseClicked(mouseEvent -> this.searchButtonAction());
 
-		importCsvButton = new Button("", JavaFXUtils.icon("res/csv-import.png"));
+		importCsvButton = new Button("", JavaFXUtils.icon("/icons/csv-import.png"));
 		importCsvButton.setOnAction(actionEvent -> this.importCsvAction());
 		importCsvButton.setOnMouseClicked(mouseEvent -> this.importCsvAction());
 
-		exportCsvButton = new Button("", JavaFXUtils.icon("res/csv.png"));
+		exportCsvButton = new Button("", JavaFXUtils.icon("/icons/csv.png"));
 		exportCsvButton.setOnAction(actionEvent -> this.exportCsvAction());
 		exportCsvButton.setOnMouseClicked(mouseEvent -> this.exportCsvAction());
 
-		sqlConsoleButton = new Button("", JavaFXUtils.icon("/res/console.png"));
+		sqlConsoleButton = new Button("", JavaFXUtils.icon("/icons/console.png"));
 		sqlConsoleButton.setOnMouseClicked(mouseEvent -> this.sqlConsoleButtonAction());
 		//FIXME maybe uncomment this
 //		sqlConsoleButton.setOnAction(mouseEvent -> this.sqlConsoleButtonAction());
 		
 		if (sqlConnector != null) {
-			refreshButton = new Button("", JavaFXUtils.icon("/res/refresh.png"));
-			tableSelectButton = new Button("", JavaFXUtils.icon("/res/database.png"));
+			refreshButton = new Button("", JavaFXUtils.icon("/icons/refresh.png"));
+			tableSelectButton = new Button("", JavaFXUtils.icon("/icons/database.png"));
 
 			tableSelectButton.setOnMouseClicked(event -> this.tableSelectButtonAction());
 			tableSelectButton.setOnAction(event -> this.tableSelectButtonAction());
@@ -217,7 +217,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			refreshButton.setOnMouseClicked(event -> refreshButtonAction());
 //FIXME something goes wrong if both action and mouse handlers set
 //			refreshButton.setOnAction(event -> refreshButtonAction());
-			columnsSettingsButton = new Button("", JavaFXUtils.icon("/res/table-settings.png"));
+			columnsSettingsButton = new Button("", JavaFXUtils.icon("/icons/table-settings.png"));
 			columnsSettingsButton.setOnMouseClicked(mouseEvent -> this.columnsSettingsButtonAction());
 
 			return new FlowPane(searchButton, settingsButton, columnsSettingsButton,tableSelectButton, refreshButton, addButton, editButton, deleteButton,
@@ -331,13 +331,13 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		sqlTableViewRef.setParent(tab);
 		tab.customTextProperty().addListener((observable, oldValue, newValue) -> {
 			if (getSelectedSqlTableView().isFilledByQuery()) {
-				tab.setCustomGraphic(JavaFXUtils.icon("res/table-y.png"));
+				tab.setCustomGraphic(JavaFXUtils.icon("/icons/table-y.png"));
             }
 			else if (tab.getGraphic() != null && viewsBox != null && viewsBox.getItems().contains(tab.getCustomText())) {
-				tab.setCustomGraphic(JavaFXUtils.icon("res/view.png"));
+				tab.setCustomGraphic(JavaFXUtils.icon("/icons/view.png"));
             }
 			else if (tab.getGraphic() != null && tablesBox != null && tablesBox.getItems().contains(tab.getCustomText())) {
-				tab.setCustomGraphic(JavaFXUtils.icon("res/table.png"));
+				tab.setCustomGraphic(JavaFXUtils.icon("/icons/table.png"));
             }
 		});
 		
@@ -377,7 +377,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	public ContextMenu createContextMenu() {
 		ContextMenu contextMenu = new ContextMenu();
 
-		MenuItem menuItemEdit = new MenuItem("Edit", JavaFXUtils.icon("/res/edit.png"));
+		MenuItem menuItemEdit = new MenuItem("Edit", JavaFXUtils.icon("/icons/edit.png"));
 		menuItemEdit.setOnAction(event -> {
 			if (isFullMode()) {
 				this.fullModeAction();
@@ -386,14 +386,14 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 		});
 
-		MenuItem menuItemCellEdit = new MenuItem("Edit cell", JavaFXUtils.icon("/res/edit.png"));
+		MenuItem menuItemCellEdit = new MenuItem("Edit cell", JavaFXUtils.icon("/icons/edit.png"));
 
 		menuItemCellEdit.setOnAction(event -> {
 			if (getSelectedSqlTableView().getSelectedCell() != null)
 				getSelectedSqlTableView().getSelectedCell().startEdit();
 		});
 
-		MenuItem menuItemCopyCell = new MenuItem("Copy cell", JavaFXUtils.icon("/res/copy.png"));
+		MenuItem menuItemCopyCell = new MenuItem("Copy cell", JavaFXUtils.icon("/icons/copy.png"));
 
 		menuItemCopyCell.setOnAction(event -> {
 			if (getSelectedSqlTableView().getSelectedCell() != null) {
@@ -403,13 +403,13 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 		});
 
-		MenuItem menuItemDelete = new MenuItem("Delete", JavaFXUtils.icon("/res/minus.png"));
+		MenuItem menuItemDelete = new MenuItem("Delete", JavaFXUtils.icon("/icons/minus.png"));
 		menuItemDelete.setOnAction(event -> this.deleteButtonAction());
 
-		MenuItem menuItemCopy = new MenuItem("Copy row", JavaFXUtils.icon("/res/copy.png"));
+		MenuItem menuItemCopy = new MenuItem("Copy row", JavaFXUtils.icon("/icons/copy.png"));
 		menuItemCopy.setOnAction(actionEvent -> this.copyAction());
 
-		MenuItem menuItemCompare = new MenuItem("Compare", JavaFXUtils.icon("/res/compare.png"));
+		MenuItem menuItemCompare = new MenuItem("Compare", JavaFXUtils.icon("/icons/compare.png"));
 		menuItemCompare.setOnAction(actionEvent -> compareAction(simulateClickEvent()));
 		
 		contextMenu.getItems().addAll(menuItemEdit, menuItemCellEdit, menuItemCopyCell, menuItemCopy, menuItemCompare,
@@ -436,17 +436,17 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	private SqlTableRowEditBox createEditBox(MapTableViewRow sqlTableRow, boolean resizeable, Orientation toolBarOrientation) {
 		SqlTableRowEditBox editBox = new SqlTableRowEditBox(getSelectedSqlTableView(), sqlTableRow, resizeable);
 
-		Button copyButton = new Button("", JavaFXUtils.icon("/res/copy.png"));
+		Button copyButton = new Button("", JavaFXUtils.icon("/icons/copy.png"));
 		copyButton.setTooltip(new Tooltip("Copy"));
 		copyButton.setOnAction(actionEvent -> editBox.copy());
 		copyButton.setFocusTraversable(false);
 
-		Button pasteButton = new Button("", JavaFXUtils.icon("/res/paste.png"));
+		Button pasteButton = new Button("", JavaFXUtils.icon("/icons/paste.png"));
 		pasteButton.setTooltip(new Tooltip("Paste"));
 		pasteButton.setOnAction(actionEvent -> this.pasteAction(editBox));
 		pasteButton.setFocusTraversable(false);
 
-		Button refreshButton = new Button("", JavaFXUtils.icon("/res/refresh.png"));
+		Button refreshButton = new Button("", JavaFXUtils.icon("/icons/refresh.png"));
 		refreshButton.setTooltip(new Tooltip("Refresh"));
 		refreshButton.setOnAction(event -> {
 			editBox.refresh();
@@ -483,14 +483,14 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 	
 		addRecordTab = new Tab("Add");
-		addRecordTab.setGraphic(JavaFXUtils.icon("/res/add.png"));
+		addRecordTab.setGraphic(JavaFXUtils.icon("/icons/add.png"));
 		addRecordTab.setClosable(false);
 	
 		SqlTableRowEditBox editBox = createEditBox(null, true);
 	
-		Button addBtn = new Button("Add", JavaFXUtils.icon("/res/check.png"));
+		Button addBtn = new Button("Add", JavaFXUtils.icon("/icons/check.png"));
 		addBtn.setTooltip(new Tooltip("Add"));
-		Button clearBtn = new Button("", JavaFXUtils.icon("/res/clear.png"));
+		Button clearBtn = new Button("", JavaFXUtils.icon("/icons/clear.png"));
 		clearBtn.setTooltip(new Tooltip("Clear"));
 		clearBtn.setOnAction(event -> editBox.clear());
 		addBtn.setOnMouseClicked(event2 -> this.insertRecordToSqlTableViewRef(editBox));
@@ -668,7 +668,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		sqlTableRow.addObserver(editBox);
 
-		Button editButton = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
+		Button editButton = new Button("Edit", JavaFXUtils.icon("/icons/check.png"));
 		editButton.setTooltip(new Tooltip("Edit"));
 		editButton.setOnAction(event -> this.updateRecordOfSqlTableViewRef(editBox, sqlTableRow));
 		editButton.setOnKeyPressed(keyEvent -> {
@@ -689,7 +689,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				: "record";
 
 		Tab editTab = new Tab(tabTitle);
-		editTab.setGraphic(JavaFXUtils.icon("res/record-edit.png"));
+		editTab.setGraphic(JavaFXUtils.icon("/icons/record-edit.png"));
 		editTab.setContent(editBox);
 		editTab.setOnCloseRequest(closeEvent -> sqlTableRow.removeObserver(editBox));
 
@@ -725,7 +725,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		SqlTableRowEditBox editBox = this.createEditBox(null, false);
 
-		Button addBtn = new Button("Add", JavaFXUtils.icon("/res/check.png"));
+		Button addBtn = new Button("Add", JavaFXUtils.icon("/icons/check.png"));
 		addBtn.setTooltip(new Tooltip("Add"));
 		editBox.getMainBox().getChildren().add(addBtn);
 
@@ -761,7 +761,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		popOver = new PopOver(editBox);
 
 		if (getSelectedSqlTableView().getPrimaryKey() != null) {
-			Button editBtn = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
+			Button editBtn = new Button("Edit", JavaFXUtils.icon("/icons/check.png"));
 			editBtn.setTooltip(new Tooltip("Edit"));
 			editBtn.setOnAction(submitEvent -> this.updateRecordOfSqlTableViewRef(editBox, sqlTableRow));
 			editBtn.setOnKeyPressed(keyEvent -> {
@@ -823,7 +823,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			SqlTableRowEditBox editBox = createEditBox(row, true);
 
 			row.addObserver(editBox);
-			Button editButton = new Button("Edit", JavaFXUtils.icon("/res/check.png"));
+			Button editButton = new Button("Edit", JavaFXUtils.icon("/icons/check.png"));
 			editButton.setTooltip(new Tooltip("Edit"));
 			editButton.setOnAction(event -> this.updateRecordOfSqlTableViewRef(editBox, row));
 			editBox.getMainBox().getChildren().add(editButton);
@@ -839,7 +839,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		if (isFullMode()) {
 			Tab compareTab = new Tab("Compare");
-			compareTab.setGraphic(JavaFXUtils.icon("/res/compare.png"));
+			compareTab.setGraphic(JavaFXUtils.icon("/icons/compare.png"));
 			compareTab.setContent(compareBox);
 			compareTab.setOnCloseRequest(closeEvent -> {
 				for (Node node : compareBox.getChildren()) {
@@ -991,8 +991,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 
 		exportCsvButton.requestFocus();
-		Button startButton = new Button("Export", JavaFXUtils.icon("/res/csv.png"));
-		Button dirButton = new Button("Search", JavaFXUtils.icon("/res/magnify.png"));
+		Button startButton = new Button("Export", JavaFXUtils.icon("/icons/csv.png"));
+		Button dirButton = new Button("Search", JavaFXUtils.icon("/icons/magnify.png"));
 
 		dirButton.setOnAction(actionEvent -> {
 			DirectoryChooser directoryChooser = new DirectoryChooser();

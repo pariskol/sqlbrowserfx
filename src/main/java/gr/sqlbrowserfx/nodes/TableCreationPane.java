@@ -47,22 +47,22 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner, Simpl
 	
 	@Override
 	public FlowPane createToolbar() {
-		Button addButton = new Button("", JavaFXUtils.icon("/res/add.png"));
+		Button addButton = new Button("", JavaFXUtils.icon("/icons/add.png"));
 		addButton.setOnMouseClicked(mouseEvent -> {
 			ColumnCreationBox columnCreationBox = new ColumnCreationBox(sqlConnector);
 			columnBoxesListView.getItems().add(columnCreationBox);
 		});
-		Button deleteButton = new Button("", JavaFXUtils.icon("/res/minus.png"));
+		Button deleteButton = new Button("", JavaFXUtils.icon("/icons/minus.png"));
 		deleteButton.setOnAction(actionEvent -> {
 			if (columnBoxesListView.getSelectionModel().getSelectedItem() != null)
 				columnBoxesListView.getItems().remove(columnBoxesListView.getSelectionModel().getSelectedIndex());	
 		});
-		Button createQueryButton = new Button("", JavaFXUtils.icon("/res/details.png"));
+		Button createQueryButton = new Button("", JavaFXUtils.icon("/icons/details.png"));
 		createQueryButton.setOnAction(actionEvent -> {
 			sqlCodeArea.clear();
 			sqlCodeArea.appendText(createCreateQuery());
 		});
-		Button createTableButton = new Button("", JavaFXUtils.icon("/res/check.png"));
+		Button createTableButton = new Button("", JavaFXUtils.icon("/icons/check.png"));
 		createTableButton.setOnAction(actionEvent -> {
 			sqlConsolePane.executeButonAction();
 		});

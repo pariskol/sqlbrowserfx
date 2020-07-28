@@ -65,7 +65,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
 			if (sqlPane != null) {
-				thisDockNode = new DockNode(this, sqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.icon("/res/console.png"));
+				thisDockNode = new DockNode(this, sqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.icon("/icons/console.png"));
 				thisDockNode.setOnClose(() -> this.listeners.clear());
 			}
 		}
@@ -76,12 +76,12 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	public FlowPane createToolbar() {
 		FlowPane toolbar = super.createToolbar();
 		//FIXME 
-		historyButton = new Button("", JavaFXUtils.icon("res/monitor.png"));
+		historyButton = new Button("", JavaFXUtils.icon("/icons/monitor.png"));
 		historyButton.setTooltip(new Tooltip("Show history"));
 		historyButton.setOnMouseClicked(mouseEvent -> {
 			if (!historyShowing) {
 				historyShowing = true;
-				DockNode dockNode = new DockNode(new VirtualizedScrollPane<SqlCodeArea>(historyCodeArea), "Query history", JavaFXUtils.icon("/res/monitor.png"));
+				DockNode dockNode = new DockNode(new VirtualizedScrollPane<SqlCodeArea>(historyCodeArea), "Query history", JavaFXUtils.icon("/icons/monitor.png"));
 				dockNode.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),DockWeights.asDoubleArrray(0.7f, 0.3f));
 				dockNode.setOnClose(() -> historyShowing = false);
 			}

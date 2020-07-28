@@ -51,14 +51,14 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		this.allItems = new ArrayList<>();
 		this.listeners = new ArrayList<>();
 
-		rootItem = new TreeItem<>(dbPath, JavaFXUtils.icon("/res/database.png"));
+		rootItem = new TreeItem<>(dbPath, JavaFXUtils.icon("/icons/database.png"));
 		rootItem.setExpanded(true);
 
-		tablesRootItem = new TreeItem<>("Tables", JavaFXUtils.icon("/res/table.png"));
+		tablesRootItem = new TreeItem<>("Tables", JavaFXUtils.icon("/icons/table.png"));
 		tablesRootItem.setExpanded(true);
-		viewsRootItem = new TreeItem<>("Views", JavaFXUtils.icon("/res/view.png"));
+		viewsRootItem = new TreeItem<>("Views", JavaFXUtils.icon("/icons/view.png"));
 		viewsRootItem.setExpanded(true);
-		indicesRootItem = new TreeItem<>("Indices", JavaFXUtils.icon("/res/index.png"));
+		indicesRootItem = new TreeItem<>("Indices", JavaFXUtils.icon("/icons/index.png"));
 		indicesRootItem.setExpanded(true);
 		rootItem.getChildren().addAll(tablesRootItem, viewsRootItem, indicesRootItem);
 
@@ -125,17 +125,17 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 					if (type.contains("table") || type.contains("TABLE")) {
 						this.fillTableTreeItem(treeItem);
 						tablesRootItem.getChildren().add(treeItem);
-						treeItem.setGraphic(JavaFXUtils.icon("/res/table.png"));
+						treeItem.setGraphic(JavaFXUtils.icon("/icons/table.png"));
 						//TODO find another way with no calls to static class SqlCodeAreaSyntax
 						SqlCodeAreaSyntax.bind(name, this.getColumnsForTable(name));
 					} else if (type.contains("view") || type.contains("VIEW")) {
 						this.fillViewTreeItem(treeItem);
 						viewsRootItem.getChildren().add(treeItem);
-						treeItem.setGraphic(JavaFXUtils.icon("/res/view.png"));
+						treeItem.setGraphic(JavaFXUtils.icon("/icons/view.png"));
 					} else if (type.contains("index") || type.contains("INDEX")) {
 						this.fillIndexTreeItem(treeItem);
 						indicesRootItem.getChildren().add(treeItem);
-						treeItem.setGraphic(JavaFXUtils.icon("/res/index.png"));
+						treeItem.setGraphic(JavaFXUtils.icon("/icons/index.png"));
 					}
 				}
 			} catch (Exception e) {
@@ -177,7 +177,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	}
 
 	private void fillTVTreeItem(TreeItem<String> treeItem, String schemaColumn) throws SQLException {
-		TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.icon("/res/script.png"));
+		TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.icon("/icons/script.png"));
 		treeItem.getChildren().add(schemaTree);
 
 		sqlConnector.getSchemas(treeItem.getValue(), rset -> {
@@ -186,7 +186,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 			schemaTree.getChildren().add(schemaItem);
 		});
 
-		TreeItem<String> columnsTree = new TreeItem<>("columns", JavaFXUtils.icon("/res/columns.png"));
+		TreeItem<String> columnsTree = new TreeItem<>("columns", JavaFXUtils.icon("/icons/columns.png"));
 		treeItem.getChildren().add(columnsTree);
 
 		sqlConnector.executeQueryRaw("select * from " + treeItem.getValue() + " limit 1", rset -> {
@@ -197,9 +197,9 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 			for (String column : sqlTable.getColumns()) {
 				TreeItem<String> columnTreeItem = new TreeItem<String>(column);
 				if (column.equals(sqlTable.getPrimaryKey()))
-					columnTreeItem.setGraphic(JavaFXUtils.icon("/res/primary-key.png"));
+					columnTreeItem.setGraphic(JavaFXUtils.icon("/icons/primary-key.png"));
 				else if (sqlTable.isForeignKey(column)) {
-					columnTreeItem.setGraphic(JavaFXUtils.icon("/res/foreign-key.png"));
+					columnTreeItem.setGraphic(JavaFXUtils.icon("/icons/foreign-key.png"));
 					TreeItem<String> referenceItem = new TreeItem<>(
 							sqlConnector.findFoireignKeyReference(treeItem.getValue(), column));
 					columnTreeItem.getChildren().add(referenceItem);
@@ -217,9 +217,9 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 				sqlConnector.executeQueryRaw("select * from sqlite_master where type like 'trigger' and tbl_name like '" +treeItem.getValue()+"'", rset -> {
 					treeItem.getChildren().get(2).getChildren().clear();
 					while (rset.next()) {
-						TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString("NAME"), JavaFXUtils.icon("/res/trigger.png"));
+						TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString("NAME"), JavaFXUtils.icon("/icons/trigger.png"));
 						String schema = rset.getString("SQL");
-						triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.icon("/res/script.png")));
+						triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.icon("/icons/script.png")));
 						ObservableList<TreeItem<String>> triggerItems = treeItem.getChildren().get(2).getChildren();
 						triggerItems.add(triggerTreeItem);
 					}
@@ -231,12 +231,12 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	
 	private void fillTableTreeItem(TreeItem<String> treeItem) throws SQLException {
 		this.fillTVTreeItem(treeItem, sqlConnector.getTableSchemaColumn());
-			TreeItem<String> triggersTreeItem = new TreeItem<String>("triggers", JavaFXUtils.icon("/res/trigger.png"));
+			TreeItem<String> triggersTreeItem = new TreeItem<String>("triggers", JavaFXUtils.icon("/icons/trigger.png"));
 			if (sqlConnector instanceof SqliteConnector) {
 				sqlConnector.executeQuery("select * from sqlite_master where type like 'trigger' and tbl_name like '" +treeItem.getValue()+"'", rset -> {
-					TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString("NAME"), JavaFXUtils.icon("/res/trigger.png"));
+					TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString("NAME"), JavaFXUtils.icon("/icons/trigger.png"));
 					String schema = rset.getString("SQL");
-					triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.icon("/res/script.png")));
+					triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.icon("/icons/script.png")));
 					triggersTreeItem.getChildren().add(triggerTreeItem);
 				});
 				
@@ -249,7 +249,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	}
 
 	private void fillIndexTreeItem(TreeItem<String> treeItem) throws SQLException {
-		TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.icon("/res/script.png"));
+		TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.icon("/icons/script.png"));
 		treeItem.getChildren().add(schemaTree);
 
 		sqlConnector.getSchemas(treeItem.getValue(), rset -> {
@@ -262,19 +262,19 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	public ContextMenu createContextMenu() {
 		ContextMenu contextMenu = new ContextMenu();
 
-		MenuItem menuItemCopy = new MenuItem("Copy text", JavaFXUtils.icon("/res/copy.png"));
+		MenuItem menuItemCopy = new MenuItem("Copy text", JavaFXUtils.icon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copyAction());
 		
-		MenuItem menuItemCopyScema = new MenuItem("Copy schema", JavaFXUtils.icon("/res/copy.png"));
+		MenuItem menuItemCopyScema = new MenuItem("Copy schema", JavaFXUtils.icon("/icons/copy.png"));
 		menuItemCopyScema.setOnAction(event -> this.copyScemaAction());
 
-		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.icon("/res/minus.png"));
+		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.icon("/icons/minus.png"));
 		menuItemDrop.setOnAction(event -> dropAction());
 
-		MenuItem menuItemSearch = new MenuItem("Search...", JavaFXUtils.icon("/res/magnify.png"));
+		MenuItem menuItemSearch = new MenuItem("Search...", JavaFXUtils.icon("/icons/magnify.png"));
 		menuItemSearch.setOnAction(event -> this.showSearch());
 		
-		MenuItem menuItemRefresh = new MenuItem("Refresh View", JavaFXUtils.icon("/res/refresh.png"));
+		MenuItem menuItemRefresh = new MenuItem("Refresh View", JavaFXUtils.icon("/icons/refresh.png"));
 		menuItemRefresh.setOnAction(event -> {
 			try {
 				this.clearAll();

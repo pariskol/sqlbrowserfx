@@ -13,7 +13,7 @@ public class DSqlConsoleView extends SqlConsolePane implements Dockable{
 
 	public DSqlConsoleView(SqlConnector sqlConnector) {
 		super(sqlConnector);
-		thisDockNode = new DockNode(this, "SqlConsole", JavaFXUtils.icon("/res/console.png"));
+		thisDockNode = new DockNode(this, "SqlConsole", JavaFXUtils.icon("/icons/console.png"));
 	}
 
 	@Override

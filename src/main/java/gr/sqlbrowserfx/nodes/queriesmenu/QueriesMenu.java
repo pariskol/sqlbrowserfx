@@ -26,11 +26,11 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 	HashMap<String, String> queriesMap;
 	
 	public QueriesMenu() {
-		super("Saved queries", JavaFXUtils.icon("/res/thunder.png"));
+		super("Saved queries", JavaFXUtils.icon("/icons/thunder.png"));
 		menuItemsMap = new HashMap<>();
 		queriesMap = new HashMap<>();
 		
-		MenuItem refreshMenuItem = new MenuItem("Refresh Queries", JavaFXUtils.icon("/res/refresh.png"));
+		MenuItem refreshMenuItem = new MenuItem("Refresh Queries", JavaFXUtils.icon("/icons/refresh.png"));
 		refreshMenuItem.setOnAction(action -> this.loadQueries());
 		this.getItems().add(refreshMenuItem);
 		this.loadQueries();
@@ -44,7 +44,7 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 			sqlConnector.executeQuery("select distinct category from saved_queries", rset -> {
 				String category = rset.getString(1); 
 				Menu categorySubMenu =  new Menu(category);
-				categorySubMenu.setGraphic(JavaFXUtils.icon("/res/folder.png"));
+				categorySubMenu.setGraphic(JavaFXUtils.icon("/icons/folder.png"));
 				menuItemsMap.put(category, categorySubMenu);
 				this.getItems().add(categorySubMenu);
 				

@@ -1,15 +1,5 @@
 package gr.sqlbrowserfx.nodes.codeareas.log;
 
-import java.time.Duration;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.regex.Matcher;
-
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.model.StyleSpans;
-import org.fxmisc.richtext.model.StyleSpansBuilder;
-import org.reactfx.Subscription;
-
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
@@ -18,6 +8,15 @@ import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.model.StyleSpans;
+import org.fxmisc.richtext.model.StyleSpansBuilder;
+import org.reactfx.Subscription;
+
+import java.time.Duration;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.regex.Matcher;
 
 public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLighter {
 
@@ -97,10 +96,10 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = new ContextMenu();
 
-		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/res/copy.png"));
+		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copy());
 
-		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.icon("/res/magnify.png"));
+		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.icon("/icons/magnify.png"));
 		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
 		menu.getItems().addAll(menuItemCopy,menuItemSearchAndReplace);

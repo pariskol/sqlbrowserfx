@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
@@ -64,6 +65,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			searchAndReplacePopOver.hide();
 		});
 
+		this.setParagraphGraphicFactory(LineNumberFactory.get(this));
 		this.enableHighlighting();
 	}
 
@@ -194,20 +196,20 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = new ContextMenu();
 
-		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/res/copy.png"));
+		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.icon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copy());
 
-		MenuItem menuItemCut = new MenuItem("Cut", JavaFXUtils.icon("/res/cut.png"));
+		MenuItem menuItemCut = new MenuItem("Cut", JavaFXUtils.icon("/icons/cut.png"));
 		menuItemCut.setOnAction(event -> this.cut());
 
-		MenuItem menuItemPaste = new MenuItem("Paste", JavaFXUtils.icon("/res/paste.png"));
+		MenuItem menuItemPaste = new MenuItem("Paste", JavaFXUtils.icon("/icons/paste.png"));
 		menuItemPaste.setOnAction(event -> this.paste());
 
-		MenuItem menuItemSuggestions = new MenuItem("Suggestions", JavaFXUtils.icon("/res/suggestion.png"));
+		MenuItem menuItemSuggestions = new MenuItem("Suggestions", JavaFXUtils.icon("/icons/suggestion.png"));
 		menuItemSuggestions
 				.setOnAction(event -> this.autoCompleteAction(this.simulateControlSpaceEvent()));
 
-		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.icon("/res/magnify.png"));
+		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.icon("/icons/magnify.png"));
 		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
 		menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste, menuItemSuggestions, menuItemSearchAndReplace);
