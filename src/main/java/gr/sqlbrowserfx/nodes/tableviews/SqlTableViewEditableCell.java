@@ -1,6 +1,7 @@
 package gr.sqlbrowserfx.nodes.tableviews;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.factories.DialogFactory;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
@@ -73,8 +74,11 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 		if (newValue != null && !newValue.equals(getText())) {
 			String column = this.getTableColumn().getText();
 			parentTableView.getSelectionModel().getSelectedItem().set(column, newValue);
-			if (parentTableView.updateSelectedRow() == 0) {
+			try {
+				parentTableView.updateSelectedRow();
 				parentTableView.getSelectionModel().getSelectedItem().set(column, oldValue);
+			} catch (Exception e) {
+				DialogFactory.createErrorDialog(e);
 			}
 		}
 	}

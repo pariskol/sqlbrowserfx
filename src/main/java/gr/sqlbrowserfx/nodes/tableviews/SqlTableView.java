@@ -296,7 +296,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		}
 	}
 	
-	public int updateSelectedRow() {
+	public void updateSelectedRow() throws Exception {
 		MapTableViewRow sqlTableRow = this.getSelectionModel().getSelectedItem();
 		Set<String> columns = this.getSqlTable().getColumns();
 		String query = "update " + this.getTableName() + " set ";
@@ -309,13 +309,8 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 					elm = sqlTableRow.get(column).toString();
 				// type checking
 				Object actualValue = null;
-				try {
-					if (elm != null && !elm.isEmpty())
-						actualValue = sqlConnector.castToDBType(this.getSqlTable(), column, elm);
-				} catch (Exception e) {
-					logger.error(e.getMessage(), e);
-					return 0;
-				}
+				if (elm != null && !elm.isEmpty())
+					actualValue = sqlConnector.castToDBType(this.getSqlTable(), column, elm);
 				params.add(actualValue);
 				query += column + "= ? ,";
 			}
@@ -326,28 +321,20 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 
 		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
 		LoggerFactory.getLogger("SQLBROWSER").debug(message);
+		sqlConnector.executeUpdate(query, params);
 
-		try {
-			sqlConnector.executeUpdate(query, params);
-
-			for (String column : columns) {
-				String elm = null;
-				if (sqlTableRow.get(column) != null)
-					elm = sqlTableRow.get(column).toString();
-				
-				Object actualValue = null;
-				if (elm != null) 
-					actualValue = sqlConnector.castToDBType(this.getSqlTable(), column, elm);
-				sqlTableRow.set(column, actualValue);
-			}
-			// notify listeners
-			sqlTableRow.changed();
-		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
-			return 0;
+		for (String column : columns) {
+			String elm = null;
+			if (sqlTableRow.get(column) != null)
+				elm = sqlTableRow.get(column).toString();
+			
+			Object actualValue = null;
+			if (elm != null) 
+				actualValue = sqlConnector.castToDBType(this.getSqlTable(), column, elm);
+			sqlTableRow.set(column, actualValue);
 		}
-		
-		return 1;
+		// notify listeners
+		sqlTableRow.changed();
 	}
 	
 	public int deleteRecord(MapTableViewRow sqlTableRow) {
