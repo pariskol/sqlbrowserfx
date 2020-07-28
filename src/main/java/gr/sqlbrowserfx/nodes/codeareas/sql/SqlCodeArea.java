@@ -320,34 +320,43 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		
 		suggestionsList.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
-				final String word = (suggestionsList.getSelectionModel().getSelectedItem() != null) ?
-										suggestionsList.getSelectionModel().getSelectedItem() :
-											suggestionsList.getItems().get(0);
-
-				Platform.runLater(() -> {
-					if (insertMode) {
-						int trl = 0;
-						if (query.contains(".")) {
-							String[] split = query.split("\\.");
-							if (split.length > 1) {
-								trl = split[1].length();
-							}
-						}
-						this.insertText(this.getCaretPosition(), word.substring(0 + trl));
-					} else {
-						this.replaceText(caretPosition - query.length(), caretPosition, word);
-						this.moveTo(caretPosition + word.length() - query.length());
-					}
-					insertMode = false;
-				});
-				
-				SqlCodeArea.this.hideAutocompletePopup();
-				SqlCodeArea.this.autoCompleteAction(keyEvent);
+				listViewOnEnterActrion(suggestionsList, query, caretPosition, keyEvent);
 			}
 			if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.SPACE) {
 				hideAutocompletePopup();
 			}
 		});
+		suggestionsList.setOnMouseClicked(mouseEvent -> listViewOnEnterActrion(suggestionsList, query, caretPosition,
+							new KeyEvent(suggestionsList, suggestionsList, 
+									KeyEvent.KEY_PRESSED, null, null, KeyCode.ENTER, 
+									false, false, false, false)));
+	}
+
+	private void listViewOnEnterActrion(ListView<String> suggestionsList, final String query, final int caretPosition,
+			KeyEvent keyEvent) {
+		final String word = (suggestionsList.getSelectionModel().getSelectedItem() != null) ?
+								suggestionsList.getSelectionModel().getSelectedItem() :
+									suggestionsList.getItems().get(0);
+
+		Platform.runLater(() -> {
+			if (insertMode) {
+				int trl = 0;
+				if (query.contains(".")) {
+					String[] split = query.split("\\.");
+					if (split.length > 1) {
+						trl = split[1].length();
+					}
+				}
+				this.insertText(this.getCaretPosition(), word.substring(0 + trl));
+			} else {
+				this.replaceText(caretPosition - query.length(), caretPosition, word);
+				this.moveTo(caretPosition + word.length() - query.length());
+			}
+			insertMode = false;
+		});
+		
+		SqlCodeArea.this.hideAutocompletePopup();
+		SqlCodeArea.this.autoCompleteAction(keyEvent);
 	}
 
 	private void showAutoCompletePopup() {

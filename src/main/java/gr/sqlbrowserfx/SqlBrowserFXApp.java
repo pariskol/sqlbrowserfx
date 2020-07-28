@@ -358,9 +358,6 @@ public class SqlBrowserFXApp extends Application {
 				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 				newSqlPane.asDockNode().setDockPane(dockPane);
 				newSqlPane.asDockNode().setFloating(true);
-//				newSqlPane.asDockNode().dock(dockPane, DockPos.RIGHT);
-//				newSqlPane.getSqlConsoleBox().addObserver(queriesMenu);
-//				newSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
 			});
 		});
 		
@@ -377,18 +374,6 @@ public class SqlBrowserFXApp extends Application {
 			VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
 		    JavaFXUtils.applyJMetro(vb);
 			new DockNode(dockPane, vb, "BashFX", JavaFXUtils.icon("/res/console.png"));
-
-//			Platform.runLater(() -> {
-//				VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
-//			    JavaFXUtils.applyJMetro(vb);
-//			    Scene scene = new Scene(vb, 800, 600);
-//			    for (String styleSheet : primaryScene.getStylesheets())
-//			  	  scene.getStylesheets().add(styleSheet);
-//			    Stage stage = new Stage();
-//			    stage.setTitle("BashFX");
-//			    stage.setScene(scene);
-//			    stage.show();
-//			});
 		});
 		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.icon("/res/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
@@ -424,28 +409,10 @@ public class SqlBrowserFXApp extends Application {
 		      
 		    VirtualizedScrollPane<LogCodeArea> virtualizedScrollPane =new VirtualizedScrollPane<>(logArea);
 		    JavaFXUtils.applyJMetro(virtualizedScrollPane);
-		    Scene scene = new Scene(virtualizedScrollPane, 800, 600);
-		    for (String styleSheet : primaryScene.getStylesheets())
-		  	  scene.getStylesheets().add(styleSheet);
-		    Stage stage = new Stage();
-		    stage.setTitle("SqlBrowserFX Log");
-		    stage.setScene(scene);
-		    stage.setOnCloseRequest(closeEvent -> {
-			    DockNode dockNode = new DockNode(virtualizedScrollPane, "SqlBrowserFX Log", JavaFXUtils.icon("/res/monitor.png"));
-				dockNode.dock(dockPane, DockPos.RIGHT);
-				dockNode.setOnClose(() -> {
-					tailer.stop();
-					tailerDaemon.interrupt();
-				});
-		    });
-		    stage.show();
-		    
-
+			new DockNode(dockPane, virtualizedScrollPane, "Log", JavaFXUtils.icon("/res/monitor.png"));
 		});
 
 		menu1.getItems().addAll(bashCodeAreaItem, logItem, sqlPaneViewItem, jsonTableViewItem);
-		if (sqlConnector instanceof SqliteConnector)
-			menu1.getItems().add(webViewItem);
 
 		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
 		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/res/spark.png", 16.0, 16.0));

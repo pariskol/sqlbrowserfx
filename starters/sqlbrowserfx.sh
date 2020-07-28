@@ -2,7 +2,7 @@
 
 cd "$(dirname "$0")"
 
-main_jar=$(find . -name "sql-browser*")
+main_jar=$(find . -name "sqlbrowser*.jar")
 main_class=gr.sqlbrowserfx.SqlBrowserFXApp
 
 $JAVA_HOME/java -Xmx512m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 \

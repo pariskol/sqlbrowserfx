@@ -1,7 +1,10 @@
 package org.dockfx;
 
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
+import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
+import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -13,12 +16,13 @@ public class DockTabPane extends TabPane implements ContextMenuOwner, Dockable {
 	public DockTabPane() {
 		super();
 		this.setContextMenu(createContextMenu());
-//		new DraggingTabPaneSupport().addSupport(this);
+		new DraggingTabPaneSupport().addSupport(this);
 	}
 
 	public void addTab(DockNode dockNode) {
 		Tab tab = new Tab(dockNode.getTitle(), dockNode);
 		tab.setGraphic(dockNode.getGraphic());
+		dockNode.setGraphic(null);
 		tab.setOnClosed(closeEvent -> {
 			Runnable closeAction = dockNode.getOnCloseAction();
 			if (closeAction != null)
@@ -34,11 +38,16 @@ public class DockTabPane extends TabPane implements ContextMenuOwner, Dockable {
 			this.getTabs().remove(tab);
 			DockNode dockNode = (DockNode) tab.getContent();
 			dockNode.dock(dockNode.getDockPane(), DockPos.TOP, parent, DockWeights.asDoubleArrray(0.5f, 0.5f));
+			dockNode.setGraphic(getGraphicFromTab(tab));
 			dockNode.showTitleBar();
-			dockNode.setGraphic(tab.getGraphic());
 			dockNode.getDockPane().undock(parent);
 		}
 	}
+	
+	private Node getGraphicFromTab(Tab tab) {
+		return ((Label)tab.getGraphic()).getGraphic();
+	}
+	
 	@Override
 	public ContextMenu createContextMenu() {
 
@@ -48,8 +57,8 @@ public class DockTabPane extends TabPane implements ContextMenuOwner, Dockable {
 			DockNode dockNode = (DockNode) selectedTab.getContent();
 			this.getTabs().remove(selectedTab);
 			dockNode.undock();
+			dockNode.setGraphic(getGraphicFromTab(selectedTab));
 			dockNode.showTitleBar();
-			dockNode.setGraphic(selectedTab.getGraphic());
 			dockNode.setFloating(true);
 			
 			undockIfNeccessary();

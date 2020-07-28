@@ -1,1 +1,2 @@
 /home/paris/sqlite-dbs/chinook.db
+/home/paris/psanta.db
