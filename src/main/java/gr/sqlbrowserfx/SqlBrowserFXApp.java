@@ -79,7 +79,7 @@ import javafx.stage.Stage;
 public class SqlBrowserFXApp extends Application {
 
 	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
-	private static final String CSS_THEME = (String) PropertiesLoader.getProperty("sqlbrowsefx.css.theme", String.class, "/res/flat-blue.css");
+	private static final String CSS_THEME = (String) PropertiesLoader.getProperty("sqlbrowsefx.css.theme", String.class, "//icons/flat-blue.css");
 	private static final Boolean AUTO_COMMIT_IS_ENABLED = (Boolean) PropertiesLoader.getProperty("sqlconnector.enable.autocommit", Boolean.class, true);
 
 	private static String DB;
@@ -88,8 +88,7 @@ public class SqlBrowserFXApp extends Application {
 	private Scene primaryScene;
 	private Stage primaryStage;
 	private DSqlPane mainSqlPane;
-	DraggingTabPaneSupport dragingSupport;
-	
+
 	private SqlConnector sqlConnector;
 	private boolean restServiceStarted;
 	private DBTreePane ddbTreePane;
@@ -101,6 +100,7 @@ public class SqlBrowserFXApp extends Application {
 //		BasicConfigurator.configure();
 		PropertiesLoader.setLogger(LoggerFactory.getLogger(PropertiesLoader.class));
 		DialogFactory.setDialogStyleSheet(CSS_THEME);
+		DB = args.length > 0 && args[0] != null ? args[0] : null;
 		launch(args);
 	}
 
@@ -109,13 +109,9 @@ public class SqlBrowserFXApp extends Application {
 		this.primaryStage = primaryStage;
 		primaryStage.setTitle("SqlBrowser");
 
-		createDBselectBox();
-
 		primaryStage.setScene(primaryScene);
 		primaryStage.sizeToScene();
-
-		primaryStage.getIcons().add(new Image("/res/sqlbrowser-fx.png"));
-
+		primaryStage.getIcons().add(new Image("/icons/sqlbrowser-fx.png"));
 		primaryStage.show();
 
 		primaryStage.setOnCloseRequest(closeEvent -> {
@@ -134,11 +130,15 @@ public class SqlBrowserFXApp extends Application {
 			System.exit(0);
 		});
 
+		if (DB == null)
+			createDBselectBox();
+		else
+			dbSelectionAction(DB);
 	}
 
 	private void createDBselectBox() {
 		Label selectedDBtext = new Label("No database selected");
-		Button openButton = new Button("Open", new ImageView(new Image("/res/database.png")));
+		Button openButton = new Button("Open", new ImageView(new Image("/icons/database.png")));
 		openButton.setOnAction(actionEvent -> dbSelectionAction(selectedDBtext.getText()));
 		HBox bottomBox = new HBox(selectedDBtext, openButton);
 		bottomBox.setPadding(new Insets(5));
@@ -147,7 +147,7 @@ public class SqlBrowserFXApp extends Application {
 
 		VBox rightBox = new VBox();
 		Label text = new Label("Browse system for database...");
-		Button fileChooserButton = new Button("Search", new ImageView(new Image("/res/magnify.png")));
+		Button fileChooserButton = new Button("Search", new ImageView(new Image("/icons/magnify.png")));
 		fileChooserButton.setOnAction(actionEvent -> {
 			FileChooser fileChooser = new FileChooser();
 			File selectedFile = fileChooser.showOpenDialog(null);
@@ -183,7 +183,7 @@ public class SqlBrowserFXApp extends Application {
 		borderPane.setBottom(bottomBox);
 
 		Tab sqliteTab = new Tab("Sqlite", borderPane);
-		sqliteTab.setGraphic(JavaFXUtils.createImageView("/res/sqlite.png", 28.0, 28.0));
+		sqliteTab.setGraphic(JavaFXUtils.createImageView("/icons/sqlite.png", 28.0, 28.0));
 		sqliteTab.setClosable(false);
 		MySqlConfigBox mySqlConfigBox = new MySqlConfigBox();
 		mySqlConfigBox.getConnectButton().setOnAction(actionEvent -> {
@@ -192,7 +192,7 @@ public class SqlBrowserFXApp extends Application {
 		});
 //		mySqlConfigBox.getChildren().add(new ListView<String>(FXCollections.observableArrayList(Arrays.asList("Yesterday", "jdbc:mysql://localhost:3306/sakila?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"))));
 		Tab mysqlTab = new Tab("MySQL", mySqlConfigBox);
-		mysqlTab.setGraphic(JavaFXUtils.createImageView("/res/mysql.png", 28.0, 28.0));
+		mysqlTab.setGraphic(JavaFXUtils.createImageView("/icons/mysql.png", 28.0, 28.0));
 		mysqlTab.setClosable(false);
 		TabPane dbTabPane = new TabPane(sqliteTab, mysqlTab);
 		
@@ -201,7 +201,6 @@ public class SqlBrowserFXApp extends Application {
 		primaryScene = new Scene(dbTabPane, 600, 400);
 		leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
 		leftBox.prefWidthProperty().bind(primaryScene.widthProperty().divide(2));
-		primaryScene.getStylesheets().add(DockPane.class.getResource("default.css").toExternalForm());
 		primaryScene.getStylesheets().add(CSS_THEME);
 		primaryScene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
 			if (event.getCode() == KeyCode.ENTER) {
@@ -335,7 +334,13 @@ public class SqlBrowserFXApp extends Application {
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
 		
 		JavaFXUtils.applyJMetro(vbox);
-		
+
+		if (primaryScene == null) {
+			primaryScene = new Scene(vbox);
+			primaryStage.setScene(primaryScene);
+			primaryScene.getStylesheets().add(CSS_THEME);
+		}
+
 		primaryScene.setRoot(vbox);
 		primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> {
 			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.TRUE);
@@ -348,9 +353,9 @@ public class SqlBrowserFXApp extends Application {
 	}
 
 	private MenuBar createMenu(DockPane dockPane) {
-		final Menu menu1 = new Menu("Views", JavaFXUtils.icon("/res/open-view.png"));
+		final Menu menu1 = new Menu("Views", JavaFXUtils.icon("/icons/open-view.png"));
 		
-		MenuItem sqlPaneViewItem = new MenuItem("Open Table View", JavaFXUtils.icon("/res/database.png"));
+		MenuItem sqlPaneViewItem = new MenuItem("Open Table View", JavaFXUtils.icon("/icons/database.png"));
 		sqlPaneViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				DSqlPane newSqlPane = new DSqlPane(sqlConnector);
@@ -361,7 +366,7 @@ public class SqlBrowserFXApp extends Application {
 			});
 		});
 		
-		MenuItem sqlConsoleViewItem = new MenuItem("Open Console View", JavaFXUtils.icon("/res/console.png"));
+		MenuItem sqlConsoleViewItem = new MenuItem("Open Console View", JavaFXUtils.icon("/icons/console.png"));
 		sqlConsoleViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				DSqlConsoleView sqlConsoleView = new DSqlConsoleView(sqlConnector);
@@ -369,35 +374,35 @@ public class SqlBrowserFXApp extends Application {
 
 			});
 		});
-		MenuItem bashCodeAreaItem = new MenuItem("Open BashFX", JavaFXUtils.icon("/res/console.png"));
+		MenuItem bashCodeAreaItem = new MenuItem("Open BashFX", JavaFXUtils.icon("/icons/console.png"));
 		bashCodeAreaItem.setOnAction(event -> {
 			VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
 		    JavaFXUtils.applyJMetro(vb);
-			new DockNode(dockPane, vb, "BashFX", JavaFXUtils.icon("/res/console.png"));
+			new DockNode(dockPane, vb, "BashFX", JavaFXUtils.icon("/icons/console.png"));
 		});
-		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.icon("/res/details.png"));
+		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.icon("/icons/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
 			DBTreePane treeView = new DBTreePane(DB, sqlConnector);
-			DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/res/details.png"));
+			DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.icon("/icons/details.png"));
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 		
-		MenuItem jsonTableViewItem = new MenuItem("Open JSON Table View", JavaFXUtils.icon("/res/web.png"));
+		MenuItem jsonTableViewItem = new MenuItem("Open JSON Table View", JavaFXUtils.icon("/icons/web.png"));
 		jsonTableViewItem.setOnAction(event -> {
 			VBox jsonTableView = this.createJsonTableView();
 		    JavaFXUtils.applyJMetro(jsonTableView);
-			new DockNode(dockPane, jsonTableView, "JSON table", JavaFXUtils.icon("/res/web.png"));
+			new DockNode(dockPane, jsonTableView, "JSON table", JavaFXUtils.icon("/icons/web.png"));
 		});
 		
-		MenuItem webViewItem = new MenuItem("Open Docs", JavaFXUtils.icon("/res/web.png"));
+		MenuItem webViewItem = new MenuItem("Open Docs", JavaFXUtils.icon("/icons/web.png"));
 		webViewItem.setOnAction(event -> {
 			WebView docsView = new WebView();
 			docsView.getEngine().load("https://www.sqlite.org/index.html");
-			DockNode dockNode = new DockNode(docsView, "Docs", JavaFXUtils.icon("/res/web.png"));
+			DockNode dockNode = new DockNode(docsView, "Docs", JavaFXUtils.icon("/icons/web.png"));
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 		
-		MenuItem logItem = new MenuItem("Open Log View", JavaFXUtils.icon("/res/monitor.png"));
+		MenuItem logItem = new MenuItem("Open Log View", JavaFXUtils.icon("/icons/monitor.png"));
 		logItem.setOnAction(actionEvent -> {
 			LogCodeArea logArea = new LogCodeArea();
 			TailerListener listener = new CodeAreaTailerListener(logArea);
@@ -409,13 +414,18 @@ public class SqlBrowserFXApp extends Application {
 		      
 		    VirtualizedScrollPane<LogCodeArea> virtualizedScrollPane =new VirtualizedScrollPane<>(logArea);
 		    JavaFXUtils.applyJMetro(virtualizedScrollPane);
-			new DockNode(dockPane, virtualizedScrollPane, "Log", JavaFXUtils.icon("/res/monitor.png"));
+			DockNode dockNode = new DockNode(dockPane, virtualizedScrollPane, "Log", JavaFXUtils.icon("/icons/monitor.png"));
+			dockNode.setOnClose(() -> {
+				tailer.stop();
+				tailerDaemon.interrupt();
+			});
+
 		});
 
 		menu1.getItems().addAll(bashCodeAreaItem, logItem, sqlPaneViewItem, jsonTableViewItem);
 
-		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/res/spark.png", 16, 16, false, false)));
-		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/res/spark.png", 16.0, 16.0));
+		final Menu menu2 = new Menu("Rest Service", new ImageView(new Image("/icons/spark.png", 16, 16, false, false)));
+		MenuItem restServiceStartItem = new MenuItem("Start Rest Service", JavaFXUtils.createImageView("/icons/spark.png", 16.0, 16.0));
 		restServiceStartItem.setOnAction(actionEvent -> {
 			if (restServiceStarted == false) {
 				SparkRESTfulService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
@@ -430,13 +440,13 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 
-		MenuItem restServiceConfigItem = new MenuItem("Configure Rest Service", JavaFXUtils.icon("res/settings.png"));
+		MenuItem restServiceConfigItem = new MenuItem("Configure Rest Service", JavaFXUtils.icon("/icons/settings.png"));
 		restServiceConfigItem.setOnAction(actionEvent -> createRestServiceConfigBox());
 		
 		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
 
 		Menu menu3 = new Menu();
-		HBox customGraphic = new HBox(JavaFXUtils.icon("res/settings.png"), new Label("Configuration"));
+		HBox customGraphic = new HBox(JavaFXUtils.icon("/icons/settings.png"), new Label("Configuration"));
 		customGraphic.setSpacing(5);
 		menu3.setGraphic(customGraphic);
 		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
@@ -458,10 +468,10 @@ public class SqlBrowserFXApp extends Application {
 		});
 		
 		Menu menu4 = new Menu("Transactions");
-		MenuItem commitAllItem = new MenuItem("Commit all", JavaFXUtils.icon("res/check.png"));
+		MenuItem commitAllItem = new MenuItem("Commit all", JavaFXUtils.icon("/icons/check.png"));
 		commitAllItem.setOnAction(actionEvent -> sqlConnector.commitAll());
 		
-		MenuItem rollbackAllItem = new MenuItem("Rollback all", JavaFXUtils.icon("res/refresh.png"));
+		MenuItem rollbackAllItem = new MenuItem("Rollback all", JavaFXUtils.icon("/icons/refresh.png"));
 		rollbackAllItem.setOnAction(actionEvent -> sqlConnector.rollbackAll());
 		
 		menu4.getItems().addAll(commitAllItem, rollbackAllItem);
@@ -479,12 +489,12 @@ public class SqlBrowserFXApp extends Application {
 		if (isRestConfigurationShowing)
 			return;
 		
-		ImageView bottleLogo = JavaFXUtils.createImageView("/res/spark-logo.png", 0.0, 200.0);
+		ImageView bottleLogo = JavaFXUtils.createImageView("/icons/spark-logo.png", 0.0, 200.0);
 		Label ipLabel = new Label("Ip address");
 		TextField ipField = new TextField(restServiceConfig.getIp());
 		Label portLabel = new Label("Port");
 		TextField portField = new TextField(restServiceConfig.getPort().toString());
-		Button saveButton = new Button("Save", JavaFXUtils.icon("/res/check.png"));
+		Button saveButton = new Button("Save", JavaFXUtils.icon("/icons/check.png"));
 
 		VBox vBox = new VBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
 		JavaFXUtils.applyJMetro(vBox);

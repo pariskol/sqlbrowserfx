@@ -149,7 +149,7 @@ public class BashFXApp extends Application{
 
 	public static void createTree(File file, TreeItem<String> parent) {
 	    if (file.isDirectory()) {
-	        TreeItem<String> treeItem = new TreeItem<>(file.getName(), JavaFXUtils.icon("/res/folder.png"));
+	        TreeItem<String> treeItem = new TreeItem<>(file.getName(), JavaFXUtils.icon("/icons/folder.png"));
 	        parent.getChildren().add(treeItem);
 	        for (File f : file.listFiles()) {
 	            createTree(f, treeItem);

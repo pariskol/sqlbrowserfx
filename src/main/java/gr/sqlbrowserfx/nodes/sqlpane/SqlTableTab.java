@@ -27,7 +27,7 @@ public class SqlTableTab extends Tab {
 		super(text, sqlTableView);
 		this.sqlTableView = sqlTableView;
 
-		Node graphic = JavaFXUtils.icon("res/table-e.png");
+		Node graphic = JavaFXUtils.icon("/icons/table-e.png");
 		label = new Label(text, graphic);
 		label.textProperty().bind(this.getSqlTableView().titleProperty());
 		this.setText(null);

@@ -39,7 +39,7 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner, Co
 
 	@Override
 	public FlowPane createToolbar() {
-		Button addButton = new Button("", JavaFXUtils.icon("res/add.png"));
+		Button addButton = new Button("", JavaFXUtils.icon("/icons/add.png"));
 		addButton.setOnAction(actionEvent -> {
 			TableCreationPane tableCreationPane = new TableCreationPane(this.sqlConnector);
 			tableCreationPane.addObserver(this.dbTreeView);
@@ -52,10 +52,10 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner, Co
 		    stage.setScene(scene);
 		    stage.show();
 		});
-		Button deleteButton = new Button("", JavaFXUtils.icon("res/minus.png"));
+		Button deleteButton = new Button("", JavaFXUtils.icon("/icons/minus.png"));
 		deleteButton.setOnAction(action -> this.dbTreeView.dropAction());
 		FlowPane toolbar =  new FlowPane(addButton, deleteButton,
-				new Button("", JavaFXUtils.icon("res/details.png")));
+				new Button("", JavaFXUtils.icon("/icons/details.png")));
 		toolbar.setPrefWidth(addButton.getWidth());
 		return toolbar;
 	}
@@ -63,7 +63,7 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner, Co
 	@Override
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
-			thisDockNode = new DockNode(this, "Structure", JavaFXUtils.icon("/res/structure.png"));
+			thisDockNode = new DockNode(this, "Structure", JavaFXUtils.icon("/icons/structure.png"));
 		}
 		return thisDockNode;
 	}

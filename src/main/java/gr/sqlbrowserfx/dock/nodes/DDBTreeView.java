@@ -36,7 +36,7 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 	@Override
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
-			thisDockNode = new DockNode(this, "Structure", JavaFXUtils.icon("/res/structure.png"));
+			thisDockNode = new DockNode(this, "Structure", JavaFXUtils.icon("/icons/structure.png"));
 		}
 		return thisDockNode;
 	}
@@ -44,7 +44,7 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 	@Override
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = super.createContextMenu();
-		openInSqlPaneMenu = new Menu("Open in..." , JavaFXUtils.icon("/res/openTab.png"));
+		openInSqlPaneMenu = new Menu("Open in..." , JavaFXUtils.icon("/icons/openTab.png"));
 		openInSqlPaneMenu.setOnMenuValidation(action -> {
 			openInSqlPaneMenu.getItems().clear();
 			for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {

@@ -56,7 +56,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 		});
 		replaceField.setPromptText("Replace...");
 
-		findButton = new Button("Find", JavaFXUtils.icon("/res/magnify.png"));
+		findButton = new Button("Find", JavaFXUtils.icon("/icons/magnify.png"));
 		findButton.setOnMouseClicked(mouseEvent -> this.findButtonAction());
 		findButton.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
@@ -64,7 +64,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 				keyEvent.consume();
 			}
 		});
-		replaceButton = new Button("Replace", JavaFXUtils.icon("/res/replace.png"));
+		replaceButton = new Button("Replace", JavaFXUtils.icon("/icons/replace.png"));
 		replaceButton.setOnMouseClicked(mouseEvent -> this.replaceButtonAction());
 		replaceButton.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
