@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
-import org.apache.log4j.BasicConfigurator;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
@@ -95,7 +94,7 @@ public class SqlBrowserFXApp extends Application {
 	private QueriesMenu queriesMenu;
 
 	public static void main(String[] args) {
-		BasicConfigurator.configure();
+//		BasicConfigurator.configure();
 		PropertiesLoader.setLogger(LoggerFactory.getLogger(PropertiesLoader.class));
 		DialogFactory.setDialogStyleSheet(CSS_THEME);
 		DB = args.length > 0 && args[0] != null ? args[0] : null;
