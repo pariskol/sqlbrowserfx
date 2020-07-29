@@ -470,7 +470,7 @@ public class SqlBrowserFXApp extends Application {
 		rollbackAllItem.setOnAction(actionEvent -> sqlConnector.rollbackAll());
 		
 		menu4.getItems().addAll(commitAllItem, rollbackAllItem);
-		if (!sqlConnector.isAutoCommitModeEnabled())
+		if (sqlConnector.isAutoCommitModeEnabled())
 			menu4.setDisable(true);
 		
 		MenuBar menuBar = new MenuBar();
