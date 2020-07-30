@@ -23,12 +23,15 @@ public class DockTabPane extends TabPane implements ContextMenuOwner, Dockable {
 		Tab tab = new Tab(dockNode.getTitle(), dockNode);
 		tab.setGraphic(dockNode.getGraphic());
 		dockNode.setGraphic(null);
-		tab.setOnClosed(closeEvent -> {
-			Runnable closeAction = dockNode.getOnCloseAction();
-			if (closeAction != null)
-				closeAction.run();
-			undockIfNeccessary();
-		});
+		if (dockNode.isClosable()) {
+			tab.setOnClosed(closeEvent -> {
+				Runnable closeAction = dockNode.getOnCloseAction();
+				if (closeAction != null)
+					closeAction.run();
+				undockIfNeccessary();
+			});
+		}
+		tab.setClosable(dockNode.isClosable());
 		this.getTabs().add(tab);
 	}
 

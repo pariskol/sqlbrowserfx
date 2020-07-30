@@ -850,7 +850,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			getSelectedTableTab().getRecordsTabPane().getTabs().add(compareTab);
 			getSelectedTableTab().getRecordsTabPane().getSelectionModel().select(compareTab);
 		} else {
-			compareBox.setPrefWidth(500);
+			compareBox.setPrefWidth(800);
 			popOver = new PopOver(compareBox);
 			popOver.setDetachable(false);
 			popOver.setOnHidden(closeEvent -> {
