@@ -23,7 +23,7 @@ cp target/sqlbrowserfx*.jar dist/sqlbrowserfx/sqlbrowserfx.jar
 cp target/dependency/* dist/sqlbrowserfx/lib
 cp log4j.properties dist/sqlbrowserfx/
 cp sqlbrowser.db dist/sqlbrowserfx/
-#cp starters/* dist/sqlbrowserfx/
+cp starters/* dist/sqlbrowserfx/
 cp sqlbrowserfx.properties dist/sqlbrowserfx/
 touch dist/sqlbrowserfx/recent-dbs.txt
 
