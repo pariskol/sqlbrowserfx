@@ -472,7 +472,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		String[] words = text.split("\\W+");
 		String saveTableShortcut = null;
 		for (String word : words) {
-			if (!word.isEmpty() && saveTableShortcut != null && !word.equals(saveTableShortcut.trim()) && !word.equals("as")) {
+			if (!word.isEmpty() && saveTableShortcut != null && !word.equals(saveTableShortcut.trim()) && !word.equals("as") && !word.equals("AS")) {
 				this.cacheTableAlias(word,saveTableShortcut);
 				saveTableShortcut = null;
 			}

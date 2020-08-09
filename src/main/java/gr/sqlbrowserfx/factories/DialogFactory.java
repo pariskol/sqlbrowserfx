@@ -12,6 +12,7 @@ import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -192,18 +193,18 @@ public class DialogFactory {
         dialogVbox.getChildren().addAll(displayLabel, content, buttonBox);
 
         AtomicInteger result = new AtomicInteger(0);
-        yes.addEventHandler(MouseEvent.MOUSE_CLICKED,
-                new EventHandler<MouseEvent>() {
+        yes.addEventHandler(ActionEvent.ACTION,
+                new EventHandler<ActionEvent>() {
                     @Override
-                    public void handle(MouseEvent e) {
+                    public void handle(ActionEvent e) {
                         result.set(1);
                     	dialog.close();
                     }
                 });
-        no.addEventHandler(MouseEvent.MOUSE_CLICKED,
-                new EventHandler<MouseEvent>() {
+        no.addEventHandler(ActionEvent.ACTION,
+                new EventHandler<ActionEvent>() {
                     @Override
-                    public void handle(MouseEvent e) {
+                    public void handle(ActionEvent e) {
                         result.set(0);
                         dialog.close();
                     }

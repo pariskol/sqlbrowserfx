@@ -20,11 +20,13 @@ public class SparkRESTfulService {
 		JsonTransformer jsonTransformer = new JsonTransformer();
 		
 		Spark.initExceptionHandler((e) -> logger.error(e.getMessage(), e));
-		Spark.after((request, response) -> {
+		
+		Spark.before((request, response) -> {
+			response.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
 			response.header("Access-Control-Allow-Origin", "*");
-			response.header("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS");
-			response.header("Access-Control-Allow-Headers",
-					"Authorization, Origin, Accept, Content-Type, X-Requested-With");
+			response.header("Access-Control-Allow-Headers", "*");
+			response.header("Access-Control-Allow-Credentials", "true");
+			response.header("Content-Type", "application/json");
 		});
 		
 		Spark.options("/*", (request, response) -> {
@@ -69,7 +71,7 @@ public class SparkRESTfulService {
 					+ ") values (" + values + ")";
 			sqlConnector.executeUpdate(query, params);
 			
-			return "{ message: \"Data has been saved\"}";
+			return "{ \"message\": \"Data has been saved\"}";
 		}, jsonTransformer);
 		
 		Spark.post("/delete", (request, response) -> {

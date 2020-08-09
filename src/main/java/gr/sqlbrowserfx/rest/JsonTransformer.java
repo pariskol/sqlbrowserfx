@@ -14,7 +14,7 @@ public class JsonTransformer implements ResponseTransformer {
 		if (object instanceof Collection<?>)
 			return new JSONArray((Collection<?>) object).toString();
 		else
-			return new JSONObject(object).toString();
+			return new JSONObject((String) object).toString();
 	}
 
 }

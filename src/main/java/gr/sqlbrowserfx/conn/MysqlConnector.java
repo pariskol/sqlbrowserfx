@@ -146,11 +146,11 @@ public class MysqlConnector extends SqlConnector {
 	
 	@Override
 	public String getName() {
-		return "Tables_in_" + database;
+		return "TABLE_NAME";
 	}
 	
 	@Override
 	public String getType() {
-		return "Table_type";
+		return "TABLE_TYPE";
 	}
 }
