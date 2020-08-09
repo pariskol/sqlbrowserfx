@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
+import org.apache.log4j.BasicConfigurator;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
@@ -94,7 +95,7 @@ public class SqlBrowserFXApp extends Application {
 	private QueriesMenu queriesMenu;
 
 	public static void main(String[] args) {
-//		BasicConfigurator.configure();
+		BasicConfigurator.configure();
 		PropertiesLoader.setLogger(LoggerFactory.getLogger(PropertiesLoader.class));
 		DialogFactory.setDialogStyleSheet(CSS_THEME);
 		DB = args.length > 0 && args[0] != null ? args[0] : null;
@@ -302,8 +303,18 @@ public class SqlBrowserFXApp extends Application {
 		return vbox;
 	}
 	
+	private String determineDBType(SqlConnector sqlConnector) {
+		String dbType = null;
+		if (sqlConnector instanceof SqliteConnector)
+			dbType = "sqlite";
+		else if (sqlConnector instanceof MysqlConnector)
+			dbType = "mysql";
+		return dbType;
+	}
+	
 	private void createAppView(SqlConnector sqlConnector) {
 		
+		SqlBrowserFXAppManager.setDBtype(determineDBType(sqlConnector));
 		primaryStage.setMaximized(true);
 		DockPane dockPane = new DockPane();
 		MenuBar menuBar = createMenu(dockPane);
@@ -318,10 +329,9 @@ public class SqlBrowserFXApp extends Application {
 		mainSqlPane.showConsole();
 
 		ddbTreePane = new DBTreePane(DB, sqlConnector);
-		SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames());
-		for (String table : ddbTreePane.getDBTreeView().getContentNames()) {
-			SqlCodeAreaSyntax.bind(table, ddbTreePane.getDBTreeView().getColumnsForTable(table));
-		}
+		
+		configureSqlCodeAreaSyntax();
+		
 		ddbTreePane.getDBTreeView().addObserver(value -> SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames()));
 		mainSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
 		mainSqlPane.getSqlConsoleBox().addObserver(queriesMenu);
@@ -352,6 +362,14 @@ public class SqlBrowserFXApp extends Application {
 			}
 			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
 		});
+	}
+
+	private void configureSqlCodeAreaSyntax() {
+		SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames());
+		
+		for (String table : ddbTreePane.getDBTreeView().getContentNames()) {
+			SqlCodeAreaSyntax.bind(table, ddbTreePane.getDBTreeView().getColumnsForTable(table));
+		}
 	}
 
 	private MenuBar createMenu(DockPane dockPane) {

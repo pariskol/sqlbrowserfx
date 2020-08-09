@@ -6,14 +6,17 @@ import org.dockfx.Dockable;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.TableCreationPane;
 import gr.sqlbrowserfx.nodes.ToolbarOwner;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 
@@ -28,9 +31,17 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner, Co
 		super();
 		this.sqlConnector = sqlConnector;
 		this.toolBar = this.createToolbar();
+		// when dbTreeView is ready fires a simple event 
 		this.dbTreeView = new DDBTreeView(dbPath, sqlConnector);
+		dbTreeView.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> {
+			Platform.runLater(() -> this.setCenter(dbTreeView));
+		});
 		this.setLeft(toolBar);
-		this.setCenter(dbTreeView);
+		ProgressIndicator progressIndicator = new ProgressIndicator();
+		progressIndicator.setMaxHeight(40);
+		progressIndicator.setMaxWidth(40);
+		this.setCenter(progressIndicator);
+		
 	}
 	@Override
 	public ContextMenu createContextMenu() {

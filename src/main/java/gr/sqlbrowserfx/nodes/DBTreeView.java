@@ -16,11 +16,13 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.listeners.SimpleObserver;
+import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -69,7 +71,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		}
 
 		this.setContextMenu(this.createContextMenu());
-		this.setRoot(rootItem);
+//		this.setRoot(rootItem);
 		this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 		
 		searchField = new TextField();
@@ -110,6 +112,52 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	}
 	
 	private void fillTreeView() throws SQLException {
+		new Thread(() -> {
+		try {
+			List<String> newItems = this.getContents();
+			
+			List<TreeItem<String>> found = new ArrayList<>();
+			List<String> sfound = new ArrayList<>();
+
+			tablesRootItem.getChildren().forEach(treeItem -> {
+				if (!newItems.contains(treeItem.getValue())) {
+					found.add(treeItem);
+					sfound.add(treeItem.getValue());
+				}
+			});
+			tablesRootItem.getChildren().removeAll(found);
+			allItems.removeAll(sfound);
+			
+			viewsRootItem.getChildren().forEach(treeItem -> {
+				if (!newItems.contains(treeItem.getValue())) {
+					found.add(treeItem);
+					sfound.add(treeItem.getValue());
+				}
+			});
+			viewsRootItem.getChildren().removeAll(found);
+			allItems.removeAll(sfound);
+			
+			indicesRootItem.getChildren().forEach(treeItem -> {
+				if (!newItems.contains(treeItem.getValue())) {
+					found.add(treeItem);
+					sfound.add(treeItem.getValue());
+				}
+			});
+			indicesRootItem.getChildren().removeAll(found);
+			allItems.removeAll(sfound);
+
+			Platform.runLater(() -> {
+				this.setRoot(rootItem);
+				this.fireEvent(new SimpleEvent());
+			});
+			this.changed();
+		} catch (Throwable e) {
+			DialogFactory.createErrorDialog(e);
+		}
+		}).start();
+	}
+
+	private List<String> getContents() throws SQLException {
 		List<String> newItems = new ArrayList<>();
 		sqlConnector.getContents(rset -> {
 			try {
@@ -142,38 +190,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 				logger.error(e.getMessage(), e);
 			}
 		});
-
-		List<TreeItem<String>> found = new ArrayList<>();
-		List<String> sfound = new ArrayList<>();
-
-		tablesRootItem.getChildren().forEach(treeItem -> {
-			if (!newItems.contains(treeItem.getValue())) {
-				found.add(treeItem);
-				sfound.add(treeItem.getValue());
-			}
-		});
-		tablesRootItem.getChildren().removeAll(found);
-		allItems.removeAll(sfound);
-		
-		viewsRootItem.getChildren().forEach(treeItem -> {
-			if (!newItems.contains(treeItem.getValue())) {
-				found.add(treeItem);
-				sfound.add(treeItem.getValue());
-			}
-		});
-		viewsRootItem.getChildren().removeAll(found);
-		allItems.removeAll(sfound);
-		
-		indicesRootItem.getChildren().forEach(treeItem -> {
-			if (!newItems.contains(treeItem.getValue())) {
-				found.add(treeItem);
-				sfound.add(treeItem.getValue());
-			}
-		});
-		indicesRootItem.getChildren().removeAll(found);
-		allItems.removeAll(sfound);
-
-		this.changed();
+		return newItems;
 	}
 
 	private void fillTVTreeItem(TreeItem<String> treeItem, String schemaColumn) throws SQLException {

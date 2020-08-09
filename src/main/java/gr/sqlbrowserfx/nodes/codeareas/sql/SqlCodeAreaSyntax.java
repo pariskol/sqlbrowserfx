@@ -11,15 +11,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
+import gr.sqlbrowserfx.conn.MysqlConnector;
+import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 
 public class SqlCodeAreaSyntax {
 
 	private static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 	
-	public static final String[] FUNCTIONS = getAutocomplteWords("funcs");
-	public static final String[] TYPES = getAutocomplteWords("types");
-	public static final String[] KEYWORDS = getAutocomplteWords("sql");
+	private static String DB_TYPE = SqlBrowserFXAppManager.getDBtype();
+	public static  String[] FUNCTIONS = getAutocomplteWords("funcs");
+	public static  String[] TYPES = getAutocomplteWords("types");
+	public static  String[] KEYWORDS = getAutocomplteWords("sql");
 
 	public static final List<String> KEYWORDS_lIST = new ArrayList<>();
 	public static final HashMap<String, List<String>> COLUMNS_MAP = new HashMap<>();
@@ -59,7 +63,7 @@ public class SqlCodeAreaSyntax {
 //                    + "|(?<HEX>" + HEX_PATTERN + ")"
 //                    + "|(?<NUMBER>" + NUMBERS_PATTERN + ")"
 					+ "|(?<METHOD>" + METHOD_PATTERN + ")" + "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
-	
+
 	static {
 		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.KEYWORDS));
         KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.FUNCTIONS));
@@ -70,8 +74,8 @@ public class SqlCodeAreaSyntax {
 		List<String> list = new ArrayList<>();
 		try {
 			SqlBrowserFXAppManager.getConfigSqlConnector()
-								  .executeQuery("select name from autocomplete where category= ?", 
-										  Arrays.asList(new String[]{category}), rset -> {
+								  .executeQuery("select name from autocomplete where category= ? and type in (?,'sql') order by name", 
+										  Arrays.asList(new String[]{category, DB_TYPE}), rset -> {
 											try {
 												HashMap<String, Object> dto = DTOMapper.map(rset);
 												list.add((String)dto.get("name"));

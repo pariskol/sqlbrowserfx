@@ -1,2 +1,3 @@
 /home/paris/sqlite-dbs/chinook.db
 /home/paris/psanta.db
+/home/paris/eclipse-workspace/sqlbrowser/sqlbrowser.db
