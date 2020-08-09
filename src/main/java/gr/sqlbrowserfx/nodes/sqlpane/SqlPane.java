@@ -1104,10 +1104,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			try {
 				getSelectedSqlTableView().insertRecord(editBox);
 				this.updateRowsCountLabel();
-				editBox.updateMessageLabel("Succeed");
+				DialogFactory.createInfoDialog("Record insert", "Succesfully inserted! \n\n" + editBox.toString());
 			} catch (Throwable e) {
 				DialogFactory.createErrorDialog(e);
-				editBox.updateMessageLabel("Failed");
 			}
 		});
 
@@ -1117,10 +1116,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		sqlConnector.executeAsync(() -> {
 			try {
 				getSelectedSqlTableView().updateRecord(editBox, sqlTableRow);
-				editBox.updateMessageLabel("Succeed");
+				DialogFactory.createInfoDialog("Record insert", "Succesfully updated! \n\n" + editBox.toString());
 			} catch (SQLException e) {
 				DialogFactory.createErrorDialog(e);
-				editBox.updateMessageLabel("Failed");
 			}
 		});
 	}

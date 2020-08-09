@@ -11,8 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
+import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
+import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -32,8 +34,10 @@ public class ColumnCreationBox extends HBox {
 	private CheckBox nnCheckBox;
 	private CheckBox pkCheckBox;
 	private CheckBox uCheckBox;
+	private SqlConnector sqlConnector;
 	
 	public ColumnCreationBox(SqlConnector sqlConnector) {
+		this.sqlConnector = sqlConnector;
 		List<String> types = this.getTypes();
 		typeComboBox = new ComboBox<>();
 		typeComboBox.setItems(FXCollections.observableArrayList(types));
@@ -81,9 +85,10 @@ public class ColumnCreationBox extends HBox {
 		Logger logger = LoggerFactory.getLogger(getClass().getName());
 		List<String> list = new ArrayList<>();
 		try {
+			final String dbType = determineDBType();
 			SqlBrowserFXAppManager.getConfigSqlConnector()
-								  .executeQuery("select name from autocomplete where category= ?", 
-										  Arrays.asList(new String[]{category}), rset -> {
+								  .executeQuery("select name from autocomplete2 where category= ? and description = ? order by name", 
+										  Arrays.asList(new String[]{category, dbType}), rset -> {
 											try {
 												HashMap<String, Object> dto = DTOMapper.map(rset);
 												list.add((String)dto.get("name"));
@@ -98,6 +103,15 @@ public class ColumnCreationBox extends HBox {
 		return list;
 	}
 	
+	private String determineDBType() {
+		String dbType = null;
+		if (sqlConnector instanceof SqliteConnector)
+			dbType = "sqlite";
+		else if (sqlConnector instanceof MysqlConnector)
+			dbType = "mysql";
+		return dbType;
+	}
+
 	public String getColumnName() {
 		return columnNameField.getText();
 	}

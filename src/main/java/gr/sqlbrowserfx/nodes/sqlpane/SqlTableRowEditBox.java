@@ -104,7 +104,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			centerBox.getChildren().add(node);
 		}
 		
-		this.setBottom(messageLabel);
+//		this.setBottom(messageLabel);
 		if (resizeable) {
 			scrollPane = new ScrollPane(centerBox);
 			scrollPane.hbarPolicyProperty().set(ScrollBarPolicy.NEVER);
@@ -209,6 +209,15 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			String newText = newValue.get(column) != null ? newValue.get(column).toString() : null;
 			textField.setText(newText);
 		}
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder("");
+		for (String key : fieldsMap.keySet()) {
+			sb.append(key + " : " + fieldsMap.get(key).getText() + "\n");
+		}
+		return sb.toString();
 	}
 
 }
