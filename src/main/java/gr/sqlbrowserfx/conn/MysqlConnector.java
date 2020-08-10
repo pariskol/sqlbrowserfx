@@ -164,7 +164,7 @@ public class MysqlConnector extends SqlConnector {
 		List<String> tables = new ArrayList<>();
 		this.executeQuery("show full tables where TABLE_TYPE = 'BASE TABLE'", rset -> {
 			try {
-				tables.add(rset.getString("TABLE_NAME"));
+				tables.add(rset.getString(1));
 			} catch (Exception e) {
 				LoggerFactory.getLogger(getClass()).error(e.getMessage());
 			}
@@ -177,7 +177,7 @@ public class MysqlConnector extends SqlConnector {
 		List<String> tables = new ArrayList<>();
 		this.executeQuery("show full tables where TABLE_TYPE = 'VIEW'", rset -> {
 			try {
-				tables.add(rset.getString("TABLE_NAME"));
+				tables.add(rset.getString(1));
 			} catch (Exception e) {
 				LoggerFactory.getLogger(getClass()).error(e.getMessage());
 			}
