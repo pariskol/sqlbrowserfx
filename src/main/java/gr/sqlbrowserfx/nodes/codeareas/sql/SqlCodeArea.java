@@ -74,7 +74,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			while (true) {
 				try {
 					Thread.sleep(1000);
-					//TODO Create a new map an d whenready then switch the pointer
+					//TODO Create a new map an d when ready then switch the pointer
 					SqlCodeArea.this.tableAliases.clear();
 					SqlCodeArea.this.analyzeTextForTablesAliases(this.getText());
 				} catch (InterruptedException e) {

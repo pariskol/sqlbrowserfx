@@ -153,4 +153,35 @@ public class MysqlConnector extends SqlConnector {
 	public String getType() {
 		return "TABLE_TYPE";
 	}
+
+	@Override
+	public void getTriggers(String table, ResultSetAction action) throws SQLException {
+		this.executeQuery("select TRIGGER_NAME, ACTION_STATEMENT from INFORMATION_SCHEMA.TRIGGERS  where EVENT_OBJECT_TABLE='" + table + "'", action);
+	}
+	
+	@Override
+	public List<String> getTables() throws SQLException {
+		List<String> tables = new ArrayList<>();
+		this.executeQuery("show full tables where TABLE_TYPE = 'BASE TABLE'", rset -> {
+			try {
+				tables.add(rset.getString("TABLE_NAME"));
+			} catch (Exception e) {
+				LoggerFactory.getLogger(getClass()).error(e.getMessage());
+			}
+		});
+		return tables;
+	}
+	
+	@Override
+	public List<String> getViews() throws SQLException {
+		List<String> tables = new ArrayList<>();
+		this.executeQuery("show full tables where TABLE_TYPE = 'VIEW'", rset -> {
+			try {
+				tables.add(rset.getString("TABLE_NAME"));
+			} catch (Exception e) {
+				LoggerFactory.getLogger(getClass()).error(e.getMessage());
+			}
+		});
+		return tables;
+	}
 }

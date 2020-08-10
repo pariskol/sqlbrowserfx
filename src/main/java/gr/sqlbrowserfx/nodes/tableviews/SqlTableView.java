@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.nodes.tableviews;
+ package gr.sqlbrowserfx.nodes.tableviews;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -23,6 +23,7 @@ import gr.sqlbrowserfx.nodes.sqlpane.SqlTableRowEditBox;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.MemoryGuard;
+import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -130,11 +131,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		
 		try {
 			while (rs.next()) {
-				LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
-				for (String columnLabel : sqlTable.getColumns()) {
-					entry.put(columnLabel, rs.getObject(columnLabel));
-				}
-	
+				LinkedHashMap<String, Object> entry = DTOMapper.map(rs);
 				rows.add(new MapTableViewRow(entry));
 			}
 		} catch (Exception e) {
@@ -198,11 +195,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		MemoryGuard.startMemoryGuard(rs);
 		try {
 			while (rs.next()) {
-				LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
-				for (String columnLabel : sqlTable.getColumns()) {
-					entry.put(columnLabel, rs.getObject(columnLabel));
-				}
-	
+				LinkedHashMap<String, Object> entry = DTOMapper.map(rs);
 				rows.add(new MapTableViewRow(entry));
 			}
 		} catch (Throwable e) {

@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
-import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
@@ -34,6 +33,8 @@ import javafx.scene.input.KeyCode;
 
 public class DBTreeView extends TreeView<String> implements ContextMenuOwner, SimpleObserver<String>, SimpleObservable<String> {
 
+	private static final String ACTION_STATEMENT = "ACTION_STATEMENT";
+	private static final String TRIGGER_NAME = "TRIGGER_NAME";
 	private Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 	private SqlConnector sqlConnector;
 
@@ -227,38 +228,30 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		});
 	}
 
-	//TODO implement in a more abstract way
 	private void updateTriggers() throws SQLException {
-		if (sqlConnector instanceof SqliteConnector) {
-			for (TreeItem<String> treeItem : tablesRootItem.getChildren()) {
-				sqlConnector.executeQueryRaw("select * from sqlite_master where type like 'trigger' and tbl_name like '" +treeItem.getValue()+"'", rset -> {
-					treeItem.getChildren().get(2).getChildren().clear();
-					while (rset.next()) {
-						TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString("NAME"), JavaFXUtils.createIcon("/icons/trigger.png"));
-						String schema = rset.getString("SQL");
-						triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.createIcon("/icons/script.png")));
-						ObservableList<TreeItem<String>> triggerItems = treeItem.getChildren().get(2).getChildren();
-						triggerItems.add(triggerTreeItem);
-					}
-					
-				});
-			}
+		for (TreeItem<String> treeItem : tablesRootItem.getChildren()) {
+			treeItem.getChildren().get(2).getChildren().clear();
+			sqlConnector.getTriggers(treeItem.getValue(), rset -> {
+				TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString(TRIGGER_NAME), JavaFXUtils.createIcon("/icons/trigger.png"));
+				String schema = rset.getString(ACTION_STATEMENT);
+				triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.createIcon("/icons/script.png")));
+				ObservableList<TreeItem<String>> triggerItems = treeItem.getChildren().get(2).getChildren();
+				triggerItems.add(triggerTreeItem);
+			});
 		}
 	}
 	
 	private void fillTableTreeItem(TreeItem<String> treeItem) throws SQLException {
 		this.fillTVTreeItem(treeItem, sqlConnector.getTableSchemaColumn());
-			TreeItem<String> triggersTreeItem = new TreeItem<String>("triggers", JavaFXUtils.createIcon("/icons/trigger.png"));
-			if (sqlConnector instanceof SqliteConnector) {
-				sqlConnector.executeQuery("select * from sqlite_master where type like 'trigger' and tbl_name like '" +treeItem.getValue()+"'", rset -> {
-					TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString("NAME"), JavaFXUtils.createIcon("/icons/trigger.png"));
-					String schema = rset.getString("SQL");
-					triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.createIcon("/icons/script.png")));
-					triggersTreeItem.getChildren().add(triggerTreeItem);
-				});
-				
-				treeItem.getChildren().add(triggersTreeItem);
-			}
+		TreeItem<String> triggersTreeItem = new TreeItem<String>("triggers", JavaFXUtils.createIcon("/icons/trigger.png"));
+		sqlConnector.getTriggers(treeItem.getValue(), rset -> {
+			TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString(TRIGGER_NAME), JavaFXUtils.createIcon("/icons/trigger.png"));
+			String schema = rset.getString(ACTION_STATEMENT);
+			triggerTreeItem.getChildren().add(new TreeItem<String>(schema, JavaFXUtils.createIcon("/icons/script.png")));
+			triggersTreeItem.getChildren().add(triggerTreeItem);
+		});
+		
+		treeItem.getChildren().add(triggersTreeItem);
 	}
 
 	private void fillViewTreeItem(TreeItem<String> treeItem) throws SQLException {

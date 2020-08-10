@@ -179,7 +179,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		CodeArea sqlConsoleArea = this.getSelectedSqlCodeArea();
 		String query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
 		final String fixedQuery = this.fixQuery(query);
-		if (fixedQuery.startsWith("select") || fixedQuery.startsWith("SELECT")) {
+		if (fixedQuery.startsWith("select") || fixedQuery.startsWith("SELECT")
+				|| fixedQuery.startsWith("show") || fixedQuery.startsWith("SHOW")) {
 			sqlConnector.executeAsync(() -> {
 				if (sqlQueryRunning.get())
 					return;
@@ -232,9 +233,12 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 					sqlQueryRunning.set(false);
 				}
 				
-				if (fixedQuery.contains("table") || fixedQuery.contains("TABLE") ||
+				if ((fixedQuery.contains("drop") || fixedQuery.contains("DROP") || fixedQuery.contains("create") || fixedQuery.contains("CREATE"))
+						&&
+					(fixedQuery.contains("table") || fixedQuery.contains("TABLE") ||
 					fixedQuery.contains("view") || fixedQuery.contains("VIEW") ||
-					fixedQuery.contains("trigger") || fixedQuery.contains("TRIGGER")) {
+					fixedQuery.contains("trigger") || fixedQuery.contains("TRIGGER"))
+					) {
 					this.changed(fixedQuery);
 				}
 			});
@@ -245,6 +249,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 	private String fixQuery(String query) {
 		int spacesNum = 0;
+		query = query.replaceAll("\t", "    ");
 		for (int i=0; i<query.length(); i++) {
 			if (query.charAt(i) == ' ' || query.charAt(i) == '\n') {
 				spacesNum++;

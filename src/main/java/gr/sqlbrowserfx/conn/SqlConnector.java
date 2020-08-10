@@ -360,7 +360,9 @@ public abstract class SqlConnector {
 	}
 
 	abstract public String getContentsQuery();
-
+	
+	abstract public void getTriggers(String table, ResultSetAction action) throws SQLException;
+	
 	abstract public void getSchemas(String name, ResultSetAction action) throws SQLException;
 
 	public void getContents(ResultSetAction action) throws SQLException {

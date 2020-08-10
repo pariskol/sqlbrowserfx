@@ -190,5 +190,10 @@ public class SqliteConnector extends SqlConnector {
 	public String getIndexColumnName() {
 		return SCHEMA_COLUMN;
 	}
+
+	@Override
+	public void getTriggers(String table, ResultSetAction action) throws SQLException {
+		this.executeQuery("select NAME as TRIGGER_NAME, SQL as ACTION_STATEMENT from sqlite_master where type like 'trigger' and tbl_name like '" + table + "'", action);
+	}
 	
 }
