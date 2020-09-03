@@ -62,6 +62,11 @@ public class SqlTable {
 		this.columnsMap = columns;
 	}
 
+	/*
+	 * Returns tables's primary key , IMPORTANT in case of a composite
+	 * key it returns a comma separated string with the keys 
+	 * 
+	 */
 	public String getPrimaryKey() {
 		return primaryKey;
 	}

@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,7 +35,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 
-//TODO use deleteRow, log log4j in ui
+//FIXME use deleteRow, log log4j in ui
 public class SqlTableView extends TableView<MapTableViewRow> {
 
 	protected ObservableList<MapTableViewRow> rows;
@@ -294,7 +293,8 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		List<Object> params = new ArrayList<>();
 
 		for (String column : columns) {
-			if (!column.equals(this.getPrimaryKey())) {
+//			if (!column.equals(this.getPrimaryKey())) {
+			if (this.getPrimaryKey() != null && !this.getPrimaryKey().contains(column)) {
 				String elm = null;
 				if (sqlTableRow.get(column) != null)
 					elm = sqlTableRow.get(column).toString();
@@ -307,8 +307,13 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			}
 		}
 		query = query.substring(0, query.length() - 1);
-		query += " where " + this.getPrimaryKey() + "= ?";
-		params.add(sqlTableRow.get(this.getPrimaryKey()));
+		query += " where ";
+		String[] keys = this.getPrimaryKey().split(",");
+		for (String key : keys) {
+			query += key + " = ? and ";
+			params.add(sqlTableRow.get(key));
+		}
+		query = query.substring(0, query.length() - "and ".length());
 
 		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
 		LoggerFactory.getLogger("SQLBROWSER").debug(message);
@@ -333,8 +338,12 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		List<Object> params = new ArrayList<>();
 		Set<String> columns = this.getSqlTable().getColumns();
 		if (this.getPrimaryKey() != null) {
-			params.add(sqlTableRow.get(this.getPrimaryKey()));
-			query += this.getPrimaryKey() + "= ?";
+			String[] keys = this.getPrimaryKey().split(",");
+			for (String key : keys) {
+				query += key + " = ? and ";
+				params.add(sqlTableRow.get(key));
+			}
+			query = query.substring(0, query.length() - "and ".length());
 		} else {
 			for (String column : columns) {
 				params.add(sqlTableRow.get(column));
@@ -433,7 +442,8 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		List<Object> params = new ArrayList<>();
 
 		for (String column : columns) {
-			if (!column.equals(this.getPrimaryKey())) {
+//			if (!column.equals(this.getPrimaryKey())) {
+			if (this.getPrimaryKey() != null && !this.getPrimaryKey().contains(column)) {
 				TextField elm = editBox.getMap().get(column);
 				Object actualValue = null;
 				if (elm != null && elm.getText() != null && !elm.getText().equals("")) {
@@ -453,14 +463,29 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			}
 		}
 		query = query.substring(0, query.length() - 1);
-		query += " where " + this.getPrimaryKey() + "= ?";
-		params.add(sqlTableRow.get(this.getPrimaryKey()));
+		query += " where ";
+		String[] keys = this.getPrimaryKey().split(",");
+		for (String key : keys) {
+			query += key + " = ? and ";
+			params.add(sqlTableRow.get(key));
+		}
+		query = query.substring(0, query.length() - "and ".length());
 
 		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
 		logger.debug(message);
 
 		if (sqlConnector.executeUpdate(query, params) > 0) {
-			sqlConnector.executeQuery("select " + StringUtils.join(columns, ",") + " from " + this.getSqlTable().getName() + " where " + this.getPrimaryKey() + " = ?", Arrays.asList(sqlTableRow.get(this.getPrimaryKey())),
+			params.clear();
+			String selectQuery = "select " + StringUtils.join(columns, ",") + " from " + this.getSqlTable().getName()
+					+ " where ";
+			keys = this.getPrimaryKey().split(",");
+			for (String key : keys) {
+				selectQuery += key + " = ? and ";
+				params.add(sqlTableRow.get(key));
+			}
+			selectQuery = selectQuery.substring(0, selectQuery.length() - "and ".length());
+			
+			sqlConnector.executeQuery(selectQuery, params,
 				rset -> {
 					LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
 					for (String columnLabel : sqlTable.getColumns()) {
@@ -504,6 +529,11 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		return sqlConnector;
 	}
 
+	/*
+	 * Returns tables's primary key , IMPORTANT in case of a composite
+	 * key it returns a comma separated string with the keys 
+	 * 
+	 */
 	public String getPrimaryKey() {
 		return sqlTable.getPrimaryKey();
 	}

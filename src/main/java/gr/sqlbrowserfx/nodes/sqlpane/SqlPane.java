@@ -1074,8 +1074,12 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		List<Object> params = new ArrayList<>();
 		Set<String> columns = getSelectedSqlTableView().getSqlTable().getColumns();
 		if (getSelectedSqlTableView().getPrimaryKey() != null) {
-			params.add(sqlTableRow.get(getSelectedSqlTableView().getPrimaryKey()));
-			query += getSelectedSqlTableView().getPrimaryKey() + "= ?";
+			String[] keys = getSelectedSqlTableView().getPrimaryKey().split(",");
+			for (String key : keys) {
+				query += key + " = ? and ";
+				params.add(sqlTableRow.get(key));
+			}
+			query = query.substring(0, query.length() - "and ".length());
 		} else {
 			for (String column : columns) {
 				params.add(sqlTableRow.get(column));

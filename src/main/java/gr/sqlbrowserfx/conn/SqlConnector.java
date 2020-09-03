@@ -260,16 +260,18 @@ public abstract class SqlConnector {
 	}
 
 	public String findPrimaryKey(String tableName) throws SQLException {
-		String primaryKey = null;
+		String primaryKey = "";
 
 		try (Connection conn = dataSource.getConnection();) {
 			DatabaseMetaData meta = conn.getMetaData();
 			ResultSet rset = meta.getPrimaryKeys(null, null, tableName);
 			while (rset.next())
-				primaryKey = rset.getString("COLUMN_NAME");
+				primaryKey += rset.getString("COLUMN_NAME") + ",";
 		}
+		if (!primaryKey.isEmpty())
+			primaryKey = primaryKey.substring(0, primaryKey.length() - 1);
 
-		return primaryKey;
+		return primaryKey.isEmpty() ? null : primaryKey;
 	}
 
 	public void rollbackQuitely(Connection conn) {

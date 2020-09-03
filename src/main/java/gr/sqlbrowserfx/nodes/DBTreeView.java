@@ -214,7 +214,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 			sqlTable.getColumns();
 			for (String column : sqlTable.getColumns()) {
 				TreeItem<String> columnTreeItem = new TreeItem<String>(column);
-				if (column.equals(sqlTable.getPrimaryKey()))
+				if (sqlTable.getPrimaryKey() != null && sqlTable.getPrimaryKey().contains(column))
 					columnTreeItem.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
 				else if (sqlTable.isForeignKey(column)) {
 					columnTreeItem.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));

@@ -84,7 +84,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 				info.show(infoButton);
 			});
 
-			if (sqlTableRow != null && columnName.equals(sqlTableView.getPrimaryKey())) {
+			if (sqlTableRow != null && sqlTableView.getPrimaryKey() != null && sqlTableView.getPrimaryKey().contains(columnName)) {
 				textField.setEditable(false);
 				textField.setTooltip(new Tooltip("Primary key can't be edit"));
 				label.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
