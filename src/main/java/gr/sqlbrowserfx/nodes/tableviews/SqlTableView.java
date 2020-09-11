@@ -86,7 +86,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		setItems(rs);
 	}
 
-	public SqlTableView(SqlConnector sqlConnector) throws SQLException {
+	public SqlTableView(SqlConnector sqlConnector) {
 		this();
 		this.sqlConnector = sqlConnector;
 	}

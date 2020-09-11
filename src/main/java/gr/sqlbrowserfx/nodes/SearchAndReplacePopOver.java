@@ -2,15 +2,18 @@ package gr.sqlbrowserfx.nodes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
 
-import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import javafx.application.Platform;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
@@ -26,6 +29,9 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	protected Button findButton;
 	protected Button replaceButton;
 	private List<SimpleObserver<String>> listeners;
+	private Button replaceAllButton;
+	private CheckBox wholeWordCheckBox;
+	private CheckBox caseInsensitiveCheckBox;
 	
 	public SearchAndReplacePopOver(CodeArea codeArea) {
 		this(codeArea, true);
@@ -50,9 +56,9 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
 				this.hide();
 			}
-//			else if (keyEvent.getCode() == KeyCode.ENTER) {
-//				this.replaceButtonAction();
-//			}
+			else if (keyEvent.getCode() == KeyCode.ENTER) {
+				this.replaceButtonAction();
+			}
 		});
 		replaceField.setPromptText("Replace...");
 
@@ -72,37 +78,148 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 				keyEvent.consume();
 			}
 		});
-//		findButton.prefWidthProperty().bind(findField.widthProperty());
-//		replaceButton.prefWidthProperty().bind(findField.widthProperty());
+		
+		replaceAllButton = new Button("Replace all", JavaFXUtils.createIcon("/icons/replace.png"));
+		replaceAllButton.setOnMouseClicked(MouseEvent -> this.replaceAllButtonAction());
+		replaceAllButton.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ENTER) {
+				this.replaceAllButtonAction();
+				keyEvent.consume();
+			}
+		});
 
+		wholeWordCheckBox = new CheckBox("ww");
+		wholeWordCheckBox.setFocusTraversable(false);
+		caseInsensitiveCheckBox = new CheckBox("ci");
+		caseInsensitiveCheckBox.setFocusTraversable(false);
+		
 		this.setArrowSize(0);
 		if (enableReplace)
-			this.setContentNode(new VBox(findField, replaceField, new HBox(findButton, replaceButton)));
+			this.setContentNode(new HBox(new VBox(findField, replaceField, new HBox(findButton, replaceButton, replaceAllButton)),
+										 new VBox(wholeWordCheckBox, caseInsensitiveCheckBox))
+					);
 		else
 			this.setContentNode(new VBox(findField, findButton));
 
 		this.setAutoHide(true);
+		this.setDetachable(false);
+	}
+	
+	private volatile int recursionRound = 0;
+	private volatile boolean javafxThreadRunning = false;
+	private Object javafxThreadRunningLock = new Object();
+	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	
+	private int findButtonActionImpl() {
+		recursionRound++;
+		
+		if (!findField.getText().isEmpty()) {
+			String pattern = findField.getText();
+			String text = codeArea.getText();
+			if (caseInsensitiveCheckBox.isSelected()) {
+				pattern = pattern.toLowerCase();
+				text = text.toLowerCase();
+			}
+			lastPos = text.indexOf(pattern, codeArea.getCaretPosition());
+			
+			if (lastPos != -1) {
+//FIXME This is no working properly
+//---------------------------------------------------------------------				
+//				if (wholeWordCheckBox.isSelected()) {
+//					if (lastPos != 0 && (text.charAt(lastPos - 1) == ' ' || text.charAt(lastPos - 1) == '\n')
+//							&& (text.charAt(lastPos + pattern.length() + 1) == ' ' && text.charAt(lastPos + pattern.length() + 1) == '\n'))
+//							System.out.println();
+//					else
+//						return;
+//				}
+//---------------------------------------------------------------------				
+
+				javafxThreadRunning = true;
+				final String finalPattern = pattern;
+				Platform.runLater(() -> {
+					synchronized (javafxThreadRunningLock) {
+						selectMatchingWord(finalPattern);
+						javafxThreadRunning = false;
+						javafxThreadRunningLock.notify();
+					}
+				});
+				while (javafxThreadRunning) {
+					synchronized (javafxThreadRunningLock) {
+						try {
+							javafxThreadRunningLock.wait(1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				};
+				
+				recursionRound = 0;
+				return 1;
+			}
+			else if (lastPos == -1 && recursionRound == 1) {
+				lastPos = 0;
+				javafxThreadRunning = true;
+				Platform.runLater(() -> {
+					synchronized (javafxThreadRunningLock) {
+						codeArea.moveTo(0);
+						javafxThreadRunning = false;
+						javafxThreadRunningLock.notify();
+					}
+				});
+				
+				while (javafxThreadRunning) {
+					synchronized (javafxThreadRunningLock) {
+						try {
+							javafxThreadRunningLock.wait(1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				};
+				//recursion
+				this.findButtonAction();
+			}
+		}
+		
+		return 0;
 	}
 	
 	private void findButtonAction() {
-		if (!findField.getText().isEmpty()) {
-			lastPos = codeArea.getText().indexOf(findField.getText(), codeArea.getCaretPosition());
-			if (lastPos != -1) {
-				codeArea.moveTo(lastPos + findField.getText().length());
-				codeArea.requestFollowCaret();
-				codeArea.selectRange(lastPos, lastPos + findField.getText().length());
-			} else if (lastPos == -1) {
-				lastPos = 0;
-				codeArea.moveTo(0);
-			}
-		}
+		executor.execute(() -> this.findButtonActionImpl());
+		
+	}
+	
+	private void selectMatchingWord(String pattern) {
+		codeArea.moveTo(lastPos + pattern.length());
+		codeArea.requestFollowCaret();
+		codeArea.selectRange(lastPos, lastPos + pattern.length());
 	}
 
 	private void replaceButtonAction() {
-		if (!replaceField.getText().isEmpty() && !codeArea.getSelectedText().isEmpty()) {
+		String replacement = replaceField.getText();
+		if (!replacement.isEmpty() && !codeArea.getSelectedText().isEmpty() && !replacement.equals(codeArea.getSelectedText())) {
 			String oldValue = codeArea.getSelectedText();
-			codeArea.replaceSelection(replaceField.getText());
-			this.changed(oldValue + ">" + replaceField.getText());
+			codeArea.replaceSelection(replacement);
+			selectMatchingWord(replacement);
+			this.changed(oldValue + ">" + replacement);
+		}
+		else {
+			if (findButtonActionImpl() != 0)
+				replaceButtonAction();
+		}
+	}
+	
+	public void replaceAllButtonAction() {
+		if (!replaceField.getText().isEmpty() && !findField.getText().isEmpty()) {
+			String pattern = findField.getText();
+			if (wholeWordCheckBox.isSelected())
+				pattern = "\\b" + pattern + "\\b";
+			if (caseInsensitiveCheckBox.isSelected())
+				pattern = "(?i)" + pattern;
+			
+			String replacement = codeArea.getText().replaceAll(pattern, replaceField.getText());
+			codeArea.replaceText(replacement);
+			this.changed(findField.getText() + ">" + replaceField.getText());
 		}
 	}
 	
@@ -116,8 +233,10 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	}
 	@Override
 	public void changed(String data) {
-		Executors.newSingleThreadExecutor()
+		if (listeners != null) {
+			Executors.newSingleThreadExecutor()
 				 .execute(() -> listeners.forEach(l -> l.onObservaleChange(data)));
+		}
 		
 	}
 	@Override

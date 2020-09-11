@@ -1,5 +1,13 @@
 package gr.sqlbrowserfx.nodes;
 
+import java.sql.SQLException;
+import java.util.Arrays;
+
+import org.slf4j.LoggerFactory;
+
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
+import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
+import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -52,6 +60,22 @@ public class MySqlConfigBox extends VBox {
 		this.getChildren().add(databaseField);
 		connectButton = new Button("Connect", JavaFXUtils.createIcon("/icons/database.png"));
 		this.getChildren().add(connectButton);
+		SqlTableView sqlTableView = new SqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
+		this.getChildren().add(sqlTableView);
+		sqlTableView.setOnMouseClicked( mouseEvent -> {
+			if (sqlTableView.getSelectionModel().getSelectedItem() != null) {
+				MapTableViewRow row = sqlTableView.getSelectionModel().getSelectedItem();
+				Platform.runLater(() -> {
+					urlField.setText(row.get("url").toString());
+					userField.setText(row.get("user").toString());
+					databaseField.setText(row.get("database").toString());
+				});
+			}
+		});
+
+		SqlBrowserFXAppManager.getConfigSqlConnector().executeQueryRawAsync("select * from mysql_history_localtime", rset -> {
+			sqlTableView.setItems(rset);
+		});
 
 		this.loader = new ProgressIndicator();
 		this.loader.setMaxSize(40, 40);
@@ -112,5 +136,16 @@ public class MySqlConfigBox extends VBox {
 		} else {
 			Platform.runLater(() -> this.getChildren().remove(loader));
 		}
+	}
+
+	public void saveToHistory() {
+		SqlBrowserFXAppManager.getConfigSqlConnector().executeAsync(() -> {
+			try {
+				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate("insert into mysql_history (url, user, database) values (?, ?, ?)",
+						Arrays.asList(urlField.getText(), userField.getText(), databaseField.getText()));
+			} catch (SQLException e) {
+				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+			}
+		});
 	}
 }

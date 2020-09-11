@@ -19,6 +19,8 @@ import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 public class QueriesMenu extends Menu implements SimpleObserver<String> {
 
@@ -52,7 +54,8 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 					try {
 						QueryDTO qd = (QueryDTO) DTOMapper.map(rset2, QueryDTO.class);
 						Menu queryMenuItem = new Menu();
-						queryMenuItem.setGraphic(new Label(qd.getDescription()));
+						Label label = new Label(qd.getDescription());
+						queryMenuItem.setGraphic(label);
 						queriesMap.put(qd.getDescription(), qd.getSql());
 						queryMenuItem.setOnAction(action -> {
 							StringSelection stringSelection = new StringSelection(queriesMap.get(qd.getDescription()));
@@ -61,20 +64,11 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 						});
 						categorySubMenu.getItems().add(queryMenuItem);
 						
-						queryMenuItem.getGraphic().setOnMouseEntered(mouseEvent -> {
-							queryMenuItem.getItems().clear();
-							for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
-								if (sqlPane.getSqlCodeAreaRef() != null) {
-									MenuItem sendToCodeArea = new MenuItem("Paste in " + sqlPane.asDockNode().getTitle());
-									sendToCodeArea.setOnAction(action2 -> {
-										sqlPane.getSqlCodeAreaRef().clear();
-										sqlPane.getSqlCodeAreaRef().appendText(queriesMap.get(qd.getDescription()));
-									});
-									queryMenuItem.getItems().add(sendToCodeArea);
-								}
-							}
-							queryMenuItem.show();
+						label.setOnKeyPressed(keyEvent -> {
+							if (keyEvent.getCode() == KeyCode.RIGHT)
+								loadSqlCodeAreasAvailable(qd, queryMenuItem);
 						});
+						label.setOnMouseEntered(mouseEvent -> loadSqlCodeAreasAvailable(qd, queryMenuItem));
 					} catch (Throwable e) {
 						logger.error(e.getMessage(), e);
 					}
@@ -84,6 +78,22 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 		} catch (SQLException e) {
 			logger.error(e.getMessage(), e);
 		}
+	}
+
+	private void loadSqlCodeAreasAvailable(QueryDTO qd, Menu queryMenuItem) {
+		System.out.println("Loading");
+		queryMenuItem.getItems().clear();
+		for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
+			if (sqlPane.getSqlCodeAreaRef() != null) {
+				MenuItem sendToCodeArea = new MenuItem("Paste in " + sqlPane.asDockNode().getTitle());
+				sendToCodeArea.setOnAction(action2 -> {
+					sqlPane.getSqlCodeAreaRef().clear();
+					sqlPane.getSqlCodeAreaRef().appendText(queriesMap.get(qd.getDescription()));
+				});
+				queryMenuItem.getItems().add(sendToCodeArea);
+			}
+		}
+		queryMenuItem.show();
 	}
 
 	@Override

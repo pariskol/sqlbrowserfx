@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -12,6 +13,7 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
@@ -197,7 +199,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 							try {
 								stmt.cancel();
 							} catch (SQLException e) {
-								LoggerFactory.getLogger("SQL-BROWSER").error(e.getMessage());
+								LoggerFactory.getLogger(getClass()).error(e.getMessage());
 							}
 						});
 					});
@@ -244,7 +246,19 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			});
 		}
 		
+		if (!fixedQuery.isEmpty())
+			this.saveHistory(fixedQuery);
+		
 		return fixedQuery;
+	}
+
+	private void saveHistory(final String fixedQuery) {
+		try {
+			SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate("insert into queries_history (query) values (?)",
+					Arrays.asList(fixedQuery));
+		} catch (SQLException e) {
+			LoggerFactory.getLogger(getClass()).error(e.getMessage());
+		}
 	}
 
 	private String fixQuery(String query) {

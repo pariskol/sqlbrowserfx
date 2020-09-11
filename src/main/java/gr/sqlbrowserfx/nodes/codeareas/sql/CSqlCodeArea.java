@@ -21,6 +21,8 @@ import javafx.scene.layout.VBox;
 
 public class CSqlCodeArea extends SqlCodeArea {
 
+	private PopOver saveQueryPopOver;
+
 	public CSqlCodeArea() {
 		super();
 		this.startTextAnalyzerDaemon();
@@ -36,7 +38,14 @@ public class CSqlCodeArea extends SqlCodeArea {
 		return menu;
 	}
 
-	private void saveQueryAction() {
+	@Override
+	protected void onMouseClicked() {
+		super.onMouseClicked();
+		if (saveQueryPopOver != null)
+			saveQueryPopOver.hide();
+	}
+	
+	protected void saveQueryAction() {
 		final SqlConnector sqlConnector = SqlBrowserFXAppManager.getConfigSqlConnector();
 		TextField descriptionField = new TextField();
 		descriptionField.setPromptText("Description");
@@ -69,21 +78,20 @@ public class CSqlCodeArea extends SqlCodeArea {
 		});
 
 		VBox vb = new VBox(categoryField, descriptionField, addButton);
-		PopOver popOver = new PopOver(vb);
+		saveQueryPopOver  = new PopOver(vb);
 		
 		categoryField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
-				popOver.hide();
+				saveQueryPopOver.hide();
 			}
 		});
 		descriptionField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
-				popOver.hide();
+				saveQueryPopOver.hide();
 			}
 		});
-		popOver.setArrowSize(0);
+		saveQueryPopOver.setArrowSize(0);
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-		popOver.show(this, boundsInScene.getMinX()+popOver.getWidth()/3, boundsInScene.getMinY()-popOver.getHeight()/2);
-
+		saveQueryPopOver.show(this, boundsInScene.getMinX()+saveQueryPopOver.getWidth()/3, boundsInScene.getMinY()-saveQueryPopOver.getHeight()/2);
 	}
 }

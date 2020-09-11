@@ -6,13 +6,18 @@ import java.awt.datatransfer.StringSelection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 import org.dockfx.DockNode;
 import org.dockfx.DockPos;
 import org.dockfx.DockWeights;
 import org.dockfx.Dockable;
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
@@ -22,11 +27,15 @@ import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
 
 public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
@@ -35,6 +44,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	private Button historyButton;
 	private boolean historyShowing = false;
 	private HistorySqlCodeArea historyCodeArea;
+	private DatePicker datePicker;
  
 	public DSqlConsolePane(SqlConnector sqlConnector) {
 		this(sqlConnector, null);
@@ -44,11 +54,43 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		super(sqlConnector);
 		historyCodeArea = new HistorySqlCodeArea();
 		historyCodeArea.setEditable(false);
+		datePicker = new DatePicker(LocalDate.now());
+
+		datePicker.setOnAction(actionEvent -> {
+            LocalDate date = datePicker.getValue();
+            String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            this.getQueriesHistory(dateStr);
+
+		});
+		
+		this.getQueriesHistory(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		
 		this.sqlPane = sqlPane;
 		this.getChildren().clear();
 		this.setCenter(getQueryTabPane());
 		this.setBottom(getBottomBar());
 		this.setLeft(getToolbar());
+	}
+
+	//Async function , runs into another thread
+	private void getQueriesHistory(String dateStr) {
+		SqlBrowserFXAppManager.getConfigSqlConnector().executeQueryRawAsync("select query,datetime(timestamp,'localtime') timestamp from queries_history "
+				+ "where date(datetime(timestamp,'localtime')) = '" + dateStr + "' order by id",
+			rset -> {
+				StringBuilder history = new StringBuilder();
+				while (rset.next()) {
+					try {
+						Map<String, Object> map = DTOMapper.map(rset);
+						history.append("\n--  Executed at : " + map.get("timestamp") + " --\n");
+						history.append(map.get("query"));
+						history.append("\n");
+					} catch (Exception e) {
+						LoggerFactory.getLogger(getClass()).error("Could not get query");
+					}
+				}
+				Platform.runLater(() -> historyCodeArea.replaceText(history.toString()));
+			}
+		);
 	}
 	
 	protected void copyAction(ListView<SqlCodeArea> listView) {
@@ -81,7 +123,12 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		historyButton.setOnMouseClicked(mouseEvent -> {
 			if (!historyShowing) {
 				historyShowing = true;
-				DockNode dockNode = new DockNode(new VirtualizedScrollPane<SqlCodeArea>(historyCodeArea), "Query history", JavaFXUtils.createIcon("/icons/monitor.png"));
+				VirtualizedScrollPane<SqlCodeArea> vsp = new VirtualizedScrollPane<>(historyCodeArea);
+				VBox vb = new VBox(datePicker, vsp);
+				DockNode dockNode = new DockNode(vb, "Query history", JavaFXUtils.createIcon("/icons/monitor.png"));
+				VBox.setVgrow(vsp, Priority.ALWAYS);
+				datePicker.prefWidthProperty().unbind();
+				datePicker.prefWidthProperty().bind(vb.widthProperty());
 				dockNode.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),DockWeights.asDoubleArrray(0.7f, 0.3f));
 				dockNode.setOnClose(() -> historyShowing = false);
 			}
@@ -115,11 +162,13 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	public String executeButonAction() {
 		String query = super.executeButonAction();
-		historyCodeArea.appendText("\n -- Executed at : " + new Timestamp(System.currentTimeMillis()).toString() + " --\n");
-		historyCodeArea.appendText(query);
-		historyCodeArea.appendText("\n");
-		historyCodeArea.moveTo(historyCodeArea.getLength());
-		historyCodeArea.requestFollowCaret();
+		if (datePicker.getValue().equals(LocalDate.now())) {
+			historyCodeArea.appendText("\n -- Executed at : " + new Timestamp(System.currentTimeMillis()).toString() + " --\n");
+			historyCodeArea.appendText(query);
+			historyCodeArea.appendText("\n");
+			historyCodeArea.moveTo(historyCodeArea.getLength());
+			historyCodeArea.requestFollowCaret();
+		}
 		return query;
 	}
 	

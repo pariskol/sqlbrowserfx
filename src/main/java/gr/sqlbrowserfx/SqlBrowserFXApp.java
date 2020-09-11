@@ -247,10 +247,6 @@ public class SqlBrowserFXApp extends Application {
 				try {
 					mysqlConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
 					mysqlConnector.checkConnection();
-//					SqlBrowserFXAppManager.getConfigSqlConnector()
-//										  .executeUpdate("insert into mysql_history (date,url,usenrname,database) values (?,?,?)",
-//												  Arrays.asList(new Timestamp(System.currentTimeMillis()),
-//														  		configBox.getUrl(), configBox.getUserField().getText(), configBox.getDatabaseField().getText()));
 				} catch (SQLException e) {
 					LoggerFactory.getLogger("SQLBROWSER").error(e.getMessage(), e);
 					configBox.showLoader(false);
@@ -259,6 +255,7 @@ public class SqlBrowserFXApp extends Application {
 					return;
 				}
 				
+				configBox.saveToHistory();
 				Platform.runLater(() -> createAppView(mysqlConnector));
 			});
 	}
@@ -342,6 +339,7 @@ public class SqlBrowserFXApp extends Application {
 		
 		VBox vbox = new VBox();
 		vbox.setAlignment(Pos.CENTER);
+//		TabPane tp = new TabPane(new Tab("SqlBrowserFX", dockPane), new Tab("BashFX", new BashFXApp().createBashFXAppBox(primaryStage)));
 		vbox.getChildren().addAll(menuBar, dockPane);
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
 		

@@ -5,7 +5,7 @@ import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 
-public class HistorySqlCodeArea extends SqlCodeArea {
+public class HistorySqlCodeArea extends CSqlCodeArea {
 
 	public HistorySqlCodeArea() {
 		super();
@@ -22,7 +22,10 @@ public class HistorySqlCodeArea extends SqlCodeArea {
 		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
 		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
-		menu.getItems().addAll(menuItemCopy, menuItemSearchAndReplace);
+		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/check.png"));
+		menuItemSave.setOnAction(action -> this.saveQueryAction());
+		
+		menu.getItems().addAll(menuItemCopy, menuItemSearchAndReplace, menuItemSave);
 		return menu;
 	}
 }

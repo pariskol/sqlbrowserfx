@@ -24,7 +24,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -38,8 +37,8 @@ import jfxtras.styles.jmetro.Style;
 public class DialogFactory {
 
 	private static String DEFAULT_STYLESHEET;
-	private static final boolean ENABLE_JMETRO = System.getProperty("jmetro") != null;
-	private static final String JMETRO = System.getProperty("jmetro");
+	private static final boolean ENABLE_JMETRO = System.getProperty("sqlbrowsefx.jmetro.theme") != null;
+	private static final String JMETRO = System.getProperty("sqlbrowsefx.jmetro.theme");
 	
 	public static void createErrorDialog(Throwable e) {
 		createErrorDialog(e, null);

@@ -11,8 +11,9 @@ import java.util.concurrent.Executors;
 public class HTTPClient {
 
     private static ExecutorService EXECUTOR_SERVICE = null;
-    private static String BASIC_AUTH = null;
+    private static String BASIC_AUTH = "";
     private static OkHttpClient client = new OkHttpClient();
+	private static boolean checkForCreds = false;
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     /**
@@ -42,7 +43,7 @@ public class HTTPClient {
     }
 
     private static void checkForCredentials() throws IllegalStateException{
-        if (BASIC_AUTH == null)
+        if (checkForCreds  && BASIC_AUTH == null)
             throw new IllegalStateException("This HTTPClient demands a Basic Authentication header to be set," +
                     " in order this to be done you must first call 'setBasicAuthCredentials' method");
     }

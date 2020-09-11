@@ -59,14 +59,18 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		this.setKeys();
 
 		this.setOnMouseClicked(mouseEvent -> {
-			if (autoCompletePopupShowing) {
-				hideAutocompletePopup();
-			}
-			searchAndReplacePopOver.hide();
+			this.onMouseClicked();
 		});
 
 		this.setParagraphGraphicFactory(LineNumberFactory.get(this));
 		this.enableHighlighting();
+	}
+
+	protected void onMouseClicked() {
+		if (autoCompletePopupShowing) {
+			hideAutocompletePopup();
+		}
+		searchAndReplacePopOver.hide();
 	}
 
 	protected void startTextAnalyzerDaemon() {
@@ -128,6 +132,12 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 						this.deletePreviousChar();
 						this.moveTo(this.getCaretPosition());
 					}
+				}
+				else if (keyEvent.getCode() == KeyCode.U) {
+					this.convertSelectedTextToUpperCase();
+				}
+				else if (keyEvent.getCode() == KeyCode.L) {
+					this.convertSelectedTextToLowerCase();
 				}
 			}
 			else {
@@ -196,6 +206,8 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = new ContextMenu();
 
+		MenuItem menuItemRun = new MenuItem("Run", JavaFXUtils.createIcon("/icons/play.png"));
+		menuItemRun.setOnAction(event -> enterAction.run());
 		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copy());
 
@@ -211,9 +223,26 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 
 		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
 		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
+		
+		MenuItem menuItemUperCase = new MenuItem("To Upper Case", JavaFXUtils.createIcon("/icons/uppercase.png"));
+		menuItemUperCase.setOnAction(action -> this.convertSelectedTextToUpperCase());
+		MenuItem menuItemLowerCase = new MenuItem("To Lower Case", JavaFXUtils.createIcon("/icons/lowercase.png"));
+		menuItemLowerCase.setOnAction(action -> this.convertSelectedTextToLowerCase());
 
-		menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste, menuItemSuggestions, menuItemSearchAndReplace);
+		menu.getItems().addAll(menuItemRun, menuItemCopy, menuItemCut, menuItemPaste, menuItemUperCase, menuItemLowerCase, menuItemSuggestions, menuItemSearchAndReplace);
 		return menu;
+	}
+
+	private void convertSelectedTextToUpperCase() {
+		if (this.getSelectedText() != null) {
+			this.replaceSelection(this.getSelectedText().toUpperCase());
+		}
+	}
+
+	private void convertSelectedTextToLowerCase() {
+		if (this.getSelectedText() != null) {
+			this.replaceSelection(this.getSelectedText().toLowerCase());
+		}
 	}
 
 	private KeyEvent simulateControlSpaceEvent() {
