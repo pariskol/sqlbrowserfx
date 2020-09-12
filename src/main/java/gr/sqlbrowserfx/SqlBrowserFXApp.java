@@ -6,15 +6,13 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.Stream;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
@@ -54,7 +52,6 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -69,6 +66,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
@@ -76,7 +74,6 @@ import javafx.stage.Stage;
 
 public class SqlBrowserFXApp extends Application {
 
-	private static final String RECENT_DBS_PATH = "./recent-dbs.txt";
 	private static final String CSS_THEME = "/styles/" + (String) PropertiesLoader.getProperty("sqlbrowsefx.css.theme", String.class, "flat-dark") + ".css";
 	private static final Boolean AUTO_COMMIT_IS_ENABLED = (Boolean) PropertiesLoader.getProperty("sqlconnector.enable.autocommit", Boolean.class, true);
 
@@ -93,6 +90,7 @@ public class SqlBrowserFXApp extends Application {
 	private boolean isInternalDBShowing = false;
 	private boolean isRestConfigurationShowing = false;
 	private QueriesMenu queriesMenu;
+	private double fontSize;
 
 	public static void main(String[] args) {
 		BasicConfigurator.configure();
@@ -104,6 +102,8 @@ public class SqlBrowserFXApp extends Application {
 
 	@Override
 	public void start(Stage primaryStage) {
+		Font defaultFont = Font.getDefault();
+		fontSize = defaultFont.getSize();
 		this.primaryStage = primaryStage;
 		primaryStage.setTitle("SqlBrowser");
 
@@ -118,16 +118,8 @@ public class SqlBrowserFXApp extends Application {
 		primaryStage.show();
 
 		primaryStage.setOnCloseRequest(closeEvent -> {
-			if (sqlConnector instanceof SqliteConnector) {
-				boolean exists = false;
-				try (Stream<String> stream = Files.lines(Paths.get(RECENT_DBS_PATH))) {
-					exists = stream.anyMatch(line -> line.equals(DB));
-					if (!exists)
-						Files.write(Paths.get(RECENT_DBS_PATH), (DB + "\n").getBytes(), StandardOpenOption.APPEND);
-				} catch (IOException e) {
-					DialogFactory.createErrorDialog(e);
-				}
-			}
+			if (sqlConnector instanceof SqliteConnector) 
+				saveConnectionToHistory();
 			
 			Platform.exit();
 			System.exit(0);
@@ -159,23 +151,26 @@ public class SqlBrowserFXApp extends Application {
 		rightBox.setAlignment(Pos.CENTER);
 		rightBox.setSpacing(5);
 
-		Label recentDBsText = new Label("Recently opened");
+		Label recentDBsText = new Label("History");
 		recentDBsText.setTextAlignment(TextAlignment.CENTER);
 
-		ListView<String> recentDBsListView = new ListView<>();
-		try (Stream<String> stream = Files.lines(Paths.get(RECENT_DBS_PATH))) {
-			stream.forEach(line -> recentDBsListView.getItems().add(line));
-		} catch (IOException e) {
-			DialogFactory.createErrorDialog(e);
-		}
+		HistorySqlTableView recentDBsTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
+		
+		SqlBrowserFXAppManager
+			.getConfigSqlConnector()
+			.executeQueryRawAsync("select id, database, timestamp from connections_history_localtime where database_type = 'sqlite'",
+				rset -> recentDBsTableView.setItemsLater(rset)
+		);
 
-		recentDBsListView.setOnMouseClicked(
-				mouseEvent -> {
-					selectedDBtext.setText(recentDBsListView.getSelectionModel().getSelectedItem());
+		recentDBsTableView.setOnMouseClicked(
+			mouseEvent -> {
+				if (recentDBsTableView.getSelectionModel().getSelectedItem() != null) {
+					selectedDBtext.setText(recentDBsTableView.getSelectionModel().getSelectedItem().get("database").toString());
 					if (mouseEvent.getClickCount() == 2)
 						dbSelectionAction(selectedDBtext.getText());
-				});
-		VBox leftBox = new VBox(recentDBsText, recentDBsListView);
+				}
+			});
+		VBox leftBox = new VBox(recentDBsText, recentDBsTableView);
 		leftBox.setAlignment(Pos.CENTER);
 		leftBox.setPadding(new Insets(5));
 		leftBox.setSpacing(5);
@@ -202,6 +197,7 @@ public class SqlBrowserFXApp extends Application {
 		JavaFXUtils.applyJMetro(dbTabPane);
 		
 		primaryScene = new Scene(dbTabPane, 600, 400);
+		dbTabPane.setStyle("fx-font-size: " + fontSize + ";");
 		leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
 		leftBox.prefWidthProperty().bind(primaryScene.widthProperty().divide(2));
 		primaryScene.getStylesheets().add(CSS_THEME);
@@ -525,6 +521,18 @@ public class SqlBrowserFXApp extends Application {
 		});
 		isRestConfigurationShowing = true;
 		stage.setOnCloseRequest(windowEvent -> isRestConfigurationShowing  = false);
+	}
+	
+	private void saveConnectionToHistory() {
+		SqlBrowserFXAppManager.getConfigSqlConnector().executeAsync(() -> {
+			try {
+				String query = "insert into connections_history (database, database_type) values (?, ?)";
+				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
+						Arrays.asList(DB, "sqlite"));
+			} catch (SQLException e) {
+				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+			}
+		});
 	}
 
 }

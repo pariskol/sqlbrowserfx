@@ -7,7 +7,7 @@ cp -r dist/sqlbrowserfx/* ~/sqlbrowserfx/
 cp starters/sqlbrowserfx.sh ~/sqlbrowserfx/
 echo
 echo "Fixing starter script.."
-sed -i "s|#JAVA_HOME|export JAVA_HOME=$JAVA_HOME/bin|g" ~/sqlbrowserfx/sqlbrowserfx.sh
+#sed -i "s|#JAVA_HOME|export JAVA_HOME=$JAVA_HOME/bin|g" ~/sqlbrowserfx/sqlbrowserfx.sh
 chmod +x ~/sqlbrowserfx/sqlbrowserfx.sh
 echo "Checking for .bash_aliases..."
 [ ! -f .bash_aliases ] && touch ~/.bash_aliases

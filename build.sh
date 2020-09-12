@@ -25,7 +25,6 @@ cp log4j.properties dist/sqlbrowserfx/
 cp sqlbrowser.db dist/sqlbrowserfx/
 cp starters/* dist/sqlbrowserfx/
 cp sqlbrowserfx.properties dist/sqlbrowserfx/
-touch dist/sqlbrowserfx/recent-dbs.txt
 
 chmod +x dist/sqlbrowserfx/*.sh
 cd dist

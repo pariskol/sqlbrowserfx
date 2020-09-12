@@ -5,9 +5,9 @@ import java.util.Arrays;
 
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.HistorySqlTableView;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
-import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -16,6 +16,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class MySqlConfigBox extends VBox {
@@ -31,6 +32,13 @@ public class MySqlConfigBox extends VBox {
 	public MySqlConfigBox() {
 		this.setPadding(new Insets(5));
 		this.setSpacing(5);
+		
+		this.getChildren().add(new Label("History"));
+		HistorySqlTableView sqlTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
+		sqlTableView.setPrefHeight(100);
+		sqlTableView.setColumnWidth(0, 0, 300);
+		this.getChildren().add(sqlTableView);
+		
 		this.getChildren().add(new Label("Databse url"));
 		urlField = new TextField();
 		urlField.setPromptText("jdbc:mysql://localhost:3306/" + lastDatabase + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
@@ -59,9 +67,15 @@ public class MySqlConfigBox extends VBox {
 		});
 		this.getChildren().add(databaseField);
 		connectButton = new Button("Connect", JavaFXUtils.createIcon("/icons/database.png"));
-		this.getChildren().add(connectButton);
-		SqlTableView sqlTableView = new SqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
-		this.getChildren().add(sqlTableView);
+		
+		this.loader = new ProgressIndicator();
+		this.loader.setMaxSize(40, 40);
+		this.loader.setVisible(false);
+		
+		HBox hb = new HBox(connectButton, loader);
+		hb.setSpacing(5);
+		this.getChildren().add(hb);
+		
 		sqlTableView.setOnMouseClicked( mouseEvent -> {
 			if (sqlTableView.getSelectionModel().getSelectedItem() != null) {
 				MapTableViewRow row = sqlTableView.getSelectionModel().getSelectedItem();
@@ -73,12 +87,10 @@ public class MySqlConfigBox extends VBox {
 			}
 		});
 
-		SqlBrowserFXAppManager.getConfigSqlConnector().executeQueryRawAsync("select * from mysql_history_localtime", rset -> {
-			sqlTableView.setItems(rset);
+		SqlBrowserFXAppManager.getConfigSqlConnector().executeQueryRawAsync("select id, timestamp, url, user, database from connections_history_localtime where database_type = 'mysql'", rset -> {
+			sqlTableView.setItemsLater(rset);
 		});
 
-		this.loader = new ProgressIndicator();
-		this.loader.setMaxSize(40, 40);
 	}
 
 	public MySqlConfigBox(String url) {
@@ -131,18 +143,15 @@ public class MySqlConfigBox extends VBox {
 	}
 
 	public void showLoader(boolean show) {
-		if (show) {
-			Platform.runLater(() -> this.getChildren().add(loader));
-		} else {
-			Platform.runLater(() -> this.getChildren().remove(loader));
-		}
+		Platform.runLater(() -> this.loader.setVisible(show));
 	}
 
 	public void saveToHistory() {
 		SqlBrowserFXAppManager.getConfigSqlConnector().executeAsync(() -> {
 			try {
-				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate("insert into mysql_history (url, user, database) values (?, ?, ?)",
-						Arrays.asList(urlField.getText(), userField.getText(), databaseField.getText()));
+				String query = "insert into connections_history (url, user, database, database_type) values (?, ?, ?, ?)";
+				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
+						Arrays.asList(urlField.getText(), userField.getText(), databaseField.getText(), "mysql"));
 			} catch (SQLException e) {
 				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
 			}
