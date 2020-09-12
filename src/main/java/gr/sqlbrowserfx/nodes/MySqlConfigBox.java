@@ -33,12 +33,6 @@ public class MySqlConfigBox extends VBox {
 		this.setPadding(new Insets(5));
 		this.setSpacing(5);
 		
-		this.getChildren().add(new Label("History"));
-		HistorySqlTableView sqlTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
-		sqlTableView.setPrefHeight(100);
-		sqlTableView.setColumnWidth(0, 0, 300);
-		this.getChildren().add(sqlTableView);
-		
 		this.getChildren().add(new Label("Databse url"));
 		urlField = new TextField();
 		urlField.setPromptText("jdbc:mysql://localhost:3306/" + lastDatabase + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
@@ -76,6 +70,10 @@ public class MySqlConfigBox extends VBox {
 		hb.setSpacing(5);
 		this.getChildren().add(hb);
 		
+		this.getChildren().add(new Label("History"));
+		HistorySqlTableView sqlTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
+		sqlTableView.setColumnWidth(0, 0, 300);
+		this.getChildren().add(sqlTableView);
 		sqlTableView.setOnMouseClicked( mouseEvent -> {
 			if (sqlTableView.getSelectionModel().getSelectedItem() != null) {
 				MapTableViewRow row = sqlTableView.getSelectionModel().getSelectedItem();

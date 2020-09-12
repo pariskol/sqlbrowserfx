@@ -112,7 +112,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		sqlQueryRunning = false;
 
-		popOver = new PopOver();
+		popOver = new SqlPanePopOver();
 		pathField = new TextField();
 
 		toolBar = this.createToolbar();
@@ -728,7 +728,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		addBtn.setTooltip(new Tooltip("Add"));
 		editBox.getMainBox().getChildren().add(addBtn);
 
-		popOver = new PopOver(editBox);
+		popOver = new SqlPanePopOver(editBox);
 		popOver.setHeight(editBox.getMainBox().getHeight());
 
 		addBtn.setOnAction(submitEvent -> this.insertRecordToSqlTableViewRef(editBox));
@@ -738,7 +738,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 		});
 
-		popOver.setDetachable(false);
 		popOver.show(addButton);
 		addBtn.requestFocus();
 	}
@@ -757,7 +756,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		SqlTableRowEditBox editBox = this.createEditBox(sqlTableRow, false);
 		sqlTableRow.addObserver(editBox);
 
-		popOver = new PopOver(editBox);
+		popOver = new SqlPanePopOver(editBox);
 
 		if (getSelectedSqlTableView().getPrimaryKey() != null) {
 			Button editBtn = new Button("Edit", JavaFXUtils.createIcon("/icons/check.png"));
@@ -772,7 +771,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			editBox.getMainBox().getChildren().add(editBtn);
 		}
 
-		popOver.setDetachable(false);
 		// remove listener on close
 		popOver.setOnHidden(windowEvent -> sqlTableRow.removeObserver(editBox));
 		popOver.show(editButton, event.getScreenX(), event.getScreenY());
@@ -851,8 +849,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			getSelectedTableTab().getRecordsTabPane().getSelectionModel().select(compareTab);
 		} else {
 			compareBox.setPrefWidth(800);
-			popOver = new PopOver(compareBox);
-			popOver.setDetachable(false);
+			popOver = new SqlPanePopOver(compareBox);
 			popOver.setOnHidden(closeEvent -> {
 				for (Node node : compareBox.getChildren()) {
 					HBox hbox = (HBox) node;
@@ -874,8 +871,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		ComboBox<String> viewsBox = this.createViewsBox();
 		viewsBox.prefWidthProperty().bind(tablesBox.widthProperty());
 		
-		popOver = new PopOver(new VBox(new Label("Select"), tablesBox, viewsBox));
-		popOver.setDetachable(false);
+		popOver = new SqlPanePopOver(new VBox(new Label("Select"), tablesBox, viewsBox));
 		popOver.show(tableSelectButton);
 	}
 
@@ -901,8 +897,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 
 		settingsButton.requestFocus();
-		popOver = new PopOver(new VBox(resizeModeCheckBox, fullModeCheckBox, limitModeCheckBox));
-		popOver.setDetachable(false);
+		popOver = new SqlPanePopOver(new VBox(resizeModeCheckBox, fullModeCheckBox, limitModeCheckBox));
 		popOver.show(settingsButton);
 	}
 
@@ -917,8 +912,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				popOver.hide();
 			}
 		});
-		popOver = new PopOver(searchBox);
-		popOver.setDetachable(false);
+		popOver = new SqlPanePopOver(searchBox);
 //		popOver.setOnHidden(closeEvent -> sqlTableView.setItems(sqlTableView.getSqlTableRows()));
 		popOver.show(searchButton);
 	}
@@ -935,9 +929,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			for (CheckBox checkBox : columnCheckBoxesMap.values()) {
 				vBox.getChildren().add(checkBox);
 			}
-			popOver = new PopOver();
-			popOver.setDetachable(false);
-			popOver.setContentNode(vBox);
+			popOver = new SqlPanePopOver(vBox);
 			popOver.show(columnsSettingsButton);
 		}
 	}
@@ -1039,8 +1031,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 		});
 
-		popOver = new PopOver(new VBox(pathField, new HBox(dirButton, startButton)));
-		popOver.setDetachable(false);
+		popOver = new SqlPanePopOver(new VBox(pathField, new HBox(dirButton, startButton)));
 		popOver.show(exportCsvButton);
 	}
 
