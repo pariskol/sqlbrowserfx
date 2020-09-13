@@ -2,10 +2,9 @@ package gr.sqlbrowserfx.utils.mapper;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 
@@ -17,7 +16,7 @@ public class DTOMapper {
 	 * 
 	 * @param rset
 	 * @param clazz
-	 * @return hashMap
+	 * @return LinkedHashMap
 	 * @throws Exception
 	 */
 	public static LinkedHashMap<String, Object> map(ResultSet rset) throws Exception {
@@ -36,19 +35,39 @@ public class DTOMapper {
 	}
 
 	/**
+	 * 
+	 * @param rset
+	 * @return HashMap
+	 * @throws RuntimeException
+	 */
+	public static HashMap<String, Object> safeMap(ResultSet rset) throws RuntimeException {
+
+		LinkedHashMap<String, Object> dto = null;
+		try {
+			dto = map(rset);
+		} catch (Throwable e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		return dto;
+	}
+	
+	public static Object safeMap(ResultSet rset, Class<?> clazz) {
+		Object dto = null;
+		try {
+			dto = map(rset, clazz);
+		} catch (Throwable e) {
+			throw new RuntimeException(e.getMessage(), e);
+		}
+		return dto;
+	}
+	/**
 	 * Maps a row of result set in a given class (which has @DTO annotation and its fields have @Column annotation).
 	 * Database's column types and class fields must be type compatible.
 	 * 
 	 * @param rset
 	 * @param clazz
 	 * @return
-	 * @throws SQLException 
-	 * @throws IllegalAccessException 
-	 * @throws InstantiationException 
-	 * @throws SecurityException 
-	 * @throws NoSuchMethodException 
-	 * @throws InvocationTargetException 
-	 * @throws IllegalArgumentException 
+	 * @throws Exception 
 	 */
 	public static Object map(ResultSet rset, Class<?> clazz) throws Exception {
 

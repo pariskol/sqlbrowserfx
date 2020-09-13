@@ -5,7 +5,8 @@
     -fx-control-inner-background: derive(-fx-base,30%);
     -fx-control-inner-background-alt: derive(-fx-control-inner-background, 30%);
     -fx-faint-focus-color: transparent;
-	/*-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
+    /*-fx-font-size: 13pt;
+	-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
 	-fx-selection-bar-non-focused: derive(-fx-base,90%);
 }
 

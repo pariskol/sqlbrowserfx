@@ -105,7 +105,7 @@ public class SqlBrowserFXApp extends Application {
 		Font defaultFont = Font.getDefault();
 		fontSize = defaultFont.getSize();
 		this.primaryStage = primaryStage;
-		primaryStage.setTitle("SqlBrowser");
+		primaryStage.setTitle("SqlBrowserFX");
 
 		if (DB == null)
 			createDBselectBox();
@@ -197,7 +197,6 @@ public class SqlBrowserFXApp extends Application {
 		JavaFXUtils.applyJMetro(dbTabPane);
 		
 		primaryScene = new Scene(dbTabPane, 600, 400);
-		dbTabPane.setStyle("fx-font-size: " + fontSize + ";");
 		leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
 		leftBox.prefWidthProperty().bind(primaryScene.widthProperty().divide(2));
 		primaryScene.getStylesheets().add(CSS_THEME);

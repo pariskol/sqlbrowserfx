@@ -235,11 +235,14 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 					sqlQueryRunning.set(false);
 				}
 				
-				if ((fixedQuery.contains("drop") || fixedQuery.contains("DROP") || fixedQuery.contains("create") || fixedQuery.contains("CREATE"))
+				String queryToLowerCase = fixedQuery.toLowerCase();
+				if ((queryToLowerCase.contains("drop") || queryToLowerCase.contains("create"))
 						&&
-					(fixedQuery.contains("table") || fixedQuery.contains("TABLE") ||
-					fixedQuery.contains("view") || fixedQuery.contains("VIEW") ||
-					fixedQuery.contains("trigger") || fixedQuery.contains("TRIGGER"))
+					(queryToLowerCase.contains("table")   ||
+					queryToLowerCase.contains("view")     ||
+					queryToLowerCase.contains("trigger")  ||
+					queryToLowerCase.contains("procedure")||
+					queryToLowerCase.contains("function"))
 					) {
 					this.changed(fixedQuery);
 				}

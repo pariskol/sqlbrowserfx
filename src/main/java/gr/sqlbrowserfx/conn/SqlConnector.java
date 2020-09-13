@@ -189,6 +189,25 @@ public abstract class SqlConnector {
 	 * @param action
 	 * @throws SQLException
 	 */
+	public void executeQueryAsync(String query, List<Object> params, ResultSetAction action) throws SQLException {
+		executorService.execute(() -> {
+			try {
+				this.executeQuery(query, params,action);
+			} catch (SQLException e) {
+				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+			}
+		});
+	}
+	
+	/**
+	 * Executes query asynchronously through
+	 * {@link gr.sqlbrowserfx.conn.SqlConnector} executor service. Action provided
+	 * is applied to each row of result set.
+	 * 
+	 * @param query
+	 * @param action
+	 * @throws SQLException
+	 */
 	public void executeQueryAsync(String query, ResultSetAction action) throws SQLException {
 		executorService.execute(() -> {
 			try {
@@ -216,6 +235,16 @@ public abstract class SqlConnector {
 		}
 
 		return result;
+	}
+	
+	public void executeUpdateAsync(String query) throws SQLException {
+		this.executeAsync(() -> {
+			try {
+				this.executeUpdate(query);
+			} catch (SQLException e) {
+				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+			}
+		});
 	}
 
 	public int executeUpdate(String query, List<Object> params) throws SQLException {

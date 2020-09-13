@@ -5,13 +5,16 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.controlsfx.control.PopOver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.factories.DialogFactory;
@@ -38,14 +41,18 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	private Logger logger = LoggerFactory.getLogger("SQLBROWSER");
 	private SqlConnector sqlConnector;
 
-	TreeItem<String> rootItem;
-	TreeItem<String> tablesRootItem;
-	TreeItem<String> viewsRootItem;
-	TreeItem<String> indicesRootItem;
+	private TreeItem<String> rootItem;
+	protected TreeItem<String> tablesRootItem;
+	protected TreeItem<String> viewsRootItem;
+	private TreeItem<String> indexesRootItem;
+	private TreeItem<String> proceduresRootItem;
+	private TreeItem<String> functionsRootItem;
+
+	
 	private List<String> allItems;
 	private List<SimpleObserver<String>> listeners;
 	
-	TextField searchField;
+	private TextField searchField;
 
 	@SuppressWarnings("unchecked")
 	public DBTreeView(String dbPath, SqlConnector sqlConnector) {
@@ -61,12 +68,20 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		tablesRootItem.setExpanded(true);
 		viewsRootItem = new TreeItem<>("Views", JavaFXUtils.createIcon("/icons/view.png"));
 		viewsRootItem.setExpanded(true);
-		indicesRootItem = new TreeItem<>("Indices", JavaFXUtils.createIcon("/icons/index.png"));
-		indicesRootItem.setExpanded(true);
-		rootItem.getChildren().addAll(tablesRootItem, viewsRootItem, indicesRootItem);
-
+		indexesRootItem = new TreeItem<>("Indexes", JavaFXUtils.createIcon("/icons/index.png"));
+		indexesRootItem.setExpanded(true);
+		
+		rootItem.getChildren().addAll(tablesRootItem, viewsRootItem, indexesRootItem);
+		
 		try {
 			this.fillTreeView();
+			// TODO implement in a more abstract way
+			if (sqlConnector instanceof MysqlConnector) {
+				proceduresRootItem = new TreeItem<>("Procedures", JavaFXUtils.createIcon("/icons/procedure.png"));
+				functionsRootItem = new TreeItem<>("Functions", JavaFXUtils.createIcon("/icons/function.png"));
+				rootItem.getChildren().addAll(proceduresRootItem, functionsRootItem);
+				this.getFunctionsAndProcedures();
+			}
 		} catch (SQLException e) {
 			DialogFactory.createErrorDialog(e);
 		}
@@ -99,6 +114,62 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		});
 	}
 
+	private void getFunctionsAndProcedures() {
+		if (!(sqlConnector instanceof MysqlConnector))
+			return;
+		
+		try {
+			sqlConnector.executeQueryAsync	("select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA = ? ",
+				Arrays.asList("batmobile"),
+				rset -> {
+					Map<String, Object> map = DTOMapper.safeMap(rset);
+					TreeItem<String> ti = new TreeItem<>();
+					ti.setValue(map.get("ROUTINE_NAME").toString());
+					String routineType = map.get("ROUTINE_TYPE").toString(); 
+					if (routineType.equals("PROCEDURE"))
+						ti.setGraphic(JavaFXUtils.createIcon("/icons/procedure.png"));
+					else
+						ti.setGraphic(JavaFXUtils.createIcon("/icons/function.png"));
+					
+					TreeItem<String> bodyTreeItem = new TreeItem<String>("body", JavaFXUtils.createIcon("/icons/script.png"));
+					bodyTreeItem.getChildren().add(new TreeItem<String>(map.get("ROUTINE_DEFINITION").toString()));
+					ti.getChildren().add(bodyTreeItem);
+					
+					TreeItem<String> paramsTreeItem = new TreeItem<>("parameters", JavaFXUtils.createIcon("/icons/var.png"));
+					ti.getChildren().add(paramsTreeItem);
+					
+					sqlConnector.executeQuery("select * from INFORMATION_SCHEMA.PARAMETERS where SPECIFIC_NAME = ? ",
+						Arrays.asList(map.get("ROUTINE_NAME")),
+						rset2 -> {
+							Map<String, Object> map2 = DTOMapper.safeMap(rset2);
+							
+							if (map2.get("PARAMETER_MODE") != null) {
+								String param = "";
+								if (map2.get("PARAMETER_NAME") != null)
+									param += map2.get("PARAMETER_NAME").toString() + " ";
+								if (map2.get("PARAMETER_MODE") != null)
+									param += map2.get("PARAMETER_MODE").toString() + " ";
+								if (map2.get("DATA_TYPE") != null)
+									param += map2.get("DATA_TYPE").toString();
+								
+								paramsTreeItem.getChildren().add(new TreeItem<String>(param));
+							}
+							else {
+								ti.setValue(ti.getValue() + " returns " +  map2.get("DATA_TYPE").toString());
+							}
+						});
+					
+					if (routineType.equals("PROCEDURE"))
+						proceduresRootItem.getChildren().add(ti);
+					else
+						functionsRootItem.getChildren().add(ti);
+				});
+			
+		} catch (SQLException e1) {
+			DialogFactory.createErrorDialog(e1);
+		}
+	}
+	
 	public void showSearchField() {
 		PopOver popOver = new PopOver(searchField);
 		popOver.setArrowSize(0);
@@ -108,7 +179,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	private void clearAll() {
 		tablesRootItem.getChildren().clear();
 		viewsRootItem.getChildren().clear();
-		indicesRootItem.getChildren().clear();
+		indexesRootItem.getChildren().clear();
 		allItems.clear();
 	}
 	
@@ -138,13 +209,13 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 			viewsRootItem.getChildren().removeAll(found);
 			allItems.removeAll(sfound);
 			
-			indicesRootItem.getChildren().forEach(treeItem -> {
+			indexesRootItem.getChildren().forEach(treeItem -> {
 				if (!newItems.contains(treeItem.getValue())) {
 					found.add(treeItem);
 					sfound.add(treeItem.getValue());
 				}
 			});
-			indicesRootItem.getChildren().removeAll(found);
+			indexesRootItem.getChildren().removeAll(found);
 			allItems.removeAll(sfound);
 
 			Platform.runLater(() -> {
@@ -183,7 +254,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 						treeItem.setGraphic(JavaFXUtils.createIcon("/icons/view.png"));
 					} else if (type.contains("index") || type.contains("INDEX")) {
 						this.fillIndexTreeItem(treeItem);
-						indicesRootItem.getChildren().add(treeItem);
+						indexesRootItem.getChildren().add(treeItem);
 						treeItem.setGraphic(JavaFXUtils.createIcon("/icons/index.png"));
 					}
 				}
@@ -207,7 +278,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		TreeItem<String> columnsTree = new TreeItem<>("columns", JavaFXUtils.createIcon("/icons/columns.png"));
 		treeItem.getChildren().add(columnsTree);
 
-		sqlConnector.executeQueryRaw("select * from " + treeItem.getValue() + " limit 1", rset -> {
+		sqlConnector.executeQueryRaw("select * from " + treeItem.getValue() + " where 1 = 2", rset -> {
 			SqlTable sqlTable = new SqlTable(rset.getMetaData());
 			sqlTable.setPrimaryKey(sqlConnector.findPrimaryKey(treeItem.getValue()));
 			sqlTable.setForeignKeys(sqlConnector.findForeignKeys(treeItem.getValue()));
@@ -251,7 +322,9 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 			triggersTreeItem.getChildren().add(triggerTreeItem);
 		});
 		
+//		TreeItem<String> indexesTreeItem = new TreeItem<String>("indexes", JavaFXUtils.createIcon("/icons/index.png"));
 		treeItem.getChildren().add(triggersTreeItem);
+
 	}
 
 	private void fillViewTreeItem(TreeItem<String> treeItem) throws SQLException {
@@ -287,8 +360,8 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		MenuItem menuItemRefresh = new MenuItem("Refresh View", JavaFXUtils.createIcon("/icons/refresh.png"));
 		menuItemRefresh.setOnAction(event -> {
 			try {
-				this.clearAll();
-				this.fillTreeView();
+				this.refreshTreeView();
+				this.refreshFunctionAndProcedures();
 			} catch (SQLException e) {
 				DialogFactory.createErrorDialog(e);
 			} 
@@ -296,6 +369,11 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemDrop, menuItemSearch, menuItemRefresh);
 
 		return contextMenu;
+	}
+
+	private void refreshTreeView() throws SQLException {
+		this.clearAll();
+		this.fillTreeView();
 	}
 
 	public void dropAction() {
@@ -327,7 +405,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 				}
 			}
 		}
-		else if (indicesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
+		else if (indexesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
 			String index = this.getSelectionModel().getSelectedItem().getValue();
 			String message = "Do you want to delete " + index;
 			int result = DialogFactory.createConfirmationDialog("Drop Index", message);
@@ -336,6 +414,32 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 					//TODO maybe execute async?
 					sqlConnector.dropIndex(index);
 					this.fillTreeView();
+				} catch (SQLException e) {
+					DialogFactory.createErrorDialog(e);
+				}
+			}
+		}
+		else if (proceduresRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
+			String procedure = this.getSelectionModel().getSelectedItem().getValue();
+			String message = "Do you want to delete " + procedure;
+			int result = DialogFactory.createConfirmationDialog("Drop Procedure", message);
+			if (result == 1) {
+				try {
+					sqlConnector.executeUpdate("drop procedure " + procedure);
+					this.refreshFunctionAndProcedures();
+				} catch (SQLException e) {
+					DialogFactory.createErrorDialog(e);
+				}
+			}
+		}
+		else if (functionsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
+			String function = this.getSelectionModel().getSelectedItem().getValue();
+			String message = "Do you want to delete " + function;
+			int result = DialogFactory.createConfirmationDialog("Drop Function", message);
+			if (result == 1) {
+				try {
+					sqlConnector.executeUpdate("drop function " + function);
+					this.refreshFunctionAndProcedures();
 				} catch (SQLException e) {
 					DialogFactory.createErrorDialog(e);
 				}
@@ -350,7 +454,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 			
 			if (tablesRootItem.getChildren().contains(startItem) ||
 				viewsRootItem.getChildren().contains(startItem) ||
-				indicesRootItem.getChildren().contains(startItem))
+				indexesRootItem.getChildren().contains(startItem))
 			{
 				text = startItem.getChildren().get(0)
 					  	   .getChildren().get(0).getValue();
@@ -412,12 +516,21 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		return colums;
 	}
 
+	private void refreshFunctionAndProcedures() {
+		proceduresRootItem.getChildren().clear();
+		functionsRootItem.getChildren().clear();
+		this.getFunctionsAndProcedures();
+	}
+	
 	@Override
 	public void onObservaleChange(String newValue) {
 		try {
 			this.fillTreeView();
-			if (newValue != null && (newValue.contains("trigger") || newValue.contains("trigger".toUpperCase())))
+			if (newValue != null && (newValue.toLowerCase().contains("trigger")))
 				this.updateTriggers();
+			if (newValue != null && (newValue.toLowerCase().contains("function") ||
+									 newValue.toLowerCase().contains("procedure")))
+				this.refreshFunctionAndProcedures();
 		} catch (SQLException e) {
 			DialogFactory.createErrorDialog(e);
 		}
