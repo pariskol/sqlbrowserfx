@@ -5,8 +5,8 @@ import java.util.Arrays;
 
 import org.slf4j.LoggerFactory;
 
-import gr.sqlbrowserfx.HistorySqlTableView;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
+import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;

@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx;
+package gr.sqlbrowserfx.nodes.tableviews;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -6,7 +6,6 @@ import java.awt.datatransfer.StringSelection;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
-import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;

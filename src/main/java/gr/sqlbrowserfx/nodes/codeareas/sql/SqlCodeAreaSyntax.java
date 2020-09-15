@@ -11,9 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
-import gr.sqlbrowserfx.conn.MysqlConnector;
-import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 
 public class SqlCodeAreaSyntax {
@@ -75,7 +72,7 @@ public class SqlCodeAreaSyntax {
 		try {
 			SqlBrowserFXAppManager.getConfigSqlConnector()
 								  .executeQuery("select name from autocomplete where category= ? and type in (?,'sql') order by name", 
-										  Arrays.asList(new String[]{category, DB_TYPE}), rset -> {
+										  Arrays.asList(new Object[]{category, DB_TYPE}), rset -> {
 											try {
 												HashMap<String, Object> dto = DTOMapper.map(rset);
 												list.add((String)dto.get("name"));

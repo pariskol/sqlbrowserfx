@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx;
+package gr.sqlbrowserfx.nodes.codeareas.log;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
