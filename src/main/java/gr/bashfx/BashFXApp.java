@@ -59,8 +59,7 @@ public class BashFXApp extends Application{
 	    splitPane.setDividerPositions(0.3f, 0.7f);
 		SplitPane.setResizableWithParent(dirTreeView, false);
 		VBox.setVgrow(splitPane, Priority.ALWAYS);
-		VBox vBox = new VBox(menu,splitPane);
-		return vBox;
+		return new VBox(menu,splitPane);
 	}
 	
 	private MenuBar createMenuBar(Stage primaryStage, TabPane tabPane) {

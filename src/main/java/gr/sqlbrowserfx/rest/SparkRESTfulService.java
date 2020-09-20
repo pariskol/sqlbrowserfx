@@ -50,10 +50,10 @@ public class SparkRESTfulService {
 		}, jsonTransformer);
 
 		
-		Spark.post("/save", (request, response) -> {
+		Spark.post("/save/:table", (request, response) -> {
 			JSONObject jsonObject = new JSONObject(request.body());
 			
-			String table = request.queryParams("table");
+			String table = request.params(":table");
 			String columns = "";
 			String values = "";
 			List<Object> params = new ArrayList<>();
@@ -74,10 +74,10 @@ public class SparkRESTfulService {
 			return "{ \"message\": \"Data has been saved\"}";
 		}, jsonTransformer);
 		
-		Spark.post("/delete", (request, response) -> {
+		Spark.post("/delete/:table", (request, response) -> {
 			JSONObject jsonObject = new JSONObject(request.body());
 			
-			String table = request.queryParams("table");
+			String table = request.params(":table");
 			
 			List<Object> params = new ArrayList<>();
 			String primaryKey = sqlConnector.findPrimaryKey(table);

@@ -20,7 +20,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 
 public class QueriesMenu extends Menu implements SimpleObserver<String> {
 
