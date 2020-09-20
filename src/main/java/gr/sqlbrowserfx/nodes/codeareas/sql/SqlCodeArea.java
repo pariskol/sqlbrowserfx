@@ -1,5 +1,6 @@
 package gr.sqlbrowserfx.nodes.codeareas.sql;
 
+import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,6 +18,8 @@ import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
 
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
+import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
@@ -249,14 +252,11 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		return new KeyEvent(KeyEvent.KEY_TYPED, " ", " ", null, false, true, false, false);
 	}
 
-	private ListView<String> createListView(List<String> suggestions) {
+	private ListView<String> createSuggestionsListView(List<String> suggestions) {
 		ListView<String> suggestionsList = new ListView<>();
 		if (suggestions != null) {
 			suggestionsList.getItems().addAll(FXCollections.observableList(new ArrayList<>(new HashSet<>(suggestions))));
-			int suggestionsNum = suggestions.size();
-			int listViewLength = ((suggestionsNum * LIST_ITEM_HEIGHT) > LIST_MAX_HEIGHT) ? LIST_MAX_HEIGHT
-					: suggestionsNum * LIST_ITEM_HEIGHT;
-			suggestionsList.setPrefHeight(listViewLength);
+			suggestionsList.setPrefHeight(100);
 		}
 		return suggestionsList;
 	}
@@ -264,7 +264,34 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	private void autoCompleteAction(KeyEvent event) {
 		
 		String ch = event.getCharacter();
-		if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType && !event.isControlDown())
+		if (event.isShiftDown() && event.isControlDown() && event.getCode() == KeyCode.SPACE) {
+			autoCompletePopup = this.createPopup();
+			
+			int caretPosition = this.getCaretPosition();
+			String query = this.getQuery(caretPosition);
+			
+			if (!query.isEmpty()) {
+				if (event.getCode() == KeyCode.ENTER)
+					return;
+
+				List<String> suggestions = this.getSavedQueries(query);
+				
+				suggestionsList = this.createSuggestionsListView(suggestions);
+				suggestionsList.setPrefSize(400, 200);
+				if (suggestionsList.getItems().size() != 0) {
+					autoCompletePopup.getContent().setAll(suggestionsList);
+					this.showAutoCompletePopup();
+					this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
+				} else {
+					this.hideAutocompletePopup();
+				}
+				
+			}
+			else {
+				this.hideAutocompletePopup();
+			}
+		}
+		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType && !event.isControlDown())
 				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
 				|| ch.equals(".") || ch.equals(",") || ch.equals("_")
 //				|| (ch.equals(" ") && tableAliasToSave != null)
@@ -274,8 +301,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			int caretPosition = this.getCaretPosition();
 			String query = this.getQuery(caretPosition);
 			
-			if (autoCompletePopup == null)
-				autoCompletePopup = this.createPopup();
+			autoCompletePopup = this.createPopup();
 
 			if (!query.isEmpty()) {
 				List<String> suggestions = null;
@@ -312,7 +338,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 					suggestions = this.getQuerySuggestions(query);
 				}
 				
-				suggestionsList = this.createListView(suggestions);
+				suggestionsList = this.createSuggestionsListView(suggestions);
 				if (suggestionsList.getItems().size() != 0) {
 					autoCompletePopup.getContent().setAll(suggestionsList);
 					this.showAutoCompletePopup();
@@ -329,6 +355,17 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		}
 		
 		event.consume();
+	}
+
+	private List<String> getSavedQueries(String query) {
+		List<String> suggestions = new ArrayList<>();
+		String sql = "select query from saved_queries where description like '%" + query + "%' ";
+		try {
+			SqlBrowserFXAppManager.getConfigSqlConnector().executeQuery(sql, rset -> suggestions.add(rset.getString(1)));
+		} catch (SQLException e) {
+			DialogFactory.createErrorDialog(e);
+		}
+		return suggestions;
 	}
 
 	private void cacheTableAlias(final String query, final String table) {
@@ -399,6 +436,9 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	}
 
 	private Popup createPopup() {
+		if (autoCompletePopup != null)
+			return autoCompletePopup;
+		
 		Popup popup = new Popup();
 		popup.setAutoHide(true);
 		popup.setOnAutoHide(event -> autoCompletePopupShowing = false);

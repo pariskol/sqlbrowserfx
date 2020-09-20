@@ -160,6 +160,25 @@
 	-fx-border-color: transparent;
 }
 
+.text-area {
+	-fx-background-color: transparent;
+	-fx-border-color: transparent;
+	-fx-border-width: 0.0 0.0 0.0 0.0;
+	-fx-prompt-text-fill: derive(-fx-base,80%);
+
+}
+
+.text-area .content {
+	-fx-background-color: transparent;
+	-fx-border-color: -fx-base;
+	-fx-border-width: 0.0 0.0 2.0 0.0;
+}
+
+.text-area:focused .content {
+	-fx-border-color: -fx-accent;
+	-fx-border-width: 0.0 0.0 2.0 0.0;
+}
+
 .text-field {
 	-fx-background-color: transparent;
 	-fx-border-color: -fx-base;
