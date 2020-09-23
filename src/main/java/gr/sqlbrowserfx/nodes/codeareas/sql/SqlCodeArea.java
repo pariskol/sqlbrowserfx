@@ -36,18 +36,15 @@ import javafx.stage.Popup;
 
 public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLighter {
 
-	private static final int LIST_ITEM_HEIGHT = 30;
-	private static final int LIST_MAX_HEIGHT = 120;
-
 	private Runnable enterAction;
 	private boolean autoCompletePopupShowing = false;
-	private Popup autoCompletePopup;
 	private boolean autoCompleteOnType = true;
-	protected SearchAndReplacePopOver searchAndReplacePopOver;
-//	private String tableAliasToSave;
-	private ListView<String> suggestionsList;
-	public final HashMap<String, Set<String>> tableAliases = new HashMap<>();
 	private boolean insertMode = false;
+	public final HashMap<String, Set<String>> tableAliases = new HashMap<>();
+
+	private Popup autoCompletePopup;
+	protected SearchAndReplacePopOver searchAndReplacePopOver;
+	private ListView<String> suggestionsList;
 
 	public SqlCodeArea() {
 		this(null);
@@ -294,7 +291,6 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType && !event.isControlDown())
 				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
 				|| ch.equals(".") || ch.equals(",") || ch.equals("_")
-//				|| (ch.equals(" ") && tableAliasToSave != null)
 				|| event.getCode() == KeyCode.ENTER
 				|| event.getCode() == KeyCode.BACK_SPACE) {
 
@@ -306,35 +302,13 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			if (!query.isEmpty()) {
 				List<String> suggestions = null;
 				if (event.getCode() == KeyCode.ENTER) {
-//					if (word.get() != null) {
-//						query = word.get();
-//						if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(query)) {
-//							if (!tableAliases.containsKey(query))
-//								tableAliases.put(query, new HashSet<>());
-//							saveTableShortcut = query;
-//						}
-//						word.set(null);
-//					}
 					return;
 				}
-//				else if ( (ch.equals(",") || ch.equals(" ") || event.getCode() == KeyCode.ENTER) && saveTableShortcut != null) {
-//					query = this.calculateQuery( caretPosition);
-//					if (!query.isEmpty() && !query.equals(saveTableShortcut.trim()) && !query.equals("as")) {
-//						this.cacheTableAlias(query, saveTableShortcut);
-//						saveTableShortcut = null;
-//						return;
-//					}
-//				}
 				else if (query.contains(".")) {
 					insertMode  = true;
 					suggestions = this.getColumnsSuggestions(query);
 				}
 				else {
-//					if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(query)) {
-//						if (!tableAliases.containsKey(query))
-//							tableAliases.put(query, new HashSet<>());
-//						saveTableShortcut = query;
-//					}
 					suggestions = this.getQuerySuggestions(query);
 				}
 				

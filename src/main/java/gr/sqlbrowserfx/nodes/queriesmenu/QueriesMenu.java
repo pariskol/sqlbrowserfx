@@ -80,7 +80,6 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 	}
 
 	private void loadSqlCodeAreasAvailable(QueryDTO qd, Menu queryMenuItem) {
-		System.out.println("Loading");
 		queryMenuItem.getItems().clear();
 		for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
 			if (sqlPane.getSqlCodeAreaRef() != null) {

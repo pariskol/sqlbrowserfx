@@ -105,24 +105,25 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 		this.setDetachable(false);
 	}
 	
-	private volatile int recursionRound = 0;
+//	private volatile int recursionRound = 0;
 	private volatile boolean javafxThreadRunning = false;
 	private Object javafxThreadRunningLock = new Object();
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
 	
 	private int findButtonActionImpl() {
-		recursionRound++;
+//		recursionRound++;
+		String pattern = findField.getText();
+		if (pattern.isEmpty())
+			return 0;
 		
-		if (!findField.getText().isEmpty()) {
-			String pattern = findField.getText();
-			String text = codeArea.getText();
-			if (caseInsensitiveCheckBox.isSelected()) {
-				pattern = pattern.toLowerCase();
-				text = text.toLowerCase();
-			}
-			lastPos = text.indexOf(pattern, codeArea.getCaretPosition());
-			
-			if (lastPos != -1) {
+		String text = codeArea.getText();
+		if (caseInsensitiveCheckBox.isSelected()) {
+			pattern = pattern.toLowerCase();
+			text = text.toLowerCase();
+		}
+		lastPos = text.indexOf(pattern, codeArea.getCaretPosition());
+		
+		if (lastPos != -1) {
 //FIXME This is no working properly
 //---------------------------------------------------------------------				
 //				if (wholeWordCheckBox.isSelected()) {
@@ -134,58 +135,57 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 //				}
 //---------------------------------------------------------------------				
 
-				javafxThreadRunning = true;
-				final String finalPattern = pattern;
-				Platform.runLater(() -> {
-					synchronized (javafxThreadRunningLock) {
-						selectMatchingWord(finalPattern);
-						javafxThreadRunning = false;
-						javafxThreadRunningLock.notify();
+			javafxThreadRunning = true;
+			final String finalPattern = pattern;
+			Platform.runLater(() -> {
+				synchronized (javafxThreadRunningLock) {
+					selectMatchingWord(finalPattern);
+					javafxThreadRunning = false;
+					javafxThreadRunningLock.notify();
+				}
+			});
+			while (javafxThreadRunning) {
+				synchronized (javafxThreadRunningLock) {
+					try {
+						javafxThreadRunningLock.wait(500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
 					}
-				});
-				while (javafxThreadRunning) {
-					synchronized (javafxThreadRunningLock) {
-						try {
-							javafxThreadRunningLock.wait(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
+				}
+			};
+			
+//				recursionRound = 0;
+			return 1;
+		}
+		else if (lastPos == -1) { // && recursionRound == 1) {
+			lastPos = 0;
+			javafxThreadRunning = true;
+			Platform.runLater(() -> {
+				synchronized (javafxThreadRunningLock) {
+					codeArea.moveTo(0);
+					javafxThreadRunning = false;
+					javafxThreadRunningLock.notify();
+				}
+			});
+			
+			while (javafxThreadRunning) {
+				synchronized (javafxThreadRunningLock) {
+					try {
+						javafxThreadRunningLock.wait(500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
 					}
-				};
-				
-				recursionRound = 0;
-				return 1;
+				}
 			}
-			else if (lastPos == -1 && recursionRound == 1) {
-				lastPos = 0;
-				javafxThreadRunning = true;
-				Platform.runLater(() -> {
-					synchronized (javafxThreadRunningLock) {
-						codeArea.moveTo(0);
-						javafxThreadRunning = false;
-						javafxThreadRunningLock.notify();
-					}
-				});
-				
-				while (javafxThreadRunning) {
-					synchronized (javafxThreadRunningLock) {
-						try {
-							javafxThreadRunningLock.wait(1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-				};
-				//recursion
-				this.findButtonAction();
-			}
+			//recursion
+			this.findButtonAction();
 		}
 		
 		return 0;
 	}
 	
 	private void findButtonAction() {
-		executor.execute(() -> this.findButtonActionImpl());
+		executor.execute(this::findButtonActionImpl);
 		
 	}
 	
@@ -196,16 +196,38 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	}
 
 	private void replaceButtonAction() {
+		executor.execute(this::replaceButtonActionImpl);
+	}
+	
+	private void replaceButtonActionImpl() {
 		String replacement = replaceField.getText();
 		if (!replacement.isEmpty() && !codeArea.getSelectedText().isEmpty() && !replacement.equals(codeArea.getSelectedText())) {
 			String oldValue = codeArea.getSelectedText();
-			codeArea.replaceSelection(replacement);
-			selectMatchingWord(replacement);
-			this.changed(oldValue + ">" + replacement);
+			javafxThreadRunning = true;
+			Platform.runLater(() -> {
+				synchronized (javafxThreadRunningLock) {
+					codeArea.replaceSelection(replacement);
+					selectMatchingWord(replacement);
+					this.changed(oldValue + ">" + replacement);
+					javafxThreadRunning = false;
+					javafxThreadRunningLock.notify();
+				}
+			});
+			
+			while (javafxThreadRunning) {
+				synchronized (javafxThreadRunningLock) {
+					try {
+						javafxThreadRunningLock.wait(500);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 		}
+//		// TODO addd functionality findAndReplace if nothing is selected
 		else {
-			if (findButtonActionImpl() != 0)
-				replaceButtonAction();
+	    	if (findButtonActionImpl() != 0)
+	    		replaceButtonAction();
 		}
 	}
 	
