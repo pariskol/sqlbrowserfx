@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 
 import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
+import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
@@ -149,7 +150,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 					try {
 						javafxThreadRunningLock.wait(500);
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						LoggerFactory.getLogger(getClass()).error(e.getMessage());
 					}
 				}
 			};
@@ -173,7 +174,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 					try {
 						javafxThreadRunningLock.wait(500);
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						LoggerFactory.getLogger(getClass()).error(e.getMessage());
 					}
 				}
 			}
@@ -219,12 +220,11 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 					try {
 						javafxThreadRunningLock.wait(500);
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						LoggerFactory.getLogger(getClass()).error(e.getMessage());
 					}
 				}
 			}
 		}
-//		// TODO addd functionality findAndReplace if nothing is selected
 		else {
 	    	if (findButtonActionImpl() != 0)
 	    		replaceButtonAction();
