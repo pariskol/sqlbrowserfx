@@ -1,5 +1,9 @@
 #!/bin/bash
 
+get_version_from_pom() {
+	grep -ioh -m 1 "<version>.*</version>" pom.xml | sed "s/<version>//g" | sed "s/<\/version>//g"
+}
+
 cd "$(dirname "$0")"
 
 rm -rf dist
@@ -26,8 +30,8 @@ cp sqlbrowser.db dist/sqlbrowserfx/
 cp starters/* dist/sqlbrowserfx/
 cp sqlbrowserfx.properties dist/sqlbrowserfx/
 
+version=$(get_version_from_pom)
 chmod +x dist/sqlbrowserfx/*.sh
 cd dist
 
-latest_tag=$(git describe)
-tar -czvf sqlbrowserfx-$latest_tag.tar.gz *
+tar -czvf sqlbrowserfx-$version.tar.gz *
