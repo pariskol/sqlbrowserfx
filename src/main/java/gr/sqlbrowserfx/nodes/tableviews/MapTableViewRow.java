@@ -74,8 +74,8 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 		String result = new String();
 		for (SimpleObjectProperty<Object> property: propertiesMap.values()) {
 			Object value = property.get();
-			if (value != null && value instanceof String)
-				value = value.toString().replace(",", "|");
+			if (value instanceof String)
+				value = value.toString().replace(",", " ");
 			if (value == null)
 				value = "";
 			result += value + ",";
@@ -90,7 +90,6 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 
 	@Override
 	public void changed(MapTableViewRow data) {
-		// TODO Auto-generated method stub
 		
 	}
 

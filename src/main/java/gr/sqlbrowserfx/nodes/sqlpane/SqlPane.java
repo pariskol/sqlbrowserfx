@@ -96,7 +96,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	private String columnsFilter = "*";
 	private Button importCsvButton;
 	protected Logger logger = LoggerFactory.getLogger("SQLBROWSER");
-	protected boolean uiLogging = false;
 
 	private String EMPTY = "empty";
 	private String whereFilter = "";
@@ -530,8 +529,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		String message = "Executing : " + query;
 		logger.debug(message);
-		if (uiLogging)
-			Platform.runLater(() -> logListView.getItems().add(message));
 		try {
 			sqlConnector.executeQueryRawSafely(query, resultSet -> {
 				sqlTableView.setItemsLater(resultSet);
@@ -1081,8 +1078,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
 		logger.debug(message);
-		if (uiLogging)
-			Platform.runLater(() -> logListView.getItems().add(message));
 
 		try {
 			sqlConnector.executeUpdate(query, params);
