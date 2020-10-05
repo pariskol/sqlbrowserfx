@@ -12,10 +12,14 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import org.reactfx.Subscription;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
@@ -26,11 +30,13 @@ import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Popup;
 
@@ -103,23 +109,62 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		this.analyzeTextForTablesAliases(this.getText());
 	}
 	
-	
-	private void setKeys() {
-		this.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.isControlDown()) { 
-				if (keyEvent.getCode() == KeyCode.ENTER) {
-					enterAction.run();
+	private void setKeysMap() {
+		InputMap<Event> addTabs = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.TAB, KeyCombination.CONTROL_DOWN),
+				action -> {
+					if (!this.getSelectedText().isEmpty()) {
+						String[] lines = this.getSelectedText().split("\r\n|\r|\n");
+						List<String> newLines = new ArrayList<>();
+						for (String line : lines) {
+							line = "\t" + line;
+							newLines.add(line);
+						}
+						String replacement = StringUtils.join(newLines, "\n");
+						if (!replacement.equals(this.getSelectedText())) {
+							this.replaceSelection(replacement);
+							this.selectRange(this.getCaretPosition() - replacement.length(), this.getCaretPosition());
+						}
+					}
 				}
-				else if (keyEvent.getCode() == KeyCode.SPACE) {
-					this.autoCompleteAction(keyEvent);
+        );
+		InputMap<Event> removeTabs = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.TAB, KeyCombination.SHIFT_DOWN, KeyCombination.CONTROL_DOWN),
+				action -> {
+					if (!this.getSelectedText().isEmpty()) {
+						String[] lines = this.getSelectedText().split("\r\n|\r|\n");
+						List<String> newLines = new ArrayList<>();
+						for (String line : lines) {
+							line = line.replaceFirst("\t", "");
+							newLines.add(line);
+						}
+						String replacement = StringUtils.join(newLines, "\n");
+						if (!replacement.equals(this.getSelectedText())) {
+							this.replaceSelection(replacement);
+							this.selectRange(this.getCaretPosition() - replacement.length(), this.getCaretPosition());
+						}
+					}
 				}
-				else if (keyEvent.getCode() == KeyCode.Q) {
-					// TODO go to query x tab
-				}
-				else if (keyEvent.getCode() == KeyCode.F) {
-					this.showSearchAndReplacePopup();
-				}
-				else if (keyEvent.getCode() == KeyCode.D) {
+        );
+		InputMap<Event> run = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.ENTER, KeyCombination.CONTROL_DOWN),
+				action -> enterAction.run()
+        );
+		InputMap<Event> autocomplete = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN),
+				action -> this.autoCompleteAction(new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, false, true, false, false))
+        );
+		InputMap<Event> autocomplete2 = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
+				action -> this.autoCompleteAction(new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, true, true, false, false))
+        );
+		InputMap<Event> searchAndReplace = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
+				action -> this.showSearchAndReplacePopup()
+        );
+		InputMap<Event> delete = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.D, KeyCombination.CONTROL_DOWN),
+				action -> {
 					boolean hasInitialSelectedText = false;
 					if (this.getSelectedText().isEmpty())
 						this.selectLine();
@@ -133,24 +178,55 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 						this.moveTo(this.getCaretPosition());
 					}
 				}
-				else if (keyEvent.getCode() == KeyCode.U) {
-					this.convertSelectedTextToUpperCase();
-				}
-				else if (keyEvent.getCode() == KeyCode.L) {
-					this.convertSelectedTextToLowerCase();
-				}
-			}
-			else {
+        );
+		InputMap<Event> toUpper = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.U, KeyCombination.CONTROL_DOWN),
+				action -> this.convertSelectedTextToUpperCase()
+        );
+		InputMap<Event> toLower = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.L, KeyCombination.CONTROL_DOWN),
+				action -> this.convertSelectedTextToLowerCase()
+        );
+// FIXME Desired behaviour can't be achieved with input map autocomplete popover does not hide.
+//		 Use traditional javafx way for this specific case
+//		InputMap<Event> backspace = InputMap.consume(
+//				EventPattern.keyPressed(KeyCode.BACK_SPACE),
+//				action -> {
+//					this.hideAutocompletePopup();
+//					// uncomment this to activate autocomplete on backspace
+////					this.autoCompleteAction(keyEvent, auoCompletePopup);
+//				}
+//        );
+		InputMap<Event> enter = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.ENTER),
+				action -> this.autoCompleteAction(new KeyEvent(this, this, 
+						KeyEvent.KEY_PRESSED, null, null, KeyCode.ENTER, 
+						false, false, false, false))
+        );
+        Nodes.addFallbackInputMap(this, addTabs);
+        Nodes.addFallbackInputMap(this, removeTabs);
+        Nodes.addInputMap(this, run);
+        Nodes.addInputMap(this, autocomplete);
+        Nodes.addInputMap(this, autocomplete2);
+        Nodes.addInputMap(this, searchAndReplace);
+        Nodes.addInputMap(this, delete);
+        Nodes.addInputMap(this, toUpper);
+        Nodes.addInputMap(this, toLower);
+//        Nodes.addFallbackInputMap(this, backspace);
+        Nodes.addFallbackInputMap(this, enter);
+	}
+	
+	private void setKeys() {
+		// FIXME Desired behaviour can't be achieved with input map autocomplete popover does not hide.
+//		 Use traditional javafx way for this specific case
+		this.setOnKeyPressed(keyEvent -> {
 				if (keyEvent.getCode() == KeyCode.BACK_SPACE) {
 					this.hideAutocompletePopup();
 					// uncomment this to activate autocomplete on backspace
 //					this.autoCompleteAction(keyEvent, auoCompletePopup);
 				}
-				else if (keyEvent.getCode() == KeyCode.ENTER) {
-					this.autoCompleteAction(keyEvent);
-				}
-			}
 		});
+		this.setKeysMap();
 	}
 	
 	private int countLines(String str) {
@@ -234,19 +310,23 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	}
 
 	private void convertSelectedTextToUpperCase() {
-		if (this.getSelectedText() != null) {
-			this.replaceSelection(this.getSelectedText().toUpperCase());
+		if (!this.getSelectedText().isEmpty()) {
+			String toUpperCase = this.getSelectedText().toUpperCase();
+			if (!toUpperCase.equals(this.getSelectedText()))
+				this.replaceSelection(toUpperCase);
 		}
 	}
 
 	private void convertSelectedTextToLowerCase() {
-		if (this.getSelectedText() != null) {
-			this.replaceSelection(this.getSelectedText().toLowerCase());
+		if (!this.getSelectedText().isEmpty()) {
+			String toLowerCase = this.getSelectedText().toLowerCase();
+			if (!toLowerCase.equals(this.getSelectedText()))
+				this.replaceSelection(toLowerCase);
 		}
 	}
 
 	private KeyEvent simulateControlSpaceEvent() {
-		return new KeyEvent(KeyEvent.KEY_TYPED, " ", " ", null, false, true, false, false);
+		return new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, false, true, false, false);
 	}
 
 	private ListView<String> createSuggestionsListView(List<String> suggestions) {
