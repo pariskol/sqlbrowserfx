@@ -44,7 +44,7 @@ Run SqlBrowserFX.exe for Windows, or run sqlbrowserfx.sh for Linux.
 * [RichTextFΧ](https://github.com/FXMisc/RichTextFX) - Library which provides editor with syntax highlighting feature.
 * [ControlsFX](https://github.com/controlsfx/controlsfx) - Library which provides many useful custom gui components.
 * [Spark Java](https://github.com/perwendel/spark)  - The web framework used.
-* [JMetro](https://pixelduke.com/java-javafx-theme-jmetro/)  - Windows like theme.
+
 
 
 
