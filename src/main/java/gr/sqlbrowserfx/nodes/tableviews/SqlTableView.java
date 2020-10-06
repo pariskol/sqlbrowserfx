@@ -161,7 +161,6 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		if (parent != null)
 			Platform.runLater(() -> parent.startLoading());
 		
-//		this.filledByQuery = true;
 		rows.clear();
 
 		HashSet<String> tablesSet = new HashSet<>();

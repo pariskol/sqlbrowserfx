@@ -10,7 +10,7 @@ import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 
-public class HistorySqlTableView extends SqlTableView implements ContextMenuOwner{
+public class HistorySqlTableView extends SqlTableView implements ContextMenuOwner {
 
 	public HistorySqlTableView(SqlConnector sqlConnector) {
 		super(sqlConnector);
@@ -20,7 +20,11 @@ public class HistorySqlTableView extends SqlTableView implements ContextMenuOwne
 	@Override
 	public ContextMenu createContextMenu() {
 		MenuItem menuItemDelete = new MenuItem("Delete", JavaFXUtils.createIcon("/icons/minus.png"));
-		menuItemDelete.setOnAction(event -> sqlConnector.executeAsync(() -> this.deleteRecord(this.getSelectionModel().getSelectedItem())));
+		menuItemDelete.setOnAction(event -> {
+			sqlConnector.executeAsync(() ->
+				this.getSelectionModel().getSelectedItems().forEach(row -> this.deleteRecord(row))
+			);
+		});
 
 		MenuItem menuItemCopy = new MenuItem("Copy row", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(actionEvent -> {
