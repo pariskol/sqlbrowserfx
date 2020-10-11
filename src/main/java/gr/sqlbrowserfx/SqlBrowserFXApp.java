@@ -16,7 +16,6 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
-import org.apache.log4j.BasicConfigurator;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
@@ -95,8 +94,7 @@ public class SqlBrowserFXApp extends Application {
 	private double fontSize;
 
 	public static void main(String[] args) {
-		BasicConfigurator.configure();
-		PropertiesLoader.setLogger(LoggerFactory.getLogger(PropertiesLoader.class));
+		PropertiesLoader.setLogger(LoggerFactory.getLogger("sqlbrowserfx"));
 		DialogFactory.setDialogStyleSheet(CSS_THEME);
 		DB = args.length > 0 && args[0] != null ? args[0] : null;
 		launch(args);
@@ -245,7 +243,7 @@ public class SqlBrowserFXApp extends Application {
 					mysqlConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
 					mysqlConnector.checkConnection();
 				} catch (SQLException e) {
-					LoggerFactory.getLogger("SQLBROWSER").error(e.getMessage(), e);
+					LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 					configBox.showLoader(false);
 					DialogFactory.createErrorDialog(e);
 					configBox.getConnectButton().setDisable(false);
@@ -531,7 +529,7 @@ public class SqlBrowserFXApp extends Application {
 				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
 						Arrays.asList(DB, "sqlite"));
 			} catch (SQLException e) {
-				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 			}
 		});
 	}

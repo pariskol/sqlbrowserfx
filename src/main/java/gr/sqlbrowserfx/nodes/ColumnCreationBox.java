@@ -47,7 +47,7 @@ public class ColumnCreationBox extends HBox {
 		try {
 			tables = sqlConnector.getTables();
 		} catch (SQLException e) {
-			LoggerFactory.getLogger(getClass().getName()).error(e.getMessage(), e);
+			LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 		}
 		columnsComboBox = new ComboBox<>();
 		tablesComboBox = new ComboBox<>();
@@ -82,7 +82,7 @@ public class ColumnCreationBox extends HBox {
 	
 	private List<String> getTypes() {
 		String category = "types";
-		Logger logger = LoggerFactory.getLogger(getClass().getName());
+		Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
 		List<String> list = new ArrayList<>();
 		try {
 			final String dbType = determineDBType();

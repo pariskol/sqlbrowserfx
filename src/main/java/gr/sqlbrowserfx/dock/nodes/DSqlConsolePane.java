@@ -85,7 +85,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 						history.append(map.get("query"));
 						history.append("\n");
 					} catch (Exception e) {
-						LoggerFactory.getLogger(getClass()).error("Could not get query");
+						LoggerFactory.getLogger("sqlbrowserfx").error("Could not get query");
 					}
 				}
 				Platform.runLater(() -> historyCodeArea.replaceText(history.toString()));

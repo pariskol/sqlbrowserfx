@@ -15,7 +15,7 @@ import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 
 public class SqlCodeAreaSyntax {
 
-	private static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
+	private static Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
 	
 	private static String DB_TYPE = SqlBrowserFXAppManager.getDBtype();
 	public static  String[] FUNCTIONS = getAutocomplteWords("funcs");

@@ -151,7 +151,7 @@ public class MySqlConfigBox extends VBox {
 				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
 						Arrays.asList(urlField.getText(), userField.getText(), databaseField.getText(), "mysql"));
 			} catch (SQLException e) {
-				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 			}
 		});
 	}

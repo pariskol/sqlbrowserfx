@@ -150,7 +150,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 					try {
 						javafxThreadRunningLock.wait(500);
 					} catch (InterruptedException e) {
-						LoggerFactory.getLogger(getClass()).error(e.getMessage());
+						LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
 					}
 				}
 			};
@@ -174,7 +174,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 					try {
 						javafxThreadRunningLock.wait(500);
 					} catch (InterruptedException e) {
-						LoggerFactory.getLogger(getClass()).error(e.getMessage());
+						LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
 					}
 				}
 			}
@@ -220,7 +220,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 					try {
 						javafxThreadRunningLock.wait(500);
 					} catch (InterruptedException e) {
-						LoggerFactory.getLogger(getClass()).error(e.getMessage());
+						LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
 					}
 				}
 			}

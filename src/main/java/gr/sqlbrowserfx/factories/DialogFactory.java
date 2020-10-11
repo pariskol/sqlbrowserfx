@@ -69,7 +69,7 @@ public class DialogFactory {
 			VBox.setVgrow(textArea, Priority.ALWAYS);
 			VBox expContent = new VBox(label,textArea);
 
-			LoggerFactory.getLogger(DialogFactory.class).error(e.getMessage(), e);
+			LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 			alert.getDialogPane().setExpandableContent(expContent);
 			if (stylesheet != null)
 				alert.getDialogPane().getStylesheets().add(stylesheet);
@@ -136,7 +136,7 @@ public class DialogFactory {
 			else if (ENABLE_JMETRO && JMETRO.equals("light"))
 				new JMetro(Style.LIGHT).setParent(alert.getDialogPane());
 
-			LoggerFactory.getLogger(DialogFactory.class).info(message);
+			LoggerFactory.getLogger("sqlbrowserfx").info(message);
 			alert.showAndWait();
 		});
 	}

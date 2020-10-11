@@ -26,7 +26,7 @@ public class MemoryGuard {
 					long currentUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
 					if (currentUsage > heapMaxSize - heapMaxSize / MEMORY_DIVIDER) {
 						rset.close();
-						LoggerFactory.getLogger(MemoryGuard.class).debug("Query was canceled due to fast growing memory consumption of ResultSet");
+						LoggerFactory.getLogger("sqlbrowserfx").debug("Query was canceled due to fast growing memory consumption of ResultSet");
 						System.gc();
 						DialogFactory.createErrorDialog(new OutOfMemoryError("Fast growing memory consumption of ResultSet"));
 						return;
@@ -34,12 +34,12 @@ public class MemoryGuard {
 					Thread.sleep(100);
 				}
 			} catch (SQLException | InterruptedException e) {
-				LoggerFactory.getLogger(MemoryGuard.class).error(e.getMessage(), e);
+				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 			} finally {
 				try {
 					rset.close();
 				} catch (SQLException e) {
-					LoggerFactory.getLogger(MemoryGuard.class).error(e.getMessage(), e);
+					LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 				}
 			}
 		}, "MemoryGuard Thread").start();
@@ -59,7 +59,7 @@ public class MemoryGuard {
 				while ((statement != null && !statement.isClosed()) ) {
 					long currentUsage = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
 					if (currentUsage > heapMaxSize - heapMaxSize / MEMORY_DIVIDER) {
-						LoggerFactory.getLogger(MemoryGuard.class).debug("Query was canceled due to fast growing memory consumption of Statement");
+						LoggerFactory.getLogger("sqlbrowserfx").debug("Query was canceled due to fast growing memory consumption of Statement");
 						statement.cancel();
 						System.gc();
 						DialogFactory.createErrorDialog(new OutOfMemoryError("Fast growing memory consumption of Statement"));
@@ -68,12 +68,12 @@ public class MemoryGuard {
 					Thread.sleep(100);
 				}
 			} catch (SQLException | InterruptedException e) {
-				LoggerFactory.getLogger(MemoryGuard.class).error(e.getMessage(), e);
+				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 			} finally {
 				try {
 					statement.close();
 				} catch (SQLException e) {
-					LoggerFactory.getLogger(MemoryGuard.class).error(e.getMessage(), e);
+					LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 				}
 			}
 		}, "MemoryGuard Thread").start();

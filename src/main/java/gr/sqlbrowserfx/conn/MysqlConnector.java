@@ -70,8 +70,8 @@ public class MysqlConnector extends SqlConnector {
 			basicDataSource.setAutoCommitOnReturn(false);
 			basicDataSource.setDefaultAutoCommit(false);
 			basicDataSource.setRollbackOnReturn(false);
-			LoggerFactory.getLogger(getClass().getName()).debug("Detected Apache BasicDataSource");
-			LoggerFactory.getLogger(getClass().getName()).debug("Disable autoCommit for all connections");
+			LoggerFactory.getLogger("sqlbrowserfx").debug("Detected Apache BasicDataSource");
+			LoggerFactory.getLogger("sqlbrowserfx").debug("Disable autoCommit for all connections");
 		}
 	}
 	
@@ -87,9 +87,9 @@ public class MysqlConnector extends SqlConnector {
 					conn.commit();
 					connections.add(conn);
 			}
-			LoggerFactory.getLogger(getClass().getName()).debug(activeConnections + " connections commited");
+			LoggerFactory.getLogger("sqlbrowserfx").debug(activeConnections + " connections commited");
 		} catch (SQLException e) {
-			LoggerFactory.getLogger(getClass()).error("Failed to commit changes , about to rollback", e);
+			LoggerFactory.getLogger("sqlbrowserfx").error("Failed to commit changes , about to rollback", e);
 			this.rollbackQuitely(conn);
 		}
 		for (Connection conn2 : connections)
@@ -109,7 +109,7 @@ public class MysqlConnector extends SqlConnector {
 					connections.add(conn);
 			}
 		} catch (SQLException e) {
-			LoggerFactory.getLogger(getClass()).error("Failed to rollback changes", e);
+			LoggerFactory.getLogger("sqlbrowserfx").error("Failed to rollback changes", e);
 		}
 		for (Connection conn2 : connections)
 			this.closeQuitely(conn2);
@@ -166,7 +166,7 @@ public class MysqlConnector extends SqlConnector {
 			try {
 				tables.add(rset.getString(1));
 			} catch (Exception e) {
-				LoggerFactory.getLogger(getClass()).error(e.getMessage());
+				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
 			}
 		});
 		return tables;
@@ -179,7 +179,7 @@ public class MysqlConnector extends SqlConnector {
 			try {
 				tables.add(rset.getString(1));
 			} catch (Exception e) {
-				LoggerFactory.getLogger(getClass()).error(e.getMessage());
+				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
 			}
 		});
 		return tables;

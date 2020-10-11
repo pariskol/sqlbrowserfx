@@ -47,6 +47,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private CSqlCodeArea codeAreaRef;
 	private CheckBox autoCompleteOnTypeCheckBox;
 	private CheckBox openInNewTableViewCheckBox;
+	private CheckBox wrapTextCheckBox;
 	private FlowPane toolbar;
 	private FlowPane bottomBar;
 	
@@ -113,6 +114,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			    	}
 			    });
 		
+		wrapTextCheckBox = new CheckBox("Wrap text");
+		
 		toolbar = this.createToolbar();
 		
 		this.setCenter(splitPane);
@@ -135,6 +138,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 	private void createSqlConsoleTab() {
 		CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
+		sqlCodeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
 		sqlCodeArea.setEnterAction(() -> this.executeButonAction());
 		sqlCodeArea.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> {
 			SqlConsolePane.this.changed();
@@ -161,7 +165,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		settingsButton.setOnMouseClicked(mouseEvent -> {
 			if (!popOverIsShowing) {
 				popOverIsShowing = true;
-				PopOver popOver = new PopOver(new VBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox));
+				PopOver popOver = new PopOver(new VBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox));
 				popOver.setOnHidden(event -> popOverIsShowing = false);
 				popOver.show(settingsButton);
 			}
@@ -199,7 +203,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 							try {
 								stmt.cancel();
 							} catch (SQLException e) {
-								LoggerFactory.getLogger(getClass()).error(e.getMessage());
+								LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
 							}
 						});
 					});
@@ -260,7 +264,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate("insert into queries_history (query) values (?)",
 					Arrays.asList(fixedQuery));
 		} catch (SQLException e) {
-			LoggerFactory.getLogger(getClass()).error(e.getMessage());
+			LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
 		}
 	}
 

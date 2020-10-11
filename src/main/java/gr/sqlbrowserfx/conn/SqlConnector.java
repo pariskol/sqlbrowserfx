@@ -61,7 +61,7 @@ public abstract class SqlConnector {
 
 	public void checkConnection() throws SQLException {
 		try (Connection conn = dataSource.getConnection();) {
-			LoggerFactory.getLogger(getClass()).info("Successful try to get connection , pool is ok.");
+			LoggerFactory.getLogger("sqlbrowserfx").info("Successful try to get connection , pool is ok.");
 		}
 	}
 
@@ -194,7 +194,7 @@ public abstract class SqlConnector {
 			try {
 				this.executeQuery(query, params,action);
 			} catch (SQLException e) {
-				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 			}
 		});
 	}
@@ -213,7 +213,7 @@ public abstract class SqlConnector {
 			try {
 				this.executeQuery(query, action);
 			} catch (SQLException e) {
-				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 			}
 		});
 	}
@@ -223,7 +223,7 @@ public abstract class SqlConnector {
 			try {
 				this.executeQueryRaw(query, action);
 			} catch (SQLException e) {
-				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 			}
 		});
 	}
@@ -242,7 +242,7 @@ public abstract class SqlConnector {
 			try {
 				this.executeUpdate(query);
 			} catch (SQLException e) {
-				LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 			}
 		});
 	}
@@ -306,9 +306,9 @@ public abstract class SqlConnector {
 	public void rollbackQuitely(Connection conn) {
 		try {
 			conn.rollback();
-			LoggerFactory.getLogger(getClass().getName()).debug("Successful rollback");
+			LoggerFactory.getLogger("sqlbrowserfx").debug("Successful rollback");
 		} catch (SQLException e) {
-			LoggerFactory.getLogger(getClass()).error(e.getMessage(), e);
+			LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
 		}
 	}
 	

@@ -38,7 +38,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 
 	private static final String ACTION_STATEMENT = "ACTION_STATEMENT";
 	private static final String TRIGGER_NAME = "TRIGGER_NAME";
-	private Logger logger = LoggerFactory.getLogger("SQLBROWSER");
+	private Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
 	private SqlConnector sqlConnector;
 
 	private TreeItem<String> rootItem;

@@ -95,7 +95,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	protected Boolean sqlQueryRunning;
 	private String columnsFilter = "*";
 	private Button importCsvButton;
-	protected Logger logger = LoggerFactory.getLogger("SQLBROWSER");
+	protected Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
 
 	private String EMPTY = "empty";
 	private String whereFilter = "";

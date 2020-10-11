@@ -14,7 +14,7 @@ import spark.Spark;
 
 public class SparkRESTfulService {
 
-	static Logger logger = LoggerFactory.getLogger("SQLBROWSER");
+	static Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
 
 	public static void init(SqlConnector sqlConnector) {
 		JsonTransformer jsonTransformer = new JsonTransformer();

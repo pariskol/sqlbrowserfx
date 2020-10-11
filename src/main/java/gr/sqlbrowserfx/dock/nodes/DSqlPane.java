@@ -269,7 +269,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 		} catch (SQLException e) {
 			DialogFactory.createErrorDialog(e);
 		} catch (NullPointerException ne) {
-			LoggerFactory.getLogger(getClass()).debug("Exception ignored", ne);
+			LoggerFactory.getLogger("sqlbrowserfx").debug("Exception ignored", ne);
 		}
 
 		return records;

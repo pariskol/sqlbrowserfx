@@ -38,7 +38,7 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 	}
 	
 	private void loadQueries() {
-		Logger logger = LoggerFactory.getLogger("SQLBROWSER");
+		Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
 		this.getItems().removeAll(menuItemsMap.values());
 		try {
 			SqlConnector sqlConnector = SqlBrowserFXAppManager.getConfigSqlConnector();

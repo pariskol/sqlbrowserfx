@@ -52,7 +52,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 
 	protected final static int NOT_SET = 0;
 
-	private Logger logger = LoggerFactory.getLogger("SQLBROWSER");
+	private Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
 	private SqlTableTab parent;
 
 	public SqlTableView() {
@@ -315,7 +315,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		query = query.substring(0, query.length() - "and ".length());
 
 		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
-		LoggerFactory.getLogger("SQLBROWSER").debug(message);
+		LoggerFactory.getLogger("sqlbrowserfx").debug(message);
 		sqlConnector.executeUpdate(query, params);
 
 		for (String column : columns) {
