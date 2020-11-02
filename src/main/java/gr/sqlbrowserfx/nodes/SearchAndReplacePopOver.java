@@ -9,6 +9,7 @@ import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -150,7 +151,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 					try {
 						javafxThreadRunningLock.wait(500);
 					} catch (InterruptedException e) {
-						LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
+						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 					}
 				}
 			};
@@ -174,7 +175,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 					try {
 						javafxThreadRunningLock.wait(500);
 					} catch (InterruptedException e) {
-						LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
+						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 					}
 				}
 			}
@@ -220,7 +221,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 					try {
 						javafxThreadRunningLock.wait(500);
 					} catch (InterruptedException e) {
-						LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
+						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 					}
 				}
 			}

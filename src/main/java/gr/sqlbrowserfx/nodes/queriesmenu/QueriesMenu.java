@@ -10,6 +10,7 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
@@ -38,7 +39,7 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 	}
 	
 	private void loadQueries() {
-		Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
+		Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 		this.getItems().removeAll(menuItemsMap.values());
 		try {
 			SqlConnector sqlConnector = SqlBrowserFXAppManager.getConfigSqlConnector();

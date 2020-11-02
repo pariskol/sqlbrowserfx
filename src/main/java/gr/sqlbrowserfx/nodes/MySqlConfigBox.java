@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
@@ -151,7 +152,7 @@ public class MySqlConfigBox extends VBox {
 				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
 						Arrays.asList(urlField.getText(), userField.getText(), databaseField.getText(), "mysql"));
 			} catch (SQLException e) {
-				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
+				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 			}
 		});
 	}

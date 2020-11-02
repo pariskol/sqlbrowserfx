@@ -10,9 +10,9 @@ import jfxtras.styles.jmetro.Style;
 
 public class JavaFXUtils {
 
-	private static  String CSS_THEME = "/themes/" + (String) PropertiesLoader.getProperty("sqlbrowsefx.css.theme", String.class, "flat-dark");
-	private static final boolean ENABLE_JMETRO =  PropertiesLoader.getProperty("sqlbrowsefx.jmetro.theme", String.class) != null;
-	private static final String JMETRO = (String) PropertiesLoader.getProperty("sqlbrowsefx.jmetro.theme", String.class);
+	private static  String CSS_THEME = "/themes/" + (String) PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark");
+	private static final boolean ENABLE_JMETRO =  PropertiesLoader.getProperty("sqlbrowserfx.jmetro.theme", String.class) != null;
+	private static final String JMETRO = (String) PropertiesLoader.getProperty("sqlbrowserfx.jmetro.theme", String.class);
 
 	
 	public static ImageView createIcon(String url) {

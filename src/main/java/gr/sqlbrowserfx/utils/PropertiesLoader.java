@@ -18,7 +18,7 @@ public class PropertiesLoader {
 	private static Boolean IS_ENABLED = true;
 	static {
 		if (System.getProperty("load.props") != null)
-			IS_ENABLED = Boolean.parseBoolean(System.getProperty("load.props"));
+			IS_ENABLED = Boolean.parseBoolean(System.getProperty("load.props", "true"));
 		if (IS_ENABLED)
 			loadProperties("./");
 	}

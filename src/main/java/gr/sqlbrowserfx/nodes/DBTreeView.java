@@ -14,6 +14,7 @@ import org.controlsfx.control.PopOver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
@@ -38,7 +39,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 
 	private static final String ACTION_STATEMENT = "ACTION_STATEMENT";
 	private static final String TRIGGER_NAME = "TRIGGER_NAME";
-	private Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
+	private Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 	private SqlConnector sqlConnector;
 
 	private TreeItem<String> rootItem;

@@ -20,6 +20,7 @@
 
 package org.dockfx;
 
+import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -320,6 +321,12 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 			borderPane = new BorderPane();
 			borderPane.getStyleClass().add("dock-node-border");
 			borderPane.setCenter(this);
+			
+			try {
+				JavaFXUtils.applyJMetro(borderPane);
+			} catch (Exception e) {
+				System.err.println("Not supported");
+			}
 			
 			Scene scene = new Scene(borderPane, width, height);
 			if (ENABLE_JMETRO && JMETRO.equals("dark"))

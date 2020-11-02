@@ -10,6 +10,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -47,7 +48,7 @@ public class ColumnCreationBox extends HBox {
 		try {
 			tables = sqlConnector.getTables();
 		} catch (SQLException e) {
-			LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 		}
 		columnsComboBox = new ComboBox<>();
 		tablesComboBox = new ComboBox<>();
@@ -82,7 +83,7 @@ public class ColumnCreationBox extends HBox {
 	
 	private List<String> getTypes() {
 		String category = "types";
-		Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
+		Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 		List<String> list = new ArrayList<>();
 		try {
 			final String dbType = determineDBType();

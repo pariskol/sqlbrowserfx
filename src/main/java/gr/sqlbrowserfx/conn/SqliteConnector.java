@@ -13,6 +13,8 @@ import javax.sql.DataSource;
 import org.slf4j.LoggerFactory;
 import org.sqlite.SQLiteDataSource;
 
+import gr.sqlbrowserfx.LoggerConf;
+
 public class SqliteConnector extends SqlConnector {
 
 	private final String SCHEMA_COLUMN = "sql";
@@ -34,14 +36,14 @@ public class SqliteConnector extends SqlConnector {
 					UpdateQuery updateQuery;
 					try {
 						updateQuery = updateQueriesQueue.take();
-						LoggerFactory.getLogger("sqlbrowserfx").info("Executing update");
+						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).info("Executing update");
 						super.executeUpdate(conn, updateQuery.getQuery(), updateQuery.getParams());
 					} catch (Throwable e) {
-						LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
+						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 					}
 				}
 			} catch (SQLException e1) {
-				LoggerFactory.getLogger("sqlbrowserfx").error(e1.getMessage(), e1);
+				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e1.getMessage(), e1);
 			}
 		}, "SQLite updates executor");
 		updatesExecutorThread.setDaemon(true);
@@ -55,7 +57,7 @@ public class SqliteConnector extends SqlConnector {
 		try {
 			this.updateConnection = datasource.getConnection();
 		} catch (SQLException e) {
-			LoggerFactory.getLogger("sqlbrowserfx").error("Could not initialize connection", e);
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not initialize connection", e);
 		}
 		return datasource;
 	}
@@ -66,7 +68,7 @@ public class SqliteConnector extends SqlConnector {
 		try {
 			this.updateConnection.setAutoCommit(false);
 		} catch (SQLException e) {
-			LoggerFactory.getLogger("sqlbrowserfx").error("Could not initialize connection", e);
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not initialize connection", e);
 		}
 	}
 	
@@ -126,7 +128,7 @@ public class SqliteConnector extends SqlConnector {
 		try {
 			this.updateConnection.rollback();
 		} catch (SQLException e) {
-			LoggerFactory.getLogger("sqlbrowserfx").error("Failed to commit changes , about to rollback", e);
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
 		}
 	}
 	
@@ -135,7 +137,7 @@ public class SqliteConnector extends SqlConnector {
 		try {
 			this.updateConnection.commit();
 		} catch (SQLException e) {
-			LoggerFactory.getLogger("sqlbrowserfx").error("Failed to commit changes , about to rollback", e);
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
 			this.rollbackQuitely(this.updateConnection);
 		}
 	}
@@ -144,7 +146,7 @@ public class SqliteConnector extends SqlConnector {
 		try {
 			this.updateQueriesQueue.put(new UpdateQuery(query, params));
 		} catch (InterruptedException e) {
-			LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 		}
 		return 2;
 	}

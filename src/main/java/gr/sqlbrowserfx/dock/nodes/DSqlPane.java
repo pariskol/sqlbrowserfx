@@ -15,6 +15,7 @@ import org.dockfx.Dockable;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
@@ -269,7 +270,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 		} catch (SQLException e) {
 			DialogFactory.createErrorDialog(e);
 		} catch (NullPointerException ne) {
-			LoggerFactory.getLogger("sqlbrowserfx").debug("Exception ignored", ne);
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Exception ignored", ne);
 		}
 
 		return records;

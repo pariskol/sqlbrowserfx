@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableRowEditBox;
@@ -52,7 +53,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 
 	protected final static int NOT_SET = 0;
 
-	private Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
+	private Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 	private SqlTableTab parent;
 
 	public SqlTableView() {
@@ -315,7 +316,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		query = query.substring(0, query.length() - "and ".length());
 
 		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
-		LoggerFactory.getLogger("sqlbrowserfx").debug(message);
+		LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug(message);
 		sqlConnector.executeUpdate(query, params);
 
 		for (String column : columns) {

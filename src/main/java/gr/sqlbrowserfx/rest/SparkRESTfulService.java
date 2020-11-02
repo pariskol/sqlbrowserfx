@@ -8,13 +8,14 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import spark.Spark;
 
 public class SparkRESTfulService {
 
-	static Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
+	static Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
 	public static void init(SqlConnector sqlConnector) {
 		JsonTransformer jsonTransformer = new JsonTransformer();

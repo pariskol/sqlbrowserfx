@@ -10,12 +10,13 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 
 public class SqlCodeAreaSyntax {
 
-	private static Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
+	private static Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 	
 	private static String DB_TYPE = SqlBrowserFXAppManager.getDBtype();
 	public static  String[] FUNCTIONS = getAutocomplteWords("funcs");

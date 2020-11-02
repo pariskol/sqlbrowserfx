@@ -10,6 +10,8 @@ import javax.sql.DataSource;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
+
 public class MysqlConnector extends SqlConnector {
 
 	private String SCHEMA_VIEW_QUERY;
@@ -70,8 +72,8 @@ public class MysqlConnector extends SqlConnector {
 			basicDataSource.setAutoCommitOnReturn(false);
 			basicDataSource.setDefaultAutoCommit(false);
 			basicDataSource.setRollbackOnReturn(false);
-			LoggerFactory.getLogger("sqlbrowserfx").debug("Detected Apache BasicDataSource");
-			LoggerFactory.getLogger("sqlbrowserfx").debug("Disable autoCommit for all connections");
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Detected Apache BasicDataSource");
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Disable autoCommit for all connections");
 		}
 	}
 	
@@ -87,9 +89,9 @@ public class MysqlConnector extends SqlConnector {
 					conn.commit();
 					connections.add(conn);
 			}
-			LoggerFactory.getLogger("sqlbrowserfx").debug(activeConnections + " connections commited");
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug(activeConnections + " connections commited");
 		} catch (SQLException e) {
-			LoggerFactory.getLogger("sqlbrowserfx").error("Failed to commit changes , about to rollback", e);
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
 			this.rollbackQuitely(conn);
 		}
 		for (Connection conn2 : connections)
@@ -109,7 +111,7 @@ public class MysqlConnector extends SqlConnector {
 					connections.add(conn);
 			}
 		} catch (SQLException e) {
-			LoggerFactory.getLogger("sqlbrowserfx").error("Failed to rollback changes", e);
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to rollback changes", e);
 		}
 		for (Connection conn2 : connections)
 			this.closeQuitely(conn2);
@@ -166,7 +168,7 @@ public class MysqlConnector extends SqlConnector {
 			try {
 				tables.add(rset.getString(1));
 			} catch (Exception e) {
-				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
+				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 			}
 		});
 		return tables;
@@ -179,7 +181,7 @@ public class MysqlConnector extends SqlConnector {
 			try {
 				tables.add(rset.getString(1));
 			} catch (Exception e) {
-				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
+				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 			}
 		});
 		return tables;

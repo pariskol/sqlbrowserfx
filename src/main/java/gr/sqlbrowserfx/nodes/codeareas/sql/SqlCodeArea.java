@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
@@ -21,7 +22,9 @@ import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import org.reactfx.Subscription;
+import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
@@ -46,7 +49,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	private boolean autoCompletePopupShowing = false;
 	private boolean autoCompleteOnType = true;
 	private boolean insertMode = false;
-	public final HashMap<String, Set<String>> tableAliases = new HashMap<>();
+	private Map<String, Set<String>> tableAliases = new HashMap<>();
 
 	private Popup autoCompletePopup;
 	protected SearchAndReplacePopOver searchAndReplacePopOver;
@@ -84,16 +87,30 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			while (true) {
 				try {
 					Thread.sleep(1000);
-					//TODO Create a new map an d when ready then switch the pointer
-					SqlCodeArea.this.tableAliases.clear();
-					SqlCodeArea.this.analyzeTextForTablesAliases(this.getText());
+//					SqlCodeArea.this.tableAliases.clear();
+					Map<String, Set<String>> newTableAliases = this.analyzeTextForTablesAliases(this.getText());
+					if (!this.areMapsEqual(this.tableAliases, newTableAliases))
+						this.tableAliases = newTableAliases;
 				} catch (InterruptedException e) {
-					// Ignore
+					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 				}
 			}
 		}, "Text Analyzer Daemon");
 		th.setDaemon(true);
 		th.start();
+	}
+	
+	private boolean areMapsEqual(Map<String, Set<String>> map1, Map<String, Set<String>> map2) {
+		if (map1.keySet().size() != map2.keySet().size())
+			return false;
+		
+		for (String key : map1.keySet()) {
+			if (!map2.containsKey(key))
+				return false;
+			if (!map1.get(key).equals(map2.get(key)))
+				return false;
+		}
+		return true;
 	}
 
 
@@ -422,13 +439,13 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		return suggestions;
 	}
 
-	private void cacheTableAlias(final String query, final String table) {
-		for ( Collection<String> l : tableAliases.values()) {
-			l.remove(query);
-			break;
-		}
-		tableAliases.get(table).add(query);
-	}
+//	private void cacheTableAlias(final String query, final String table) {
+//		for ( Collection<String> l : tableAliases.values()) {
+//			l.remove(query);
+//			break;
+//		}
+//		tableAliases.get(table).add(query);
+//	}
 
 	private void hideAutocompletePopup() {
 		if (autoCompletePopup != null && autoCompletePopupShowing) {
@@ -591,20 +608,23 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 //	}
 	
 	
-	public void analyzeTextForTablesAliases(String text) {
+	public Map<String, Set<String>> analyzeTextForTablesAliases(String text) {
+		Map<String, Set<String>> newTableAliases = new HashMap<>();
 		String[] words = text.split("\\W+");
 		String saveTableShortcut = null;
 		for (String word : words) {
-			if (!word.isEmpty() && saveTableShortcut != null && !word.equals(saveTableShortcut.trim()) && !word.equals("as") && !word.equals("AS")) {
-				this.cacheTableAlias(word,saveTableShortcut);
+			if (!word.isEmpty() && saveTableShortcut != null && !word.equals(saveTableShortcut.trim())
+					&& !word.equalsIgnoreCase("as")) {
+//				this.cacheTableAlias(word,saveTableShortcut);
+				newTableAliases.get(saveTableShortcut).add(word);
 				saveTableShortcut = null;
-			}
-			else if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(word)) {
-				if (!tableAliases.containsKey(word))
-					tableAliases.put(word, new HashSet<>());
+			} else if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(word)) {
+				if (!newTableAliases.containsKey(word))
+					newTableAliases.put(word, new HashSet<>());
 				saveTableShortcut = word;
 			}
 		}
+		return newTableAliases;
 	}
 
 }

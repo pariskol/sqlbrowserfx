@@ -7,6 +7,8 @@
     -fx-faint-focus-color: transparent;
 	/*-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
 	-fx-selection-bar-non-focused: derive(-fx-base,90%);
+	-fx-font-size: 11pt;
+	
 }
 
 .dock-area-indicator {

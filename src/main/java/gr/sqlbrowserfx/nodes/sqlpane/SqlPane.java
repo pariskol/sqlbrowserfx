@@ -23,6 +23,7 @@ import org.controlsfx.control.PopOver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
@@ -95,7 +96,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	protected Boolean sqlQueryRunning;
 	private String columnsFilter = "*";
 	private Button importCsvButton;
-	protected Logger logger = LoggerFactory.getLogger("sqlbrowserfx");
+	protected Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
 	private String EMPTY = "empty";
 	private String whereFilter = "";

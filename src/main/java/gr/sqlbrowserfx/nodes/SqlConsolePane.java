@@ -13,6 +13,7 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
@@ -203,7 +204,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 							try {
 								stmt.cancel();
 							} catch (SQLException e) {
-								LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
+								LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 							}
 						});
 					});
@@ -264,7 +265,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate("insert into queries_history (query) values (?)",
 					Arrays.asList(fixedQuery));
 		} catch (SQLException e) {
-			LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 		}
 	}
 

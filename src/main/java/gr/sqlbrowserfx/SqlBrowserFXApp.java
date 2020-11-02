@@ -75,7 +75,7 @@ import javafx.stage.Stage;
 
 public class SqlBrowserFXApp extends Application {
 
-	private static final String CSS_THEME = "/styles/" + (String) PropertiesLoader.getProperty("sqlbrowsefx.css.theme", String.class, "flat-dark") + ".css";
+	private static final String CSS_THEME = "/styles/" + (String) PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark") + ".css";
 	private static final Boolean AUTO_COMMIT_IS_ENABLED = (Boolean) PropertiesLoader.getProperty("sqlconnector.enable.autocommit", Boolean.class, true);
 
 	private static String DB;
@@ -94,7 +94,7 @@ public class SqlBrowserFXApp extends Application {
 	private double fontSize;
 
 	public static void main(String[] args) {
-		PropertiesLoader.setLogger(LoggerFactory.getLogger("sqlbrowserfx"));
+		PropertiesLoader.setLogger(LoggerFactory.getLogger(LoggerConf.LOGGER_NAME));
 		DialogFactory.setDialogStyleSheet(CSS_THEME);
 		DB = args.length > 0 && args[0] != null ? args[0] : null;
 		launch(args);
@@ -243,7 +243,7 @@ public class SqlBrowserFXApp extends Application {
 					mysqlConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
 					mysqlConnector.checkConnection();
 				} catch (SQLException e) {
-					LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
+					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 					configBox.showLoader(false);
 					DialogFactory.createErrorDialog(e);
 					configBox.getConnectButton().setDisable(false);
@@ -529,7 +529,7 @@ public class SqlBrowserFXApp extends Application {
 				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
 						Arrays.asList(DB, "sqlite"));
 			} catch (SQLException e) {
-				LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage(), e);
+				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 			}
 		});
 	}

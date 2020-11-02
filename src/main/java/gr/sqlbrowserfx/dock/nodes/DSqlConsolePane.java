@@ -17,6 +17,7 @@ import org.dockfx.Dockable;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
@@ -85,7 +86,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 						history.append(map.get("query"));
 						history.append("\n");
 					} catch (Exception e) {
-						LoggerFactory.getLogger("sqlbrowserfx").error("Could not get query");
+						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not get query");
 					}
 				}
 				Platform.runLater(() -> historyCodeArea.replaceText(history.toString()));
