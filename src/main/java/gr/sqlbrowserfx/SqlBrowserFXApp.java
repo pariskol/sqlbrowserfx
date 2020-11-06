@@ -419,7 +419,7 @@ public class SqlBrowserFXApp extends Application {
 		logItem.setOnAction(actionEvent -> {
 			LogCodeArea logArea = new LogCodeArea();
 			TailerListener listener = new CodeAreaTailerListener(logArea);
-		    Tailer tailer = new Tailer(new File("./log/sql-browser.log"), listener, 0);
+		    Tailer tailer = new Tailer(new File("./logs/sqlbrowserfx.log"), listener, 0);
 
 		    Thread tailerDaemon = new Thread(tailer, "Logfile Tailer Daemon");
 		    tailerDaemon.setDaemon(true);
@@ -516,6 +516,7 @@ public class SqlBrowserFXApp extends Application {
 		saveButton.setOnAction(actionEvent -> {
 			restServiceConfig.setIp(ipField.getText());
 			restServiceConfig.setPort(Integer.parseInt(portField.getText()));
+			isRestConfigurationShowing  = false;
 			stage.close();
 		});
 		isRestConfigurationShowing = true;
