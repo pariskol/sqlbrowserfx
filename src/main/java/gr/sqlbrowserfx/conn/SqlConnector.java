@@ -52,10 +52,10 @@ public abstract class SqlConnector {
 					SqlConnector.this.checkConnection();
 					Thread.sleep(60000);
 				} catch (SQLException e) {
-					LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
+					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 					SqlConnector.this.initDatasource();
 				} catch (Exception e) {
-					LoggerFactory.getLogger("sqlbrowserfx").error(e.getMessage());
+					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 				}
 			}
 		}, "Connection Monitor Daemon");
@@ -80,7 +80,7 @@ public abstract class SqlConnector {
 
 	public void checkConnection() throws SQLException {
 		try (Connection conn = dataSource.getConnection();) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).info("Successful try to get connection , pool is ok.");
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Successful try to get connection , pool is ok.");
 		}
 	}
 
