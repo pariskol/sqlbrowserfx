@@ -33,6 +33,10 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 		});
 	}
 
+	public DDBTreeView(String dbPath, SqlConnector sqlConnector, DBTreePane parent) {
+		super(dbPath, sqlConnector, parent);
+	}
+	
 	@Override
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
@@ -45,22 +49,38 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = super.createContextMenu();
 		openInSqlPaneMenu = new Menu("Open in..." , JavaFXUtils.createIcon("/icons/openTab.png"));
-		openInSqlPaneMenu.setOnMenuValidation(action -> {
-			openInSqlPaneMenu.getItems().clear();
-			for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
-				MenuItem item = new MenuItem(sqlPane.asDockNode().getTitle());
-				item.setOnAction(action2 -> {
-					if (this.tablesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem()) ||
-						this.viewsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())
-						)
-						sqlPane.createSqlTableTabWithData(this.getSelectionModel().getSelectedItem().getValue());
-				});
-				openInSqlPaneMenu.getItems().add(item);
-			}
-		});
+		this.populateSqlPanesMenu();
+		// for some reason it stopped working
+//		openInSqlPaneMenu.setOnMenuValidation(action -> {
+//			openInSqlPaneMenu.getItems().clear();
+//			for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
+//				MenuItem item = new MenuItem(sqlPane.asDockNode().getTitle());
+//				item.setOnAction(action2 -> {
+//					if (this.tablesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem()) ||
+//						this.viewsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())
+//						)
+//						sqlPane.createSqlTableTabWithData(this.getSelectionModel().getSelectedItem().getValue());
+//				});
+//				openInSqlPaneMenu.getItems().add(item);
+//			}
+//		});
 		menu.getItems().add(menu.getItems().size()-1, openInSqlPaneMenu);
 		return menu;
 		
+	}
+
+	public void populateSqlPanesMenu() {
+		openInSqlPaneMenu.getItems().clear();
+		for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
+			MenuItem item = new MenuItem(sqlPane.asDockNode().getTitle());
+			item.setOnAction(action2 -> {
+				if (this.tablesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem()) ||
+					this.viewsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())
+					)
+					sqlPane.createSqlTableTabWithData(this.getSelectionModel().getSelectedItem().getValue());
+			});
+			openInSqlPaneMenu.getItems().add(item);
+		}
 	}
 
 }

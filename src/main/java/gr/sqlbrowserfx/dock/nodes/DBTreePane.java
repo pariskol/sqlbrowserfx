@@ -8,7 +8,6 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
-import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.TableCreationPane;
 import gr.sqlbrowserfx.nodes.ToolbarOwner;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
@@ -32,17 +31,27 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner, Co
 		this.sqlConnector = sqlConnector;
 		this.toolBar = this.createToolbar();
 		// when dbTreeView is ready fires a simple event 
-		this.dbTreeView = new DDBTreeView(dbPath, sqlConnector);
+		this.dbTreeView = new DDBTreeView(dbPath, sqlConnector, this);
 		dbTreeView.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> {
 			Platform.runLater(() -> this.setCenter(dbTreeView));
 		});
 		this.setLeft(toolBar);
-		ProgressIndicator progressIndicator = new ProgressIndicator();
-		progressIndicator.setMaxHeight(40);
-		progressIndicator.setMaxWidth(40);
-		this.setCenter(progressIndicator);
+		this.setLoading(true);
 		
 	}
+	
+	public void setLoading(boolean loading) {
+		if (loading) {
+			ProgressIndicator progressIndicator = new ProgressIndicator();
+			progressIndicator.setMaxHeight(40);
+			progressIndicator.setMaxWidth(40);
+			this.setCenter(progressIndicator);
+		}
+		else {
+			Platform.runLater(() -> this.setCenter(dbTreeView));
+		}
+	}
+	
 	@Override
 	public ContextMenu createContextMenu() {
 		// TODO Auto-generated method stub
@@ -92,7 +101,7 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner, Co
 		return thisDockNode;
 	}
 	
-	public DBTreeView getDBTreeView() {
+	public DDBTreeView getDBTreeView() {
 		return dbTreeView;
 	}
 
