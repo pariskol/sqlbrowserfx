@@ -1,6 +1,5 @@
 package gr.sqlbrowserfx.nodes.tableviews;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +46,7 @@ public class MapTableView extends TableView<MapTableViewRow> {
 		
 	}
 	
-	public synchronized void setItemsLater(JSONArray jsonArray) throws SQLException {
+	public synchronized void setItemsLater(JSONArray jsonArray) {
 
 		rows.clear();
 		columns = new ArrayList<>();

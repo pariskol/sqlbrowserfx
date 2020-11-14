@@ -91,6 +91,8 @@ public class SqlBrowserFXApp extends Application {
 	private boolean isInternalDBShowing = false;
 	private boolean isRestConfigurationShowing = false;
 	private QueriesMenu queriesMenu;
+	
+	@SuppressWarnings("unused")
 	private double fontSize;
 
 	public static void main(String[] args) {
@@ -321,6 +323,8 @@ public class SqlBrowserFXApp extends Application {
 		mainSqlPane.showConsole();
 
 		ddbTreePane = new DBTreePane(DB, sqlConnector);
+		SqlBrowserFXAppManager.registerDDBTreeView(ddbTreePane.getDBTreeView());
+		ddbTreePane.getDBTreeView().asDockNode().setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
 		
 		configureSqlCodeAreaSyntax();
 		
@@ -372,10 +376,10 @@ public class SqlBrowserFXApp extends Application {
 		sqlPaneViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
 				DSqlPane newSqlPane = new DSqlPane(sqlConnector);
-				SqlBrowserFXAppManager.addSqlPane(newSqlPane);
-				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
+				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + (SqlBrowserFXAppManager.getActiveSqlPanes().size() + 1));
 				newSqlPane.asDockNode().setDockPane(dockPane);
 				newSqlPane.asDockNode().setFloating(true);
+				SqlBrowserFXAppManager.addSqlPane(newSqlPane);
 			});
 		});
 		
@@ -472,7 +476,7 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 		
-		Menu menu4 = new Menu("Transactions");
+		Menu menu4 = new Menu("Transactions", JavaFXUtils.createIcon("/icons/transaction.png"));
 		MenuItem commitAllItem = new MenuItem("Commit all", JavaFXUtils.createIcon("/icons/check.png"));
 		commitAllItem.setOnAction(actionEvent -> sqlConnector.commitAll());
 		
@@ -483,9 +487,17 @@ public class SqlBrowserFXApp extends Application {
 		if (sqlConnector.isAutoCommitModeEnabled())
 			menu4.setDisable(true);
 		
+		Menu menu5 = new Menu();
+		customGraphic = new HBox(JavaFXUtils.createIcon("/icons/help.png"), new Label("Help"));
+		customGraphic.setSpacing(5);
+		menu5.setGraphic(customGraphic);
+		menu5.getGraphic().setOnMouseClicked(mouseEvent -> {
+			new DockNode(dockPane, new HelpTabPane(), "Help", null);
+		});
+
 		MenuBar menuBar = new MenuBar();
 		queriesMenu = new QueriesMenu();
-		menuBar.getMenus().addAll(menu1, menu2, queriesMenu, menu3, menu4);
+		menuBar.getMenus().addAll(menu1, menu2, queriesMenu, menu3, menu4, menu5);
 
 		return menuBar;
 	}

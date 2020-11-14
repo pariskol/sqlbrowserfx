@@ -18,6 +18,7 @@ import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
+import gr.sqlbrowserfx.dock.nodes.DBTreePane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
@@ -54,6 +55,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	private List<SimpleObserver<String>> listeners;
 	
 	private TextField searchField;
+	private DBTreePane parent = null;
 
 	@SuppressWarnings("unchecked")
 	public DBTreeView(String dbPath, SqlConnector sqlConnector) {
@@ -115,6 +117,11 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		});
 	}
 
+	public DBTreeView(String dbPath, SqlConnector sqlConnector, DBTreePane parent) {
+		this(dbPath, sqlConnector);
+		this.parent = parent;
+	}
+	
 	private void getFunctionsAndProcedures() {
 		if (!(sqlConnector instanceof MysqlConnector))
 			return;
@@ -188,7 +195,6 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		new Thread(() -> {
 		try {
 			List<String> newItems = this.getContents();
-			
 			List<TreeItem<String>> found = new ArrayList<>();
 			List<String> sfound = new ArrayList<>();
 
@@ -518,6 +524,8 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	}
 
 	private void refreshFunctionAndProcedures() {
+		if (this.parent != null)
+			parent.setLoading(true);
 		proceduresRootItem.getChildren().clear();
 		functionsRootItem.getChildren().clear();
 		this.getFunctionsAndProcedures();

@@ -319,7 +319,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 //		super.enableFullMode(tab);
 		Platform.runLater(() -> {
 //			tab.setContent(guiState.getSqlTableView());
-			if (isFullMode()) {
+			if (isInFullMode()) {
 //				final TabPane recordsTabPane = tab.getRecordsTabPane() != null ?
 //						tab.getRecordsTabPane() :
 //						this.createRecordsTabPane();

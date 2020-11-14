@@ -126,7 +126,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		this.analyzeTextForTablesAliases(this.getText());
 	}
 	
-	private void setKeysMap() {
+	protected void setKeysMap() {
 		InputMap<Event> addTabs = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.TAB, KeyCombination.CONTROL_DOWN),
 				action -> {
@@ -220,6 +220,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 						KeyEvent.KEY_PRESSED, null, null, KeyCode.ENTER, 
 						false, false, false, false))
         );
+		
         Nodes.addFallbackInputMap(this, addTabs);
         Nodes.addFallbackInputMap(this, removeTabs);
         Nodes.addInputMap(this, run);

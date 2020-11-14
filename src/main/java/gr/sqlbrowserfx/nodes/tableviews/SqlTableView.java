@@ -21,7 +21,6 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableRowEditBox;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
-import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.MemoryGuard;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
@@ -46,7 +45,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 	protected SqlConnector sqlConnector;
 	double minWidth, prefWidth, maxWidth;
 	protected boolean autoResize;
-	int currentColumnPos = 0;
+	private int currentColumnPos = 0;
 	private TableCell<MapTableViewRow, Object> selectedCell;
 	protected boolean filledByQuery = false;
 	protected boolean areCellsEditableByClick;
@@ -78,7 +77,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			}
 		});
 		
-		JavaFXUtils.addMouseScrolling(this);
+//		JavaFXUtils.addMouseScrolling(this);
 		titleProperty = new SimpleStringProperty("empty");
 	}
 
@@ -149,7 +148,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			});
 			tableColumns.add(col);
 		}
-
+		
 		this.getColumns().setAll(tableColumns);
 		super.setItems(rows);
 
@@ -217,6 +216,15 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 				this.getColumns().add(col);
 			}
 
+//			this.setRowFactory(tv -> {
+//			    TableRow<MapTableViewRow> row = new TableRow<>();
+//			    BooleanBinding updatedByGui = row.itemProperty().get().isUpdatedByGui().not().not();
+//			    row.styleProperty().bind(Bindings.when(updatedByGui)
+//			        .then("-fx-background-color: green ;")
+//			        .otherwise(""));
+//			    return row ;
+//			});
+			
 			this.autoResizedColumns(autoResize);
 			this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 			super.setItems(rows);
@@ -436,7 +444,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		sqlConnector.executeUpdate(query, params);
 	}
 
-	public void updateRecord(SqlTableRowEditBox editBox, MapTableViewRow sqlTableRow) throws SQLException {
+	public void updateRecord(final SqlTableRowEditBox editBox, final MapTableViewRow sqlTableRow) throws SQLException {
 		Set<String> columns = this.getSqlTable().getColumns();
 		String query = "update " + this.getTableName() + " set ";
 		List<Object> params = new ArrayList<>();
@@ -475,28 +483,37 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		logger.debug(message);
 
 		if (sqlConnector.executeUpdate(query, params) > 0) {
-			params.clear();
-			String selectQuery = "select " + StringUtils.join(columns, ",") + " from " + this.getSqlTable().getName()
-					+ " where ";
-			keys = this.getPrimaryKey().split(",");
-			for (String key : keys) {
-				selectQuery += key + " = ? and ";
-				params.add(sqlTableRow.get(key));
-			}
-			selectQuery = selectQuery.substring(0, selectQuery.length() - "and ".length());
-			
-			sqlConnector.executeQuery(selectQuery, params,
-				rset -> {
-					LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
-					for (String columnLabel : sqlTable.getColumns()) {
-						entry.put(columnLabel, rset.getObject(columnLabel));
-					}
-					sqlTableRow.refreshMap(entry);
-				});
+			if (sqlConnector.isAutoCommitModeEnabled())
+				updateRowFromDb(sqlTableRow, columns);
+			else
+				sqlTableRow.refreshMapFromEditBox(editBox);
 		}
 
 		// notify listeners
 		sqlTableRow.changed();
+	}
+
+	private void updateRowFromDb(final MapTableViewRow sqlTableRow, Set<String> columns)
+			throws SQLException {
+		List<Object> params = new ArrayList<>();
+		String[] keys;
+		String selectQuery = "select " + StringUtils.join(columns, ",") + " from " + this.getSqlTable().getName()
+				+ " where ";
+		keys = this.getPrimaryKey().split(",");
+		for (String key : keys) {
+			selectQuery += key + " = ? and ";
+			params.add(sqlTableRow.get(key));
+		}
+		selectQuery = selectQuery.substring(0, selectQuery.length() - "and ".length());
+		
+		sqlConnector.executeQuery(selectQuery, params,
+			rset -> {
+				LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
+				for (String columnLabel : sqlTable.getColumns()) {
+					entry.put(columnLabel, rset.getObject(columnLabel));
+				}
+				sqlTableRow.refreshMap(entry);
+			});
 	}
 	
 	@SuppressWarnings("unused")

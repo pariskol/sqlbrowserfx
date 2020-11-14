@@ -4,12 +4,16 @@ import java.sql.SQLException;
 import java.util.Arrays;
 
 import org.controlsfx.control.PopOver;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -17,6 +21,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.VBox;
 
 public class CSqlCodeArea extends SqlCodeArea {
@@ -43,6 +48,17 @@ public class CSqlCodeArea extends SqlCodeArea {
 		super.onMouseClicked();
 		if (saveQueryPopOver != null)
 			saveQueryPopOver.hide();
+	}
+	
+	@Override
+	protected void setKeysMap() {
+		super.setKeysMap();
+		InputMap<Event> saveQuery = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.S, KeyCombination.CONTROL_DOWN),
+				action -> this.saveQueryAction()
+        );
+		
+        Nodes.addInputMap(this, saveQuery);
 	}
 	
 	protected void saveQueryAction() {

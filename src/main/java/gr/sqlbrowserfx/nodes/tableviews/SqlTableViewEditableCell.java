@@ -2,6 +2,7 @@ package gr.sqlbrowserfx.nodes.tableviews;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.utils.PropertiesLoader;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
@@ -25,7 +26,7 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 		this.parentTableView = parentTableView;
 		this.setOnMouseClicked(mouseEvent -> {
 			parentTableView.setSelectedCell(this);
-			if (parentTableView.areCellsEditableByClick() && mouseEvent.getClickCount() == 2) {
+			if (((Boolean)PropertiesLoader.getProperty("sqlbrowserfx.default.editmode.cell", Boolean.class, false)) && parentTableView.areCellsEditableByClick() && mouseEvent.getClickCount() == 2) {
 				this.startEdit();
 			}
 		});
@@ -97,7 +98,8 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 		else
 			textField.setEditable(false);
 		
-		textField.setAlignment(Pos.CENTER);
+//		textField.setAlignment(Pos.CENTER);
+		textField.setStyle("-fx-border-width: 0.0 0.0 0.0 0.0; -fx-padding: 0;");
 		return textField;
 	}
 

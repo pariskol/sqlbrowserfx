@@ -6,7 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 import gr.sqlbrowserfx.listeners.SimpleObserver;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlTableRowEditBox;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 
@@ -15,6 +18,7 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 	protected LinkedHashMap<String,SimpleObjectProperty<Object>> propertiesMap = new LinkedHashMap<>();
 	protected List<String> columns;
 	private List<SimpleObserver<MapTableViewRow>> listeners;
+	private SimpleBooleanProperty isUpdateByGuiProperty = new SimpleBooleanProperty(true);
 	
 	public MapTableViewRow() {
 		columns = new ArrayList<>();
@@ -29,6 +33,12 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 	public void refreshMap(Map<String, Object> entry) {
 		for (String key : entry.keySet()) {
 			propertiesMap.get(key).set(entry.get(key));
+		}
+	}
+	
+	public void refreshMapFromEditBox(SqlTableRowEditBox entry) {
+		for (String key : entry.getMap().keySet()) {
+			propertiesMap.get(key).set(entry.getMap().get(key).getText());
 		}
 	}
 	
@@ -61,6 +71,9 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 		propertiesMap.get(key).setValue(value);
 	}
 
+	public BooleanProperty isUpdatedByGui() {
+		return isUpdateByGuiProperty;
+	}
 	public List<String> getColumns() {
 		return columns;
 	}

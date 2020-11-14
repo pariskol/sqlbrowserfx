@@ -61,13 +61,14 @@ public class DialogFactory {
 			textArea.setEditable(false);
 			textArea.setWrapText(true);
 
-			textArea.setMaxWidth(Double.MAX_VALUE);
-			textArea.setMaxHeight(Double.MAX_VALUE);
+//			textArea.setMaxWidth(Double.MAX_VALUE);
+//			textArea.setMaxHeight(Double.MAX_VALUE);
 			VBox.setVgrow(textArea, Priority.ALWAYS);
 			VBox expContent = new VBox(label,textArea);
 
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 			alert.getDialogPane().setExpandableContent(expContent);
+			alert.getDialogPane().setExpanded(true);
 			if (stylesheet != null)
 				alert.getDialogPane().getStylesheets().add(stylesheet);
 			else if (DEFAULT_STYLESHEET != null)

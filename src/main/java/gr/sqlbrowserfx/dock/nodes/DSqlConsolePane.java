@@ -153,7 +153,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		
 		final SqlTableTab fTab = tab;
 		Platform.runLater(() -> {
-			if (sqlPane.isFullMode()) {
+			if (sqlPane.isInFullMode()) {
 				sqlPane.enableFullMode(fTab);
 			}
 			sqlPane.updateRowsCountLabel();

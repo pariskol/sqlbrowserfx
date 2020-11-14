@@ -8,7 +8,7 @@
   <cmdLine></cmdLine>
   <chdir>.</chdir>
   <priority>high</priority>
-  <downloadUrl>http://java.com/download</downloadUrl>
+  <downloadUrl></downloadUrl>
   <supportUrl></supportUrl>
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
@@ -19,13 +19,13 @@
     <cp>./lib/*</cp>
   </classPath>
   <jre>
-    <path></path>
-    <bundledJre64Bit>false</bundledJre64Bit>
+    <path>./jre</path>
+    <bundledJre64Bit>true</bundledJre64Bit>
     <bundledJreAsFallback>false</bundledJreAsFallback>
-    <minVersion>1.8.0</minVersion>
+    <minVersion>1.8.0_0</minVersion>
     <maxVersion></maxVersion>
-    <jdkPreference>preferJre</jdkPreference>
-    <runtimeBits>64/32</runtimeBits>
-    <opt>-Xmx512m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 --module-path  ./openjfx/lib/  --add-modules javafx.controls</opt>
+    <jdkPreference>jdkOnly</jdkPreference>
+    <runtimeBits>64</runtimeBits>
+    <opt>-Xmx384m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 --module-path  ./openjfx/lib/  --add-modules javafx.controls</opt>
   </jre>
 </launch4jConfig>

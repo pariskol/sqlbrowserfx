@@ -22,6 +22,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.input.KeyCode;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -76,12 +77,11 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 				infoText.setWrapText(true);
 				infoText.setPrefColumnCount(20);
 				infoText.setPrefRowCount(5);
-				Button submitButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
-				submitButton.setOnAction(event -> textField.setText(infoText.getText()));
-				PopOver info = new PopOver(new VBox(infoText, submitButton));
-//				info.setArrowSize(0);
-				info.setDetachable(false);
+				textField.textProperty().bind(infoText.textProperty());
+				PopOver info = new SqlPanePopOver(new VBox(infoText));
+				info.setOnHidden(event-> textField.textProperty().unbind());
 				info.show(infoButton);
+				infoText.setOnKeyPressed(event-> {if (event.getCode() == KeyCode.ESCAPE) info.hide();});
 			});
 
 			if (sqlTableRow != null && sqlTableView.getPrimaryKey() != null && sqlTableView.getPrimaryKey().contains(columnName)) {
