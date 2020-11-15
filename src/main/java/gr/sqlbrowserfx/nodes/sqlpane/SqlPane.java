@@ -95,6 +95,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	
 	protected SqlConnector sqlConnector;
 	protected Boolean sqlQueryRunning;
+	private Boolean isSearchApplied = false;
 	private String columnsFilter = "*";
 	private Button importCsvButton;
 	protected Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
@@ -179,9 +180,13 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		searchField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				if (searchField.getText().isEmpty()) {
-					Platform.runLater(() -> getSelectedSqlTableView().setItems(getSelectedSqlTableView().getSqlTableRows()));
+					Platform.runLater(() -> {
+						getSelectedSqlTableView().setItems(getSelectedSqlTableView().getSqlTableRows());
+						this.setIsSearchApplied(false);
+						this.updateRowsCountLabel();
+					});
 				} else {
-					SqlPane.this.searchFieldAction();
+					this.searchFieldAction();
 				}
 			}
 		});
@@ -549,7 +554,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	public void updateRowsCountLabel() {
-		Platform.runLater(() -> this.rowsCountLabel.setText(getSelectedSqlTableView().getSqlTableRows().size() + " rows"));
+		if (isSearchApplied())
+			Platform.runLater(() -> this.rowsCountLabel.setText(getSelectedSqlTableView().getItems().size() + " filtered rows of " + getSelectedSqlTableView().getSqlTableRows().size()));
+		else
+			Platform.runLater(() -> this.rowsCountLabel.setText(getSelectedSqlTableView().getSqlTableRows().size() + " rows"));
 		
 	}
 
@@ -605,6 +613,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			String columnRegex = split.length > 1 ? split[0] : null;
 			String regex = split.length > 1 ? split[1] : split[0];
 			
+			this.setIsSearchApplied(!regex.isEmpty());
+			
 			for (MapTableViewRow row : sqlTableView.getSqlTableRows()) {
 				for (TableColumn<MapTableViewRow, ?> column : sqlTableView.getVisibleLeafColumns()) {
 
@@ -621,8 +631,11 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 						}
 					}
 				}
-				Platform.runLater(() -> sqlTableView.setItems(searchRows));
 			}
+			Platform.runLater(() -> {
+				sqlTableView.setItems(searchRows);
+				this.updateRowsCountLabel();
+			});
 		});
 	}
 
@@ -1216,4 +1229,13 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return (SqlTableTab) tablesTabPane.getSelectionModel().getSelectedItem();
 	}
 
+	public Boolean isSearchApplied() {
+		return isSearchApplied;
+	}
+
+	public void setIsSearchApplied(Boolean isSearchApplied) {
+		this.isSearchApplied = isSearchApplied;
+	}
+
+	
 }
