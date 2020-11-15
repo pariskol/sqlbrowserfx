@@ -131,7 +131,6 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 //				if (wholeWordCheckBox.isSelected()) {
 //					if (lastPos != 0 && (text.charAt(lastPos - 1) == ' ' || text.charAt(lastPos - 1) == '\n')
 //							&& (text.charAt(lastPos + pattern.length() + 1) == ' ' && text.charAt(lastPos + pattern.length() + 1) == '\n'))
-//							System.out.println();
 //					else
 //						return;
 //				}

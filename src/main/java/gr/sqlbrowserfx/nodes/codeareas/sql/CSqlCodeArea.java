@@ -30,7 +30,6 @@ public class CSqlCodeArea extends SqlCodeArea {
 
 	public CSqlCodeArea() {
 		super();
-		this.startTextAnalyzerDaemon();
 	}
 
 	@Override
@@ -110,4 +109,5 @@ public class CSqlCodeArea extends SqlCodeArea {
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
 		saveQueryPopOver.show(this, boundsInScene.getMinX()+saveQueryPopOver.getWidth()/3, boundsInScene.getMinY()-saveQueryPopOver.getHeight()/2);
 	}
+
 }

@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +55,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	private Popup autoCompletePopup;
 	protected SearchAndReplacePopOver searchAndReplacePopOver;
 	private ListView<String> suggestionsList;
+	private Thread textAnalyzerDaemon;
 
 	public SqlCodeArea() {
 		this(null);
@@ -82,9 +84,9 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		searchAndReplacePopOver.hide();
 	}
 
-	protected void startTextAnalyzerDaemon() {
-		Thread th = new Thread(() -> {
-			while (true) {
+	public void startTextAnalyzerDaemon() {
+		this.textAnalyzerDaemon = new Thread(() -> {
+			while (!Thread.currentThread().isInterrupted()) {
 				try {
 					Thread.sleep(1000);
 //					SqlCodeArea.this.tableAliases.clear();
@@ -92,12 +94,20 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 					if (!this.areMapsEqual(this.tableAliases, newTableAliases))
 						this.tableAliases = newTableAliases;
 				} catch (InterruptedException e) {
-					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug(e.getMessage());
+					break;
 				}
 			}
 		}, "Text Analyzer Daemon");
-		th.setDaemon(true);
-		th.start();
+		this.textAnalyzerDaemon.setDaemon(true);
+		this.textAnalyzerDaemon.start();
+	}
+	
+	public void stopTextAnalyzerDaemon() {
+		if (this.textAnalyzerDaemon != null) {
+			this.textAnalyzerDaemon.interrupt();
+			this.textAnalyzerDaemon = null;
+		}
 	}
 	
 	private boolean areMapsEqual(Map<String, Set<String>> map1, Map<String, Set<String>> map2) {
@@ -353,6 +363,9 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			suggestionsList.getItems().addAll(FXCollections.observableList(new ArrayList<>(new HashSet<>(suggestions))));
 			suggestionsList.setPrefHeight(100);
 		}
+		suggestionsList.setCellFactory(callback -> {
+			return new SuggestionListCell();
+		});
 		return suggestionsList;
 	}
 
@@ -475,8 +488,8 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	private void listViewOnEnterActrion(ListView<String> suggestionsList, final String query, final int caretPosition,
 			KeyEvent keyEvent) {
 		final String word = (suggestionsList.getSelectionModel().getSelectedItem() != null) ?
-								suggestionsList.getSelectionModel().getSelectedItem() :
-									suggestionsList.getItems().get(0);
+								suggestionsList.getSelectionModel().getSelectedItem().replaceAll("@", "")	 :
+									suggestionsList.getItems().get(0).replaceAll("@", "");
 
 		Platform.runLater(() -> {
 			if (insertMode) {
@@ -565,9 +578,9 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
     }
 
 	public List<String> getQuerySuggestions(String query) {
-        List<String> suggestions = SqlCodeAreaSyntax.KEYWORDS_lIST.parallelStream()
+        List<String> suggestions = SqlCodeAreaSyntax.KEYWORDS_lIST.stream()
         							.filter(keyword -> keyword != null && keyword.startsWith(query)).collect(Collectors.toList());
-//        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
+        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
         return suggestions;
     }
     

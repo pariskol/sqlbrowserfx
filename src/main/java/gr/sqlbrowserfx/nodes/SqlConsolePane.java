@@ -139,6 +139,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 	private void createSqlConsoleTab() {
 		CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
+		sqlCodeArea.startTextAnalyzerDaemon();
 		sqlCodeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
 		sqlCodeArea.setEnterAction(() -> this.executeButonAction());
 		sqlCodeArea.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> {
@@ -146,6 +147,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		});
 		VirtualizedScrollPane<CodeArea> scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
 		Tab newTab = new Tab("query " + queryTabPane.getTabs().size(), scrollPane);
+		newTab.setOnClosed(event -> sqlCodeArea.stopTextAnalyzerDaemon());
 
 		queryTabPane.getTabs().add(newTab);
 		queryTabPane.getSelectionModel().select(newTab);

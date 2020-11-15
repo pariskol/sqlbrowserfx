@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.input.Tailer;
 import org.apache.commons.io.input.TailerListener;
@@ -36,7 +37,6 @@ import gr.sqlbrowserfx.nodes.codeareas.log.CodeAreaTailerListener;
 import gr.sqlbrowserfx.nodes.codeareas.log.LogCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
-import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
@@ -326,9 +326,7 @@ public class SqlBrowserFXApp extends Application {
 		SqlBrowserFXAppManager.registerDDBTreeView(ddbTreePane.getDBTreeView());
 		ddbTreePane.getDBTreeView().asDockNode().setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
 		
-		configureSqlCodeAreaSyntax();
-		
-		ddbTreePane.getDBTreeView().addObserver(value -> SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames()));
+		ddbTreePane.getDBTreeView().addObserver(value -> SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x + "@").collect(Collectors.toList())));
 		mainSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
 		mainSqlPane.getSqlConsoleBox().addObserver(queriesMenu);
 		ddbTreePane.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
@@ -362,7 +360,7 @@ public class SqlBrowserFXApp extends Application {
 	}
 
 	private void configureSqlCodeAreaSyntax() {
-		SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames());
+		SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x + "@").collect(Collectors.toList()));
 		
 		for (String table : ddbTreePane.getDBTreeView().getContentNames()) {
 			SqlCodeAreaSyntax.bind(table, ddbTreePane.getDBTreeView().getColumnsForTable(table));
@@ -468,11 +466,12 @@ public class SqlBrowserFXApp extends Application {
 		menu3.setGraphic(customGraphic);
 		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
 			if (!isInternalDBShowing) {
-				SqlPane sqlPane = new SqlPane(SqlBrowserFXAppManager.getConfigSqlConnector());
-				JavaFXUtils.applyJMetro(sqlPane);
-				DockNode dockNode = new DockNode(dockPane, sqlPane, "SqlBrowserFX Internal Database", JavaFXUtils.createIcon("/icons/database.png"), 800.0, 600.0);
+				DSqlPane newSqlPane = new DSqlPane(SqlBrowserFXAppManager.getConfigSqlConnector());
+				newSqlPane.asDockNode().setTitle("SqlBrowserFX Internal Database");
+				newSqlPane.asDockNode().setDockPane(dockPane);
+				newSqlPane.asDockNode().setFloating(true);
 				isInternalDBShowing  = true;
-				dockNode.setOnClose(() -> isInternalDBShowing = false);
+				newSqlPane.asDockNode().setOnClose(() -> isInternalDBShowing = false);
 			}
 		});
 		
