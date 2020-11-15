@@ -10,3 +10,4 @@ dist
 .gradle/
 .idea/
 sqlbrowserfx.iml
+sqlbrowser.db
