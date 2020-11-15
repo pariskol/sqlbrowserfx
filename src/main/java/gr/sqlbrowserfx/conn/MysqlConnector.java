@@ -147,6 +147,11 @@ public class MysqlConnector extends SqlConnector {
 	}
 	
 	@Override
+	public String getDbSchema() {
+		return database;
+	}
+	
+	@Override
 	public String getName() {
 		return "TABLE_NAME";
 	}

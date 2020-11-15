@@ -45,7 +45,7 @@ public class SqliteConnector extends SqlConnector {
 			} catch (SQLException e1) {
 				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e1.getMessage(), e1);
 			}
-		}, "SQLite updates executor");
+		}, getClass().getSimpleName() + "-updates-executor");
 		updatesExecutorThread.setDaemon(true);
 		updatesExecutorThread.start();
 	}

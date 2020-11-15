@@ -8,12 +8,16 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
@@ -21,6 +25,9 @@ import gr.sqlbrowserfx.utils.MemoryGuard;
 
 public abstract class SqlConnector {
 
+	public static final String FOREIGN_KEY = "FKCOLUMN_NAME";
+	public static final String REFERENCED_TABLE = "PKTABLE_NAME";
+	public static final String REFERENCED_KEY = "PKCOLUMN_NAME";
 	private DataSource dataSource;
 	private String driver;
 	private String url;
@@ -30,7 +37,12 @@ public abstract class SqlConnector {
 	private boolean isAutoCommitModeEnabled = true;
 
 	public SqlConnector() {
-		executorService = Executors.newCachedThreadPool();
+		BasicThreadFactory factory = new BasicThreadFactory.Builder()
+			     .namingPattern(getClass().getSimpleName() + "-pool-thread-%d")
+			     .daemon(true)
+			     .priority(Thread.NORM_PRIORITY)
+			     .build();
+		executorService = Executors.newCachedThreadPool(factory);
 	}
 
 	public SqlConnector(String driver, String url, String user, String password) {
@@ -58,7 +70,7 @@ public abstract class SqlConnector {
 					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 				}
 			}
-		}, "Connection Monitor Daemon");
+		}, getClass().getSimpleName() + "-connection-monitor");
 		daemon.setDaemon(true);
 		daemon.start();
 	}
@@ -312,7 +324,7 @@ public abstract class SqlConnector {
 
 		try (Connection conn = dataSource.getConnection();) {
 			DatabaseMetaData meta = conn.getMetaData();
-			ResultSet rset = meta.getPrimaryKeys(null, null, tableName);
+			ResultSet rset = meta.getPrimaryKeys(null, getDbSchema(), tableName);
 			while (rset.next())
 				primaryKey += rset.getString("COLUMN_NAME") + ",";
 		}
@@ -339,37 +351,25 @@ public abstract class SqlConnector {
 	}
 
 	public List<String> findForeignKeys(String tableName) throws SQLException {
-		List<String> foreignKeys = new ArrayList<>();
+		return findFoireignKeyReferences(tableName).stream().map(x -> x.get(FOREIGN_KEY)).collect(Collectors.toList());
+	}
+
+	public List<Map<String, String>> findFoireignKeyReferences(String tableName) throws SQLException {
+		List<Map<String, String>> foreignKeys = new ArrayList<>();
 		try (Connection conn = dataSource.getConnection();) {
 			DatabaseMetaData meta = conn.getMetaData();
-			try (ResultSet rset = meta.getImportedKeys(null, null, tableName);) {
+			try (ResultSet rset = meta.getImportedKeys(null, getDbSchema(), tableName);) {
 				while (rset.next()) {
-					String foreignKey = rset.getString("FKCOLUMN_NAME");
-					foreignKeys.add(foreignKey);
+					Map<String, String> map = new HashMap<>();
+					map.put(REFERENCED_KEY, rset.getString(REFERENCED_KEY));
+					map.put(REFERENCED_TABLE, rset.getString(REFERENCED_TABLE));
+					map.put(FOREIGN_KEY, rset.getString(FOREIGN_KEY));
+					foreignKeys.add(map);
 				}
 			}
 		}
 
 		return foreignKeys;
-	}
-
-	public String findFoireignKeyReference(String tableName, String key) throws SQLException {
-		try (Connection conn = dataSource.getConnection();) {
-			DatabaseMetaData meta = conn.getMetaData();
-			try (ResultSet rset = meta.getImportedKeys(null, null, tableName);) {
-				while (rset.next()) {
-					String referenceKey = rset.getString("PKCOLUMN_NAME");
-					String referenceTable = rset.getString("PKTABLE_NAME");
-					String foreignKey = rset.getString("FKCOLUMN_NAME");
-
-					if (foreignKey.equals(key))
-						return referenceKey + " : " + referenceTable;
-
-				}
-			}
-		}
-
-		return null;
 	}
 
 	public abstract Object castToDBType(SqlTable sqlTable, String columnName, String text);
@@ -409,6 +409,10 @@ public abstract class SqlConnector {
 		this.executorService = executorService;
 	}
 
+	public String getDbSchema() {
+		return null;
+	}
+	
 	abstract public String getContentsQuery();
 	
 	abstract public void getTriggers(String table, ResultSetAction action) throws SQLException;

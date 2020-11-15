@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.controlsfx.control.PopOver;
 import org.slf4j.Logger;
@@ -288,7 +289,8 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		sqlConnector.executeQueryRaw("select * from " + treeItem.getValue() + " where 1 = 2", rset -> {
 			SqlTable sqlTable = new SqlTable(rset.getMetaData());
 			sqlTable.setPrimaryKey(sqlConnector.findPrimaryKey(treeItem.getValue()));
-			sqlTable.setForeignKeys(sqlConnector.findForeignKeys(treeItem.getValue()));
+			List<Map<String, String>> fkeys = sqlConnector.findFoireignKeyReferences(treeItem.getValue());
+			sqlTable.setForeignKeys(fkeys.stream().map(x -> x.get(SqlConnector.FOREIGN_KEY)).collect(Collectors.toList()));
 			sqlTable.getColumns();
 			for (String column : sqlTable.getColumns()) {
 				TreeItem<String> columnTreeItem = new TreeItem<String>(column);
@@ -296,9 +298,13 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 					columnTreeItem.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
 				else if (sqlTable.isForeignKey(column)) {
 					columnTreeItem.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
-					TreeItem<String> referenceItem = new TreeItem<>(
-							sqlConnector.findFoireignKeyReference(treeItem.getValue(), column));
-					columnTreeItem.getChildren().add(referenceItem);
+					List<Map<String, String>> l = fkeys.stream().filter(x -> x.get(SqlConnector.FOREIGN_KEY).equals(column)).collect(Collectors.toList());
+					Map<String, String> map = l.size() > 0 ? l.get(0) : null;
+					if (map != null) {
+						String refColumn = map.get(SqlConnector.REFERENCED_TABLE) + ": " + map.get(SqlConnector.REFERENCED_KEY);
+						TreeItem<String> referenceItem = new TreeItem<>(refColumn);
+						columnTreeItem.getChildren().add(referenceItem);
+					}
 
 				}
 				columnsTree.getChildren().add(columnTreeItem);
