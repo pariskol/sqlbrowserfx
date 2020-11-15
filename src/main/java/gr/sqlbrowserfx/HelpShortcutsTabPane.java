@@ -28,6 +28,7 @@ public class HelpShortcutsTabPane extends TabPane {
 		addShortcut("Cut", "Ctrl+X", rows);
 		addShortcut("Undo", "Ctrl+Z", rows);
 		addShortcut("Redo", "Ctrl+Shift+Z", rows);
+		addShortcut("Save Query", "Ctrl+S", rows);
 		addShortcut("To Upper Case", "Ctrl+U", rows);
 		addShortcut("To Lower Case", "Ctrl+L", rows);
 		addShortcut("Add Tabs", "Ctrl+Tab", rows);
@@ -51,7 +52,6 @@ public class HelpShortcutsTabPane extends TabPane {
 		addShortcut("Edit", "Ctrl+E", rows);
 		addShortcut("Delete", "Ctrl+D", rows);
 		addShortcut("Refresh", "Ctrl+R", rows);
-		addShortcut("Save Query", "Ctrl+S", rows);
 		addShortcut("Scroll To Top", "Ctrl+Home", rows);
 		addShortcut("Scroll To End", "Ctrl+End", rows);
 		addShortcut("Select All Rows", "Ctrl+A", rows);
@@ -76,7 +76,7 @@ public class HelpShortcutsTabPane extends TabPane {
 		MapTableView tableView = new MapTableView();
 		List<Map<String, Object>> rows = new ArrayList<>();
 		addShortcut("Search", "Ctrl+F", rows);
-		addShortcut("Copy text of selected item ", "Ctrl+C", rows);
+		addShortcut("Copy text of selected items (comma separated)", "Ctrl+C", rows);
 		tableView.setItemsLater(new JSONArray(rows));
 		
 		Tab tab = new Tab("DBTreeView", tableView);
