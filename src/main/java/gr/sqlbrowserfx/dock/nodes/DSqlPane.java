@@ -74,47 +74,6 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 		chartColumns = new ArrayList<>();
 		lineChartBoxes = new ArrayList<>();
 
-		this.getSelectedSqlTableView().setOnKeyPressed(keyEvent -> {
-			if (keyEvent.isControlDown()) {
-				switch (keyEvent.getCode()) {
-				case F:
-					this.searchButtonAction();
-					getSelectedSqlTableView().requestFocus();
-					break;
-				case C:
-					this.copyAction();
-					getSelectedSqlTableView().requestFocus();
-					break;
-				case D:
-					this.deleteButtonAction();
-					getSelectedSqlTableView().requestFocus();
-					break;
-				case E:
-					this.editButtonAction(simulateClickEvent(editButton));
-					getSelectedSqlTableView().requestFocus();
-					break;
-				case Q:
-					this.addButtonAction();
-					getSelectedSqlTableView().requestFocus();
-					break;
-				case I:
-					this.importCsvAction();
-					getSelectedSqlTableView().requestFocus();
-					break;
-				case R:
-					this.refreshButtonAction();
-					getSelectedSqlTableView().requestFocus();
-					break;
-				case T:
-					this.sqlConsoleButtonAction();
-					sqlConsoleBox.getCodeAreaRef().requestFocus();
-				default:
-					break;
-				}
-			}
-			getSelectedSqlTableView().requestFocus();
-		});
-
 	}
 
 	@Override
@@ -301,10 +260,10 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	}
 
 	@Override
-	protected void getDataFromDB(String table, final SqlTableView sqlTableView) {
+	protected void getDataFromDB(String table, final SqlTableTab sqlTableTab) {
 		if (table != null && !table.equals("empty")) {
-			super.getDataFromDB(table, sqlTableView);
-			this.fillChartColumnBoxes(sqlTableView);
+			super.getDataFromDB(table, sqlTableTab);
+			this.fillChartColumnBoxes(sqlTableTab.getSqlTableView());
 		}
 	}
 

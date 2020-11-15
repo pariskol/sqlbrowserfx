@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -360,7 +359,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	private ListView<String> createSuggestionsListView(List<String> suggestions) {
 		ListView<String> suggestionsList = new ListView<>();
 		if (suggestions != null) {
-			suggestionsList.getItems().addAll(FXCollections.observableList(new ArrayList<>(new HashSet<>(suggestions))));
+			suggestionsList.getItems().addAll(FXCollections.observableList(suggestions));
 			suggestionsList.setPrefHeight(100);
 		}
 		suggestionsList.setCellFactory(callback -> {
@@ -580,7 +579,8 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	public List<String> getQuerySuggestions(String query) {
         List<String> suggestions = SqlCodeAreaSyntax.KEYWORDS_lIST.stream()
         							.filter(keyword -> keyword != null && keyword.startsWith(query)).collect(Collectors.toList());
-        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
+//        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
+//        suggestions.sort(String.CASE_INSENSITIVE_ORDER);
         return suggestions;
     }
     
@@ -596,7 +596,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
     			if (s.equals(tableAlias)) {
         	    	if (columnPattern != null) {
         	    		return SqlCodeAreaSyntax.COLUMNS_MAP.get(knownTable)
-        	    							.parallelStream().filter(col -> col.contains(columnPattern))
+        	    							.stream().filter(col -> col.toLowerCase().contains(columnPattern.toLowerCase()))
         	    							.collect(Collectors.toList());
         	    	}
         	    	else {

@@ -326,7 +326,10 @@ public class SqlBrowserFXApp extends Application {
 		SqlBrowserFXAppManager.registerDDBTreeView(ddbTreePane.getDBTreeView());
 		ddbTreePane.getDBTreeView().asDockNode().setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
 		
-		ddbTreePane.getDBTreeView().addObserver(value -> SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x + "@").collect(Collectors.toList())));
+		ddbTreePane.getDBTreeView().addObserver(value -> {
+			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x + "@").collect(Collectors.toList()));
+			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x.toUpperCase() + "@").collect(Collectors.toList()));
+		});
 		mainSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
 		mainSqlPane.getSqlConsoleBox().addObserver(queriesMenu);
 		ddbTreePane.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
@@ -357,14 +360,6 @@ public class SqlBrowserFXApp extends Application {
 			}
 			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
 		});
-	}
-
-	private void configureSqlCodeAreaSyntax() {
-		SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x + "@").collect(Collectors.toList()));
-		
-		for (String table : ddbTreePane.getDBTreeView().getContentNames()) {
-			SqlCodeAreaSyntax.bind(table, ddbTreePane.getDBTreeView().getColumnsForTable(table));
-		}
 	}
 
 	private MenuBar createMenu(DockPane dockPane) {
@@ -461,12 +456,16 @@ public class SqlBrowserFXApp extends Application {
 		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
 
 		Menu menu3 = new Menu();
-		HBox customGraphic = new HBox(JavaFXUtils.createIcon("/icons/settings.png"), new Label("Configuration"));
+		HBox customGraphic = new HBox(JavaFXUtils.createIcon("/icons/settings.png"), new Label("Internal DB"));
 		customGraphic.setSpacing(5);
 		menu3.setGraphic(customGraphic);
 		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
 			if (!isInternalDBShowing) {
 				DSqlPane newSqlPane = new DSqlPane(SqlBrowserFXAppManager.getConfigSqlConnector());
+				newSqlPane.createSqlTableTabWithDataUnsafe("autocomplete");
+				newSqlPane.createSqlTableTabWithDataUnsafe("saved_queries");
+				newSqlPane.createSqlTableTabWithDataUnsafe("queries_history");
+				newSqlPane.createSqlTableTabWithDataUnsafe("connections_history");
 				newSqlPane.asDockNode().setTitle("SqlBrowserFX Internal Database");
 				newSqlPane.asDockNode().setDockPane(dockPane);
 				newSqlPane.asDockNode().setFloating(true);
@@ -496,7 +495,7 @@ public class SqlBrowserFXApp extends Application {
 
 		MenuBar menuBar = new MenuBar();
 		queriesMenu = new QueriesMenu();
-		menuBar.getMenus().addAll(menu1, menu2, queriesMenu, menu3, menu4, menu5);
+		menuBar.getMenus().addAll(menu1, menu2, queriesMenu, menu4, menu3, menu5);
 
 		return menuBar;
 	}

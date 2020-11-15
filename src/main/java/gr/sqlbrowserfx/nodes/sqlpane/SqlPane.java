@@ -130,7 +130,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		tablesTabPane.setOnMouseClicked(mouseEvent -> this.tablesTabPaneClickAction());
 
-		this.addSqlTableTab();
+//		this.addSqlTableTab();
 
 		resizeModeCheckBox = new CheckBox("Auto resize");
 		resizeModeCheckBox.setOnMouseClicked(event -> {
@@ -370,17 +370,19 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	public void createSqlTableTabWithData(String table) {
-		if (sqlQueryRunning) {
-			return;
-		} else {
-			tablesTabPane.getSelectionModel().select(addTableTab);
-			SqlTableTab tab = this.addSqlTableTab();
+		if (!sqlQueryRunning) {
+			final SqlTableTab tab = this.addSqlTableTab();
 			this.createTablesBox();
 			this.createViewsBox();
-			sqlConnector.executeAsync(() -> this.getDataFromDB(table, tab.getSqlTableView()));
+			sqlConnector.executeAsync(() -> this.getDataFromDB(table, tab));
 		}
 	}
-
+	
+	public void createSqlTableTabWithDataUnsafe(String table) {
+			final SqlTableTab tab = this.addSqlTableTab();
+			this.getDataFromDB(table, tab);
+	}
+	
 	@Override
 	public ContextMenu createContextMenu() {
 		ContextMenu contextMenu = new ContextMenu();
@@ -528,8 +530,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return limitModeCheckBox.isSelected();
 	}
 
-	protected void getDataFromDB(String table, final SqlTableView sqlTableView) {
-		SqlTableTab sqlTableTab = (SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem();
+	protected void getDataFromDB(String table, final SqlTableTab sqlTableTab) {
+		SqlTableView sqlTableView = sqlTableTab.getSqlTableView();
 		sqlQueryRunning = true;
 		String query = "select " + columnsFilter + " from " + table + whereFilter;
 
@@ -641,10 +643,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	// Buttons' actions -------------------------------------------------------
 	protected void tableComboBoxAction(ComboBox<String> comboBox) {
-		if (sqlQueryRunning) {
-			return;
-		} else {
-			sqlConnector.executeAsync(() -> this.getDataFromDB(comboBox.getSelectionModel().getSelectedItem(), getSelectedSqlTableView()));
+		if (!sqlQueryRunning) {
+			sqlConnector.executeAsync(() -> this.getDataFromDB(comboBox.getSelectionModel().getSelectedItem(), getSelectedTableTab()));
 		}
 	}
 
@@ -902,13 +902,11 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 //		if (tablesBox != null && tablesBox.getSelectionModel().getSelectedItem() != null && !sqlQueryRunning.get()) {
 //			tablesBox.getOnAction().handle(new ActionEvent());
 //		}
-		if (sqlQueryRunning) {
-			return;
-		} else {
+		if (!sqlQueryRunning) {
 			if (tablesTabPane.getSelectionModel().getSelectedItem() != null
 					&& !((SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem()).getCustomText().equals(EMPTY)) {
 				String tableName = ((SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem()).getCustomText();
-				sqlConnector.executeAsync(() -> this.getDataFromDB(tableName, getSelectedSqlTableView()));
+				sqlConnector.executeAsync(() -> this.getDataFromDB(tableName, getSelectedTableTab()));
 			}
 		}
 	}

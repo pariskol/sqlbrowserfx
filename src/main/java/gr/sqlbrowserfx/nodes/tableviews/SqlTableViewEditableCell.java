@@ -53,7 +53,10 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 	public void startEdit() {
 		TablePosition<?, ?> pos = parentTableView.getSelectionModel().getSelectedCells().get(0);
 		
-		if (pos.getTableColumn().getText().equals(parentTableView.getPrimaryKey())) {
+		if (pos != null &&
+			pos.getTableColumn() != null &&
+			pos.getTableColumn().getText() != null &&
+			pos.getTableColumn().getText().equals(parentTableView.getPrimaryKey())) {
 			return;
 		}
 		
