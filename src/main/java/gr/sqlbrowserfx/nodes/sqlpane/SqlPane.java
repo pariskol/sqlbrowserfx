@@ -1224,7 +1224,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	public final SqlTableTab getSelectedTableTab() {
-		return (SqlTableTab) tablesTabPane.getSelectionModel().getSelectedItem();
+		Tab tab = tablesTabPane.getSelectionModel().getSelectedItem();
+		return tab instanceof SqlTableTab ? (SqlTableTab) tab : null;
 	}
 
 	public Boolean isSearchApplied() {

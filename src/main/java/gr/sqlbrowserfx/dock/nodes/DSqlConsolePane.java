@@ -142,7 +142,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	protected void handleSelectResult(String query, ResultSet rset) throws SQLException {
 		SqlTableView sqlTableView = sqlPane.getSelectedSqlTableView();
 		SqlTableTab tab = sqlPane.getSelectedTableTab();
-		if (this.openInNewTableView()) {
+		if (this.openInNewTableView() || tab == null) {
 			tab = sqlPane.addSqlTableTabLater();
 			sqlTableView = tab.getSqlTableView();
 		}

@@ -13,6 +13,7 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
@@ -90,6 +91,10 @@ public class CSqlCodeArea extends SqlCodeArea {
 					DialogFactory.createErrorDialog(e);
 				}
 			});
+		});
+		addButton.setOnKeyPressed(event -> {
+			addButton.getOnAction().handle(new ActionEvent());
+			event.consume();
 		});
 
 		VBox vb = new VBox(categoryField, descriptionField, addButton);
