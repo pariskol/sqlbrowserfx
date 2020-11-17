@@ -4,7 +4,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -23,8 +27,8 @@ public class SqlCodeAreaSyntax {
 	public static  String[] TYPES = getAutocomplteWords("types");
 	public static  String[] KEYWORDS = getAutocomplteWords("sql");
 
-	public static final List<String> KEYWORDS_lIST = new ArrayList<>();
-	public static final HashMap<String, List<String>> COLUMNS_MAP = new HashMap<>();
+	public static final Set<String> KEYWORDS_lIST = new LinkedHashSet<>();
+	public static final Map<String, List<String>> COLUMNS_MAP = new HashMap<>();
 
 	private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
 	private static final String PAREN_PATTERN = "\\(|\\)";
