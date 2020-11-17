@@ -16,8 +16,7 @@ public class HelpTabPane extends TabPane{
 
 	public HelpTabPane() {
 		super();
-		String desc ="SQLBROWSERFX"
-				+ "\n\n"
+		String desc = ""
 				+ "SqlBrowserFX is a feature rich cross platform sql client for SQLite , MySQL for both windows and linux \n"
 				+ "\n"
 				+ "\n"
@@ -77,6 +76,7 @@ public class HelpTabPane extends TabPane{
 		
 		TextArea descTextArea = new TextArea(desc);
 		descTextArea.setEditable(false);
+		descTextArea.setWrapText(true);
 		
 		TextArea licenseTextArea = new TextArea(license);
 		licenseTextArea.setEditable(false);
@@ -84,6 +84,16 @@ public class HelpTabPane extends TabPane{
 		tab.setClosable(false);
 		this.getTabs().add(tab);
 		tab = new Tab("Shortcuts", new HelpShortcutsTabPane());
+		tab.setClosable(false);
+		this.getTabs().add(tab);
+		TextArea restTextArea = new TextArea("SqlBrowserFX provides a simple rest api for fast prototyping\n\n"
+										   + "Available Endpoints:\n\n"
+										   + "/tables (get db tables)\n"
+										   + "/get/:table?column1=...&column2=... (with parameters matching table columns)\n"
+										   + "/save/:table (with json body with keys matching table columns)\n"
+										   + "/delete/:table (with json body with keys matching table columns)\n");
+		restTextArea.setEditable(false);
+		tab = new Tab("Rest Api", restTextArea);
 		tab.setClosable(false);
 		this.getTabs().add(tab);
 		tab = new Tab("License", licenseTextArea);
