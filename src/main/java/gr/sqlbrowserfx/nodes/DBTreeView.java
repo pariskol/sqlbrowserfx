@@ -230,6 +230,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 				this.setRoot(rootItem);
 				this.fireEvent(new SimpleEvent());
 			});
+
 			this.changed();
 		} catch (Throwable e) {
 			DialogFactory.createErrorDialog(e);
@@ -385,6 +386,8 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	}
 
 	private void refreshTreeView() throws SQLException {
+		if (this.parent != null)
+			parent.setLoading(true);
 		this.clearAll();
 		this.fillTreeView();
 	}
@@ -530,8 +533,6 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	}
 
 	private void refreshFunctionAndProcedures() {
-		if (this.parent != null)
-			parent.setLoading(true);
 		proceduresRootItem.getChildren().clear();
 		functionsRootItem.getChildren().clear();
 		this.getFunctionsAndProcedures();
