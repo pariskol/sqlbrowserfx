@@ -170,7 +170,7 @@ public class SqliteConnector extends SqlConnector {
 	
 	@Override
 	public String getContentsQuery() {
-		return "select name,type from sqlite_master";
+		return "select name,type from sqlite_master order by name";
 	}
 
 	@Override
