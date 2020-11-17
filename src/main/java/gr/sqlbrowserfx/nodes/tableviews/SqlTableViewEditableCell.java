@@ -19,7 +19,6 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 	public SqlTableViewEditableCell() {
 		super();
 		this.setAlignment(Pos.CENTER_LEFT);
-		this.setWrapText(true);
 	}
 
 	public SqlTableViewEditableCell(SqlTableView parentTableView) {

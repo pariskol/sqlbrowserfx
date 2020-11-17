@@ -32,7 +32,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 
 //FIXME use deleteRow, log log4j in ui
@@ -379,7 +379,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		List<Object> params = new ArrayList<>();
 		String notEmptyColumns = "";
 		String values = "";
-		Map<String, TextField> map = editBox.getMap();
+		Map<String, TextArea> map = editBox.getMap();
 		Map<String, Object> entry = new HashMap<>();
 
 		for (String column : columns) {
@@ -452,7 +452,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		for (String column : columns) {
 //			if (!column.equals(this.getPrimaryKey())) {
 			if (this.getPrimaryKey() != null && !this.getPrimaryKey().contains(column)) {
-				TextField elm = editBox.getMap().get(column);
+				TextArea elm = editBox.getMap().get(column);
 				Object actualValue = null;
 				if (elm != null && elm.getText() != null && !elm.getText().equals("")) {
 					// type checking

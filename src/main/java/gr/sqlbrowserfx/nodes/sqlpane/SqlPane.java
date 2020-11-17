@@ -511,7 +511,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		});
 	
 		editBox.getToolbar().getChildren().addAll(clearBtn);
-		editBox.getMainBox().getChildren().add(addBtn);
+		editBox.setActionButton(addBtn);
 	
 		for (Node node : editBox.getChildren()) {
 			if (node instanceof HBox)
@@ -693,7 +693,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 		});
 
-		editBox.getMainBox().getChildren().addAll(editButton);
+		editBox.setActionButton(editButton);
 
 		for (Node node : editBox.getChildren()) {
 			if (node instanceof HBox)
@@ -743,7 +743,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		Button addBtn = new Button("Add", JavaFXUtils.createIcon("/icons/check.png"));
 		addBtn.setTooltip(new Tooltip("Add"));
-		editBox.getMainBox().getChildren().add(addBtn);
+		editBox.setActionButton(addBtn);
 
 		popOver = new SqlPanePopOver(editBox);
 		popOver.setHeight(editBox.getMainBox().getHeight());
@@ -789,7 +789,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				}
 			});
 
-			editBox.getMainBox().getChildren().add(editBtn);
+			editBox.setActionButton(editBtn);
 		}
 
 		// remove listener on close
@@ -844,7 +844,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			Button editButton = new Button("Edit", JavaFXUtils.createIcon("/icons/check.png"));
 			editButton.setTooltip(new Tooltip("Edit"));
 			editButton.setOnAction(event -> this.updateRecordOfSqlTableView(editBox, row));
-			editBox.getMainBox().getChildren().add(editButton);
+			editBox.setActionButton(editButton);
 			editBox.prefWidthProperty().bind(compareBox.widthProperty().divide(2));
 			compareRowBox.getChildren().add(editBox);
 

@@ -5,6 +5,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.controlsfx.control.PopOver;
@@ -22,10 +23,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
-import javafx.scene.input.KeyCode;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -34,7 +34,7 @@ import javafx.scene.paint.Color;
 
 public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<MapTableViewRow> {
 
-	private HashMap<String, TextField> fieldsMap;
+	private LinkedHashMap<String, TextArea> fieldsMap;
 	private List<String> columns;
 	private Runnable closeAction;
 	private MapTableViewRow sqlTableRow;
@@ -42,25 +42,54 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 	private FlowPane toolbar;
 	private ScrollPane scrollPane;
 	private Label messageLabel;
+	private Button actionButton;
 
 	public SqlTableRowEditBox(SqlTableView sqlTableView, MapTableViewRow sqlTableRow, boolean resizeable) {
 		
 		messageLabel = new Label();
 		messageLabel.setTextFill(Color.GREEN);
 		centerBox = new VBox();
-		fieldsMap = new HashMap<>();
+		fieldsMap = new LinkedHashMap<>();
 		columns = sqlTableView.getColumnsNames();
 		for (String columnName : columns) {
 			Label label = new Label(columnName);
 			label.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
 			label.setTooltip(new Tooltip(columnName));
 			label.setAlignment(Pos.CENTER_RIGHT);
-			TextField textField = new TextField();
-			textField.setAlignment(Pos.CENTER);
+			TextArea textField = new TextArea();
+			textField.setPrefRowCount(1);
+			textField.setPrefColumnCount(10);
+			textField.setOnKeyPressed(event -> {
+				if (event.getCode() == KeyCode.ENTER) {
+					this.actionButton.requestFocus();
+					event.consume();
+				}
+				else if (event.getCode() == KeyCode.TAB) {
+					List<TextArea> l = new ArrayList<>(fieldsMap.values());
+					int i = 0;
+					for (i=0; i<l.size();i++) {
+						if (l.get(i).equals(textField))
+							break;
+					}
+					if (actionButton != null && (i == l.size() - 1 || (event.isShiftDown() && i == 0)))
+						this.actionButton.requestFocus();
+					else if (event.isShiftDown() && i > 0)
+						l.get(i-1).requestFocus();
+					else if (i < l.size() - 1								)
+						l.get(i+1).requestFocus();
+
+					event.consume();
+						
+				}
+			});
+//			textField.setAlignment(Pos.CENTER);
 
 			this.sqlTableRow = sqlTableRow;
-			if (sqlTableRow != null && sqlTableRow.get(columnName) != null)
+			if (sqlTableRow != null && sqlTableRow.get(columnName) != null) {
 				textField.setText(sqlTableRow.get(columnName).toString());
+				if (textField.getText().contains("\n"))
+					textField.setWrapText(true);
+			}
 			else
 				textField.setText("");
 
@@ -74,9 +103,8 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 					return;
 
 				TextArea infoText = new TextArea(textField.getText());
-				infoText.setWrapText(true);
-				infoText.setPrefColumnCount(20);
-				infoText.setPrefRowCount(5);
+				infoText.setPrefColumnCount(30);
+				infoText.setPrefRowCount(12);
 				textField.textProperty().bind(infoText.textProperty());
 				PopOver info = new SqlPanePopOver(new VBox(infoText));
 				info.setOnHidden(event-> textField.textProperty().unbind());
@@ -120,16 +148,16 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 	public SqlTableRowEditBox() {
 		
 	}
-	public List<TextField> getTextFields() {
+	public List<TextArea> getTextFields() {
 		return new ArrayList<>(fieldsMap.values());
 	}
 
-	public HashMap<String, TextField> getMap() {
+	public HashMap<String, TextArea> getMap() {
 		return fieldsMap;
 	}
 
 	public void clear() {
-		for (TextField textField : fieldsMap.values()) {
+		for (TextArea textField : fieldsMap.values()) {
 			textField.clear();
 		}
 	}
@@ -197,6 +225,11 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 	public VBox getMainBox() {
 		return centerBox;
 	}
+	
+	public void setActionButton(Button button) {
+		this.actionButton = button;
+		this.centerBox.getChildren().add(this.actionButton);
+	}
 
 	public void setScrollPane(ScrollPane scrollPane) {
 		this.scrollPane = scrollPane;
@@ -205,7 +238,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 	@Override
 	public void onObservaleChange(MapTableViewRow newValue) {
 		for (String column : columns) {
-			TextField textField = fieldsMap.get(column);
+			TextArea textField = fieldsMap.get(column);
 			String newText = newValue.get(column) != null ? newValue.get(column).toString() : null;
 			textField.setText(newText);
 		}
