@@ -19,13 +19,13 @@
     <cp>./lib/*</cp>
   </classPath>
   <jre>
-    <path>./jre</path>
+    <path>jre</path>
     <bundledJre64Bit>true</bundledJre64Bit>
     <bundledJreAsFallback>false</bundledJreAsFallback>
-    <minVersion>1.8.0_0</minVersion>
+    <minVersion></minVersion>
     <maxVersion></maxVersion>
     <jdkPreference>jdkOnly</jdkPreference>
     <runtimeBits>64</runtimeBits>
-    <opt>-Xmx384m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 --module-path  ./openjfx/lib/  --add-modules javafx.controls</opt>
+    <opt>-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 </opt>
   </jre>
 </launch4jConfig>
