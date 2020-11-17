@@ -3,7 +3,10 @@ package gr.sqlbrowserfx.conn;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -131,6 +134,41 @@ public class MysqlConnector extends SqlConnector {
 		}
 	}
 
+	@Override
+	public String findPrimaryKey(String tableName) throws SQLException {
+		StringBuilder primaryKeyBulder = new StringBuilder("");
+
+		String query = "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME "
+				+ "	FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?";
+		this.executeQuery(query, Arrays.asList(this.database, tableName, "PRIMARY"), rset -> {
+			primaryKeyBulder.append(rset.getString("COLUMN_NAME"));
+			primaryKeyBulder.append(",");
+		});
+		
+		String primaryKey = primaryKeyBulder.toString();
+		if (!primaryKey.isEmpty())
+			primaryKey = primaryKey.substring(0, primaryKey.length() - 1);
+
+		return primaryKey.isEmpty() ? null : primaryKey;
+	}
+	
+	@Override
+	public List<Map<String, String>> findFoireignKeyReferences(String tableName) throws SQLException {
+		List<Map<String, String>> foreignKeys = new ArrayList<>();
+		String query = "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME "
+				+ "	FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_NAME != ?";
+		this.executeQuery(query, Arrays.asList(this.database, tableName, "PRIMARY"), rset -> {
+			Map<String, String> map = new HashMap<>();
+			map.put(REFERENCED_KEY, rset.getString("REFERENCED_COLUMN_NAME"));
+			map.put(REFERENCED_TABLE, rset.getString("REFERENCED_TABLE_NAME"));
+			map.put(FOREIGN_KEY, rset.getString("COLUMN_NAME"));
+			foreignKeys.add(map);
+		});
+			
+
+		return foreignKeys;
+	}
+	
 	@Override
 	public String getTableSchemaColumn() {
 		return "Create Table";
