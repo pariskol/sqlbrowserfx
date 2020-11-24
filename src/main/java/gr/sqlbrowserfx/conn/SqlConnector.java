@@ -58,13 +58,23 @@ public abstract class SqlConnector {
 	protected abstract DataSource initDatasource();
 
 	public void startConnectionMonitorDaemon() {
+		int max = 10;
 		Thread daemon = new Thread(() -> {
+			int i = 0;
 			while(!Thread.currentThread().isInterrupted()) {
 				try {
 					SqlConnector.this.checkConnection();
+					i = 0;
 					Thread.sleep(60000);
 				} catch (SQLException e) {
 					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+					if ( i == max)
+						break;
+					i++;
+					try {
+						Thread.sleep(2000);
+					} catch (InterruptedException e1) {
+					}
 					SqlConnector.this.initDatasource();
 				} catch (Exception e) {
 					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());

@@ -73,7 +73,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 				categoryField.getItems().add(rset.getString(1));
 			});
 		} catch (SQLException e) {
-			DialogFactory.createErrorDialog(e);
+			DialogFactory.createErrorNotification(e);
 		}
 
 		Button addButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
@@ -85,10 +85,10 @@ public class CSqlCodeArea extends SqlCodeArea {
 							Arrays.asList(query,
 									categoryField.getSelectionModel().getSelectedItem(),
 									descriptionField.getText()));
-					DialogFactory.createInfoDialog("Info", "Query has been saved successfuly");
+					DialogFactory.createNotification("Info", "Query has been saved successfuly");
 					this.fireEvent(new SimpleEvent());
 				} catch (SQLException e) {
-					DialogFactory.createErrorDialog(e);
+					DialogFactory.createErrorNotification(e);
 				}
 			});
 		});

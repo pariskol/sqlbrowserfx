@@ -202,7 +202,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	
 	private void replaceButtonActionImpl() {
 		String replacement = replaceField.getText();
-		if (!replacement.isEmpty() && !codeArea.getSelectedText().isEmpty() && !replacement.equals(codeArea.getSelectedText())) {
+		if (!codeArea.getSelectedText().isEmpty() && !replacement.equals(codeArea.getSelectedText())) {
 			String oldValue = codeArea.getSelectedText();
 			javafxThreadRunning = true;
 			Platform.runLater(() -> {
@@ -232,7 +232,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	}
 	
 	public void replaceAllButtonAction() {
-		if (!replaceField.getText().isEmpty() && !findField.getText().isEmpty()) {
+		if (!findField.getText().isEmpty()) {
 			String pattern = findField.getText();
 			if (wholeWordCheckBox.isSelected())
 				pattern = "\\b" + pattern + "\\b";

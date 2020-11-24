@@ -25,6 +25,7 @@ public class HelpShortcutsTabPane extends TabPane {
 		List<Map<String, Object>> rows = new ArrayList<>();
 		addShortcut("Undo", "Ctrl+Z", rows);
 		addShortcut("Redo", "Ctrl+Shift+Z", rows);
+		addShortcut("Format code (all or selected text)", "Ctrl+Shift+F", rows);
 		addShortcut("Save Query (selected text)", "Ctrl+S", rows);
 		addShortcut("Open New Tab", "Ctrl+N", rows);
 		addShortcut("Switch Tabs", "Ctrl+Page Up", rows);

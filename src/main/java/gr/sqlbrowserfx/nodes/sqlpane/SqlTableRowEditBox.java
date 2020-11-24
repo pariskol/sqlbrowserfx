@@ -61,7 +61,8 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			textField.setPrefColumnCount(10);
 			textField.setOnKeyPressed(event -> {
 				if (event.getCode() == KeyCode.ENTER) {
-					this.actionButton.requestFocus();
+					if (actionButton != null)
+						this.actionButton.requestFocus();
 					event.consume();
 				}
 				else if (event.getCode() == KeyCode.TAB) {
@@ -71,10 +72,10 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 						if (l.get(i).equals(textField))
 							break;
 					}
-					if (actionButton != null && (i == l.size() - 1 || (event.isShiftDown() && i == 0)))
-						this.actionButton.requestFocus();
-					else if (event.isShiftDown() && i > 0)
+					if (event.isShiftDown() && i > 0)
 						l.get(i-1).requestFocus();
+					else if (actionButton != null && (i == l.size() - 1 || (event.isShiftDown() && i == 0)))
+						this.actionButton.requestFocus();
 					else if (i < l.size() - 1								)
 						l.get(i+1).requestFocus();
 

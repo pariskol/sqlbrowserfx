@@ -548,7 +548,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			});
 
 		} catch (SQLException e) {
-			DialogFactory.createErrorDialog(e);
+			DialogFactory.createErrorNotification(e);
 		} finally {
 			this.updateRowsCountLabel();
 			this.enableFullMode(sqlTableTab);
@@ -781,7 +781,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			editBtn.setTooltip(new Tooltip("Edit"));
 			editBtn.setOnAction(submitEvent -> {
 				this.updateRecordOfSqlTableView(editBox, sqlTableRow);
-				popOver.hide();
+//				popOver.hide();
 			});
 			editBtn.setOnKeyPressed(keyEvent -> {
 				if (keyEvent.getCode() == KeyCode.ENTER) {
@@ -825,7 +825,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	private void compareAction(MouseEvent mouseEvent) {
 		if (getSelectedSqlTableView().getSelectionModel().getSelectedItems().size() > 8) {
-			DialogFactory.createErrorDialog(new Exception("Too much elements to compare!"));
+			DialogFactory.createErrorNotification(new Exception("Too much elements to compare!"));
 			return;
 		}
 
@@ -1039,7 +1039,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 									;
 								}
 							});
-							DialogFactory.createInfoDialog("CSV Export",
+							DialogFactory.createNotification("CSV Export",
 									"Export to csv has been completed\n" + pathField.getText());
 						} catch (IOException e) {
 							logger.error(e.getMessage(), e);
@@ -1104,7 +1104,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		try {
 			sqlConnector.executeUpdate(query, params);
 		} catch (Exception e) {
-			DialogFactory.createErrorDialog(e);
+			DialogFactory.createErrorNotification(e);
 			return 0;
 		}
 
@@ -1116,9 +1116,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			try {
 				getSelectedSqlTableView().insertRecord(editBox);
 				this.updateRowsCountLabel();
-				DialogFactory.createInfoDialog("Record insertion", "Succesfully inserted! \n\n" + editBox.toString());
+				DialogFactory.createNotification("Record insertion", "Succesfully inserted!");
 			} catch (Throwable e) {
-				DialogFactory.createErrorDialog(e);
+				DialogFactory.createErrorNotification(e);
 			}
 		});
 
@@ -1129,9 +1129,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			try {
 				getSelectedSqlTableView().updateRecord(editBox, sqlTableRow);
 //				if (this.isInFullMode())
-				DialogFactory.createInfoDialog("Record update", "Succesfully updated! \n\n" + editBox.toString());
+				DialogFactory.createNotification("Record update", "Succesfully updated!");
 			} catch (SQLException e) {
-				DialogFactory.createErrorDialog(e);
+				DialogFactory.createErrorNotification(e);
 			}
 		});
 	}

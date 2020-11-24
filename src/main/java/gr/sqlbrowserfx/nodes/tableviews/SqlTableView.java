@@ -29,7 +29,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.SelectionMode;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -46,7 +45,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 	double minWidth, prefWidth, maxWidth;
 	protected boolean autoResize;
 	private int currentColumnPos = 0;
-	private TableCell<MapTableViewRow, Object> selectedCell;
+	private SqlTableViewEditableCell selectedCell;
 	protected boolean filledByQuery = false;
 	protected boolean areCellsEditableByClick;
 
@@ -393,11 +392,9 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 				} catch (NumberFormatException e) {
 					String message = "Value \"" + editBox.getMap().get(column).getText() + "\" is not valid for column "
 							+ column + ", expecting " + this.getSqlTable().getColumnsMap().get(column);
-					logger.error(message);
-					return;
+					throw new SQLException(message);
 				} catch (Exception e) {
-					logger.error(e.getMessage(), e);
-					return;
+					throw new SQLException(e);
 				}
 				params.add(actualValue);
 				entry.put(column, actualValue);
@@ -462,8 +459,9 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 						// Class<?> clazz = sqlTableRow.get(label.getText()).getValue().getClass();
 						// actualValue = clazz.cast(actualValue);
 					} catch (Exception e) {
-						logger.error(e.getMessage(), e);
-						return;
+						String message = "Value \"" + editBox.getMap().get(column).getText() + "\" is not valid for column "
+								+ column + ", expecting " + this.getSqlTable().getColumnsMap().get(column);
+						throw new SQLException(message, e);
 					}
 				}
 				params.add(actualValue);
@@ -563,11 +561,11 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		this.sqlTable = sqlTable;
 	}
 
-	public TableCell<MapTableViewRow, Object> getSelectedCell() {
+	public SqlTableViewEditableCell getSelectedCell() {
 		return selectedCell;
 	}
 	
-	public void setSelectedCell(TableCell<MapTableViewRow, Object> sqlTableViewEditCell) {
+	public void setSelectedCell(SqlTableViewEditableCell sqlTableViewEditCell) {
 		this.selectedCell = sqlTableViewEditCell;
 	}
 

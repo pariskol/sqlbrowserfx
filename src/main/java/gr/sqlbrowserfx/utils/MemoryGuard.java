@@ -29,12 +29,12 @@ public class MemoryGuard {
 						rset.close();
 						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Query was canceled due to fast growing memory consumption of ResultSet");
 						System.gc();
-						DialogFactory.createErrorDialog(new OutOfMemoryError("Fast growing memory consumption of ResultSet"));
+						DialogFactory.createErrorNotification(new OutOfMemoryError("Fast growing memory consumption of ResultSet"));
 						return;
 					}
 					Thread.sleep(100);
 				}
-			} catch (SQLException | InterruptedException e) {
+			} catch (Throwable e) {
 				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 			} finally {
 				try {
@@ -63,12 +63,12 @@ public class MemoryGuard {
 						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Query was canceled due to fast growing memory consumption of Statement");
 						statement.cancel();
 						System.gc();
-						DialogFactory.createErrorDialog(new OutOfMemoryError("Fast growing memory consumption of Statement"));
+						DialogFactory.createErrorNotification(new OutOfMemoryError("Fast growing memory consumption of Statement"));
 						return;
 					}
 					Thread.sleep(100);
 				}
-			} catch (SQLException | InterruptedException e) {
+			} catch (Throwable e) {
 				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 			} finally {
 				try {

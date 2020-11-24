@@ -175,7 +175,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	
 	@Override
 	protected void handleUpdateResult(int rowsAffected) throws SQLException {
-		DialogFactory.createInfoDialog("SQL query result", "Query OK (" + rowsAffected + ") rows affected!");
+		DialogFactory.createNotification("SQL query result", "Query OK (" + rowsAffected + ") rows affected!");
 	}
 	
 	@Override
@@ -185,7 +185,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 					"If you are trying to run a select query try to use limit";
 			e = new SQLException(message, e);
 		}
-		DialogFactory.createErrorDialog(e);
+		DialogFactory.createErrorNotification(e);
 		System.gc();
 	}
 

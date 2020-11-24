@@ -339,12 +339,10 @@
 }
 
 .list-view .list-cell:even {
--fx-text-fill: white;
 -fx-control-inner-background: derive(-fx-base, 23%);
 }
 
 .list-view .list-cell:odd {
--fx-text-fill: white;
 -fx-control-inner-background: derive(-fx-base, 0%);
 }
 

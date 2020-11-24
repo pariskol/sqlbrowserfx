@@ -27,7 +27,7 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 	
 	public MapTableViewRow(Map<String,Object> entry) {
 		this();
-		setMap(entry);
+		this.setMap(entry);
 	}
 
 	public void refreshMap(Map<String, Object> entry) {
@@ -88,7 +88,7 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 		for (SimpleObjectProperty<Object> property: propertiesMap.values()) {
 			Object value = property.get();
 			if (value instanceof String)
-				value = value.toString().replace(",", " ");
+				value = value.toString().replaceAll("\n", " ").replace(",", " ");
 			if (value == null)
 				value = "";
 			result += value + ",";

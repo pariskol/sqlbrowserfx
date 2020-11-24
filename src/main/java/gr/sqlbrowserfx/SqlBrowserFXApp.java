@@ -82,7 +82,7 @@ public class SqlBrowserFXApp extends Application {
 	private static RESTfulServiceConfig restServiceConfig;
 
 	private Scene primaryScene;
-	private Stage primaryStage;
+	public static Stage STAGE;
 	private DSqlPane mainSqlPane;
 
 	private SqlConnector sqlConnector;
@@ -106,7 +106,7 @@ public class SqlBrowserFXApp extends Application {
 	public void start(Stage primaryStage) {
 		Font defaultFont = Font.getDefault();
 		fontSize = defaultFont.getSize();
-		this.primaryStage = primaryStage;
+		SqlBrowserFXApp.STAGE = primaryStage;
 		primaryStage.setTitle("SqlBrowserFX");
 
 		if (DB == null)
@@ -271,7 +271,7 @@ public class SqlBrowserFXApp extends Application {
 						JSONArray jsonArray = new JSONArray(HTTPClient.GET(requestField.getText()));
 						tableView.setItemsLater(jsonArray);
 					} catch (Throwable e) {
-						DialogFactory.createErrorDialog(e);
+						DialogFactory.createErrorNotification(e);
 					}
 				});
 			}
@@ -309,7 +309,7 @@ public class SqlBrowserFXApp extends Application {
 	private void createAppView(SqlConnector sqlConnector) {
 		
 		SqlBrowserFXAppManager.setDBtype(determineDBType(sqlConnector));
-		primaryStage.setMaximized(true);
+		STAGE.setMaximized(true);
 		DockPane dockPane = new DockPane();
 		MenuBar menuBar = createMenu(dockPane);
 
@@ -347,12 +347,12 @@ public class SqlBrowserFXApp extends Application {
 
 		if (primaryScene == null) {
 			primaryScene = new Scene(vbox);
-			primaryStage.setScene(primaryScene);
+			STAGE.setScene(primaryScene);
 			primaryScene.getStylesheets().add(CSS_THEME);
 		}
 
 		primaryScene.setRoot(vbox);
-		primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> {
+		STAGE.heightProperty().addListener((obs, oldVal, newVal) -> {
 			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.TRUE);
 			for (SplitPane split : dockPane.getSplitPanes()) {
 			    double[] positions = split.getDividerPositions(); // reccord the current ratio

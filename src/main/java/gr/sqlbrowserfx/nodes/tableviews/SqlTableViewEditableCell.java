@@ -15,7 +15,7 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 
 	SqlTableView parentTableView;
 	SqlConnector sqlConnector;
-	
+
 	public SqlTableViewEditableCell() {
 		super();
 		this.setAlignment(Pos.CENTER_LEFT);
@@ -26,39 +26,38 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 		this.parentTableView = parentTableView;
 		this.setOnMouseClicked(mouseEvent -> {
 			parentTableView.setSelectedCell(this);
-			if (((Boolean)PropertiesLoader.getProperty("sqlbrowserfx.default.editmode.cell", Boolean.class, false)) && parentTableView.areCellsEditableByClick() && mouseEvent.getClickCount() == 2) {
+			if (((Boolean) PropertiesLoader.getProperty("sqlbrowserfx.default.editmode.cell", Boolean.class, false))
+					&& parentTableView.areCellsEditableByClick() && mouseEvent.getClickCount() == 2) {
 				this.startEdit();
 			}
 		});
+		this.setContentDisplay(ContentDisplay.TEXT_ONLY);
 	}
-	
+
 	public SqlTableViewEditableCell(SqlTableView parentTable, SqlConnector sqlConnector) {
 		this(parentTable);
 		this.sqlConnector = sqlConnector;
 	}
-	
+
 	@Override
 	protected void updateItem(Object item, boolean empty) {
-		super.updateItem(item, empty);
-
 		if (item == null || empty) {
 			setText(null);
-		} else {
+		} else if (!item.equals(getText())) {
 			setText(item.toString());
 		}
+
 	}
-	
+
 	@Override
 	public void startEdit() {
 		TablePosition<?, ?> pos = parentTableView.getSelectionModel().getSelectedCells().get(0);
-		
-		if (pos != null &&
-			pos.getTableColumn() != null &&
-			pos.getTableColumn().getText() != null &&
-			pos.getTableColumn().getText().equals(parentTableView.getPrimaryKey())) {
+
+		if (pos != null && pos.getTableColumn() != null && pos.getTableColumn().getText() != null
+				&& pos.getTableColumn().getText().equals(parentTableView.getPrimaryKey())) {
 			return;
 		}
-		
+
 		TextField textField = createTextField();
 		setGraphic(textField);
 		setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
@@ -69,7 +68,7 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 				cancelEdit();
 			});
 		});
-		
+
 	}
 
 	@Override
@@ -82,11 +81,11 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 				parentTableView.updateSelectedRow();
 			} catch (Exception e) {
 				parentTableView.getSelectionModel().getSelectedItem().set(column, oldValue);
-				DialogFactory.createErrorDialog(e);
+				DialogFactory.createErrorNotification(e.getClass().getSimpleName(), "Could not update cell!\n" + e.getMessage(), e);
 			}
 		}
 	}
-	
+
 	@Override
 	public void cancelEdit() {
 		setText(getText());
@@ -95,12 +94,12 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 
 	protected TextField createTextField() {
 		TableViewCellEditField textField = new TableViewCellEditField(getText(), this);
-		
+
 		if (sqlConnector != null)
 			textField.setEditable(true);
 		else
 			textField.setEditable(false);
-		
+
 //		textField.setAlignment(Pos.CENTER);
 		textField.setStyle("-fx-border-width: 0.0 0.0 0.0 0.0; -fx-padding: 0;");
 		return textField;
@@ -109,6 +108,5 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 	public SqlTableView getParentTable() {
 		return parentTableView;
 	}
-	
-	
+
 }

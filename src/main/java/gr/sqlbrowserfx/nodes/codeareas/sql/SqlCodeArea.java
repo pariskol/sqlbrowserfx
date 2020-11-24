@@ -31,6 +31,7 @@ import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import gr.sqlbrowserfx.utils.SqlFormatter;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.Event;
@@ -230,6 +231,16 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 						false, false, false, false))
         );
 		
+		InputMap<Event> format = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
+				action -> {
+					if (this.getSelectedText().isEmpty())
+						this.replaceText(SqlFormatter.format(this.getText()));
+					else
+						this.replaceSelection(SqlFormatter.format(this.getSelectedText()));
+				}
+		);
+		
         Nodes.addFallbackInputMap(this, addTabs);
         Nodes.addFallbackInputMap(this, removeTabs);
         Nodes.addInputMap(this, run);
@@ -239,6 +250,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
         Nodes.addInputMap(this, delete);
         Nodes.addInputMap(this, toUpper);
         Nodes.addInputMap(this, toLower);
+        Nodes.addInputMap(this, format);
 //        Nodes.addFallbackInputMap(this, backspace);
         Nodes.addFallbackInputMap(this, enter);
 	}
@@ -447,7 +459,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		try {
 			SqlBrowserFXAppManager.getConfigSqlConnector().executeQuery(sql, rset -> suggestions.add(rset.getString(1)));
 		} catch (SQLException e) {
-			DialogFactory.createErrorDialog(e);
+			DialogFactory.createErrorNotification(e);
 		}
 		return suggestions;
 	}

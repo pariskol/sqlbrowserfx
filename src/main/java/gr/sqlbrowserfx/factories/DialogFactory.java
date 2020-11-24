@@ -5,9 +5,11 @@ import java.io.StringWriter;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.controlsfx.control.Notifications;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
+import gr.sqlbrowserfx.SqlBrowserFXApp;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -32,9 +34,11 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class DialogFactory {
 
+	private static final Pos NOTIFICATION_POS = Pos.TOP_RIGHT;
 	private static String DEFAULT_STYLESHEET;
 	
 	public static void createErrorDialog(Throwable e) {
@@ -171,7 +175,7 @@ public class DialogFactory {
         dialog.initOwner((Stage) owner.getScene().getWindow());
 
         HBox buttonBox = new HBox();
-        buttonBox.setAlignment(Pos.BASELINE_RIGHT);
+        buttonBox.setAlignment(NOTIFICATION_POS);
 
         VBox dialogVbox = new VBox();
         dialogVbox.setAlignment(Pos.CENTER);
@@ -210,6 +214,59 @@ public class DialogFactory {
         return result.get();
     }
 
+	public static void createNotification(String title, String message) {
+		Platform.runLater(() -> {
+			Notifications.create()
+					.title(title)
+					.text(message)
+					.darkStyle()
+					.hideAfter(Duration.seconds(3))
+					.position(NOTIFICATION_POS)
+					.onAction(actionEvent -> {
+						createInfoDialog(title, message);
+					})
+					.owner(SqlBrowserFXApp.STAGE)
+					.showInformation();
+			
+		});
+	}
+	
+	public static void createErrorNotification(String title, String message, Throwable t) {
+		LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(message);
+		Platform.runLater(() -> {
+			Notifications.create()
+					.title(title)
+					.text(message)
+					.darkStyle()
+					.hideAfter(Duration.seconds(2))
+					.position(NOTIFICATION_POS)
+					.onAction(actionEvent -> {
+						createErrorDialog(t, null);
+					})
+					.owner(SqlBrowserFXApp.STAGE)
+					.showError();
+			
+		});
+	}
+	
+	public static void createErrorNotification(Throwable t) {
+		LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(t.getMessage(), t);
+		Platform.runLater(() -> {
+			Notifications.create()
+					.title(t.getClass().getSimpleName())
+					.text(t.getMessage())
+					.darkStyle()
+					.hideAfter(Duration.seconds(2))
+					.position(NOTIFICATION_POS)
+					.onAction(actionEvent -> {
+						createErrorDialog(t, null);
+					})
+					.owner(SqlBrowserFXApp.STAGE)
+					.showError();
+			
+		});
+	}
+	
 	public static String getDialogStyleSheet() {
 		return DEFAULT_STYLESHEET;
 	}
