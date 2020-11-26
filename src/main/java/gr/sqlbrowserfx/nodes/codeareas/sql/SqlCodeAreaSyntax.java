@@ -21,54 +21,51 @@ public class SqlCodeAreaSyntax {
 
 	private static Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 	
-	private static String DB_TYPE = SqlBrowserFXAppManager.getDBtype();
-	public static  String[] FUNCTIONS = getAutocomplteWords("funcs");
-	public static  String[] TYPES = getAutocomplteWords("types");
-	public static  String[] KEYWORDS = getAutocomplteWords("sql");
+	private static String DB_TYPE = "";
+	public static  String[] FUNCTIONS;
+	public static  String[] TYPES;
+	public static  String[] KEYWORDS;
 
 	public static final Set<String> KEYWORDS_lIST = new LinkedHashSet<>();
 	public static final Map<String, List<String>> COLUMNS_MAP = new HashMap<>();
 
-	private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
 	private static final String PAREN_PATTERN = "\\(|\\)";
-//    private static final String BRACE_PATTERN = "\\{|\\}";
-//    private static final String BRACKET_PATTERN = "\\[|\\]";
-//    private static final String CAST_PATTERN = "<[a-zA-Z0-9,<>]+>";
 	private static final String SEMICOLON_PATTERN = "\\;";
 	private static final String STRING_PATTERN = "\'([^\'\\\\]|\\\\.)*\'";
 	private static final String STRING_PATTERN_2 = "\"([^\"\\\\]|\\\\.)*\"";
-	public static final String TODO_SINGLE_COMMENT_PATTERN = "//TODO[^\n]*";
-	public static final String WARN_SINGLE_COMMENT_PATTERN = "//WARN[^\n]*";
 //    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/";
-	//FIXME add right pattern
 	private static final String COMMENT_PATTERN = "--[^\n]*";
-//    private static final String ANNOTATION_PATTERN = "@.[a-zA-Z0-9]+";
-//    private static final String OPERATION_PATTERN = ":|==|>|<|!=|>=|<=|->|=|>|<|%|-|-=|%=|\\+|\\-|\\-=|\\+=|\\^|\\&|\\|::|\\?|\\*";
-//    private static final String HEX_PATTERN = "#[a-fA-F0-9]+";
 //    private static final String NUMBERS_PATTERN = "[0-9]+";
 	private static final String METHOD_PATTERN = "\\.[a-zA-Z0-9_]+";
-	private static final String FUNCTIONS_PATTERN = "\\b(" + String.join("|", FUNCTIONS) + ")\\b";
+	
+	private static String KEYWORD_PATTERN;
+	private static String FUNCTIONS_PATTERN;
+	public static Pattern PATTERN;
 
-	public static final Pattern PATTERN = Pattern
-			.compile("(?<KEYWORD>" + KEYWORD_PATTERN + ")" + "|(?<PAREN>" + PAREN_PATTERN + ")"
-//                    + "|(?<BRACE>" + BRACE_PATTERN + ")"
-//                    + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
-					+ "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")" + "|(?<STRING>" + STRING_PATTERN + ")" + "|(?<STRING2>"
-					+ STRING_PATTERN_2 + ")"
-//                    + "|(?<TODO>" + TODO_SINGLE_COMMENT_PATTERN + ")"
-//                    + "|(?<WARN>" + WARN_SINGLE_COMMENT_PATTERN + ")"
-                    + "|(?<COMMENT>" + COMMENT_PATTERN + ")"
-//                    + "|(?<ANNOTATION>" + ANNOTATION_PATTERN + ")"
-//                    + "|(?<CAST>" + CAST_PATTERN + ")"
-//                    + "|(?<OPERATION>" + OPERATION_PATTERN + ")"
-//                    + "|(?<HEX>" + HEX_PATTERN + ")"
-//                    + "|(?<NUMBER>" + NUMBERS_PATTERN + ")"
-					+ "|(?<METHOD>" + METHOD_PATTERN + ")" + "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
-
-	static {
+    public static void init(String dbType) {
+    	DB_TYPE = dbType;
+    	init();
+    }
+    
+	private static void init() {
+		FUNCTIONS = getAutocomplteWords("funcs");
+		TYPES = getAutocomplteWords("types");
+		KEYWORDS = getAutocomplteWords("sql");
+		
+		KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
+		FUNCTIONS_PATTERN = "\\b(" + String.join("|", FUNCTIONS) + ")\\b";
+		PATTERN = Pattern.compile("(?<KEYWORD>" + KEYWORD_PATTERN + ")" 
+								+ "|(?<PAREN>" + PAREN_PATTERN + ")"
+								+ "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")" 
+								+ "|(?<STRING>" + STRING_PATTERN + ")" 
+								+ "|(?<STRING2>" + STRING_PATTERN_2 + ")"
+								+ "|(?<COMMENT>" + COMMENT_PATTERN + ")"
+								+ "|(?<METHOD>" + METHOD_PATTERN + ")" 
+								+ "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
+		
 		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.KEYWORDS));
+		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.TYPES));
         KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.FUNCTIONS));
-        KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.TYPES));
 	}
 	
 	private static String[] getAutocomplteWords(String category) {
@@ -99,4 +96,5 @@ public class SqlCodeAreaSyntax {
     public static void bind(String table, List<String> columns) {
 		COLUMNS_MAP.put(table, columns);
 	}
+    
 }

@@ -232,7 +232,6 @@ public class SqlBrowserFXApp extends Application {
 	}
 
 	private void dbSelectionAction(MySqlConfigBox configBox) {
-		
 		configBox.getConnectButton().setDisable(true);
 		DB = configBox.getDatabaseField().getText();
 		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
@@ -309,6 +308,8 @@ public class SqlBrowserFXApp extends Application {
 	private void createAppView(SqlConnector sqlConnector) {
 		
 		SqlBrowserFXAppManager.setDBtype(determineDBType(sqlConnector));
+		SqlCodeAreaSyntax.init(SqlBrowserFXAppManager.getDBtype());
+		
 		STAGE.setMaximized(true);
 		DockPane dockPane = new DockPane();
 		MenuBar menuBar = createMenu(dockPane);
@@ -328,7 +329,7 @@ public class SqlBrowserFXApp extends Application {
 		
 		ddbTreePane.getDBTreeView().addObserver(value -> {
 			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x + "@").collect(Collectors.toList()));
-			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x.toUpperCase() + "@").collect(Collectors.toList()));
+//			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x.toUpperCase() + "@").collect(Collectors.toList()));
 		});
 		mainSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
 		mainSqlPane.getSqlConsoleBox().addObserver(queriesMenu);
@@ -416,8 +417,7 @@ public class SqlBrowserFXApp extends Application {
 		logItem.setOnAction(actionEvent -> {
 			LogCodeArea logArea = new LogCodeArea();
 			TailerListener listener = new CodeAreaTailerListener(logArea);
-		    Tailer tailer = new Tailer(new File("./logs/sqlbrowserfx.log"), listener, 0);
-
+		    Tailer tailer = new Tailer(new File("./logs/sqlbrowserfx.log"), listener, 1000);
 		    Thread tailerDaemon = new Thread(tailer, "Logfile Tailer Daemon");
 		    tailerDaemon.setDaemon(true);
 		    tailerDaemon.start();
@@ -462,13 +462,13 @@ public class SqlBrowserFXApp extends Application {
 		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
 			if (!isInternalDBShowing) {
 				DSqlPane newSqlPane = new DSqlPane(SqlBrowserFXAppManager.getConfigSqlConnector());
+				newSqlPane.asDockNode().setTitle("SqlBrowserFX Internal Database");
+				newSqlPane.asDockNode().setDockPane(dockPane);
+				newSqlPane.asDockNode().setFloating(true);
 				newSqlPane.createSqlTableTabWithDataUnsafe("autocomplete");
 				newSqlPane.createSqlTableTabWithDataUnsafe("saved_queries");
 				newSqlPane.createSqlTableTabWithDataUnsafe("queries_history");
 				newSqlPane.createSqlTableTabWithDataUnsafe("connections_history");
-				newSqlPane.asDockNode().setTitle("SqlBrowserFX Internal Database");
-				newSqlPane.asDockNode().setDockPane(dockPane);
-				newSqlPane.asDockNode().setFloating(true);
 				isInternalDBShowing  = true;
 				newSqlPane.asDockNode().setOnClose(() -> isInternalDBShowing = false);
 			}
