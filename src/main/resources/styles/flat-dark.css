@@ -531,3 +531,6 @@
 	-fx-stroke-width: 2;
 }
 
+.context-menu {
+    -fx-min-width: 150px;
+}

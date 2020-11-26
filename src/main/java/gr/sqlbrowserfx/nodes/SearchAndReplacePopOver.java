@@ -101,7 +101,8 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 										 new VBox(wholeWordCheckBox, caseInsensitiveCheckBox))
 					);
 		else
-			this.setContentNode(new VBox(findField, findButton));
+			this.setContentNode(new HBox(new VBox(findField, findButton),
+										 new VBox(wholeWordCheckBox, caseInsensitiveCheckBox)));
 
 		this.setAutoHide(true);
 		this.setDetachable(false);

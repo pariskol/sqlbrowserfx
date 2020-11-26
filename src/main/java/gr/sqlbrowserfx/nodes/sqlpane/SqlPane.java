@@ -102,7 +102,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	private String EMPTY = "empty";
 	private String whereFilter = "";
-	private int linesLimit = 50000;
+	private int linesLimit = 5000;
 
 	public SqlPane() {
 		this(null);
@@ -337,19 +337,22 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		});
 		SqlTableTab tab = new SqlTableTab(EMPTY, sqlTableView);
 		sqlTableView.setParent(tab);
-		tab.customTextProperty().addListener((observable, oldValue, newValue) -> {
-			if (getSelectedSqlTableView().isFilledByQuery()) {
-				tab.setCustomGraphic(JavaFXUtils.createIcon("/icons/table-y.png"));
-            }
-			else if (tab.getGraphic() != null && viewsBox != null && viewsBox.getItems().contains(tab.getCustomText())) {
-				tab.setCustomGraphic(JavaFXUtils.createIcon("/icons/view.png"));
-            }
-			else if (tab.getGraphic() != null && tablesBox != null && tablesBox.getItems().contains(tab.getCustomText())) {
-				tab.setCustomGraphic(JavaFXUtils.createIcon("/icons/table.png"));
-            }
-		});
+		tab.customTextProperty()
+		   .addListener((observable, oldValue, newValue) -> determineTabIcon(tab));
 		
 		return tab;
+	}
+
+	private void determineTabIcon(SqlTableTab tab) {
+		if (getSelectedSqlTableView().isFilledByQuery()) {
+			tab.setCustomGraphic(JavaFXUtils.createIcon("/icons/table-y.png"));
+		}
+		else if (tab.getGraphic() != null && viewsBox != null && viewsBox.getItems().contains(tab.getCustomText())) {
+			tab.setCustomGraphic(JavaFXUtils.createIcon("/icons/view.png"));
+		}
+		else if (tab.getGraphic() != null && tablesBox != null && tablesBox.getItems().contains(tab.getCustomText())) {
+			tab.setCustomGraphic(JavaFXUtils.createIcon("/icons/table.png"));
+		}
 	}
 	
 	public SqlTableTab addSqlTableTab() {
@@ -369,6 +372,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return tab;
 	}
 
+	// TODO no need?
 	public void createSqlTableTabWithData(String table) {
 		if (!sqlQueryRunning) {
 			final SqlTableTab tab = this.addSqlTableTab();
@@ -379,8 +383,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 	
 	public void createSqlTableTabWithDataUnsafe(String table) {
+			this.createTablesBox();
+			this.createViewsBox();
 			final SqlTableTab tab = this.addSqlTableTab();
-			this.getDataFromDB(table, tab);
+			sqlConnector.executeAsync(() -> this.getDataFromDB(table, tab));
 	}
 	
 	@Override
@@ -549,6 +555,13 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		} catch (SQLException e) {
 			DialogFactory.createErrorNotification(e);
+			if (e.getErrorCode() == 1234) {
+				Platform.runLater(() -> {
+					sqlTableTab.getOnClosed().handle(new ActionEvent());
+					tablesTabPane.getTabs().remove(sqlTableTab);
+				});
+				System.gc();
+			}
 		} finally {
 			this.updateRowsCountLabel();
 			this.enableFullMode(sqlTableTab);
@@ -558,7 +571,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	public void updateRowsCountLabel() {
 		if (isSearchApplied())
 			Platform.runLater(() -> this.rowsCountLabel.setText(getSelectedSqlTableView().getItems().size() + " filtered rows of " + getSelectedSqlTableView().getSqlTableRows().size()));
-		else
+		else if (getSelectedSqlTableView() != null)
 			Platform.runLater(() -> this.rowsCountLabel.setText(getSelectedSqlTableView().getSqlTableRows().size() + " rows"));
 		
 	}
@@ -899,13 +912,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	protected void refreshButtonAction() {
 		//TODO rerun original query in case an sqlcodearea is involved
 		refreshButton.requestFocus();
-//		if (tablesBox != null && tablesBox.getSelectionModel().getSelectedItem() != null && !sqlQueryRunning.get()) {
-//			tablesBox.getOnAction().handle(new ActionEvent());
-//		}
 		if (!sqlQueryRunning) {
 			if (tablesTabPane.getSelectionModel().getSelectedItem() != null
-					&& !((SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem()).getCustomText().equals(EMPTY)) {
-				String tableName = ((SqlTableTab)tablesTabPane.getSelectionModel().getSelectedItem()).getCustomText();
+					&& !getSelectedTableTab().getCustomText().equals(EMPTY)) {
+				String tableName = getSelectedTableTab().getCustomText();
 				sqlConnector.executeAsync(() -> this.getDataFromDB(tableName, getSelectedTableTab()));
 			}
 		}

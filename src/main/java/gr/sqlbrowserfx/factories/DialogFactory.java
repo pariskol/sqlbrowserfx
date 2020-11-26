@@ -233,10 +233,23 @@ public class DialogFactory {
 	
 	public static void createErrorNotification(String title, String message, Throwable t) {
 		LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(message);
+		String formattedMessage = message;
+		int splitSize = 40;
+		if (message.length() > splitSize) {
+			formattedMessage = "";
+			while (message.length() > splitSize) {
+				int spacePos = message.indexOf(" ", splitSize);
+				spacePos = spacePos != -1 ? spacePos : splitSize;
+				formattedMessage += message.substring(0, spacePos) + "\n";
+				message = message.substring(spacePos);
+			}
+			formattedMessage += message;
+		}
+		final String fmessage = formattedMessage;
 		Platform.runLater(() -> {
 			Notifications.create()
 					.title(title)
-					.text(message)
+					.text(fmessage)
 					.darkStyle()
 					.hideAfter(Duration.seconds(2))
 					.position(NOTIFICATION_POS)
@@ -250,21 +263,7 @@ public class DialogFactory {
 	}
 	
 	public static void createErrorNotification(Throwable t) {
-		LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(t.getMessage(), t);
-		Platform.runLater(() -> {
-			Notifications.create()
-					.title(t.getClass().getSimpleName())
-					.text(t.getMessage())
-					.darkStyle()
-					.hideAfter(Duration.seconds(2))
-					.position(NOTIFICATION_POS)
-					.onAction(actionEvent -> {
-						createErrorDialog(t, null);
-					})
-					.owner(SqlBrowserFXApp.STAGE)
-					.showError();
-			
-		});
+		createErrorNotification(t.getClass().getSimpleName(), t.getMessage(), t);
 	}
 	
 	public static String getDialogStyleSheet() {
