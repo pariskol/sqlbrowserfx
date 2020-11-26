@@ -77,6 +77,33 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		this.enableHighlighting();
 	}
 
+	public SqlCodeArea(String text, boolean editable, boolean withMenu) {
+		super();
+	
+		if (!withMenu)
+			this.setContextMenu(null);
+		
+		this.enableHighlighting();
+		if (text != null) {
+			this.replaceText(text);
+			this.setPrefHeight(countLines(text)*18);
+		}
+		
+		this.setEditable(editable);
+	
+		this.setOnMouseClicked(mouseEvent -> {
+			this.requestFocus();
+			if (mouseEvent.getClickCount() == 2) {
+				this.selectAll();
+			}
+		});
+		this.focusedProperty().addListener((ov, oldV, newV) -> {
+			if (!newV) { // focus lost
+				this.deselect();
+			}
+		});
+	}
+
 	protected void onMouseClicked() {
 		if (autoCompletePopupShowing) {
 			hideAutocompletePopup();
@@ -84,12 +111,11 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		searchAndReplacePopOver.hide();
 	}
 
-	public void startTextAnalyzerDaemon() {
+	private void initTextAnalyzerDaemon() {
 		this.textAnalyzerDaemon = new Thread(() -> {
-			while (!Thread.currentThread().isInterrupted()) {
+			while (!textAnalyzerDaemon.isInterrupted()) {
 				try {
 					Thread.sleep(1000);
-//					SqlCodeArea.this.tableAliases.clear();
 					Map<String, Set<String>> newTableAliases = this.analyzeTextForTablesAliases(this.getText());
 					if (!this.areMapsEqual(this.tableAliases, newTableAliases))
 						this.tableAliases = newTableAliases;
@@ -98,13 +124,20 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 					break;
 				}
 			}
-		}, "Text Analyzer Daemon");
+		}, getClass().getSimpleName() + "-text-analyzer-daemon");
 		this.textAnalyzerDaemon.setDaemon(true);
-		this.textAnalyzerDaemon.start();
+	}
+
+	public void startTextAnalyzerDaemon() {
+		this.stopTextAnalyzerDaemon();
+		if (this.textAnalyzerDaemon == null) {
+			this.initTextAnalyzerDaemon();
+			this.textAnalyzerDaemon.start();
+		}
 	}
 	
 	public void stopTextAnalyzerDaemon() {
-		if (this.textAnalyzerDaemon != null) {
+		if (this.textAnalyzerDaemon != null && !this.textAnalyzerDaemon.isInterrupted()) {
 			this.textAnalyzerDaemon.interrupt();
 			this.textAnalyzerDaemon = null;
 		}
@@ -273,33 +306,6 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		return lines.length;
 	}
 	
-	public SqlCodeArea(String text, boolean editable, boolean withMenu) {
-		super();
-
-		if (!withMenu)
-			this.setContextMenu(null);
-		
-		this.enableHighlighting();
-		if (text != null) {
-			this.replaceText(text);
-			this.setPrefHeight(countLines(text)*18);
-		}
-		
-		this.setEditable(editable);
-
-		this.setOnMouseClicked(mouseEvent -> {
-			this.requestFocus();
-			if (mouseEvent.getClickCount() == 2) {
-				this.selectAll();
-			}
-		});
-		this.focusedProperty().addListener((ov, oldV, newV) -> {
-			if (!newV) { // focus lost
-				this.deselect();
-			}
-		});
-	}
-
 	@Override
 	public void enableHighlighting() {
 		@SuppressWarnings("unused")
@@ -464,14 +470,6 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		return suggestions;
 	}
 
-//	private void cacheTableAlias(final String query, final String table) {
-//		for ( Collection<String> l : tableAliases.values()) {
-//			l.remove(query);
-//			break;
-//		}
-//		tableAliases.get(table).add(query);
-//	}
-
 	private void hideAutocompletePopup() {
 		if (autoCompletePopup != null && autoCompletePopupShowing) {
 			autoCompletePopup.hide();
@@ -550,8 +548,6 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			String styleClass = matcher.group("KEYWORD") != null ? "keyword"
 					: matcher.group("FUNCTION") != null ? "function"
 							: matcher.group("METHOD") != null ? "method" : matcher.group("PAREN") != null ? "paren"
-//							: matcher.group("BRACE") != null ? "brace"
-//									: matcher.group("BRACKET") != null ? "bracket"
 									: matcher.group("SEMICOLON") != null ? "semicolon"
 											: matcher.group("STRING2") != null ? "string2"
 													: matcher.group("STRING") != null ? "string"
@@ -582,7 +578,6 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
     public String getQuery(int position) {
         int limit = (position > WORD_LENGTH_LIMIT) ? WORD_LENGTH_LIMIT : position;
         String keywords = this.getText().substring(position - limit, position);
-        //keywords = keywords.replaceAll("\\p{Punct}", " ").trim();
         keywords = keywords.replaceAll("\\n", " ").trim();
         int last = keywords.lastIndexOf(" ");
         return keywords.substring(last + 1).trim();
@@ -591,8 +586,6 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	public List<String> getQuerySuggestions(String query) {
         List<String> suggestions = SqlCodeAreaSyntax.KEYWORDS_lIST.stream()
         							.filter(keyword -> keyword != null && keyword.startsWith(query)).collect(Collectors.toList());
-//        suggestions.sort(Comparator.comparing(String::length).thenComparing(String::compareToIgnoreCase));
-//        suggestions.sort(String.CASE_INSENSITIVE_ORDER);
         return suggestions;
     }
     
@@ -620,20 +613,6 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
     	return SqlCodeAreaSyntax.COLUMNS_MAP.get(tableAlias);
     }
 
-//	@Override
-//	public void onChange(String newValue) {
-//		String[] split = newValue.split(">");
-//		String oldShortcut = split[0];
-//		String newShorcut = split[1];
-//		for (String table : tableAliases.keySet()) {
-//			if (tableAliases.get(table).remove(oldShortcut)) {
-//				tableAliases.get(table).add(newShorcut);
-//				return;
-//			}
-//		}
-//	}
-	
-	
 	public Map<String, Set<String>> analyzeTextForTablesAliases(String text) {
 		Map<String, Set<String>> newTableAliases = new HashMap<>();
 		String[] words = text.split("\\W+");
@@ -641,7 +620,6 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		for (String word : words) {
 			if (!word.isEmpty() && saveTableShortcut != null && !word.equals(saveTableShortcut.trim())
 					&& !word.equalsIgnoreCase("as")) {
-//				this.cacheTableAlias(word,saveTableShortcut);
 				newTableAliases.get(saveTableShortcut).add(word);
 				saveTableShortcut = null;
 			} else if (SqlCodeAreaSyntax.COLUMNS_MAP.containsKey(word)) {

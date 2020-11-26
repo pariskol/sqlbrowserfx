@@ -32,6 +32,10 @@ public class SqlTableTab extends Tab {
 		label.textProperty().bind(this.getSqlTableView().titleProperty());
 		this.setText(null);
 		this.setGraphic(label);
+		this.setOnClosed(event -> {
+			sqlTableView.clear();
+			System.gc();
+		});
 	}
 
 	public SqlTableView getSqlTableView() {

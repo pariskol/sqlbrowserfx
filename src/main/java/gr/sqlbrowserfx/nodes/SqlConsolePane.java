@@ -104,14 +104,21 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		});
 		
 		openInNewTableViewCheckBox = new CheckBox("Open in new table");
-		openInNewTableViewCheckBox.setSelected(true);
+		openInNewTableViewCheckBox.setSelected(false);
 		
 		queryTabPane.getSelectionModel().selectedItemProperty().addListener(
 			    (ChangeListener<Tab>) (ov, oldTab, newTab) -> {
 			    	if ((VirtualizedScrollPane<SqlCodeArea>)newTab.getContent() != null) {
-			    		SqlCodeArea sqlCodeArea = ((VirtualizedScrollPane<SqlCodeArea>)newTab.getContent()).getContent();
-				    	if (sqlCodeArea != null)
+			    		SqlCodeArea sqlCodeArea = ((VirtualizedScrollPane<SqlCodeArea>)oldTab.getContent() != null) ?((VirtualizedScrollPane<SqlCodeArea>)oldTab.getContent()).getContent()
+			    				: null;
+			    		if (sqlCodeArea != null) {
+				    		sqlCodeArea.stopTextAnalyzerDaemon();
+				    	}
+			    		sqlCodeArea = ((VirtualizedScrollPane<SqlCodeArea>)newTab.getContent()).getContent();
+				    	if (sqlCodeArea != null) {
 				    		sqlCodeArea.setAutoCompleteOnType(autoCompleteOnTypeCheckBox.isSelected());
+				    		sqlCodeArea.startTextAnalyzerDaemon();
+				    	}
 			    	}
 			    });
 		
@@ -139,12 +146,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 	private void createSqlConsoleTab() {
 		CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
-		sqlCodeArea.startTextAnalyzerDaemon();
 		sqlCodeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
 		sqlCodeArea.setEnterAction(() -> this.executeButonAction());
-		sqlCodeArea.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> {
-			SqlConsolePane.this.changed();
-		});
+		sqlCodeArea.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> SqlConsolePane.this.changed());
+		
 		VirtualizedScrollPane<CodeArea> scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
 		Tab newTab = new Tab("query " + queryTabPane.getTabs().size(), scrollPane);
 		newTab.setOnClosed(event -> sqlCodeArea.stopTextAnalyzerDaemon());
