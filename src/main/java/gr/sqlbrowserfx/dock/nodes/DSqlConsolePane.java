@@ -28,6 +28,7 @@ import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import gr.sqlbrowserfx.utils.MemoryGuard;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
@@ -149,7 +150,14 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
 
 		sqlTableView.setFilledByQuery(true);
-		sqlTableView.setItemsLater(rset);
+		try {
+			sqlTableView.setItemsLater(rset);
+		} catch (SQLException e) {
+			if (e.getErrorCode() == 9 || e.getErrorCode() == 1234) {
+				if (openInNewTableView())
+					Platform.runLater(() -> sqlPane.getTablesTabPane().getTabs().remove(sqlPane.getSelectedTableTab()));
+			}
+		}
 		
 		final SqlTableTab fTab = tab;
 		Platform.runLater(() -> {
@@ -180,7 +188,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	
 	@Override
 	public void hanldeException(SQLException e) {
-		if (e.getErrorCode() == 9) {
+		if (e.getErrorCode() == 9 || e.getErrorCode() == MemoryGuard.SQL_MEMORY_ERROR_CODE) {
 			String message = "Not enough memory , try again to run query.\n"+
 					"If you are trying to run a select query try to use limit";
 			e = new SQLException(message, e);

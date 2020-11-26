@@ -42,7 +42,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 	protected SqlTable sqlTable;
 	protected List<String> columns;
 	protected SqlConnector sqlConnector;
-	double minWidth, prefWidth, maxWidth;
+	private double minWidth, prefWidth, maxWidth;
 	protected boolean autoResize;
 	private int currentColumnPos = 0;
 	private SqlTableViewEditableCell selectedCell;
@@ -196,11 +196,15 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 				rows.add(new MapTableViewRow(entry));
 			}
 		} catch (Throwable e) {
-			rows.clear();
+			this.clear();
+			Platform.runLater(() -> {
+				this.titleProperty.set("error");
+				parent.load();
+			});
+			throw new SQLException("MemoryGuard action", "", MemoryGuard.SQL_MEMORY_ERROR_CODE);
 		}
 
 		Platform.runLater(() -> {
-			super.setItems(FXCollections.emptyObservableList());
 			this.getColumns().clear();
 			titleProperty.set(sqlTable.getName());
 			
