@@ -153,7 +153,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		try {
 			sqlTableView.setItemsLater(rset);
 		} catch (SQLException e) {
-			if (e.getErrorCode() == 9 || e.getErrorCode() == 1234) {
+			if (e.getErrorCode() == 9 || e.getErrorCode() == MemoryGuard.SQL_MEMORY_ERROR_CODE) {
 				if (openInNewTableView())
 					Platform.runLater(() -> sqlPane.getTablesTabPane().getTabs().remove(sqlPane.getSelectedTableTab()));
 			}

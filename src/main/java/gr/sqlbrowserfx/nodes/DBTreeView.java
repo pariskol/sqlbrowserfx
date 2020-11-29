@@ -251,17 +251,17 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 				if (!allItems.contains(name)) {
 					allItems.add(name);
 					TreeItem<String> treeItem = new TreeItem<String>(name);
-					if (type.contains("table") || type.contains("TABLE")) {
+					if (type.toLowerCase().contains("table")) {
 						this.fillTableTreeItem(treeItem);
 						tablesRootItem.getChildren().add(treeItem);
 						treeItem.setGraphic(JavaFXUtils.createIcon("/icons/table.png"));
 						//TODO find another way with no calls to static class SqlCodeAreaSyntax
 						SqlCodeAreaSyntax.bind(name, this.getColumnsForTable(name));
-					} else if (type.contains("view") || type.contains("VIEW")) {
+					} else if (type.toLowerCase().contains("view")) {
 						this.fillViewTreeItem(treeItem);
 						viewsRootItem.getChildren().add(treeItem);
 						treeItem.setGraphic(JavaFXUtils.createIcon("/icons/view.png"));
-					} else if (type.contains("index") || type.contains("INDEX")) {
+					} else if (type.toLowerCase().contains("index")) {
 						this.fillIndexTreeItem(treeItem);
 						indexesRootItem.getChildren().add(treeItem);
 						treeItem.setGraphic(JavaFXUtils.createIcon("/icons/index.png"));

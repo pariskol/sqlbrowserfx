@@ -465,10 +465,10 @@ public class SqlBrowserFXApp extends Application {
 				newSqlPane.asDockNode().setTitle("SqlBrowserFX Internal Database");
 				newSqlPane.asDockNode().setDockPane(dockPane);
 				newSqlPane.asDockNode().setFloating(true);
-				newSqlPane.createSqlTableTabWithDataUnsafe("autocomplete");
-				newSqlPane.createSqlTableTabWithDataUnsafe("saved_queries");
-				newSqlPane.createSqlTableTabWithDataUnsafe("queries_history");
 				newSqlPane.createSqlTableTabWithDataUnsafe("connections_history");
+				newSqlPane.createSqlTableTabWithDataUnsafe("saved_queries");
+//				newSqlPane.createSqlTableTabWithDataUnsafe("autocomplete");
+//				newSqlPane.createSqlTableTabWithDataUnsafe("queries_history");
 				isInternalDBShowing  = true;
 				newSqlPane.asDockNode().setOnClose(() -> isInternalDBShowing = false);
 			}

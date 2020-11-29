@@ -32,6 +32,7 @@ import gr.sqlbrowserfx.nodes.ToolbarOwner;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import gr.sqlbrowserfx.utils.MemoryGuard;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -555,11 +556,12 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		} catch (SQLException e) {
 			DialogFactory.createErrorNotification(e);
-			if (e.getErrorCode() == 1234) {
-				Platform.runLater(() -> {
-					sqlTableTab.getOnClosed().handle(new ActionEvent());
-					tablesTabPane.getTabs().remove(sqlTableTab);
-				});
+			if (e.getErrorCode() == MemoryGuard.SQL_MEMORY_ERROR_CODE) {
+				//TODO what must be done here?
+//				Platform.runLater(() -> {
+//					sqlTableTab.getOnClosed().handle(new ActionEvent());
+//					tablesTabPane.getTabs().remove(sqlTableTab);
+//				});
 				System.gc();
 			}
 		} finally {
