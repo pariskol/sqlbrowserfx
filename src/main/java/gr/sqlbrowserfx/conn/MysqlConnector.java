@@ -19,6 +19,7 @@ public class MysqlConnector extends SqlConnector {
 
 	private String SCHEMA_VIEW_QUERY;
 	private String SCHEMA_TABLE_QUERY;
+	private String SCHEMA_INDEX_QUERY;
 
 	private String database;
 
@@ -29,7 +30,7 @@ public class MysqlConnector extends SqlConnector {
 		this.database = database;
 		SCHEMA_VIEW_QUERY = "SHOW CREATE VIEW " + database + ".";
 		SCHEMA_TABLE_QUERY = "SHOW CREATE TABLE " + database + ".";
-		
+		SCHEMA_INDEX_QUERY = "SELECT DISTINCT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = '" + database + "' AND TABLE_NAME = ?";
 	}
 	
 	public MysqlConnector(String url, String database, String user, String password) {
@@ -37,6 +38,7 @@ public class MysqlConnector extends SqlConnector {
 		this.database = database;
 		SCHEMA_VIEW_QUERY = "SHOW CREATE VIEW " + database + ".";
 		SCHEMA_TABLE_QUERY = "SHOW CREATE TABLE " + database + ".";
+		SCHEMA_INDEX_QUERY = "SHOW CREATE TABLE " + database + ".";
 	}
 
 	
@@ -130,7 +132,11 @@ public class MysqlConnector extends SqlConnector {
 		try {
 			this.executeQuery(SCHEMA_TABLE_QUERY + name, action);
 		} catch (SQLException e) {
-			this.executeQuery(SCHEMA_VIEW_QUERY + name, action);
+			try {
+				this.executeQuery(SCHEMA_VIEW_QUERY + name, action);
+			} catch (SQLException e2) {
+				this.executeQuery(SCHEMA_INDEX_QUERY, Arrays.asList(name), action);
+			}
 		}
 	}
 
@@ -181,7 +187,7 @@ public class MysqlConnector extends SqlConnector {
 
 	@Override
 	public String getIndexColumnName() {
-		return null;
+		return "COLUMN_NAME";
 	}
 	
 	@Override
