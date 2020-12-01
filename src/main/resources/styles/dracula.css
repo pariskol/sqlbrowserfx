@@ -232,7 +232,7 @@
 }
 
 .tab:selected {
-	-fx-background-color: -fx-base;
+	-fx-background-color: -fx-accent;
 }
 
 
