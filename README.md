@@ -47,7 +47,7 @@ Run SqlBrowserFX.exe for Windows, or run sqlbrowserfx.sh for Linux.
 * [Spark Java](https://github.com/perwendel/spark)  - The web framework used.
 
 ## Other Notes
-SqlBrowserFX can be build with java 11 too , but a full migration is not yet possible because spark java library is not java 11 compatible.
+SqlBrowserFX can be build with java 11 too (by using pom-11.xml) , but a full migration is not yet possible because spark java library is not java 11 compatible.
 
 
 
