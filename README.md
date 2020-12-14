@@ -46,6 +46,9 @@ Run SqlBrowserFX.exe for Windows, or run sqlbrowserfx.sh for Linux.
 * [ControlsFX](https://github.com/controlsfx/controlsfx) - Library which provides many useful custom gui components.
 * [Spark Java](https://github.com/perwendel/spark)  - The web framework used.
 
+## Other Notes
+SqlBrowserFX can be build with java 11 too , but a full migration is not yet possible because spark java library is not java 11 compatible.
+
 
 
 
