@@ -129,7 +129,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		
 		try {
 			sqlConnector.executeQueryAsync	("select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA = ? ",
-				Arrays.asList("batmobile"),
+				Arrays.asList(sqlConnector.getDbSchema()),
 				rset -> {
 					Map<String, Object> map = DTOMapper.safeMap(rset);
 					TreeItem<String> ti = new TreeItem<>();
