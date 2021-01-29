@@ -1,15 +1,16 @@
 .root { 
     -fx-accent: #1a6ee4;
     -fx-focus-color: -fx-accent;
+    -fx-base: #111;
     -fx-control-inner-background: derive(-fx-base,30%);
     -fx-control-inner-background-alt: derive(-fx-control-inner-background, 30%);
     -fx-faint-focus-color: transparent;
-	/*-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
+    /*-fx-font-size: 13pt;
+	-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
 	-fx-selection-bar-non-focused: derive(-fx-base,90%);
 }
 
-
-dock-area-indicator {
+.dock-area-indicator {
 	-fx-fill: -fx-selection-bar;
 	-fx-opacity: 0.5;
 	-fx-stroke: rgba(50.0, 50.0, 100.0, 0.4);
@@ -17,6 +18,42 @@ dock-area-indicator {
 	-fx-stroke-type: inside;
 	-fx-stroke-dash-array: 8.0 4.0;
 	-fx-stroke-line-cap: butt;
+}
+
+.dock-top {
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
+}
+
+.dock-right {
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
+}
+
+.dock-bottom {
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
+}
+
+.dock-left {
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
+}
+
+.dock-center {
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
+}
+
+.dock-top-root {
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
+}
+
+.dock-right-root {
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
+}
+
+.dock-bottom-root {
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
+}
+
+.dock-left-root {
+  -fx-graphic: url(../themes/flat-dark/icons/pin.png);
 }
 
 /* JavaFX developers really seem to have fat fingers? */
@@ -74,7 +111,7 @@ dock-area-indicator {
 }
 
 .dock-title-label {
-	-fx-graphic: url(docknode.png);
+	/*-fx-graphic: url(docknode.png);*/
 	-fx-padding: 0.0 0.0 3.0 0.0;
 	-fx-text-fill: -fx-text-base-color;
 	-fx-effect: dropshadow(gaussian, rgba(255.0, 255.0, 255.0, 0.2), 0.0,
@@ -91,22 +128,22 @@ dock-area-indicator {
 
 /* Set the icons for the dock title bar's buttons here. */
 .dock-state-button {
-	-fx-graphic: url(restore.png);
+	-fx-graphic: url(../themes/flat-dark/icons/restore-win-w.png);
 	-fx-background-color: transparent;
 }
 
 .dock-node:floating .dock-state-button {
-	-fx-graphic: url(maximize.png);
+	-fx-graphic: url(../themes/flat-dark/icons/maximize-win-w.png);
 	-fx-background-color: transparent;
 }
 
 .dock-node:maximized .dock-state-button {
-	-fx-graphic: url(restore.png);
+	-fx-graphic: url(../themes/flat-dark/icons/restore-win-w.png);
 	-fx-background-color: transparent;
 }
 
 .dock-close-button {
-	-fx-graphic: url(close.png);
+	-fx-graphic: url(../themes/flat-dark/icons/close-win-w.png);
 	-fx-background-color: transparent;
 }
 
@@ -123,45 +160,6 @@ dock-area-indicator {
 	-fx-border-color: transparent;
 }
 
-.text-field {
-	-fx-background-color: transparent;
-	-fx-border-color: -fx-base;
-	-fx-border-width: 0.0 0.0 2.0 0.0;
-}
-
-.text-field:focused {
-	-fx-border-color: -fx-accent;
-}
-
-.text-area {
-	-fx-background-color: transparent;
-	-fx-border-color: transparent;
-	-fx-border-width: 0.0 0.0 0.0 0.0;
-	-fx-prompt-text-fill: derive(-fx-base,80%);
-	-fx-padding: 0;
-
-}
-
-/*.text-area .scroll-bar:vertical {
-    -fx-pref-width: 1;
-    -fx-opacity: 0;
-}*/
-.text-area .scroll-bar:horizontal {
-    -fx-pref-height: 1;
-    -fx-opacity: 0;
-}
-
-.text-area .content {
-	-fx-background-color: transparent;
-	-fx-border-color: -fx-base;
-	-fx-border-width: 0.0 0.0 2.0 0.0;
-	-fx-padding: 0 5 0 5;
-}
-
-.text-area:focused .content {
-	-fx-border-color: -fx-accent;
-	-fx-border-width: 0.0 0.0 2.0 0.0;
-}
 
 .tab-pane {
 	-fx-tab-min-width: 2.0em;
@@ -177,10 +175,6 @@ dock-area-indicator {
 }
 
 
-.label {
-	-fx-fill:black;
-	-fx-text-fill:black;
-}
 .tab .tab-label {
 	-fx-alignment: CENTER;
 }
@@ -257,12 +251,10 @@ dock-area-indicator {
 	-fx-background-color: transparent;
 }
 .button:hover {
-	-fx-text-fill: white;
 	-fx-background-color: -fx-focus-color;
 }
 
 .button:focused {
-	-fx-text-fill: white;
     -fx-background-color: -fx-focus-color; 
 }
 .button:default {
@@ -301,9 +293,17 @@ dock-area-indicator {
     -fx-background-color: transparent, -fx-control-inner-background;
     -fx-background-insets: 0, 1;
     -fx-padding: 1;
+    -fx-focus-color: black;
 	-fx-faint-focus-color: transparent;
 }
 
+.list-view .list-cell:even {
+-fx-control-inner-background: derive(-fx-base, 23%);
+}
+
+.list-view .list-cell:odd {
+-fx-control-inner-background: derive(-fx-base, 0%);
+}
 
 .table-view {
 	-fx-focus-color: transparent;
@@ -330,30 +330,6 @@ dock-area-indicator {
 }
 
 
-.combo-box-base {
-	-fx-background-color: transparent;
-	-fx-border-radius: 0.0;
-	-fx-border-width: 0.0 0.0 2.0 0.0;
-	-fx-border-color: -fx-base;
-	-fx-alignment: CENTER;
-	-fx-content-display: LEFT;
-}
-
-.combo-box-base:focused {
-	-fx-background-color: transparent;
-	-fx-border-radius: 0.0;
-	-fx-border-width: 0.0 0.0 2.0 0.0;
-	-fx-border-color: -fx-accent;
-}
-
-.combo-box-popup .list-view .list-cell:filled:hover {
-	-fx-background-color: -fx-accent;
-}
-.combo-box .list-view:focused .list-cell:selected {
-	-fx-background-color: -fx-accent;
-	-fx-text-fill:white;
-	-fx-table-cell-border-color: -fx-accent;
-}
 .lineno {
  -fx-background-color: derive(-fx-base, 27%);
 }
@@ -362,18 +338,22 @@ dock-area-indicator {
   -fx-background-color: derive(-fx-base, 27%);
 }
 
+.styled-text-area .selection {
+    -fx-fill: derive(-fx-accent,10%);
+}
+
 .styled-text-area .text{
-  -fx-fill: black;
+  -fx-fill: #f8f8f2;
   -fx-font-family: "Noto Sans";
 }
 
 .styled-text-area .text.keyword {
-    -fx-fill: purple;
+    -fx-fill: #a678c2;
     -fx-font-weight: bold;
 }
 
 .styled-text-area .text.function {
-	-fx-fill: blue;
+	-fx-fill: #69d7ee;
 	-fx-font-weight: bold;
 }
 
@@ -383,26 +363,26 @@ dock-area-indicator {
 }
 
 .styled-text-area .text.paren {
-    -fx-fill: black;
+    -fx-fill: #f8f8f2;
     -fx-font-weight: bold;
 }
 
 .styled-text-area .text.bracket {
-    -fx-fill: black;
+    -fx-fill: #f8f8f2;
     -fx-font-weight: bold;
 }
 
 .styled-text-area .text.brace {
-    -fx-fill: black;
+    -fx-fill: #f8f8f2;
     -fx-font-weight: bold;
 }
 
 .styled-text-area .text.string {
-    -fx-fill: blue;
+    -fx-fill: #e6da74;
 }
 
 .styled-text-area .text.string2 {
-    -fx-fill: blue;
+    -fx-fill: #e6da74;
 }
 
 .styled-text-area .text.todo {
@@ -437,21 +417,20 @@ dock-area-indicator {
 }
 
 .styled-text-area .text.number{
-  -fx-fill: purple;
+  -fx-fill: #ae81ff;
 }
 
 .styled-text-area .text.method{
-  -fx-fill: black;
+  -fx-fill: #f8f8f2;
 }
 
 .paragraph-box:has-caret {
-   -fx-background-color: derive(-fx-base,40%);
+   -fx-background-color: #1c1c1c99;
 }
 
 .caret {
-   -fx-stroke: black;
+   -fx-stroke: #f8f8f2;
 }
-
 
 .popover  {
 	-fx-background-color: derive(-fx-base,40%);
@@ -465,7 +444,7 @@ dock-area-indicator {
 }
 
 .popover > .content {
-		-fx-background-color: derive(-fx-base,40%);
+		-fx-background-color: derive(-fx-base,26%);
 		-fx-padding: 10.0;
 }
 
@@ -483,7 +462,7 @@ dock-area-indicator {
 }
 
 .popover > .content > .title > .icon > .graphics > .circle {
-	-fx-fill: gray ;
+	-fx-fill: transparent ;
 	-fx-effect: innershadow(gaussian, rgba(0,0,0,.2), 3, 0.5, 1.0, 1.0);
 }
 
@@ -492,5 +471,6 @@ dock-area-indicator {
 	-fx-stroke-width: 2;
 }
 
-
-
+.context-menu {
+    -fx-min-width: 150px;
+}
