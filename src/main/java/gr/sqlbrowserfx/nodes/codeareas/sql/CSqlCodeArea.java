@@ -51,8 +51,8 @@ public class CSqlCodeArea extends SqlCodeArea {
 	}
 	
 	@Override
-	protected void setKeysMap() {
-		super.setKeysMap();
+	protected void setInputMap() {
+		super.setInputMap();
 		InputMap<Event> saveQuery = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.S, KeyCombination.CONTROL_DOWN),
 				action -> this.saveQueryAction()

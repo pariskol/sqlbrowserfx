@@ -2,7 +2,7 @@ package sqlbrowserfx;
 
 import org.json.JSONArray;
 
-import gr.sqlbrowserfx.nodes.tableviews.MapTableView;
+import gr.sqlbrowserfx.nodes.tableviews.JSONTableView;
 import gr.sqlbrowserfx.utils.HTTPClient;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -22,7 +22,7 @@ public class GuiJsonTableView extends Application{
 		try {
 			primaryStage.setTitle("SqlBrowser");
 			JSONArray jsonArray = new JSONArray(HTTPClient.GET("https://www.psantamouris.gr/get/customers"));
-			MapTableView tableView = new MapTableView();
+			JSONTableView tableView = new JSONTableView();
 			tableView.setItemsLater(jsonArray);
 			primaryStage.setScene(new Scene(new VBox(new TextField(), tableView)));
 			primaryStage.show();

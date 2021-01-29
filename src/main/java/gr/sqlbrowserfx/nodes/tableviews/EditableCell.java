@@ -18,7 +18,7 @@ public class EditableCell extends TableCell<MapTableViewRow, Object> {
 		this.setAlignment(Pos.CENTER);
 	}
 
-	public EditableCell(MapTableView parentTableView) {
+	public EditableCell(JSONTableView parentTableView) {
 		this();
 		this.parentTableView = parentTableView;
 		this.setOnMouseClicked(mouseEvent -> {
@@ -29,7 +29,7 @@ public class EditableCell extends TableCell<MapTableViewRow, Object> {
 		});
 	}
 	
-	public EditableCell(MapTableView parentTable, SqlConnector sqlConnector) {
+	public EditableCell(JSONTableView parentTable, SqlConnector sqlConnector) {
 		this(parentTable);
 	}
 	

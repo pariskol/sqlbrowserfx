@@ -38,7 +38,7 @@ import gr.sqlbrowserfx.nodes.codeareas.log.LogCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
-import gr.sqlbrowserfx.nodes.tableviews.MapTableView;
+import gr.sqlbrowserfx.nodes.tableviews.JSONTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
 import gr.sqlbrowserfx.rest.SparkRESTfulService;
@@ -257,7 +257,7 @@ public class SqlBrowserFXApp extends Application {
 	}
 
 	private VBox createJsonTableView() {
-		MapTableView tableView = new MapTableView();
+		JSONTableView tableView = new JSONTableView();
 		
 		TextField requestField = new TextField();
 		requestField.setPromptText("Enter url...");

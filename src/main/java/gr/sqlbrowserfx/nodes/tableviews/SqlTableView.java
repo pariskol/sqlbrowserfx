@@ -13,6 +13,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +36,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 
 //FIXME use deleteRow, log log4j in ui
 public class SqlTableView extends TableView<MapTableViewRow> {
@@ -63,21 +67,47 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		prefWidth = 0;
 		maxWidth = 0;
 
+		this.setInputMap();
+//		this.setKeys();
+		
+//		JavaFXUtils.addMouseScrolling(this);
+		titleProperty = new SimpleStringProperty("empty");
+	}
+
+	@SuppressWarnings("unused")
+	@Deprecated
+	private void setKeys() {
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
 				if (keyEvent.getCode() == KeyCode.LEFT) {
 					if (currentColumnPos < getColumns().size() - 1)
-						this.scrollToColumn(getColumns().get(currentColumnPos++));;
+						this.scrollToColumn(getColumns().get(currentColumnPos++));
 				}
 				if (keyEvent.getCode() == KeyCode.RIGHT) {
 					if (currentColumnPos > 0)
-						this.scrollToColumn(getColumns().get(currentColumnPos--));;
+						this.scrollToColumn(getColumns().get(currentColumnPos--));
 				}
 			}
 		});
-		
-//		JavaFXUtils.addMouseScrolling(this);
-		titleProperty = new SimpleStringProperty("empty");
+	}
+
+	protected void setInputMap() {
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.LEFT, KeyCombination.CONTROL_DOWN),
+				action -> {
+					if (currentColumnPos < getColumns().size() - 1)
+						this.scrollToColumn(getColumns().get(currentColumnPos++));
+				}
+        ));
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.LEFT, KeyCombination.CONTROL_DOWN),
+				action -> {
+					if (currentColumnPos > 0)
+						this.scrollToColumn(getColumns().get(currentColumnPos--));
+				}
+        ));
 	}
 
 	public SqlTableView(ResultSet rs) throws SQLException {

@@ -20,6 +20,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import org.controlsfx.control.PopOver;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +59,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -300,6 +304,75 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 		});
 		sqlTableView.setContextMenu(this.createContextMenu());
+		this.setSqlTableViewInputMap(sqlTableView);
+//		this.setSqlTableViewKeys(sqlTableView);
+		SqlTableTab tab = new SqlTableTab(EMPTY, sqlTableView);
+		sqlTableView.setParent(tab);
+		tab.customTextProperty()
+		   .addListener((observable, oldValue, newValue) -> determineTabIcon(tab));
+		
+		return tab;
+	}
+
+	private void setSqlTableViewInputMap(SqlTableView sqlTableView) {
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
+				action -> this.searchButtonAction()
+        ));
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.C, KeyCombination.CONTROL_DOWN),
+				action -> {
+					this.copyAction();
+					sqlTableView.requestFocus();
+				}
+        ));
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.D, KeyCombination.CONTROL_DOWN),
+				action -> {
+					this.deleteButtonAction();
+					sqlTableView.requestFocus();
+				}
+        ));
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.E, KeyCombination.CONTROL_DOWN),
+				action -> {
+					this.editButtonAction(simulateClickEvent(editButton));
+					sqlTableView.requestFocus();
+				}
+        ));
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.Q, KeyCombination.CONTROL_DOWN),
+				action -> {
+					this.addButtonAction();
+					sqlTableView.requestFocus();
+				}
+        ));
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.I, KeyCombination.CONTROL_DOWN),
+				action -> {
+					this.importCsvAction();
+					sqlTableView.requestFocus();
+				}
+        ));
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.R, KeyCombination.CONTROL_DOWN),
+				action -> {
+					this.refreshButtonAction();
+					sqlTableView.requestFocus();
+				}
+        ));
+	}
+
+	@SuppressWarnings("unused")
+	@Deprecated
+	private void setSqlTableViewKeys(SqlTableView sqlTableView) {
 		sqlTableView.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
 				switch (keyEvent.getCode()) {
@@ -336,12 +409,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 			sqlTableView.requestFocus();
 		});
-		SqlTableTab tab = new SqlTableTab(EMPTY, sqlTableView);
-		sqlTableView.setParent(tab);
-		tab.customTextProperty()
-		   .addListener((observable, oldValue, newValue) -> determineTabIcon(tab));
-		
-		return tab;
 	}
 
 	private void determineTabIcon(SqlTableTab tab) {

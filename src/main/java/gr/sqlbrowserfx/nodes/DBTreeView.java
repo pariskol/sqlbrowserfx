@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.controlsfx.control.PopOver;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +39,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 
 public class DBTreeView extends TreeView<String> implements ContextMenuOwner, SimpleObserver<String>, SimpleObservable<String> {
 
@@ -102,6 +106,26 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 			}
 		});
 		
+		this.setInputMap();
+//		this.setKeys();
+	}
+
+	protected void setInputMap() {
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
+				action -> this.showSearchField()
+        ));
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.C, KeyCombination.CONTROL_DOWN),
+				action -> this.copyAction()
+        ));
+	}
+	
+	@SuppressWarnings("unused")
+	@Deprecated
+	private void setKeys() {
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
 				switch (keyEvent.getCode()) {

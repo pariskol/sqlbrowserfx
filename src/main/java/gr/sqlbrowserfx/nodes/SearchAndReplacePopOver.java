@@ -34,6 +34,12 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	private Button replaceAllButton;
 	private CheckBox wholeWordCheckBox;
 	private CheckBox caseInsensitiveCheckBox;
+
+//	private volatile int recursionRound = 0;
+	private volatile boolean javafxThreadRunning = false;
+	private Object javafxThreadRunningLock = new Object();
+	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	private long terminationTime;
 	
 	public SearchAndReplacePopOver(CodeArea codeArea) {
 		this(codeArea, true);
@@ -108,16 +114,16 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 		this.setDetachable(false);
 	}
 	
-//	private volatile int recursionRound = 0;
-	private volatile boolean javafxThreadRunning = false;
-	private Object javafxThreadRunningLock = new Object();
-	private ExecutorService executor = Executors.newSingleThreadExecutor();
-	
 	private int findButtonActionImpl() {
 //		recursionRound++;
 		String pattern = findField.getText();
 		if (pattern.isEmpty())
 			return 0;
+		
+		if (System.currentTimeMillis() >= terminationTime) {
+			System.out.println("Search timeout!");
+			return 0;
+		}
 		
 		String text = codeArea.getText();
 		if (caseInsensitiveCheckBox.isSelected()) {
@@ -180,15 +186,20 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 				}
 			}
 			//recursion
-			this.findButtonAction();
+			this.findButtonActionImpl();
 		}
 		
 		return 0;
 	}
 	
 	private void findButtonAction() {
+		this.resetSearchTerminationTime();
 		executor.execute(this::findButtonActionImpl);
 		
+	}
+	
+	private void resetSearchTerminationTime() {
+		terminationTime = System.currentTimeMillis() + 2000;
 	}
 	
 	private void selectMatchingWord(String pattern) {
@@ -198,10 +209,18 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	}
 
 	private void replaceButtonAction() {
+		this.resetSearchTerminationTime();
 		executor.execute(this::replaceButtonActionImpl);
 	}
 	
 	private void replaceButtonActionImpl() {
+		if (terminationTime <= System.currentTimeMillis()) {
+			System.out.println(terminationTime);
+			System.out.println(System.currentTimeMillis());
+			System.out.println("Search timeout!");
+			return;
+		}
+		
 		String replacement = replaceField.getText();
 		if (!codeArea.getSelectedText().isEmpty() && !replacement.equals(codeArea.getSelectedText())) {
 			String oldValue = codeArea.getSelectedText();
@@ -228,7 +247,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 		}
 		else {
 	    	if (findButtonActionImpl() != 0)
-	    		replaceButtonAction();
+	    		replaceButtonActionImpl();
 		}
 	}
 	

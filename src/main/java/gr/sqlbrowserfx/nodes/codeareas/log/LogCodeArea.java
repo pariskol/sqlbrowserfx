@@ -1,5 +1,18 @@
 package gr.sqlbrowserfx.nodes.codeareas.log;
 
+import java.time.Duration;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.regex.Matcher;
+
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.model.StyleSpans;
+import org.fxmisc.richtext.model.StyleSpansBuilder;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
+import org.reactfx.Subscription;
+
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
@@ -8,15 +21,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.model.StyleSpans;
-import org.fxmisc.richtext.model.StyleSpansBuilder;
-import org.reactfx.Subscription;
-
-import java.time.Duration;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.regex.Matcher;
+import javafx.scene.input.KeyCombination;
 
 public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLighter {
 
@@ -28,7 +33,8 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		this.setEditable(false);
 		this.enableHighlighting();
 		this.setContextMenu(this.createContextMenu());
-		this.setKeys();
+		this.setInputMap();
+//		this.setKeys();
 	}
 	
 	@Override
@@ -40,6 +46,34 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		}
 	}
 	
+	protected void setInputMap() {
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
+				action -> this.showSearchAndReplacePopup()
+        ));
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.D, KeyCombination.CONTROL_DOWN),
+				action -> {
+					boolean hasInitialSelectedText = false;
+					if (this.getSelectedText().isEmpty())
+						this.selectLine();
+					else
+						hasInitialSelectedText = true;
+					
+					this.replaceSelection("");
+					
+					if (!hasInitialSelectedText && this.getCaretPosition() != 0) {
+						this.deletePreviousChar();
+						this.moveTo(this.getCaretPosition() + 1);
+					}
+				}
+        ));
+	}
+	
+	@SuppressWarnings("unused")
+	@Deprecated
 	private void setKeys() {
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.F) {
@@ -61,6 +95,7 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			}
 		});
 	}
+	
 	@Override
 	public void enableHighlighting() {
 		@SuppressWarnings("unused")

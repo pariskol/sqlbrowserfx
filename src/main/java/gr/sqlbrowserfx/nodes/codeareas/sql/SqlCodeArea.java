@@ -169,7 +169,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		this.analyzeTextForTablesAliases(this.getText());
 	}
 	
-	protected void setKeysMap() {
+	protected void setInputMap() {
 		InputMap<Event> addTabs = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.TAB, KeyCombination.CONTROL_DOWN),
 				action -> {
@@ -298,7 +298,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 //					this.autoCompleteAction(keyEvent, auoCompletePopup);
 				}
 		});
-		this.setKeysMap();
+		this.setInputMap();
 	}
 	
 	private int countLines(String str) {
@@ -484,7 +484,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				listViewOnEnterActrion(suggestionsList, query, caretPosition, keyEvent);
 			}
-			if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.SPACE) {
+			else if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.SPACE) {
 				hideAutocompletePopup();
 			}
 		});

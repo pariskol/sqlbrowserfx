@@ -3,6 +3,9 @@ package gr.sqlbrowserfx.nodes.tableviews;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import org.json.JSONArray;
 
 import javafx.application.Platform;
@@ -12,8 +15,9 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 
-public class MapTableView extends TableView<MapTableViewRow> {
+public class JSONTableView extends TableView<MapTableViewRow> {
 
 	protected List<String> columns;
 	protected ObservableList<MapTableViewRow> rows;
@@ -23,7 +27,7 @@ public class MapTableView extends TableView<MapTableViewRow> {
 	int currentColumnPos = 0;
 
 
-	public MapTableView() {
+	public JSONTableView() {
 
 		rows = FXCollections.observableArrayList();
 		autoResize = false;
@@ -31,19 +35,44 @@ public class MapTableView extends TableView<MapTableViewRow> {
 		prefWidth = 0;
 		maxWidth = 0;
 
+		this.setInputMap();
+		
+	}
+	
+	@SuppressWarnings("unused")
+	@Deprecated
+	private void setKeys() {
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
 				if (keyEvent.getCode() == KeyCode.LEFT) {
 					if (currentColumnPos < getColumns().size() - 1)
-						this.scrollToColumn(getColumns().get(currentColumnPos++));;
+						this.scrollToColumn(getColumns().get(currentColumnPos++));
 				}
 				if (keyEvent.getCode() == KeyCode.RIGHT) {
 					if (currentColumnPos > 0)
-						this.scrollToColumn(getColumns().get(currentColumnPos--));;
+						this.scrollToColumn(getColumns().get(currentColumnPos--));
 				}
 			}
 		});
-		
+	}
+
+	protected void setInputMap() {
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.LEFT, KeyCombination.CONTROL_DOWN),
+				action -> {
+					if (currentColumnPos < getColumns().size() - 1)
+						this.scrollToColumn(getColumns().get(currentColumnPos++));
+				}
+        ));
+		Nodes.addInputMap(this, 
+				InputMap.consume(
+				EventPattern.keyPressed(KeyCode.LEFT, KeyCombination.CONTROL_DOWN),
+				action -> {
+					if (currentColumnPos > 0)
+						this.scrollToColumn(getColumns().get(currentColumnPos--));
+				}
+        ));
 	}
 	
 	public synchronized void setItemsLater(JSONArray jsonArray) {

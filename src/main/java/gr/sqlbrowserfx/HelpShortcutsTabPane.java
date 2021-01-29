@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.json.JSONArray;
 
-import gr.sqlbrowserfx.nodes.tableviews.MapTableView;
+import gr.sqlbrowserfx.nodes.tableviews.JSONTableView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
@@ -21,7 +21,7 @@ public class HelpShortcutsTabPane extends TabPane {
 	}
 
 	private Tab createSqlCodeAreaTab() {
-		MapTableView tableView = new MapTableView();
+		JSONTableView tableView = new JSONTableView();
 		List<Map<String, Object>> rows = new ArrayList<>();
 		addShortcut("Undo", "Ctrl+Z", rows);
 		addShortcut("Redo", "Ctrl+Shift+Z", rows);
@@ -63,7 +63,7 @@ public class HelpShortcutsTabPane extends TabPane {
 	}
 	
 	private Tab createSqlTableViewTab() {
-		MapTableView tableView = new MapTableView();
+		JSONTableView tableView = new JSONTableView();
 		List<Map<String, Object>> rows = new ArrayList<>();
 		addShortcut("Add", "Ctrl+Q", rows);
 		addShortcut("Edit", "Ctrl+E", rows);
@@ -89,7 +89,7 @@ public class HelpShortcutsTabPane extends TabPane {
 	}
 
 	private Tab createDBTreeViewTab() {
-		MapTableView tableView = new MapTableView();
+		JSONTableView tableView = new JSONTableView();
 		List<Map<String, Object>> rows = new ArrayList<>();
 		addShortcut("Search", "Ctrl+F", rows);
 		addShortcut("Copy text of selected items (comma separated if many)", "Ctrl+C", rows);
