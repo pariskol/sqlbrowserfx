@@ -19,6 +19,42 @@ dock-area-indicator {
 	-fx-stroke-line-cap: butt;
 }
 
+.dock-top {
+  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+}
+
+.dock-right {
+  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+}
+
+.dock-bottom {
+  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+}
+
+.dock-left {
+  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+}
+
+.dock-center {
+  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+}
+
+.dock-top-root {
+  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+}
+
+.dock-right-root {
+  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+}
+
+.dock-bottom-root {
+  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+}
+
+.dock-left-root {
+  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+}
+
 /* JavaFX developers really seem to have fat fingers? */
 .dock-pos-indicator .button {
 	-fx-padding: 4.0;
@@ -74,7 +110,7 @@ dock-area-indicator {
 }
 
 .dock-title-label {
-	-fx-graphic: url(docknode.png);
+	-fx-graphic: url(../styles/flat-blue/icons/docknode.png);
 	-fx-padding: 0.0 0.0 3.0 0.0;
 	-fx-text-fill: -fx-text-base-color;
 	-fx-effect: dropshadow(gaussian, rgba(255.0, 255.0, 255.0, 0.2), 0.0,
@@ -91,22 +127,22 @@ dock-area-indicator {
 
 /* Set the icons for the dock title bar's buttons here. */
 .dock-state-button {
-	-fx-graphic: url(restore.png);
+	-fx-graphic: url(../styles/flat-blue/icons/restore.png);
 	-fx-background-color: transparent;
 }
 
 .dock-node:floating .dock-state-button {
-	-fx-graphic: url(maximize.png);
+	-fx-graphic: url(../styles/flat-blue/icons/maximize.png);
 	-fx-background-color: transparent;
 }
 
 .dock-node:maximized .dock-state-button {
-	-fx-graphic: url(restore.png);
+	-fx-graphic: url(../styles/flat-blue/icons/restore.png);
 	-fx-background-color: transparent;
 }
 
 .dock-close-button {
-	-fx-graphic: url(close.png);
+	-fx-graphic: url(../styles/flat-blue/icons/close.png);
 	-fx-background-color: transparent;
 }
 
