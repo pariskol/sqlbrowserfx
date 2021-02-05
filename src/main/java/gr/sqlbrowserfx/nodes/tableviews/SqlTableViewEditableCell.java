@@ -86,6 +86,9 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 				DialogFactory.createErrorNotification(e.getClass().getSimpleName(), "Could not update cell!\n" + e.getMessage(), e);
 			}
 		}
+		setContentDisplay(ContentDisplay.TEXT_ONLY);
+		parentTableView.requestFocus();
+		
 	}
 
 	@Override
