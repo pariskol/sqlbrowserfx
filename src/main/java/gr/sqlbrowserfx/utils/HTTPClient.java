@@ -1,16 +1,21 @@
 package gr.sqlbrowserfx.utils;
 
-import com.squareup.okhttp.*;
-import org.json.JSONObject;
-
 import java.io.IOException;
 import java.util.Base64;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.json.JSONObject;
+
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+
 public class HTTPClient {
 
-    private static ExecutorService EXECUTOR_SERVICE = null;
+    private static volatile ExecutorService EXECUTOR_SERVICE = null;
     private static String BASIC_AUTH = "";
     private static OkHttpClient client = new OkHttpClient();
 	private static boolean checkForCreds = false;

@@ -1,3 +1,4 @@
+
 package gr.sqlbrowserfx.nodes.codeareas.log;
 
 import java.time.Duration;

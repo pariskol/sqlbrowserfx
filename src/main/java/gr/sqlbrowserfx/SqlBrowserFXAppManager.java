@@ -20,7 +20,7 @@ public class SqlBrowserFXAppManager {
 		return SQL_CONNECTOR;
 	}
 	
-	public static void addSqlPane(DSqlPane sqlPane) {
+	public static void registerSqlPane(DSqlPane sqlPane) {
 		SQL_PANES.add(sqlPane);
 		DB_TREE_VIEWS.forEach(tv -> tv.populateSqlPanesMenu());
 	}
@@ -29,7 +29,11 @@ public class SqlBrowserFXAppManager {
 		return SQL_PANES;
 	}
 	
-	public static void removeSqlPane(SqlPane sqlPane) {
+	public static long getActiveSqlCodeAreasNum() {
+		return SQL_PANES.stream().filter(x -> x.getSqlCodeAreaRef() != null).count();
+	}
+	
+	public static void unregisterSqlPane(SqlPane sqlPane) {
 		SQL_PANES.remove(sqlPane);
 		DB_TREE_VIEWS.forEach(tv -> tv.populateSqlPanesMenu());
 	}

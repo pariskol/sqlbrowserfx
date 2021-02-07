@@ -3,8 +3,8 @@ package gr.sqlbrowserfx.nodes;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
-import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
+import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.geometry.Orientation;
