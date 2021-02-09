@@ -207,7 +207,8 @@ public class MysqlConnector extends SqlConnector {
 
 	@Override
 	public void getTriggers(String table, ResultSetAction action) throws SQLException {
-		this.executeQuery("select TRIGGER_NAME, ACTION_STATEMENT from INFORMATION_SCHEMA.TRIGGERS  where EVENT_OBJECT_TABLE='" + table + "'", action);
+		this.executeQuery("select TRIGGER_NAME, ACTION_STATEMENT from INFORMATION_SCHEMA.TRIGGERS  where EVENT_OBJECT_TABLE= ? and TRIGGER_SCHEMA = ?",
+				Arrays.asList(table, database), action);
 	}
 	
 	@Override
