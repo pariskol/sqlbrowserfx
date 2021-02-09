@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx;
+package gr.sqlbrowserfx.nodes;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 
+import gr.sqlbrowserfx.LoggerConf;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
