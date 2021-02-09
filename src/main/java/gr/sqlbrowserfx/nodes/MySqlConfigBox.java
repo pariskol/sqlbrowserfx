@@ -28,7 +28,10 @@ public class MySqlConfigBox extends VBox {
 	private TextField databaseField;
 	private Button connectButton;
 	private ProgressIndicator loader;
-	String lastDatabase = "@database@";
+	private HistorySqlTableView sqlTableView;
+	
+	private String lastDatabase = "@database@";
+
 
 	public MySqlConfigBox() {
 		this.setPadding(new Insets(5));
@@ -37,6 +40,14 @@ public class MySqlConfigBox extends VBox {
 		this.getChildren().add(new Label("Databse url"));
 		urlField = new TextField();
 		urlField.setPromptText("jdbc:mysql://localhost:3306/" + lastDatabase + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC");
+		urlField.textProperty()
+				.addListener((observable, oldValue, newValue) -> {
+					String[] split = urlField.getText().split("/");
+					if (split.length > 3) {
+						databaseField.setText(split[split.length - 1].replaceAll("\\?.*", ""));
+						System.out.println(databaseField.getText());
+					}
+				});
 		userField = new TextField();
 		this.getChildren().add(urlField);
 		this.getChildren().add(new Label("Username"));
@@ -60,7 +71,7 @@ public class MySqlConfigBox extends VBox {
 				lastDatabase = "@database@";
 			}
 		});
-		this.getChildren().add(databaseField);
+//		this.getChildren().add(databaseField);
 		connectButton = new Button("Connect", JavaFXUtils.createIcon("/icons/database.png"));
 		
 		this.loader = new ProgressIndicator();
@@ -72,7 +83,7 @@ public class MySqlConfigBox extends VBox {
 		this.getChildren().add(hb);
 		
 		this.getChildren().add(new Label("History"));
-		HistorySqlTableView sqlTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
+		sqlTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
 		sqlTableView.setColumnWidth(0, 0, 300);
 		this.getChildren().add(sqlTableView);
 		sqlTableView.setOnMouseClicked( mouseEvent -> {
@@ -86,9 +97,14 @@ public class MySqlConfigBox extends VBox {
 			}
 		});
 
-		SqlBrowserFXAppManager.getConfigSqlConnector().executeQueryRawAsync("select id, timestamp, url, user, database from connections_history_localtime where database_type = 'mysql'", rset -> {
-			sqlTableView.setItemsLater(rset);
-		});
+		SqlBrowserFXAppManager.getConfigSqlConnector()
+							  .executeQueryRawAsync(
+			"select url, user, database, timestamp, id from connections_history_localtime"
+			+ " where database_type = 'mysql' order by timestamp desc",
+			rset -> {
+				sqlTableView.setItemsLater(rset);
+			}
+		);
 
 	}
 

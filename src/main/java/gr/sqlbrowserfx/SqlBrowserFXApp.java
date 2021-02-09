@@ -25,6 +25,7 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
 
+import gr.bashfx.BashFXApp;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
@@ -32,6 +33,7 @@ import gr.sqlbrowserfx.dock.nodes.DBTreePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsoleView;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.HelpTabPane;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.codeareas.log.CodeAreaTailerListener;
 import gr.sqlbrowserfx.nodes.codeareas.log.LogCodeArea;
@@ -160,7 +162,7 @@ public class SqlBrowserFXApp extends Application {
 		
 		SqlBrowserFXAppManager
 			.getConfigSqlConnector()
-			.executeQueryRawAsync("select id, database, timestamp from connections_history_localtime where database_type = 'sqlite'",
+			.executeQueryRawAsync("select database, timestamp, id from connections_history_localtime where database_type = 'sqlite' order by timestamp desc",
 				rset -> recentDBsTableView.setItemsLater(rset)
 		);
 
@@ -385,12 +387,12 @@ public class SqlBrowserFXApp extends Application {
 
 			});
 		});
-//		MenuItem bashCodeAreaItem = new MenuItem("Open BashFX", JavaFXUtils.createIcon("/icons/console.png"));
-//		bashCodeAreaItem.setOnAction(event -> {
-//			VBox vb = new BashFXApp().createBashFXAppBox(primaryStage);
-//		    JavaFXUtils.applyJMetro(vb);
-//			new DockNode(dockPane, vb, "BashFX", JavaFXUtils.createIcon("/icons/console.png"));
-//		});
+		MenuItem bashCodeAreaItem = new MenuItem("Open BashFX", JavaFXUtils.createIcon("/icons/console.png"));
+		bashCodeAreaItem.setOnAction(event -> {
+			VBox vb = new BashFXApp().createBashFXAppBox(STAGE);
+		    JavaFXUtils.applyJMetro(vb);
+			new DockNode(dockPane, vb, "BashFX", JavaFXUtils.createIcon("/icons/console.png"));
+		});
 		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.createIcon("/icons/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
 			DBTreePane treeView = new DBTreePane(DB, sqlConnector);
@@ -432,7 +434,7 @@ public class SqlBrowserFXApp extends Application {
 
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, jsonTableViewItem, logItem);
+		menu1.getItems().addAll(sqlPaneViewItem, jsonTableViewItem, logItem, bashCodeAreaItem);
 
 		final Menu menu2 = new Menu("Restful Service", JavaFXUtils.createImageView("/icons/spark.png", 16.0, 16.0));
 		MenuItem restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createImageView("/icons/spark.png", 16.0, 16.0));
