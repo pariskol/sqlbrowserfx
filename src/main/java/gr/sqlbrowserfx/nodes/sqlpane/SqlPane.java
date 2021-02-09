@@ -171,15 +171,18 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		addButton = new Button("", JavaFXUtils.createIcon("/icons/add.png"));
 		addButton.setOnMouseClicked(event -> addButtonAction());
 		addButton.setOnAction(event -> addButtonAction());
-
+		addButton.setTooltip(new Tooltip("Insert record"));
+		
 		deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
 		deleteButton.setOnMouseClicked(event -> deleteButtonAction());
 		deleteButton.setOnAction(event -> deleteButtonAction());
-
+		deleteButton.setTooltip(new Tooltip("Delete selected records"));
+		
 		editButton = new Button("", JavaFXUtils.createIcon("/icons/edit.png"));
 		editButton.setOnMouseClicked(mouseEvent -> editButtonAction(mouseEvent));
 		editButton.setOnAction(mouseEvent -> editButtonAction(this.simulateClickEvent(editButton)));
-
+		editButton.setTooltip(new Tooltip("Edit selected record"));
+		
 		searchField = new TextField();
 		searchField.setPromptText("Search...");
 		searchField.setOnKeyPressed(keyEvent -> {
@@ -199,37 +202,45 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		settingsButton = new Button("", JavaFXUtils.createIcon("/icons/settings.png"));
 		settingsButton.setOnMouseClicked(event -> this.settingsButtonAction());
 		settingsButton.setOnAction(event -> this.settingsButtonAction());
-
+		settingsButton.setTooltip(new Tooltip("Adjust settings"));
+		
 		searchButton = new Button("", JavaFXUtils.createIcon("/icons/magnify.png"));
 		searchButton.setOnAction(actionEvent -> this.searchButtonAction());
 		searchButton.setOnMouseClicked(mouseEvent -> this.searchButtonAction());
-
+		searchButton.setTooltip(new Tooltip("Search in table"));
+		
 		importCsvButton = new Button("", JavaFXUtils.createIcon("/icons/csv-import.png"));
 		importCsvButton.setOnAction(actionEvent -> this.importCsvAction());
 		importCsvButton.setOnMouseClicked(mouseEvent -> this.importCsvAction());
-
+		importCsvButton.setTooltip(new Tooltip("Import from csv"));
+		
 		exportCsvButton = new Button("", JavaFXUtils.createIcon("/icons/csv.png"));
 		exportCsvButton.setOnAction(actionEvent -> this.exportCsvAction());
 		exportCsvButton.setOnMouseClicked(mouseEvent -> this.exportCsvAction());
-
+		exportCsvButton.setTooltip(new Tooltip("Export to csv"));
+		
 		sqlConsoleButton = new Button("", JavaFXUtils.createIcon("/icons/console.png"));
 		sqlConsoleButton.setOnMouseClicked(mouseEvent -> this.sqlConsoleButtonAction());
+		sqlConsoleButton.setTooltip(new Tooltip("Open sql code area"));
 		//FIXME maybe uncomment this
 //		sqlConsoleButton.setOnAction(mouseEvent -> this.sqlConsoleButtonAction());
 		
 		if (sqlConnector != null) {
 			refreshButton = new Button("", JavaFXUtils.createIcon("/icons/refresh.png"));
-			tableSelectButton = new Button("", JavaFXUtils.createIcon("/icons/database.png"));
+			refreshButton.setOnMouseClicked(event -> refreshButtonAction());
+			refreshButton.setTooltip(new Tooltip("Refresh"));
 
+			tableSelectButton = new Button("", JavaFXUtils.createIcon("/icons/database.png"));
 			tableSelectButton.setOnMouseClicked(event -> this.tableSelectButtonAction());
 			tableSelectButton.setOnAction(event -> this.tableSelectButtonAction());
-
-			refreshButton.setOnMouseClicked(event -> refreshButtonAction());
+			tableSelectButton.setTooltip(new Tooltip("Select table/view"));
+			
 //FIXME something goes wrong if both action and mouse handlers set
 //			refreshButton.setOnAction(event -> refreshButtonAction());
 			columnsSettingsButton = new Button("", JavaFXUtils.createIcon("/icons/table-settings.png"));
 			columnsSettingsButton.setOnMouseClicked(mouseEvent -> this.columnsSettingsButtonAction());
-
+			columnsSettingsButton.setTooltip(new Tooltip("Select visible columns"));
+				
 			return new FlowPane(searchButton, settingsButton, columnsSettingsButton,tableSelectButton, refreshButton, addButton, editButton, deleteButton,
 					importCsvButton, exportCsvButton, sqlConsoleButton);
 		} else {
@@ -440,6 +451,14 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return tab;
 	}
 
+	public void showAddTableTab(boolean show) {
+		if (!show)
+			this.tablesTabPane.getTabs().remove(this.addTableTab);
+		else
+			this.tablesTabPane.getTabs().add(0, this.addTableTab);
+
+	}
+	
 	// TODO no need?
 	public void createSqlTableTabWithData(String table) {
 		if (!sqlQueryRunning) {

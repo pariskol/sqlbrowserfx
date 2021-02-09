@@ -14,6 +14,7 @@ import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 
@@ -53,7 +54,9 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner {
 	@Override
 	public FlowPane createToolbar() {
 		Button searchButton = new Button("", JavaFXUtils.createIcon("/icons/magnify.png"));
+		searchButton.setTooltip(new Tooltip("Search in tree"));
 		searchButton.setOnAction(actionEvent -> this.dbTreeView.showSearchField());
+		
 		Button addButton = new Button("", JavaFXUtils.createIcon("/icons/add.png"));
 		addButton.setOnAction(actionEvent -> {
 			TableCreationPane tableCreationPane = new TableCreationPane(this.sqlConnector);
@@ -61,9 +64,14 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner {
 			JavaFXUtils.applyJMetro(tableCreationPane);
 			new DockNode(asDockNode().getDockPane(), tableCreationPane, "Create New Table", JavaFXUtils.createIcon("/icons/add.png"), 1000.0, 600.0);
 		});
+		addButton.setTooltip(new Tooltip("Open table creator"));
+
 		Button deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
+		deleteButton.setTooltip(new Tooltip("Drop"));
 		deleteButton.setOnAction(action -> this.dbTreeView.dropAction());
+		
 		Button scemaDetailsButton = new Button("", JavaFXUtils.createIcon("/icons/details.png"));
+		scemaDetailsButton.setTooltip(new Tooltip("Show schema"));
 		scemaDetailsButton.setOnAction(actionEvent -> {
 			SqlCodeArea codeArea = new SqlCodeArea(this.dbTreeView.copyScemaAction(), false, false);
 			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);

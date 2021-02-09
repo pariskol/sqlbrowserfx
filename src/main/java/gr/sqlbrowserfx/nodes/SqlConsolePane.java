@@ -167,7 +167,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		executeButton.setOnAction(actionEvent -> executeButonAction());
 		
 		stopExecutionButton = new Button("", JavaFXUtils.createIcon("/icons/stop.png"));
-		executeButton.setTooltip(new Tooltip("Stop execution"));
+		stopExecutionButton.setTooltip(new Tooltip("Stop execution"));
 		
 		settingsButton = new Button("", JavaFXUtils.createIcon("/icons/settings.png"));
 		settingsButton.setOnMouseClicked(mouseEvent -> {
@@ -178,6 +178,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				popOver.show(settingsButton);
 			}
 		});
+		settingsButton.setTooltip(new Tooltip("Adjust settings"));
 		
 		FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton, settingsButton);
 		toolbar.setOrientation(Orientation.VERTICAL);
