@@ -327,7 +327,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 			});
 
 			thisDockNode.setOnClose(() -> {
-				SqlBrowserFXAppManager.removeSqlPane(this);
+				SqlBrowserFXAppManager.unregisterSqlPane(this);
 //				it does not work as expected
 //				if (sqlConsoleBox != null)
 //					sqlConsoleBox.asDockNode().close();

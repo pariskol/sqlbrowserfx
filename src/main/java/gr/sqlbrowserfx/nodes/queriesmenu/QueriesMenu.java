@@ -17,15 +17,14 @@ import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
-import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
-import javafx.scene.input.KeyCode;
 
 public class QueriesMenu extends Menu implements SimpleObserver<String> {
 
-	HashMap<String, Menu> menuItemsMap;
-	HashMap<String, String> queriesMap;
+	private HashMap<String, Menu> menuItemsMap;
+	private HashMap<String, String> queriesMap;
+	private long codeAreasAvailable = 0;
 	
 	public QueriesMenu() {
 		super("Saved queries", JavaFXUtils.createIcon("/icons/thunder.png"));
@@ -36,6 +35,30 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 		refreshMenuItem.setOnAction(action -> this.loadQueries());
 		this.getItems().add(refreshMenuItem);
 		this.loadQueries();
+		this.startCodeAreasAgent();
+	
+	}
+
+	private void startCodeAreasAgent() {
+		Thread t = new Thread(() -> {
+			while(!Thread.currentThread().isInterrupted()) {
+				try {
+					long newCodeAreasAvailable = SqlBrowserFXAppManager.getActiveSqlCodeAreasNum();
+					if (newCodeAreasAvailable != codeAreasAvailable) {
+						codeAreasAvailable = newCodeAreasAvailable;
+						
+						for(Menu menu : menuItemsMap.values())
+							for (MenuItem item: menu.getItems())
+								populateSqlCodeAreasAvailable((Menu) item);
+					}
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					break;
+				}
+			}
+		}, getClass().getSimpleName() + "-codeareas-agent");
+		t.setDaemon(true);
+		t.start();
 	}
 	
 	private void loadQueries() {
@@ -53,9 +76,9 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 				sqlConnector.executeQuery("select * from saved_queries where category = ?", Arrays.asList(category), rset2 -> {
 					try {
 						QueryDTO qd = (QueryDTO) DTOMapper.map(rset2, QueryDTO.class);
-						Menu queryMenuItem = new Menu();
-						Label label = new Label(qd.getDescription());
-						queryMenuItem.setGraphic(label);
+						Menu queryMenuItem = new Menu(qd.getDescription());
+//						Label label = new Label(qd.getDescription());
+//						queryMenuItem.setGraphic(label);
 						queriesMap.put(qd.getDescription(), qd.getSql());
 						queryMenuItem.setOnAction(action -> {
 							StringSelection stringSelection = new StringSelection(queriesMap.get(qd.getDescription()));
@@ -63,12 +86,12 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 							clipboard.setContents(stringSelection, null);
 						});
 						categorySubMenu.getItems().add(queryMenuItem);
-						
-						label.setOnKeyPressed(keyEvent -> {
-							if (keyEvent.getCode() == KeyCode.RIGHT)
-								loadSqlCodeAreasAvailable(qd, queryMenuItem);
-						});
-						label.setOnMouseEntered(mouseEvent -> loadSqlCodeAreasAvailable(qd, queryMenuItem));
+						populateSqlCodeAreasAvailable(queryMenuItem);
+//						label.setOnKeyPressed(keyEvent -> {
+//							if (keyEvent.getCode() == KeyCode.RIGHT)
+//								populateSqlCodeAreasAvailable(qd, queryMenuItem);
+//						});
+//						label.setOnMouseEntered(mouseEvent -> populateSqlCodeAreasAvailable(qd, queryMenuItem));
 					} catch (Throwable e) {
 						logger.error(e.getMessage(), e);
 					}
@@ -80,19 +103,19 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 		}
 	}
 
-	private void loadSqlCodeAreasAvailable(QueryDTO qd, Menu queryMenuItem) {
+	private void populateSqlCodeAreasAvailable(Menu queryMenuItem) {
 		queryMenuItem.getItems().clear();
 		for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
 			if (sqlPane.getSqlCodeAreaRef() != null) {
 				MenuItem sendToCodeArea = new MenuItem("Paste in " + sqlPane.asDockNode().getTitle());
 				sendToCodeArea.setOnAction(action2 -> {
 					sqlPane.getSqlCodeAreaRef().clear();
-					sqlPane.getSqlCodeAreaRef().appendText(queriesMap.get(qd.getDescription()));
+					sqlPane.getSqlCodeAreaRef().appendText(queriesMap.get(queryMenuItem.getText()));
 				});
 				queryMenuItem.getItems().add(sendToCodeArea);
 			}
 		}
-		queryMenuItem.show();
+//		queryMenuItem.show();
 	}
 
 	@Override

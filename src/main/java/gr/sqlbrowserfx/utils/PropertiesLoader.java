@@ -95,7 +95,7 @@ public class PropertiesLoader {
 			Constructor<?> cons = clazz.getConstructor(String.class);
 			Object returnedValue = cons.newInstance(value.toString());
 			return returnedValue;
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			if (logger != null)
     			logger.error("Could not read property from file");
         	else

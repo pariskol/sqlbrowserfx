@@ -91,7 +91,7 @@ public abstract class SqlConnector {
 		for (Object param : params) {
 			if (param == null || param.toString().equals(""))
 				statement.setNull(i++, Types.VARCHAR);
-			else if (param instanceof Byte[]) {
+			else if (param instanceof byte[]) {
 				statement.setBytes(i++, (byte[]) param);
 			} else
 				statement.setObject(i++, param);
@@ -355,7 +355,8 @@ public abstract class SqlConnector {
 	
 	protected void closeQuitely(AutoCloseable closeable) {
 		try {
-			closeable.close();
+			if (closeable != null)
+				closeable.close();
 		} catch (Throwable e) {
 		}
 	}

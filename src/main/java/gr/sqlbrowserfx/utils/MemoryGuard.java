@@ -44,7 +44,7 @@ public class MemoryGuard {
 					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 				}
 			}
-		}, "MemoryGuard Thread").start();
+		}, "memory-guard").start();
 	}
 	
 	/**
@@ -78,6 +78,6 @@ public class MemoryGuard {
 					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 				}
 			}
-		}, "MemoryGuard Thread").start();
+		}, "memory-guard").start();
 	}
 }

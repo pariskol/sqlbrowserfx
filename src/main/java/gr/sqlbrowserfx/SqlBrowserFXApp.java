@@ -319,7 +319,7 @@ public class SqlBrowserFXApp extends Application {
 		dockPane.getStylesheets().add(CSS_THEME);
 
 		mainSqlPane = new DSqlPane(sqlConnector);
-		SqlBrowserFXAppManager.addSqlPane(mainSqlPane);
+		SqlBrowserFXAppManager.registerSqlPane(mainSqlPane);
 		mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, DockWeights.asDoubleArrray(0.8f));
 		mainSqlPane.asDockNode().setClosable(false);
@@ -375,7 +375,7 @@ public class SqlBrowserFXApp extends Application {
 				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + (SqlBrowserFXAppManager.getActiveSqlPanes().size() + 1));
 				newSqlPane.asDockNode().setDockPane(dockPane);
 				newSqlPane.asDockNode().setFloating(true);
-				SqlBrowserFXAppManager.addSqlPane(newSqlPane);
+				SqlBrowserFXAppManager.registerSqlPane(newSqlPane);
 			});
 		});
 		
