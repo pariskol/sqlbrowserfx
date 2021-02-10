@@ -45,7 +45,6 @@ public class MySqlConfigBox extends VBox {
 					String[] split = urlField.getText().split("/");
 					if (split.length > 3) {
 						databaseField.setText(split[split.length - 1].replaceAll("\\?.*", ""));
-						System.out.println(databaseField.getText());
 					}
 				});
 		userField = new TextField();
