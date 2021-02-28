@@ -1,10 +1,16 @@
 package gr.sqlbrowserfx.nodes.codeareas.sql;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,11 +48,12 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.FileChooser;
 import javafx.stage.Popup;
 
 public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLighter {
 
-	private Runnable enterAction;
+	private Runnable runAction;
 	private boolean autoCompletePopupShowing = false;
 	private boolean autoCompleteOnType = true;
 	private boolean insertMode = false;
@@ -56,6 +63,8 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	protected SearchAndReplacePopOver searchAndReplacePopOver;
 	private ListView<String> suggestionsList;
 	private Thread textAnalyzerDaemon;
+	protected MenuItem menuItemRun;
+	
 
 	public SqlCodeArea() {
 		this(null);
@@ -208,7 +217,10 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
         );
 		InputMap<Event> run = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.ENTER, KeyCombination.CONTROL_DOWN),
-				action -> enterAction.run()
+				action -> { 
+					if(runAction != null)
+						runAction.run();
+				}
         );
 		InputMap<Event> autocomplete = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN),
@@ -327,8 +339,8 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = new ContextMenu();
 
-		MenuItem menuItemRun = new MenuItem("Run", JavaFXUtils.createIcon("/icons/play.png"));
-		menuItemRun.setOnAction(event -> enterAction.run());
+		menuItemRun = new MenuItem("Run", JavaFXUtils.createIcon("/icons/play.png"));
+		menuItemRun.setOnAction(event -> runAction.run());
 		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copy());
 
@@ -349,8 +361,11 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		menuItemUperCase.setOnAction(action -> this.convertSelectedTextToUpperCase());
 		MenuItem menuItemLowerCase = new MenuItem("To Lower Case", JavaFXUtils.createIcon("/icons/lowercase.png"));
 		menuItemLowerCase.setOnAction(action -> this.convertSelectedTextToLowerCase());
-
-		menu.getItems().addAll(menuItemRun, menuItemCopy, menuItemCut, menuItemPaste, menuItemUperCase, menuItemLowerCase, menuItemSuggestions, menuItemSearchAndReplace);
+		
+		MenuItem menuItemSaveAs = new MenuItem("Save As...", JavaFXUtils.createIcon("/icons/save.png"));
+		menuItemSaveAs.setOnAction(action -> this.saveAsFileAction());
+		
+		menu.getItems().addAll(menuItemRun, menuItemCopy, menuItemCut, menuItemPaste, menuItemUperCase, menuItemLowerCase, menuItemSuggestions, menuItemSearchAndReplace, menuItemSaveAs);
 		return menu;
 	}
 
@@ -386,6 +401,21 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		return suggestionsList;
 	}
 
+	private void saveAsFileAction() {
+		FileChooser fileChooser = new FileChooser();
+		File selectedFile = fileChooser.showOpenDialog(null);
+		
+		if (selectedFile == null) return;
+		
+		try {
+		    Files.createFile(Paths.get(selectedFile.getPath()));
+			Files.write(Paths.get(selectedFile.getPath()), this.getText().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		DialogFactory.createNotification("File saved", "File saved at " + new Date().toString());
+	} 
+	
 	private void autoCompleteAction(KeyEvent event) {
 		
 		String ch = event.getCharacter();
@@ -561,8 +591,12 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		return spansBuilder.create();
 	}
 
-	public void setEnterAction(Runnable action) {
-		enterAction = action;
+	public Runnable getRunAction() {
+		return runAction;
+	}
+	
+	public void setRunAction(Runnable action) {
+		runAction = action;
 	}
 
 	public boolean isAutoCompleteOnTypeEnabled() {

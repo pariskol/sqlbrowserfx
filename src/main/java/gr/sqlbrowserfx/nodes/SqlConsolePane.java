@@ -1,5 +1,9 @@
 package gr.sqlbrowserfx.nodes;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -7,7 +11,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
@@ -20,6 +26,7 @@ import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.CSqlCodeArea;
+import gr.sqlbrowserfx.nodes.codeareas.sql.FileSqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -37,6 +44,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
 public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObservable<String>{
 
@@ -147,7 +155,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private void createSqlConsoleTab() {
 		CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
 		sqlCodeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
-		sqlCodeArea.setEnterAction(() -> this.executeButonAction());
+		sqlCodeArea.setRunAction(() -> this.executeButonAction());
 		sqlCodeArea.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> SqlConsolePane.this.changed());
 		
 		VirtualizedScrollPane<CodeArea> scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
@@ -158,6 +166,33 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		queryTabPane.getSelectionModel().select(newTab);
 		codeAreaRef = sqlCodeArea;
 		sqlCodeArea.requestFocus();
+	}
+	
+	private void openFileAction() {
+		FileChooser fileChooser = new FileChooser();
+		File selectedFile = fileChooser.showOpenDialog(null);
+		openInNewTab(selectedFile);
+	}
+	
+	private void openInNewTab(File selectedFile) {
+		FileSqlCodeArea codeArea = new FileSqlCodeArea(selectedFile);
+		
+		VirtualizedScrollPane<CodeArea> vsp = new VirtualizedScrollPane<CodeArea>(codeArea);
+		String fileContent = null;
+		try {
+			fileContent = StringUtils.join(
+				Files.lines(Paths.get(selectedFile.getAbsolutePath()))
+				 	 .collect(Collectors.toList()), "\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		codeArea.replaceText(fileContent);
+		
+		Tab tab = new Tab(selectedFile.getName(),vsp);
+		queryTabPane.getTabs().add(tab);
+		queryTabPane.getSelectionModel().select(tab);
+		codeAreaRef = codeArea;
+		codeArea.requestFocus();
 	}
 	
 	@Override
@@ -180,7 +215,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		});
 		settingsButton.setTooltip(new Tooltip("Adjust settings"));
 		
-		FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton, settingsButton);
+		Button openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
+		openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
+		FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton, settingsButton, openButton);
 		toolbar.setOrientation(Orientation.VERTICAL);
 		return toolbar;
 	}
