@@ -52,6 +52,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -347,6 +348,7 @@ public class SqlBrowserFXApp extends Application {
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
 		
 		JavaFXUtils.applyJMetro(vbox);
+		JavaFXUtils.addZoomInOutSupport(vbox);
 
 		if (primaryScene == null) {
 			primaryScene = new Scene(vbox);
@@ -389,7 +391,7 @@ public class SqlBrowserFXApp extends Application {
 		});
 		MenuItem bashCodeAreaItem = new MenuItem("Open BashFX", JavaFXUtils.createIcon("/icons/console.png"));
 		bashCodeAreaItem.setOnAction(event -> {
-			VBox vb = new BashFXApp().createBashFXAppBox(STAGE);
+			Node vb = new BashFXApp().createBashFXAppBox(true);
 		    JavaFXUtils.applyJMetro(vb);
 			new DockNode(dockPane, vb, "BashFX", JavaFXUtils.createIcon("/icons/console.png"));
 		});

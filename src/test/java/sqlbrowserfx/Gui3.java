@@ -1,6 +1,6 @@
 package sqlbrowserfx;
 
-import gr.sqlbrowserfx.HelpTabPane;
+import gr.sqlbrowserfx.nodes.HelpTabPane;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;

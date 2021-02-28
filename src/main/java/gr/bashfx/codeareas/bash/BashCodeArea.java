@@ -1,5 +1,6 @@
 package gr.bashfx.codeareas.bash;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -10,13 +11,13 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Timer;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import org.controlsfx.control.Notifications;
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.Subscription;
@@ -31,6 +32,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.FileChooser;
 import javafx.stage.Popup;
 import javafx.util.Duration;
 
@@ -39,54 +41,38 @@ public class BashCodeArea extends CodeArea{
     private static final int LIST_ITEM_HEIGHT = 30;
     private static final int LIST_MAX_HEIGHT = 120;
     private static final int WORD_LENGTH_LIMIT = 45;
-    Timer autocompleteTimer;
 	private SearchAndReplacePopOver searchAndReplacePopOver;
 	private String path;
+	private Popup autoCompletePopup;
+	private String fileName;
     
+	public BashCodeArea() {
+		this(null);
+	}
+	
 	public BashCodeArea(String path) {
 		super();
-		autocompleteTimer = new Timer("Autocomplete timer");
 		this.setContextMenu(this.createContextMenu());
-		AtomicReference<Popup> auoCompletePopup = new AtomicReference<Popup>();
-		this.setOnKeyTyped(event -> {
-//			autocompleteTimer.schedule(new TimerTask() {
-//				@Override
-//				public void run() {
-//					this.this.autoCompleteAction(event, auoCompletePopup);
-//				}
-//			}, 1500);
-			this.autoCompleteAction(event, auoCompletePopup);
-
-		});
+		autoCompletePopup = new Popup();
+		this.setOnKeyTyped(event -> this.autoCompleteAction(event));
+		this.path = path;
 
 		searchAndReplacePopOver = new SearchAndReplacePopOver(this);
 
-//		this.setOnKeyPressed(keyEvent -> {
-//			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.ENTER) {
-////				executebutton.getOnAction().handle(new ActionEvent());
-//				enterAction.run();
-//			}
-//			else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.Q) {
-//				//TODO go to query x tab
-//			}
-//		});
-		
 		this.caretPositionProperty().addListener((observable, oldPosition, newPosition) -> {
-			if (auoCompletePopup.get() != null)
-				auoCompletePopup.get().hide();
+			if (autoCompletePopup != null)
+				autoCompletePopup.hide();
 		});
 
 		this.enableHighlighting();
-		
-		this.setOnMouseClicked(mouseEvent -> {
-			searchAndReplacePopOver.hide();
-		});
-		
-		this.setOnKeysPressed(path);
+		this.setOnMouseClicked(mouseEvent -> searchAndReplacePopOver.hide());
+		this.setOnKeysPressed();
+		this.setParagraphGraphicFactory(LineNumberFactory.get(this));
+
 	}
 	
+	@SuppressWarnings("unused")
 	private void enableHighlighting() {
-		@SuppressWarnings("unused")
 		Subscription subscription = this.multiPlainChanges().successionEnds(java.time.Duration.ofMillis(200))
 				.subscribe(ignore -> {
 					try {
@@ -137,6 +123,10 @@ public class BashCodeArea extends CodeArea{
     public String getPath() {
     	return path;
     }
+    
+    public String getFileName() {
+    	return fileName;
+    }
 
     private static List<String> getQuerySuggestions(String query) {
         List<String> suggestions = BashCodeAreaSyntax.KEYWORDS_lIST.parallelStream()
@@ -155,12 +145,15 @@ public class BashCodeArea extends CodeArea{
 				boundsInScene.getMinY());
 	}
 	
-	private void setOnKeysPressed(String path) {
-		this.path = path;
+	private void setOnKeysPressed() {
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
 				if (keyEvent.getCode() == KeyCode.S) {
-					this.saveFileAction();
+					try {
+						this.saveFileAction();
+					} catch (Exception e) {
+						this.saveAsFileAction();
+					}
 				}
 				else if (keyEvent.getCode() == KeyCode.D) {
 					boolean hasInitialSelectedText = false;
@@ -192,28 +185,50 @@ public class BashCodeArea extends CodeArea{
 		Notifications.create()
 					 .owner(this)
 					 .position(Pos.TOP_RIGHT)
+					 .darkStyle()
+					 .text("File saved at " + new Date().toString())
+					 .hideAfter(Duration.millis(1000))
+					 .showInformation();
+	}
+	
+	public void saveAsFileAction() {
+		FileChooser fileChooser = new FileChooser();
+		File selectedFile = fileChooser.showOpenDialog(null);
+		try {
+			this.path = selectedFile.getPath();
+			this.fileName = selectedFile.getName();
+		    Files.createFile(Paths.get(selectedFile.getPath()));
+			Files.write(Paths.get(selectedFile.getPath()), this.getText().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		Notifications.create()
+					 .owner(this)
+					 .position(Pos.TOP_RIGHT)
+					 .darkStyle()
 					 .text("File saved at " + new Date().toString())
 					 .hideAfter(Duration.millis(1000))
 					 .showInformation();
 	} 
-	private void autoCompleteAction(KeyEvent event, AtomicReference<Popup> auoCompletePopup) {
+	
+	private void autoCompleteAction(KeyEvent event) {
 		String ch = event.getCharacter();
 		// for some reason keycode does not work
 		if (Character.isLetter(ch.charAt(0)) || (event.isControlDown() && ch.equals(" "))) {
 			int position = this.getCaretPosition();
 			String query = getQuery(this, position);
-			if (auoCompletePopup.get() == null) {
-				auoCompletePopup.set(new Popup());
+			if (autoCompletePopup == null) {
+				autoCompletePopup = new Popup();
 			} else {
-				auoCompletePopup.get().hide();
+				autoCompletePopup.hide();
 			}
 			if (!query.trim().isEmpty()) {
 				ListView<String> suggestionsList = getSuggestionsList(query);
 				if (suggestionsList.getItems().size() != 0) {
-					auoCompletePopup.get().getContent().clear();
-					auoCompletePopup.get().getContent().add(suggestionsList);
+					autoCompletePopup.getContent().clear();
+					autoCompletePopup.getContent().add(suggestionsList);
 					Bounds pointer = this.caretBoundsProperty().getValue().get();
-					auoCompletePopup.get().show(this, pointer.getMaxX(), pointer.getMinY());
+					autoCompletePopup.show(this, pointer.getMaxX(), pointer.getMinY());
 					suggestionsList.setOnKeyPressed(keyEvent -> {
 						if (keyEvent.getCode() == KeyCode.ENTER) {
 							AtomicReference<String> word = new AtomicReference<>();
@@ -229,16 +244,16 @@ public class BashCodeArea extends CodeArea{
 								this.replaceText(position - query.length(), position, word.get());
 								this.moveTo(position + word.get().length() - query.length());
 							});
-							auoCompletePopup.get().hide();
+							autoCompletePopup.hide();
 						}
 						if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.SPACE) {
-							auoCompletePopup.get().hide();
-							auoCompletePopup.set(null);
+							autoCompletePopup.hide();
+							autoCompletePopup = null;
 						}
 					});
 				}
 			} else {
-				auoCompletePopup.get().hide();
+				autoCompletePopup.hide();
 			}
 		}
 	}
