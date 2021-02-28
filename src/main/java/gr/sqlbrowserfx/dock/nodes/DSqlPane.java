@@ -73,7 +73,6 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 		chartsDNs = new ArrayList<>();
 		chartColumns = new ArrayList<>();
 		lineChartBoxes = new ArrayList<>();
-
 	}
 
 	@Override

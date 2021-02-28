@@ -36,7 +36,6 @@ public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner {
 		});
 		this.setLeft(toolBar);
 		this.setLoading(true);
-		
 	}
 	
 	public void setLoading(boolean loading) {

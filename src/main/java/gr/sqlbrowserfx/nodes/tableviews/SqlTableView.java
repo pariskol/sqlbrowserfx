@@ -70,7 +70,6 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		this.setInputMap();
 //		this.setKeys();
 		
-//		JavaFXUtils.addMouseScrolling(this);
 		titleProperty = new SimpleStringProperty("empty");
 	}
 
