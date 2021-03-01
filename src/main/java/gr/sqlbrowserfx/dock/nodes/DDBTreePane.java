@@ -18,14 +18,14 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 
-public class DBTreePane extends BorderPane implements Dockable, ToolbarOwner {
+public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner {
 
 	private FlowPane toolBar;
 	private DDBTreeView dbTreeView;
 	private DockNode thisDockNode = null;
 	private SqlConnector sqlConnector;
 
-	public DBTreePane(String dbPath, SqlConnector sqlConnector) {
+	public DDBTreePane(String dbPath, SqlConnector sqlConnector) {
 		super();
 		this.sqlConnector = sqlConnector;
 		this.toolBar = this.createToolbar();

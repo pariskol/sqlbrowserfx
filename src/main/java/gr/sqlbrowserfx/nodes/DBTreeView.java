@@ -22,7 +22,7 @@ import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
-import gr.sqlbrowserfx.dock.nodes.DBTreePane;
+import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
@@ -60,7 +60,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	private List<SimpleObserver<String>> listeners;
 	
 	private TextField searchField;
-	private DBTreePane parent = null;
+	private DDBTreePane parent = null;
 
 	@SuppressWarnings("unchecked")
 	public DBTreeView(String dbPath, SqlConnector sqlConnector) {
@@ -142,7 +142,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		});
 	}
 
-	public DBTreeView(String dbPath, SqlConnector sqlConnector, DBTreePane parent) {
+	public DBTreeView(String dbPath, SqlConnector sqlConnector, DDBTreePane parent) {
 		this(dbPath, sqlConnector);
 		this.parent = parent;
 	}

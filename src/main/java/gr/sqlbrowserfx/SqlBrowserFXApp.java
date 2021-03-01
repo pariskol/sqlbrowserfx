@@ -29,7 +29,7 @@ import gr.bashfx.BashFXApp;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
-import gr.sqlbrowserfx.dock.nodes.DBTreePane;
+import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsoleView;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
@@ -90,7 +90,7 @@ public class SqlBrowserFXApp extends Application {
 
 	private SqlConnector sqlConnector;
 	private boolean restServiceStarted;
-	private DBTreePane ddbTreePane;
+	private DDBTreePane ddbTreePane;
 	private boolean isInternalDBShowing = false;
 	private boolean isRestConfigurationShowing = false;
 	private QueriesMenu queriesMenu;
@@ -326,7 +326,7 @@ public class SqlBrowserFXApp extends Application {
 		mainSqlPane.asDockNode().setClosable(false);
 		mainSqlPane.showConsole();
 
-		ddbTreePane = new DBTreePane(DB, sqlConnector);
+		ddbTreePane = new DDBTreePane(DB, sqlConnector);
 		SqlBrowserFXAppManager.registerDDBTreeView(ddbTreePane.getDBTreeView());
 		ddbTreePane.getDBTreeView().asDockNode().setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
 		
@@ -397,7 +397,7 @@ public class SqlBrowserFXApp extends Application {
 		});
 		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.createIcon("/icons/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
-			DBTreePane treeView = new DBTreePane(DB, sqlConnector);
+			DDBTreePane treeView = new DDBTreePane(DB, sqlConnector);
 			DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.createIcon("/icons/details.png"));
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});

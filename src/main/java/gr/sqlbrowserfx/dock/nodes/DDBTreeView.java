@@ -33,7 +33,7 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 		});
 	}
 
-	public DDBTreeView(String dbPath, SqlConnector sqlConnector, DBTreePane parent) {
+	public DDBTreeView(String dbPath, SqlConnector sqlConnector, DDBTreePane parent) {
 		super(dbPath, sqlConnector, parent);
 	}
 	
