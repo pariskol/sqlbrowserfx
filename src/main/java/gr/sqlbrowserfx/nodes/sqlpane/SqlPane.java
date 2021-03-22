@@ -791,6 +791,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		editButton.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				editButton.getOnAction().handle(new ActionEvent());
+				keyEvent.consume();
 			}
 		});
 

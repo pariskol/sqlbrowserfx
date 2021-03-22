@@ -24,6 +24,7 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableRowEditBox;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
+import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.MemoryGuard;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
@@ -38,7 +39,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 
-//FIXME use deleteRow, log log4j in ui
 public class SqlTableView extends TableView<MapTableViewRow> {
 
 	protected ObservableList<MapTableViewRow> rows;
@@ -174,11 +174,19 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			col.setCellFactory(callback -> {
 				return new SqlTableViewEditableCell(this, sqlConnector);
 			});
+			
+			if (sqlTable.isForeignKey(column))
+				col.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
+			else if (sqlTable.isPrimaryKey(column))
+				col.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
+			
 			tableColumns.add(col);
 		}
 		
 		this.getColumns().setAll(tableColumns);
 		super.setItems(rows);
+		// very poor performance of controlsfx tablefilter
+//		TableFilter.forTableView(this).apply();
 
 		this.autoResizedColumns(autoResize);
 		this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -245,6 +253,12 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 				col.setCellFactory(callback -> {
 					return new SqlTableViewEditableCell(this, sqlConnector);
 				});
+				
+				if (sqlTable.isForeignKey(column))
+					col.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
+				else if (sqlTable.isPrimaryKey(column))
+					col.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
+				
 				this.getColumns().add(col);
 			}
 
@@ -260,6 +274,9 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			this.autoResizedColumns(autoResize);
 			this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 			super.setItems(rows);
+			
+			// very poor performance of controlsfx tablefilter
+//			TableFilter.forTableView(this).apply();
 			
 			if (parent != null)
 				parent.load();

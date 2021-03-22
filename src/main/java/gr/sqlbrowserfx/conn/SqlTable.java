@@ -99,6 +99,10 @@ public class SqlTable {
 		}
 		return false;
 	}
+	
+	public boolean isPrimaryKey(String key) {
+		return (primaryKey != null && primaryKey.equals(key));
+	}
 
 	public String columnsToString() {
 		String result = new String();
