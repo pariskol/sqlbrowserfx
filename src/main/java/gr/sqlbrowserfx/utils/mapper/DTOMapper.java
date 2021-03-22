@@ -27,7 +27,7 @@ public class DTOMapper {
 		for (int i=1;i<= rsmd.getColumnCount();i++) {
 			Object value = dto.get(rsmd.getColumnName(i));
 			if (value != null)
-				dto.put(rsmd.getColumnName(i)+" ("+rsmd.getTableName(i)+")", rset.getObject(i));
+				dto.put(rsmd.getTableName(i) + "." + rsmd.getColumnName(i), rset.getObject(i));
 			else dto.put(rsmd.getColumnName(i), rset.getObject(i));
 		}
 		
@@ -40,7 +40,7 @@ public class DTOMapper {
 	 * @return HashMap
 	 * @throws RuntimeException
 	 */
-	public static HashMap<String, Object> safeMap(ResultSet rset) throws RuntimeException {
+	public static HashMap<String, Object> mapu(ResultSet rset) throws RuntimeException {
 
 		LinkedHashMap<String, Object> dto = null;
 		try {
@@ -51,7 +51,7 @@ public class DTOMapper {
 		return dto;
 	}
 	
-	public static Object safeMap(ResultSet rset, Class<?> clazz) {
+	public static Object unsafeMap(ResultSet rset, Class<?> clazz) {
 		Object dto = null;
 		try {
 			dto = map(rset, clazz);
