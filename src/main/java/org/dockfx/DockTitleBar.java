@@ -95,6 +95,7 @@ public class DockTitleBar extends HBox implements EventHandler<MouseEvent> {
 			}
 		});
 		closeButton.visibleProperty().bind(dockNode.closableProperty());
+		stateButton.visibleProperty().bind(dockNode.floatableProperty());
 
 		// create a pane that will stretch to make the buttons right aligned
 		Pane fillPane = new Pane();

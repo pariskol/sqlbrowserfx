@@ -21,7 +21,7 @@ public class GuiJsonTableView extends Application{
 	public void start(Stage primaryStage) {
 		try {
 			primaryStage.setTitle("SqlBrowser");
-			JSONArray jsonArray = new JSONArray(HTTPClient.GET("https://www.psantamouris.gr/get/customers"));
+			JSONArray jsonArray = new JSONArray(HTTPClient.GET("<your url>"));
 			JSONTableView tableView = new JSONTableView();
 			tableView.setItemsLater(jsonArray);
 			primaryStage.setScene(new Scene(new VBox(new TextField(), tableView)));
