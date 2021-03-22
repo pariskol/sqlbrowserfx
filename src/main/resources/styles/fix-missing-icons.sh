@@ -1,7 +1,8 @@
 #!/bin/bash
 
 source_theme="./flat-dark/icons"
-target_theme="./flat-blue/icons"
+#target_theme="./flat-blue/icons"
+target_theme="./$1/icons"
 
 for file in $(find $source_theme -type f -name "*")
 do
