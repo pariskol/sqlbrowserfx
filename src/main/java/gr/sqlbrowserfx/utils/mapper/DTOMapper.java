@@ -51,7 +51,7 @@ public class DTOMapper {
 		return dto;
 	}
 	
-	public static Object unsafeMap(ResultSet rset, Class<?> clazz) {
+	public static Object mapu(ResultSet rset, Class<?> clazz) {
 		Object dto = null;
 		try {
 			dto = map(rset, clazz);

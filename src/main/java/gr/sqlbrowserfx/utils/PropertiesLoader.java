@@ -46,7 +46,7 @@ public class PropertiesLoader {
 	        });
 		} catch (IOException e) {
 			if (logger != null)
-    			logger.error("Could not read property from file");
+    			logger.debug("Could not read property from file");
         	else
         		System.err.println("Could not read property from file");
 		}
@@ -60,7 +60,7 @@ public class PropertiesLoader {
 			return returnedValue;
 		} catch (Exception e) {
 			if (logger != null)
-    			logger.error("Could not read property from file");
+    			logger.debug("Could not read property from file");
         	else
         		System.err.println("Could not read property from file");
 		}
@@ -97,7 +97,7 @@ public class PropertiesLoader {
 			return returnedValue;
 		} catch (Throwable e) {
 			if (logger != null)
-    			logger.error("Could not read property from file");
+    			logger.debug("Could not read property from file");
         	else
         		System.err.println("Could not read property from file");
 		}

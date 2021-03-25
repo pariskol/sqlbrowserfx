@@ -29,11 +29,14 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.listeners.TableColumnFilteringEvent;
+import gr.sqlbrowserfx.listeners.TableSearchFilteringEvent;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.ToolbarOwner;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
+import gr.sqlbrowserfx.nodes.tableviews.filter.SqlTableFilter;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.MemoryGuard;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
@@ -108,6 +111,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	private String EMPTY = "empty";
 	private String whereFilter = "";
 	private int linesLimit = 5000;
+	private boolean isColumnFilteringEnabled = true;
 
 	public SqlPane() {
 		this(null);
@@ -164,6 +168,16 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		DraggingTabPaneSupport dragingSupport = new DraggingTabPaneSupport("/icons/table.png");
         dragingSupport.addSupport(this);
+        
+        this.addEventHandler(TableColumnFilteringEvent.EVENT_TYPE, event -> {
+        	int diff = getSelectedSqlTableView().getSqlTableRows().size() - getSelectedSqlTableView().getItems().size();
+        	isSearchApplied = diff > 0;
+			this.updateRowsCountLabel();
+		});
+        
+        this.addEventHandler(TableSearchFilteringEvent.EVENT_TYPE, event -> {
+        	Platform.runLater(() -> SqlTableFilter.apply(getSelectedSqlTableView()));
+        });
 	}
 
 	@Override
@@ -190,6 +204,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				if (searchField.getText().isEmpty()) {
 					Platform.runLater(() -> {
 						getSelectedSqlTableView().setItems(getSelectedSqlTableView().getSqlTableRows());
+						this.fireEvent(new TableSearchFilteringEvent());
 						this.setIsSearchApplied(false);
 						this.updateRowsCountLabel();
 					});
@@ -295,6 +310,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	private SqlTableTab createSqlTableTab() {
 		SqlTableView sqlTableView = new SqlTableView();
+		sqlTableView.enableColumnFiltering(isColumnFilteringEnabled);
 		sqlTableView.setColumnWidth(0, 0, 350);
 		sqlTableView.setSqlConnector(sqlConnector);
 		sqlTableView.setOnMouseClicked(mouseEvent -> {
@@ -707,38 +723,37 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	private void searchFieldAction() {
 		final SqlTableView sqlTableView = this.getSelectedSqlTableView(); 
 		sqlTableView.getSelectionModel().clearSelection();
-		// use executor service of sqlConnector
-		sqlConnector.executeAsync(() -> {
-			Platform.runLater(() -> sqlTableView.setItems(sqlTableView.getSqlTableRows()));
-			ObservableList<MapTableViewRow> searchRows = FXCollections.observableArrayList();
+		
+		ObservableList<MapTableViewRow> searchRows = FXCollections.observableArrayList();
 
-			String[] split = searchField.getText().split(":");
-			String columnRegex = split.length > 1 ? split[0] : null;
-			String regex = split.length > 1 ? split[1] : split[0];
-			
-			this.setIsSearchApplied(!regex.isEmpty());
-			
-			for (MapTableViewRow row : sqlTableView.getSqlTableRows()) {
-				for (TableColumn<MapTableViewRow, ?> column : sqlTableView.getVisibleLeafColumns()) {
+		String[] split = searchField.getText().split(":");
+		String columnRegex = split.length > 1 ? split[0] : null;
+		String regex = split.length > 1 ? split[1] : split[0];
+		
+		this.setIsSearchApplied(!regex.isEmpty());
+		
+		for (MapTableViewRow row : sqlTableView.getSqlTableRows()) {
+			for (TableColumn<MapTableViewRow, ?> column : sqlTableView.getVisibleLeafColumns()) {
 
-					if (columnRegex != null && column.getText().equals(columnRegex) && row.get(column.getText()) != null) {
-						if (row.get(column.getText()).toString().matches("(?i:.*" + regex + ".*)")) {
-							searchRows.add(new MapTableViewRow(row));
-							break;
-						}
+				if (columnRegex != null && column.getText().equals(columnRegex) && row.get(column.getText()) != null) {
+					if (row.get(column.getText()).toString().matches("(?i:.*" + regex + ".*)")) {
+						searchRows.add(new MapTableViewRow(row));
+						break;
 					}
-					else if (columnRegex == null && row.get(column.getText()) != null) {
-						if (row.get(column.getText()).toString().matches("(?i:.*" + regex + ".*)")) {
-							searchRows.add(new MapTableViewRow(row));
-							break;
-						}
+				}
+				else if (columnRegex == null && row.get(column.getText()) != null) {
+					if (row.get(column.getText()).toString().matches("(?i:.*" + regex + ".*)")) {
+						searchRows.add(new MapTableViewRow(row));
+						break;
 					}
 				}
 			}
-			Platform.runLater(() -> {
-				sqlTableView.setItems(searchRows);
-				this.updateRowsCountLabel();
-			});
+		}
+
+		Platform.runLater(() -> {
+			sqlTableView.setItems(searchRows);
+			this.updateRowsCountLabel();
+			this.fireEvent(new TableSearchFilteringEvent());
 		});
 	}
 
@@ -1335,5 +1350,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		this.isSearchApplied = isSearchApplied;
 	}
 
-	
+
+	public void enableColumnFiltering(boolean b) {
+		this.isColumnFilteringEnabled   = b;
+	}
 }

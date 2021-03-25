@@ -24,6 +24,7 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableRowEditBox;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
+import gr.sqlbrowserfx.nodes.tableviews.filter.SqlTableFilter;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.MemoryGuard;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
@@ -52,6 +53,9 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 	private SqlTableViewEditableCell selectedCell;
 	protected boolean filledByQuery = false;
 	protected boolean areCellsEditableByClick;
+	private boolean areColumnsFilterable = true;
+	
+	private Map<String, Long> columnCounts; 
 
 	protected final static int NOT_SET = 0;
 
@@ -67,6 +71,8 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		prefWidth = 0;
 		maxWidth = 0;
 
+		columnCounts = new HashMap<>();
+		
 		this.setInputMap();
 //		this.setKeys();
 		
@@ -136,6 +142,22 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		rows.clear();
 	}
 
+	protected void createColumnFilters() {
+		// very poor performance of controlsfx tablefilter
+		if (areColumnsFilterable)
+			SqlTableFilter.apply(this);
+	}
+	
+	public void resetColumnGraphic(TableColumn<?, ?> col) {
+		String column = col.getText();
+		if (sqlTable.isForeignKey(column))
+			col.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
+		else if (sqlTable.isPrimaryKey(column))
+			col.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
+		else
+			col.setGraphic(null);
+	}
+	
 	public synchronized void setItems(ResultSet rs) throws SQLException {
 
 		this.filledByQuery = false;
@@ -185,8 +207,8 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		
 		this.getColumns().setAll(tableColumns);
 		super.setItems(rows);
-		// very poor performance of controlsfx tablefilter
-//		TableFilter.forTableView(this).apply();
+		
+		this.createColumnFilters();
 
 		this.autoResizedColumns(autoResize);
 		this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -232,6 +254,13 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 				LinkedHashMap<String, Object> entry = DTOMapper.map(rs);
 				rows.add(new MapTableViewRow(entry));
 			}
+			
+			sqlTable.getColumns().forEach(
+					col -> {
+						long count = rows.stream().map(row -> row.get(col)).distinct().count();
+						columnCounts.put(col, count);
+					});
+			
 		} catch (Throwable e) {
 			this.clear();
 			Platform.runLater(() -> {
@@ -275,8 +304,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 			super.setItems(rows);
 			
-			// very poor performance of controlsfx tablefilter
-//			TableFilter.forTableView(this).apply();
+			this.createColumnFilters();
 			
 			if (parent != null)
 				parent.load();
@@ -642,5 +670,13 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 	
 	public void setCellsEditableByClick(boolean areEditable) {
 		this.areCellsEditableByClick = areEditable;
+	}
+	
+	public void enableColumnFiltering(boolean areColumnsFilterable) {
+		this.areColumnsFilterable = areColumnsFilterable;
+	}
+	
+	public Long getUniqueEntriesForColumn(String col) {
+		return columnCounts.get(col);
 	}
 }
