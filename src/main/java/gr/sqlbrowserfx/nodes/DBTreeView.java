@@ -474,6 +474,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		}
 		else if (functionsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
 			String function = this.getSelectionModel().getSelectedItem().getValue();
+			function = function.replaceAll(" returns.*", "");
 			String message = "Do you want to delete " + function;
 			int result = DialogFactory.createConfirmationDialog("Drop Function", message);
 			if (result == 1) {
