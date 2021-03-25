@@ -16,17 +16,21 @@ import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.conn.SqliteConnector;
+import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 
 public class ColumnCreationBox extends HBox {
 
+	private Button deleteButton;
 	private ComboBox<String> typeComboBox;
 	private ComboBox<String> columnsComboBox;
 	private ComboBox<String> tablesComboBox;
@@ -37,7 +41,7 @@ public class ColumnCreationBox extends HBox {
 	private CheckBox uCheckBox;
 	private SqlConnector sqlConnector;
 	
-	public ColumnCreationBox(SqlConnector sqlConnector) {
+	public ColumnCreationBox(SqlConnector sqlConnector, ListView<ColumnCreationBox> parent) {
 		this.sqlConnector = sqlConnector;
 		List<String> types = this.getTypes();
 		typeComboBox = new ComboBox<>();
@@ -75,7 +79,11 @@ public class ColumnCreationBox extends HBox {
 		pkCheckBox = new CheckBox("PK");
 		nnCheckBox = new CheckBox("NN");
 		uCheckBox = new CheckBox("U");
-		this.getChildren().addAll(columnNameField, typeComboBox, 
+		
+		deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
+		deleteButton.setOnAction(event -> parent.getItems().remove(this));
+		
+		this.getChildren().addAll(deleteButton, columnNameField, typeComboBox, 
 				pkCheckBox, fkCheckBox, tablesComboBox, columnsComboBox,  nnCheckBox, uCheckBox);
 		this.setSpacing(10);
 		this.setAlignment(Pos.BASELINE_LEFT);

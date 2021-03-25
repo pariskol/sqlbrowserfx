@@ -33,7 +33,8 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner, Simpl
 		tableNameField = new TextField();
 		tableNameField.setPromptText("Enter table name...");
 		this.columnBoxesListView = new ListView<>();
-		ColumnCreationBox columnCreationBox = new ColumnCreationBox(sqlConnector);
+		this.columnBoxesListView.setSelectionModel(new NoSelectionModel<>());
+		ColumnCreationBox columnCreationBox = new ColumnCreationBox(sqlConnector, columnBoxesListView);
 		columnBoxesListView.getItems().add(columnCreationBox);
 		sqlConsolePane = new DSqlConsolePane(sqlConnector, null);
 		sqlCodeArea = (SqlCodeArea) sqlConsolePane.getCodeAreaRef();
@@ -49,7 +50,7 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner, Simpl
 	public FlowPane createToolbar() {
 		Button addButton = new Button("", JavaFXUtils.createIcon("/icons/add.png"));
 		addButton.setOnMouseClicked(mouseEvent -> {
-			ColumnCreationBox columnCreationBox = new ColumnCreationBox(sqlConnector);
+			ColumnCreationBox columnCreationBox = new ColumnCreationBox(sqlConnector, columnBoxesListView);
 			columnBoxesListView.getItems().add(columnCreationBox);
 		});
 		Button deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
