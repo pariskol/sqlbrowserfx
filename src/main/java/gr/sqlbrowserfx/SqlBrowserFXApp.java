@@ -463,7 +463,6 @@ public class SqlBrowserFXApp extends Application {
 		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
 			if (!isInternalDBShowing) {
 				DSqlPane newSqlPane = new DSqlPane(SqlBrowserFXAppManager.getConfigSqlConnector());
-				newSqlPane.enableColumnFiltering(true);
 				newSqlPane.asDockNode().setTitle("SqlBrowserFX Internal Database");
 				newSqlPane.asDockNode().setDockPane(dockPane);
 				newSqlPane.asDockNode().setFloating(true);

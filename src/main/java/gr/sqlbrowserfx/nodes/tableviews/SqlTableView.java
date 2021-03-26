@@ -53,7 +53,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 	private SqlTableViewEditableCell selectedCell;
 	protected boolean filledByQuery = false;
 	protected boolean areCellsEditableByClick;
-	private boolean areColumnsFilterable = true;
+	private boolean areColumnsFilterable = false;
 	
 	private Map<String, Long> columnCounts; 
 

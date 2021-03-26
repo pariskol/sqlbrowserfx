@@ -169,6 +169,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		DraggingTabPaneSupport dragingSupport = new DraggingTabPaneSupport("/icons/table.png");
         dragingSupport.addSupport(this);
         
+        this.setInputMap();
+        
         this.addEventHandler(TableColumnFilteringEvent.EVENT_TYPE, event -> {
         	int diff = getSelectedSqlTableView().getSqlTableRows().size() - getSelectedSqlTableView().getItems().size();
         	isSearchApplied = diff > 0;
@@ -331,7 +333,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 		});
 		sqlTableView.setContextMenu(this.createContextMenu());
-		this.setSqlTableViewInputMap(sqlTableView);
 //		this.setSqlTableViewKeys(sqlTableView);
 		SqlTableTab tab = new SqlTableTab(EMPTY, sqlTableView);
 		sqlTableView.setParent(tab);
@@ -341,7 +342,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return tab;
 	}
 
-	private void setSqlTableViewInputMap(SqlTableView sqlTableView) {
+	private void setInputMap() {
 		Nodes.addInputMap(this, 
 				InputMap.consume(
 				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
@@ -352,7 +353,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				EventPattern.keyPressed(KeyCode.C, KeyCombination.CONTROL_DOWN),
 				action -> {
 					this.copyAction();
-					sqlTableView.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 				}
         ));
 		Nodes.addInputMap(this, 
@@ -360,7 +361,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				EventPattern.keyPressed(KeyCode.D, KeyCombination.CONTROL_DOWN),
 				action -> {
 					this.deleteButtonAction();
-					sqlTableView.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 				}
         ));
 		Nodes.addInputMap(this, 
@@ -368,7 +369,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				EventPattern.keyPressed(KeyCode.E, KeyCombination.CONTROL_DOWN),
 				action -> {
 					this.editButtonAction(simulateClickEvent(editButton));
-					sqlTableView.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 				}
         ));
 		Nodes.addInputMap(this, 
@@ -376,7 +377,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				EventPattern.keyPressed(KeyCode.Q, KeyCombination.CONTROL_DOWN),
 				action -> {
 					this.addButtonAction();
-					sqlTableView.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 				}
         ));
 		Nodes.addInputMap(this, 
@@ -384,7 +385,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				EventPattern.keyPressed(KeyCode.I, KeyCombination.CONTROL_DOWN),
 				action -> {
 					this.importCsvAction();
-					sqlTableView.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 				}
         ));
 		Nodes.addInputMap(this, 
@@ -392,7 +393,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				EventPattern.keyPressed(KeyCode.R, KeyCombination.CONTROL_DOWN),
 				action -> {
 					this.refreshButtonAction();
-					sqlTableView.requestFocus();
+					getSelectedSqlTableView().requestFocus();
 				}
         ));
 	}
@@ -1352,6 +1353,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 
 	public void enableColumnFiltering(boolean b) {
-		this.isColumnFilteringEnabled   = b;
+		this.isColumnFilteringEnabled  = b;
 	}
 }
