@@ -262,10 +262,10 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 					});
 			
 		} catch (Throwable e) {
-			this.clear();
 			Platform.runLater(() -> {
 				this.titleProperty.set("error");
 				parent.load();
+				this.clear();
 			});
 			throw new SQLException("MemoryGuard action", "", MemoryGuard.SQL_MEMORY_ERROR_CODE);
 		}

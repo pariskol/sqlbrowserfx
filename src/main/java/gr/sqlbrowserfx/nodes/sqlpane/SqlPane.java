@@ -704,7 +704,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	public void disableFullMode() {
 		tablesTabPane.getSelectionModel().getSelectedItem().setContent(getSelectedSqlTableView());
-	}
+		tablesTabPane.getTabs().forEach(tab -> {
+			if (tab instanceof SqlTableTab)
+				((SqlTableTab)tab).setRecordsTabPane(null);
+		});	}
 
 	public void fillColumnCheckBoxes(final SqlTableView sqlTableView) {
 //		Platform.runLater(() -> {

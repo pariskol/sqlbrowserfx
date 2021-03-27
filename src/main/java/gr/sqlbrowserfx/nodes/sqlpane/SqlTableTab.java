@@ -33,6 +33,7 @@ public class SqlTableTab extends Tab {
 		this.setText(null);
 		this.setGraphic(label);
 		this.setOnClosed(event -> {
+			this.sqlTableView = null;
 			System.gc();
 		});
 	}

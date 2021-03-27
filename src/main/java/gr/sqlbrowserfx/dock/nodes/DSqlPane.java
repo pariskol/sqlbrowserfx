@@ -290,6 +290,8 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 					dRecordsTabPane.setOnClose(() -> {
 						dRecordsTabPane = null;
 						this.setFullMode(false);
+						this.disableFullMode();
+						System.gc();
 					});
 				} else {
 					dRecordsTabPane.setContents(recordsTabPane);
@@ -303,8 +305,14 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 
 	@Override
 	public void disableFullMode() {
-		if (dRecordsTabPane != null)
+		if (dRecordsTabPane != null) {
 			dRecordsTabPane.close();
+			
+			tablesTabPane.getTabs().forEach(tab -> {
+				if (tab instanceof SqlTableTab)
+					((SqlTableTab)tab).setRecordsTabPane(null);
+			});
+		}
 //		super.disableFullMode();
 	}
 
