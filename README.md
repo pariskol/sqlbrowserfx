@@ -1,6 +1,6 @@
 # SqlBrowserFX
 
-SqlBrowserFX is a feature rich cross platform sql client for SQLite , MySQL for both windows and linux 
+SqlBrowserFX is a feature rich cross platform sql client for SQLite , MySQL, MariaDB for both windows and linux 
 
 ![](images/sqlbrowserfx.png)
 
@@ -16,7 +16,7 @@ SqlBrowserFX is a feature rich cross platform sql client for SQLite , MySQL for 
 * Queries History.
 * Savable queries.
 * Support for SQLite.
-* Support for MySQL.
+* Support for MySQL, MariaDB.
 * Cross Platform.
 
 
