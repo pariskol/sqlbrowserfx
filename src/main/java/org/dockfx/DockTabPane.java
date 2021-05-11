@@ -11,7 +11,7 @@ import javafx.scene.control.TabPane;
 
 public class DockTabPane extends TabPane implements ContextMenuOwner, Dockable {
 	
-	private DockNode parent;
+	private DockNode thisDockNode;
 	
 	public DockTabPane() {
 		super();
@@ -33,6 +33,7 @@ public class DockTabPane extends TabPane implements ContextMenuOwner, Dockable {
 		}
 		tab.setClosable(dockNode.isClosable());
 		this.getTabs().add(tab);
+		this.getSelectionModel().select(tab);
 	}
 
 	private void undockIfNeccessary() {
@@ -40,11 +41,14 @@ public class DockTabPane extends TabPane implements ContextMenuOwner, Dockable {
 			Tab tab = this.getTabs().get(0);
 			this.getTabs().remove(tab);
 			DockNode dockNode = (DockNode) tab.getContent();
-			dockNode.dock(dockNode.getDockPane(), DockPos.TOP, parent, DockWeights.asDoubleArrray(0.5f, 0.5f));
+			dockNode.dock(dockNode.getDockPane(), DockPos.TOP, thisDockNode, DockWeights.asDoubleArrray(0.5f, 0.5f));
 			dockNode.setGraphic(getGraphicFromTab(tab));
 			dockNode.showTitleBar();
-			dockNode.getDockPane().undock(parent);
+			dockNode.getDockPane().undock(thisDockNode);
 		}
+//		if (this.getTabs().size() == 0) {
+//			this.asDockNode().close();
+//		}
 	}
 	
 	private Node getGraphicFromTab(Tab tab) {
@@ -54,7 +58,7 @@ public class DockTabPane extends TabPane implements ContextMenuOwner, Dockable {
 	@Override
 	public ContextMenu createContextMenu() {
 
-		MenuItem menuItemUndock = new MenuItem("Undock");
+		MenuItem menuItemUndock = new MenuItem("Undock Selected");
 		menuItemUndock.setOnAction(event -> {
 			Tab selectedTab = getSelectionModel().getSelectedItem();
 			DockNode dockNode = (DockNode) selectedTab.getContent();
@@ -72,10 +76,10 @@ public class DockTabPane extends TabPane implements ContextMenuOwner, Dockable {
 
 	@Override
 	public DockNode asDockNode() {
-		if (parent == null) {
-			parent = new DockNode(this, "Grouped View");
-			parent.setClosable(false);
+		if (thisDockNode == null) {
+			thisDockNode = new DockNode(this, "Grouped View");
+			thisDockNode.setClosable(false);
 		}
-		return parent;
+		return thisDockNode;
 	}
 }
