@@ -404,9 +404,20 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 				DialogFactory.createErrorDialog(e);
 			} 
 		});
-		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemDrop, menuItemSearch, menuItemRefresh);
+		MenuItem menuItemCollapseAll = new MenuItem("Collapse All", JavaFXUtils.createIcon("/icons/collapse.png"));
+		menuItemCollapseAll.setOnAction(event -> {
+			if (this.getSelectionModel().getSelectedItem() != null)
+				this.collapseAll(this.getSelectionModel().getSelectedItem());
+		});
+
+		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemDrop, menuItemSearch, menuItemRefresh, menuItemCollapseAll);
 
 		return contextMenu;
+	}
+
+	private void collapseAll(TreeItem<String> treeItem) {
+		treeItem.getChildren().forEach(this::collapseAll);
+		treeItem.setExpanded(false);
 	}
 
 	private void refreshTreeView() throws SQLException {
