@@ -109,7 +109,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
 			if (sqlPane != null) {
-				thisDockNode = new DockNode(this, sqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.createIcon("/icons/console.png"));
+				thisDockNode = new DockNode(sqlPane.asDockNode().getDockPane(), this, sqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.createIcon("/icons/console.png"), 600.0, 400.0);
 				thisDockNode.setOnClose(() -> this.listeners.clear());
 			}
 		}
@@ -119,7 +119,6 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	public FlowPane createToolbar() {
 		FlowPane toolbar = super.createToolbar();
-		//FIXME 
 		historyButton = new Button("", JavaFXUtils.createIcon("/icons/monitor.png"));
 		historyButton.setTooltip(new Tooltip("Show history"));
 		historyButton.setOnMouseClicked(mouseEvent -> {

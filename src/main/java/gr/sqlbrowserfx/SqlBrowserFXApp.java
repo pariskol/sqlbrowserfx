@@ -43,7 +43,7 @@ import gr.sqlbrowserfx.nodes.tableviews.JSONTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
 import gr.sqlbrowserfx.rest.SparkRESTfulService;
-import gr.sqlbrowserfx.utils.HTTPClient;
+import gr.sqlbrowserfx.utils.HttpClient;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
 import javafx.application.Application;
@@ -268,7 +268,7 @@ public class SqlBrowserFXApp extends Application {
 				executor.execute(() -> {
 					try {
 						
-						JSONArray jsonArray = new JSONArray(HTTPClient.GET(requestField.getText()));
+						JSONArray jsonArray = new JSONArray(HttpClient.GET(requestField.getText()));
 						tableView.setItemsLater(jsonArray);
 					} catch (Throwable e) {
 						DialogFactory.createErrorNotification(e);

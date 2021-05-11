@@ -609,7 +609,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	
 	private static final int WORD_LENGTH_LIMIT = 45;
 
-    public String getQuery(int position) {
+    private String getQuery(int position) {
         int limit = (position > WORD_LENGTH_LIMIT) ? WORD_LENGTH_LIMIT : position;
         String keywords = this.getText().substring(position - limit, position);
         keywords = keywords.replaceAll("\\n", " ").trim();
@@ -617,13 +617,13 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
         return keywords.substring(last + 1).trim();
     }
 
-	public List<String> getQuerySuggestions(String query) {
+	private List<String> getQuerySuggestions(String query) {
         List<String> suggestions = SqlCodeAreaSyntax.KEYWORDS_lIST.stream()
         							.filter(keyword -> keyword != null && keyword.startsWith(query)).collect(Collectors.toList());
         return suggestions;
     }
     
-    public List<String> getColumnsSuggestions(String query) {
+    private List<String> getColumnsSuggestions(String query) {
     	String[] split = query.split("\\.");
     	
     	String tableAlias = split[0];
@@ -647,7 +647,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
     	return SqlCodeAreaSyntax.COLUMNS_MAP.get(tableAlias);
     }
 
-	public Map<String, Set<String>> analyzeTextForTablesAliases(String text) {
+	private Map<String, Set<String>> analyzeTextForTablesAliases(String text) {
 		Map<String, Set<String>> newTableAliases = new HashMap<>();
 		String[] words = text.split("\\W+");
 		String saveTableShortcut = null;

@@ -12,8 +12,9 @@ import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 
-public class HTTPClient {
+public class HttpClient {
 
     private static volatile ExecutorService EXECUTOR_SERVICE = null;
     private static String BASIC_AUTH = "";
@@ -42,9 +43,12 @@ public class HTTPClient {
                 .build();
 
         Response response = client.newCall(request).execute();
-        if (response.code() != 200)
-            throw new IOException("Status code: " + response.code() + " , " + response.body().string());
-        return response.body().string();
+        try (ResponseBody resBody = response.body()){
+            String res = resBody.string();
+            if (!response.isSuccessful())
+                throw new IOException("Status code: " + response.code() + " , " + res);
+            return resBody.string();
+        }
     }
 
     private static void checkForCredentials() throws IllegalStateException{
@@ -64,9 +68,12 @@ public class HTTPClient {
                 .build();
         Response response = client.newCall(request).execute();
 
-        if (response.code() != 200)
-            throw new IOException("Status code: " + response.code() + " , " + response.body().string());
-        return response.body().string();
+        try (ResponseBody resBody = response.body()){
+            String res = resBody.string();
+            if (!response.isSuccessful())
+                throw new IOException("Status code: " + response.code() + " , " + res);
+            return resBody.string();
+        }
     }
 
     public static void setBasicAuthCredentials(String username, String password) {
