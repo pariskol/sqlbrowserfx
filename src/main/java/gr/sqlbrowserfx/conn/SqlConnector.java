@@ -288,6 +288,15 @@ public abstract class SqlConnector {
 		});
 	}
 
+	public void executeUpdateAsync(String query, List<Object> params) throws SQLException {
+		this.executeAsync(() -> {
+			try {
+				this.executeUpdate(query, params);
+			} catch (SQLException e) {
+				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
+			}
+		});
+	}
 	public int executeUpdate(String query, List<Object> params) throws SQLException {
 		int result = 0;
 		try (Connection conn = dataSource.getConnection();

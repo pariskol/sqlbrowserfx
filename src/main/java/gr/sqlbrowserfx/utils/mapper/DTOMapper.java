@@ -12,14 +12,38 @@ import java.util.LinkedHashMap;
 public class DTOMapper {
 
 	/**
-	 * Maps a row of result set into a HashMap.
+	 * Maps a row of result set into a HashMap. 
+	 * For mapping columns aliases are used.
 	 * 
 	 * @param rset
-	 * @param clazz
 	 * @return LinkedHashMap
 	 * @throws Exception
 	 */
 	public static LinkedHashMap<String, Object> map(ResultSet rset) throws Exception {
+
+		LinkedHashMap<String, Object> dto = new LinkedHashMap<>();
+		ResultSetMetaData rsmd = rset.getMetaData();
+		
+		for (int i=1;i<= rsmd.getColumnCount();i++) {
+			Object value = dto.get(rsmd.getColumnLabel(i));
+			if (value != null)
+				dto.put(rsmd.getTableName(i) + "." + rsmd.getColumnLabel(i), rset.getObject(i));
+			else dto.put(rsmd.getColumnLabel(i), rset.getObject(i));
+		}
+		
+		return dto;
+	}
+
+	
+	/**
+	 * Maps a row of result set into a HashMap. 
+	 * For mapping columns real names are used.
+	 * 
+	 * @param rset
+	 * @return LinkedHashMap
+	 * @throws Exception
+	 */
+	public static LinkedHashMap<String, Object> mapR(ResultSet rset) throws Exception {
 
 		LinkedHashMap<String, Object> dto = new LinkedHashMap<>();
 		ResultSetMetaData rsmd = rset.getMetaData();
@@ -33,7 +57,7 @@ public class DTOMapper {
 		
 		return dto;
 	}
-
+	
 	/**
 	 * 
 	 * @param rset

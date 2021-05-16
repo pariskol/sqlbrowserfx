@@ -22,7 +22,7 @@ public class SqlTable {
 			name = rsmd.getTableName(1);
 			columnsMap = new LinkedHashMap<>();
 			for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-				columnsMap.put(rsmd.getColumnName(i), rsmd.getColumnTypeName(i));
+				columnsMap.put(rsmd.getColumnLabel(i), rsmd.getColumnTypeName(i));
 			}
 
 		} catch (SQLException e) {
@@ -38,7 +38,7 @@ public class SqlTable {
 			columnsMap = new LinkedHashMap<>();
 			for (int i = 1; i <= rsmd.getColumnCount(); i++) {
 				if (rsmd.getTableName(i).equals(name))
-					columnsMap.put(rsmd.getColumnName(i), rsmd.getColumnTypeName(i));
+					columnsMap.put(rsmd.getColumnLabel(i), rsmd.getColumnTypeName(i));
 			}
 
 		} catch (SQLException e) {

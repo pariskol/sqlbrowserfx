@@ -266,7 +266,7 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		List<String> newItems = new ArrayList<>();
 		sqlConnector.getContents(rset -> {
 			try {
-				HashMap<String, Object> dto = DTOMapper.map(rset);
+				HashMap<String, Object> dto = DTOMapper.mapR(rset);
 
 				String name = (String) dto.get(sqlConnector.getName());
 				String type = (String) dto.get(sqlConnector.getType());
