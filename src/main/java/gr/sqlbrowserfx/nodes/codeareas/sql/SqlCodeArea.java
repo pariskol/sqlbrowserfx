@@ -39,6 +39,7 @@ import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.SqlFormatter;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
@@ -55,7 +56,6 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 
 	private Runnable runAction;
 	private boolean autoCompletePopupShowing = false;
-	private boolean autoCompleteOnType = true;
 	private boolean insertMode = false;
 	private Map<String, Set<String>> tableAliases = new HashMap<>();
 
@@ -64,6 +64,8 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	private ListView<String> suggestionsList;
 	private Thread textAnalyzerDaemon;
 	protected MenuItem menuItemRun;
+	private SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
+	private SimpleBooleanProperty autoCompleteProperty = new SimpleBooleanProperty(true);
 	
 
 	public SqlCodeArea() {
@@ -82,6 +84,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			this.onMouseClicked();
 		});
 
+		this.showLinesProperty.addListener((ob,ov,nv) -> enableShowLineNumbers(nv));
 		this.setParagraphGraphicFactory(LineNumberFactory.get(this));
 		this.enableHighlighting();
 	}
@@ -423,7 +426,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			autoCompletePopup = this.createPopup();
 			
 			int caretPosition = this.getCaretPosition();
-			String query = this.getQuery(caretPosition);
+			String query = this.calculateQuery(caretPosition);
 			
 			if (!query.isEmpty()) {
 				if (event.getCode() == KeyCode.ENTER)
@@ -446,14 +449,14 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 				this.hideAutocompletePopup();
 			}
 		}
-		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteOnType && !event.isControlDown())
+		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
 				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
 				|| ch.equals(".") || ch.equals(",") || ch.equals("_")
 				|| event.getCode() == KeyCode.ENTER
 				|| event.getCode() == KeyCode.BACK_SPACE) {
 
 			int caretPosition = this.getCaretPosition();
-			String query = this.getQuery(caretPosition);
+			String query = this.calculateQuery(caretPosition);
 			
 			autoCompletePopup = this.createPopup();
 
@@ -599,17 +602,9 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		runAction = action;
 	}
 
-	public boolean isAutoCompleteOnTypeEnabled() {
-		return autoCompleteOnType;
-	}
-
-	public void setAutoCompleteOnType(boolean autoCompleteOnType) {
-		this.autoCompleteOnType = autoCompleteOnType;
-	}
-	
 	private static final int WORD_LENGTH_LIMIT = 45;
 
-    private String getQuery(int position) {
+    private String calculateQuery(int position) {
         int limit = (position > WORD_LENGTH_LIMIT) ? WORD_LENGTH_LIMIT : position;
         String keywords = this.getText().substring(position - limit, position);
         keywords = keywords.replaceAll("\\n", " ").trim();
@@ -664,5 +659,21 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		}
 		return newTableAliases;
 	}
+	
+	private void enableShowLineNumbers(boolean enable) {
+		if (enable)
+			this.setParagraphGraphicFactory(LineNumberFactory.get(this));
+		else
+			this.setParagraphGraphicFactory(null);
+	}
 
+	public SimpleBooleanProperty showLinesProperty() {
+		return showLinesProperty;
+	}
+	
+	public SimpleBooleanProperty autoCompleteProperty() {
+		return autoCompleteProperty;
+	}
+
+	
 }

@@ -43,6 +43,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
@@ -57,6 +58,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private CheckBox autoCompleteOnTypeCheckBox;
 	private CheckBox openInNewTableViewCheckBox;
 	private CheckBox wrapTextCheckBox;
+	private CheckBox showLinesCheckBox; 
 	private FlowPane toolbar;
 	private FlowPane bottomBar;
 	
@@ -107,9 +109,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 		autoCompleteOnTypeCheckBox = new CheckBox("Autocomplete on type");
 		autoCompleteOnTypeCheckBox.setSelected(true);
-		autoCompleteOnTypeCheckBox.setOnAction(event -> {
-			codeAreaRef.setAutoCompleteOnType(autoCompleteOnTypeCheckBox.isSelected());
-		});
 		
 		openInNewTableViewCheckBox = new CheckBox("Open in new table");
 		openInNewTableViewCheckBox.setSelected(false);
@@ -124,13 +123,14 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				    	}
 			    		sqlCodeArea = ((VirtualizedScrollPane<SqlCodeArea>)newTab.getContent()).getContent();
 				    	if (sqlCodeArea != null) {
-				    		sqlCodeArea.setAutoCompleteOnType(autoCompleteOnTypeCheckBox.isSelected());
 				    		sqlCodeArea.startTextAnalyzerDaemon();
 				    	}
 			    	}
 			    });
 		
 		wrapTextCheckBox = new CheckBox("Wrap text");
+		showLinesCheckBox = new CheckBox("Show line number");
+		showLinesCheckBox.setSelected(true);
 		
 		toolbar = this.createToolbar();
 		
@@ -155,6 +155,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private void createSqlConsoleTab() {
 		CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
 		sqlCodeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
+		sqlCodeArea.showLinesProperty().bind(this.showLinesCheckBox.selectedProperty());
+		sqlCodeArea.autoCompleteProperty().bind(this.autoCompleteOnTypeCheckBox.selectedProperty());
+
 		sqlCodeArea.setRunAction(() -> this.executeButonAction());
 		sqlCodeArea.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> SqlConsolePane.this.changed());
 		
@@ -208,7 +211,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		settingsButton.setOnMouseClicked(mouseEvent -> {
 			if (!popOverIsShowing) {
 				popOverIsShowing = true;
-				PopOver popOver = new PopOver(new VBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox));
+				PopOver popOver = new PopOver(new VBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox, showLinesCheckBox));
 				popOver.setOnHidden(event -> popOverIsShowing = false);
 				popOver.show(settingsButton);
 			}
@@ -231,8 +234,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		CodeArea sqlConsoleArea = this.getSelectedSqlCodeArea();
 		String query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
 		final String fixedQuery = this.fixQuery(query);
-		if (fixedQuery.startsWith("select") || fixedQuery.startsWith("SELECT")
-				|| fixedQuery.startsWith("show") || fixedQuery.startsWith("SHOW")) {
+		
+		if (fixedQuery.toLowerCase().startsWith("select")
+				|| fixedQuery.toLowerCase().startsWith("show")) {
 			sqlConnector.executeAsync(() -> {
 				if (sqlQueryRunning.get())
 					return;
@@ -240,6 +244,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				sqlQueryRunning.set(true);
 				Platform.runLater(() -> {
 					executeButton.setDisable(true);
+					this.setCenter(new StackPane(progressIndicator));
 				});
 				try {
 					sqlConnector.executeCancelableQuery(fixedQuery, rset -> {
@@ -259,6 +264,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				} finally {
 					Platform.runLater(() -> {
 						executeButton.setDisable(false);
+						this.setCenter(queryTabPane);
+						getSelectedSqlCodeArea().requestFocus();
 					});
 					sqlQueryRunning.set(false);
 				}
@@ -271,6 +278,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				sqlQueryRunning.set(true);
 				Platform.runLater(() -> {
 					executeButton.setDisable(true);
+					this.setCenter(new StackPane(progressIndicator));
 				});
 				try {
 					int rowsAffected = sqlConnector.executeUpdate(fixedQuery);
@@ -281,18 +289,29 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				} finally {
 					Platform.runLater(() -> {
 						executeButton.setDisable(false);
+						this.setCenter(queryTabPane);
+						getSelectedSqlCodeArea().requestFocus();
 					});
 					sqlQueryRunning.set(false);
 				}
 				
 				String queryToLowerCase = fixedQuery.toLowerCase();
-				if ((queryToLowerCase.contains("drop") || queryToLowerCase.contains("create"))
+				if (
+					//------------------------------------------
+					(queryToLowerCase.startsWith("drop")  || 
+					 queryToLowerCase.startsWith("create")|| 
+					 queryToLowerCase.startsWith("alter")
+					 )
+					//------------------------------------------
 						&&
+					//------------------------------------------
 					(queryToLowerCase.contains("table")   ||
-					queryToLowerCase.contains("view")     ||
-					queryToLowerCase.contains("trigger")  ||
-					queryToLowerCase.contains("procedure")||
-					queryToLowerCase.contains("function"))
+				 	 queryToLowerCase.contains("view")     ||
+					 queryToLowerCase.contains("trigger")  ||
+					 queryToLowerCase.contains("procedure")||
+					 queryToLowerCase.contains("function")
+					 )
+					//------------------------------------------
 					) {
 					this.changed(fixedQuery);
 				}
@@ -307,7 +326,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 	private void saveHistory(final String fixedQuery) {
 		try {
-			SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate("insert into queries_history (query) values (?)",
+			SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdateAsync("insert into queries_history (query) values (?)",
 					Arrays.asList(fixedQuery));
 		} catch (SQLException e) {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
@@ -316,7 +335,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 	private String fixQuery(String query) {
 		int spacesNum = 0;
-		query = query.replaceAll("\t", "    ");
+		query = query.trim().replaceAll("\t", "    ");
 		for (int i=0; i<query.length(); i++) {
 			if (query.charAt(i) == ' ' || query.charAt(i) == '\n') {
 				spacesNum++;
