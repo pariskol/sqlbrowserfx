@@ -142,12 +142,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 //		this.addSqlTableTab();
 
 		resizeModeCheckBox = new CheckBox("Auto resize");
-		resizeModeCheckBox.setOnMouseClicked(event -> {
-			if (resizeModeCheckBox.isSelected())
-				getSelectedSqlTableView().autoResizedColumns(true);
-			else
-				getSelectedSqlTableView().autoResizedColumns(false);
-		});
 		fullModeCheckBox = new CheckBox("Full mode");
 		fullModeCheckBox.setOnMouseClicked(moueEvent -> {
 			SqlTableTab sqlTableTab = getSelectedTableTab();
@@ -312,6 +306,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	private SqlTableTab createSqlTableTab() {
 		SqlTableView sqlTableView = new SqlTableView();
+		sqlTableView.autoResizeProperty().bind(resizeModeCheckBox.selectedProperty());
 		sqlTableView.enableColumnFiltering(isColumnFilteringEnabled);
 		sqlTableView.setColumnWidth(0, 0, 350);
 		sqlTableView.setSqlConnector(sqlConnector);

@@ -29,6 +29,7 @@ import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.MemoryGuard;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -48,7 +49,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 	protected List<String> columns;
 	protected SqlConnector sqlConnector;
 	private double minWidth, prefWidth, maxWidth;
-	protected boolean autoResize;
+	protected SimpleBooleanProperty autoResizeProperty = new SimpleBooleanProperty(false);
 	private int currentColumnPos = 0;
 	private SqlTableViewEditableCell selectedCell;
 	protected boolean filledByQuery = false;
@@ -66,7 +67,6 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 
 		rows = FXCollections.observableArrayList();
 		sqlConnector = null;
-		autoResize = false;
 		minWidth = 0;
 		prefWidth = 0;
 		maxWidth = 0;
@@ -77,6 +77,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 //		this.setKeys();
 		
 		titleProperty = new SimpleStringProperty("empty");
+		autoResizeProperty.addListener((ob, ov, nv) -> this.autoResizedColumns());
 	}
 
 	@SuppressWarnings("unused")
@@ -210,7 +211,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		
 		this.createColumnFilters();
 
-		this.autoResizedColumns(autoResize);
+		this.autoResizedColumns();
 		this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 	}
 	
@@ -300,7 +301,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 //			    return row ;
 //			});
 			
-			this.autoResizedColumns(autoResize);
+			this.autoResizedColumns();
 			this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 			super.setItems(rows);
 			
@@ -331,9 +332,8 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		}
 	}
 
-	public void autoResizedColumns(boolean autoResize) {
-		this.autoResize = autoResize;
-		if (autoResize) {
+	private void autoResizedColumns() {
+		if (autoResizeProperty.get()) {
 			this.setColumnWidth(NOT_SET, NOT_SET, NOT_SET);
 			for (TableColumn<?, ?> column : this.getVisibleLeafColumns()) {
 				column.prefWidthProperty().bind(this.widthProperty().divide(this.getVisibleLeafColumns().size()));
@@ -352,7 +352,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 				if (tableColumn.getText().equals(checkBox.getText())) {
 					tableColumn.visibleProperty().unbind();
 					tableColumn.visibleProperty().bindBidirectional(checkBox.selectedProperty());
-					checkBox.setOnAction(actionEvent -> this.autoResizedColumns(autoResize));
+//					checkBox.setOnAction(actionEvent -> this.autoResizedColumns(autoResize));
 				}
 			}
 		}
@@ -679,4 +679,9 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 	public Long getUniqueEntriesForColumn(String col) {
 		return columnCounts.get(col);
 	}
+	
+	public SimpleBooleanProperty autoResizeProperty() {
+		return autoResizeProperty;
+	}
+	
 }
