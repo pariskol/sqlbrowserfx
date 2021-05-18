@@ -240,7 +240,6 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 		if (sqlConsoleBox == null) {
 			sqlConsoleBox = new DSqlConsolePane(this.sqlConnector, this);
 			sqlConsoleBox.asDockNode().setOnClose(() -> sqlConsoleBox = null);
-			sqlConsoleBox.asDockNode().setMaxHeight(1080);
 			sqlConsoleBox.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.TOP, this.asDockNode(),
 					DockWeights.asDoubleArrray(0.3f, 0.7f));
 		}
