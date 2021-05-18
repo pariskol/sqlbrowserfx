@@ -13,6 +13,14 @@
 		<log4j.version>2.13.3</log4j.version>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>terminalfx-repo</id>
+			<url>https://github.com/javaterminal/terminalfx/raw/master/releases</url>
+		</repository>
+	</repositories>
+
+
 	<build>
 		<plugins>
 			<plugin>
@@ -41,6 +49,11 @@
 		</plugins>
 	</build>
 	<dependencies>
+		<dependency>
+			<groupId>com.kodedu.terminalfx</groupId>
+			<artifactId>terminalfx</artifactId>
+			<version>1.0.8</version>
+		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.jfxtras/jmetro -->
 		<dependency>
 			<groupId>org.jfxtras</groupId>

@@ -68,6 +68,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		this.getQueriesHistory(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 		
 		this.sqlPane = sqlPane;
+		this.destroySplitPane();
 		this.getChildren().clear();
 		this.setCenter(getQueryTabPane());
 		this.setBottom(getBottomBar());

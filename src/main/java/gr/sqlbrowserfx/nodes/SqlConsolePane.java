@@ -68,6 +68,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private Button stopExecutionButton;
 	private Button settingsButton;
 	private boolean popOverIsShowing = false;
+	private SplitPane splitPane;
 
 
 	@SuppressWarnings("unchecked")
@@ -102,7 +103,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			}
 		});
 
-		SplitPane splitPane = new SplitPane(queryTabPane, historyArea);
+		splitPane = new SplitPane(queryTabPane, historyArea);
 		splitPane.setOrientation(Orientation.VERTICAL);
 		historyArea.prefHeightProperty().bind(splitPane.heightProperty().multiply(0.65));
 		queryTabPane.prefHeightProperty().bind(splitPane.heightProperty().multiply(0.35));
@@ -141,6 +142,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		this.addTab();
 	}
 
+	public void destroySplitPane() {
+		this.splitPane = null;
+	}
+	
 	@SuppressWarnings("unchecked")
 	private void addTab() {
 		Tab selectedTab = queryTabPane.getSelectionModel().getSelectedItem();
@@ -264,7 +269,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				} finally {
 					Platform.runLater(() -> {
 						executeButton.setDisable(false);
-						this.setCenter(queryTabPane);
+						if (splitPane != null)
+							this.setCenter(splitPane);
+						else
+							this.setCenter(queryTabPane);
 						getSelectedSqlCodeArea().requestFocus();
 					});
 					sqlQueryRunning.set(false);
@@ -289,8 +297,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				} finally {
 					Platform.runLater(() -> {
 						executeButton.setDisable(false);
-						this.setCenter(queryTabPane);
-						getSelectedSqlCodeArea().requestFocus();
+						if (splitPane != null)
+							this.setCenter(splitPane);
+						else
+							this.setCenter(queryTabPane);						getSelectedSqlCodeArea().requestFocus();
 					});
 					sqlQueryRunning.set(false);
 				}
@@ -360,9 +370,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			String line = "";
 			ResultSetMetaData rsmd = rset.getMetaData();
 			for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-				line += rsmd.getColumnName(i) + " : ";
-				if (rset.getObject(rsmd.getColumnName(i)) != null)
-					line += rset.getObject(rsmd.getColumnName(i)).toString() + ", ";
+				line += rsmd.getColumnLabel(i) + " : ";
+				if (rset.getObject(rsmd.getColumnLabel(i)) != null)
+					line += rset.getObject(rsmd.getColumnLabel(i)).toString() + ", ";
 			}
 			line = line.substring(0, line.length() - ", ".length());
 			lines += line + "\n";

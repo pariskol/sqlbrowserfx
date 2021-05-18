@@ -25,19 +25,24 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
 
+import com.kodedu.terminalfx.TerminalBuilder;
+import com.kodedu.terminalfx.TerminalTab;
+import com.kodedu.terminalfx.config.TerminalConfig;
+
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
-import gr.sqlbrowserfx.dock.nodes.DSqlConsoleView;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.HelpTabPane;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
+import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.codeareas.log.CodeAreaTailerListener;
 import gr.sqlbrowserfx.nodes.codeareas.log.LogCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
+import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
 import gr.sqlbrowserfx.nodes.tableviews.JSONTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
@@ -68,6 +73,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.web.WebView;
@@ -228,7 +234,14 @@ public class SqlBrowserFXApp extends Application {
 		SqlConnector sqliteConnector = new SqliteConnector(dbPath);
 		sqliteConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
 		this.sqlConnector = sqliteConnector;
-		createAppView(sqliteConnector);
+		if (System.getProperty("mode", "normal").equals("simple")) {
+			SqlCodeAreaSyntax.init(SqlBrowserFXAppManager.getDBtype());
+			primaryScene.setRoot(new SqlConsolePane(sqliteConnector));
+			JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
+			STAGE.setScene(primaryScene);
+		}
+		else
+			createAppView(sqliteConnector);
 
 	}
 
@@ -253,7 +266,16 @@ public class SqlBrowserFXApp extends Application {
 				}
 				
 				configBox.saveToHistory();
-				Platform.runLater(() -> createAppView(mysqlConnector));
+				Platform.runLater(() -> {
+					if (System.getProperty("mode", "normal").equals("simple")) {
+						SqlCodeAreaSyntax.init(SqlBrowserFXAppManager.getDBtype());
+						primaryScene.setRoot(new SqlConsolePane(mysqlConnector));
+						JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
+						STAGE.setScene(primaryScene);
+					}
+					else
+						createAppView(mysqlConnector);
+				});
 			});
 	}
 
@@ -362,6 +384,7 @@ public class SqlBrowserFXApp extends Application {
 			}
 			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
 		});
+		
 	}
 
 	private MenuBar createMenu(DockPane dockPane) {
@@ -378,13 +401,9 @@ public class SqlBrowserFXApp extends Application {
 			});
 		});
 		
-		MenuItem sqlConsoleViewItem = new MenuItem("Open Console View", JavaFXUtils.createIcon("/icons/console.png"));
+		MenuItem sqlConsoleViewItem = new MenuItem("Open Simple Console View", JavaFXUtils.createIcon("/icons/console.png"));
 		sqlConsoleViewItem.setOnAction(event -> {
-			Platform.runLater(() -> {
-				DSqlConsoleView sqlConsoleView = new DSqlConsoleView(sqlConnector);
-				sqlConsoleView.asDockNode().dock(dockPane, DockPos.RIGHT);
-
-			});
+			new DockNode(dockPane, new SqlConsolePane(sqlConnector), "Simple SqlConsole", JavaFXUtils.createIcon("/icons/console.png"));
 		});
 //		MenuItem bashCodeAreaItem = new MenuItem("Open BashFX", JavaFXUtils.createIcon("/icons/console.png"));
 //		bashCodeAreaItem.setOnAction(event -> {
@@ -432,8 +451,25 @@ public class SqlBrowserFXApp extends Application {
 			});
 
 		});
+		
+		MenuItem terminalItem = new MenuItem("Open Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
+		terminalItem.setOnAction(event -> {
+			TerminalConfig darkConfig = new TerminalConfig();
+			darkConfig.setBackgroundColor(Color.rgb(16, 16, 16));
+			darkConfig.setForegroundColor(Color.rgb(240, 240, 240));
+			darkConfig.setCursorColor(Color.rgb(255, 0, 0, 0.5));
 
-		menu1.getItems().addAll(sqlPaneViewItem, jsonTableViewItem, logItem);
+			TerminalBuilder terminalBuilder = new TerminalBuilder(darkConfig);
+			TerminalTab terminal = terminalBuilder.newTerminal();
+
+			TabPane tabPane = new TabPane();
+			new DraggingTabPaneSupport().addSupport(tabPane);
+			tabPane.getTabs().add(terminal);
+			
+			new DockNode(dockPane, tabPane, "Terminal", JavaFXUtils.createIcon("/icons/console.png"));
+		});
+
+		menu1.getItems().addAll(sqlPaneViewItem, jsonTableViewItem, logItem, terminalItem, sqlConsoleViewItem);
 
 		final Menu menu2 = new Menu("Restful Service", JavaFXUtils.createImageView("/icons/spark.png", 16.0, 16.0));
 		MenuItem restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createImageView("/icons/spark.png", 16.0, 16.0));
