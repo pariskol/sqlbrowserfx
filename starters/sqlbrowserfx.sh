@@ -7,5 +7,4 @@ main_class=gr.sqlbrowserfx.GUIStarter
 
 [ ! -z "$JAVA_HOME" ] && JAVA_HOME=$JAVA_HOME/bin/
 ${JAVA_HOME}java -Xmx512m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 \
--Dlog4j.configuration=file:./log4j.properties \
 -cp lib/*:$main_jar $main_class
