@@ -205,7 +205,7 @@ public class SqlBrowserFXApp extends Application {
 		
 		JavaFXUtils.applyJMetro(dbTabPane);
 		
-		primaryScene = new Scene(dbTabPane, 600, 400);
+		primaryScene = new Scene(dbTabPane, 800, 500);
 		leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
 		leftBox.prefWidthProperty().bind(primaryScene.widthProperty().divide(2));
 		primaryScene.getStylesheets().add(CSS_THEME);
