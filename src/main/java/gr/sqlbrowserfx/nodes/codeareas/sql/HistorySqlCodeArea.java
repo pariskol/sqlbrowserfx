@@ -10,6 +10,7 @@ public class HistorySqlCodeArea extends CSqlCodeArea {
 	public HistorySqlCodeArea() {
 		super();
 		searchAndReplacePopOver = new SearchAndReplacePopOver(this, false);
+		this.enableShowLineNumbers(true);
 	}
 	
 	@Override

@@ -22,6 +22,7 @@ import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
+import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
@@ -399,7 +400,8 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 		menuItemRefresh.setOnAction(event -> {
 			try {
 				this.refreshTreeView();
-				this.refreshFunctionAndProcedures();
+				if (!(sqlConnector instanceof SqliteConnector))
+					this.refreshFunctionAndProcedures();
 			} catch (SQLException e) {
 				DialogFactory.createErrorDialog(e);
 			} 

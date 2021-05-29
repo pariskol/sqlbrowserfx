@@ -15,6 +15,7 @@ public class HistorySqlTableView extends SqlTableView implements ContextMenuOwne
 	public HistorySqlTableView(SqlConnector sqlConnector) {
 		super(sqlConnector);
 		this.setContextMenu(createContextMenu());
+		this.enableColumnFiltering(true);
 	}
 
 	@Override
