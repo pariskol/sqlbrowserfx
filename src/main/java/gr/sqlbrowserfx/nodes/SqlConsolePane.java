@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
@@ -240,6 +242,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		String query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
 		final String fixedQuery = this.fixQuery(query);
 		
+		AtomicLong queryDuration = new AtomicLong(System.currentTimeMillis());
 		if (fixedQuery.toLowerCase().startsWith("select")
 				|| fixedQuery.toLowerCase().startsWith("show")) {
 			sqlConnector.executeAsync(() -> {
@@ -253,6 +256,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				});
 				try {
 					sqlConnector.executeCancelableQuery(fixedQuery, rset -> {
+						queryDuration.set(System.currentTimeMillis() - queryDuration.get());
+						SqlConsolePane.this.saveHistory(fixedQuery, queryDuration.get());
+						DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration.get() + "ms", 1);
 						handleSelectResult(fixedQuery, rset);
 					}, stmt -> {
 						stopExecutionButton.setOnAction(action -> {
@@ -290,6 +296,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				});
 				try {
 					int rowsAffected = sqlConnector.executeUpdate(fixedQuery);
+					queryDuration.set(System.currentTimeMillis() - queryDuration.get());
+					DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration.get() + "ms", 1);
+					SqlConsolePane.this.saveHistory(fixedQuery, queryDuration.get());
 					handleUpdateResult(rowsAffected);
 
 				} catch (SQLException e) {
@@ -328,16 +337,16 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			});
 		}
 		
-		if (!fixedQuery.isEmpty())
-			this.saveHistory(fixedQuery);
+//		if (!fixedQuery.isEmpty())
+//			this.saveHistory(fixedQuery, queryDuration.get());
 		
 		return fixedQuery;
 	}
 
-	private void saveHistory(final String fixedQuery) {
+	private void saveHistory(final String fixedQuery, long queryDuration) {
 		try {
-			SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdateAsync("insert into queries_history (query) values (?)",
-					Arrays.asList(fixedQuery));
+			SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdateAsync("insert into queries_history (query, duration) values (?, ?)",
+					Arrays.asList(fixedQuery, queryDuration));
 		} catch (SQLException e) {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 		}

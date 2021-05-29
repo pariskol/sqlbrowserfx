@@ -77,14 +77,14 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
 	//Async function , runs into another thread
 	private void getQueriesHistory(String dateStr) {
-		SqlBrowserFXAppManager.getConfigSqlConnector().executeQueryRawAsync("select query,datetime(timestamp,'localtime') timestamp from queries_history "
+		SqlBrowserFXAppManager.getConfigSqlConnector().executeQueryRawAsync("select query, duration, datetime(timestamp,'localtime') timestamp from queries_history "
 				+ "where date(datetime(timestamp,'localtime')) = '" + dateStr + "' order by id",
 			rset -> {
 				StringBuilder history = new StringBuilder();
 				while (rset.next()) {
 					try {
 						Map<String, Object> map = DTOMapper.map(rset);
-						history.append("\n--  Executed at : " + map.get("timestamp") + " --\n");
+						history.append("\n--  Executed at : " + map.get("timestamp") + " Duration: " + map.get("duration") + "ms --\n");
 						history.append(map.get("query"));
 						history.append("\n");
 					} catch (Exception e) {

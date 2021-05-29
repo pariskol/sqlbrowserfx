@@ -660,7 +660,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		return newTableAliases;
 	}
 	
-	private void enableShowLineNumbers(boolean enable) {
+	protected void enableShowLineNumbers(boolean enable) {
 		if (enable)
 			this.setParagraphGraphicFactory(LineNumberFactory.get(this));
 		else

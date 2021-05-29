@@ -215,12 +215,16 @@ public class DialogFactory {
     }
 
 	public static void createNotification(String title, String message) {
+		createNotification(title, message, 3);
+	}
+	
+	public static void createNotification(String title, String message, int durationInSecs) {
 		Platform.runLater(() -> {
 			Notifications.create()
 					.title(title)
 					.text(message)
 					.darkStyle()
-					.hideAfter(Duration.seconds(3))
+					.hideAfter(Duration.seconds(durationInSecs))
 					.position(NOTIFICATION_POS)
 					.onAction(actionEvent -> {
 						createInfoDialog(title, message);
