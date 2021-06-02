@@ -199,6 +199,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		codeArea.replaceText(fileContent);
 		
 		Tab tab = new Tab(selectedFile.getName(),vsp);
+		tab.setGraphic(JavaFXUtils.createIcon("/icons/code-file.png"));
 		queryTabPane.getTabs().add(tab);
 		queryTabPane.getSelectionModel().select(tab);
 		codeAreaRef = codeArea;
