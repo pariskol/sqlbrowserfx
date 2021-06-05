@@ -259,6 +259,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 					sqlConnector.executeCancelableQuery(fixedQuery, rset -> {
 						queryDuration.set(System.currentTimeMillis() - queryDuration.get());
 						SqlConsolePane.this.saveHistory(fixedQuery, queryDuration.get());
+						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("\n" + fixedQuery + "\n execution took  " + queryDuration.get() + "ms"); 
 						DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration.get() + "ms", 1);
 						handleSelectResult(fixedQuery, rset);
 					}, stmt -> {
@@ -298,6 +299,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				try {
 					int rowsAffected = sqlConnector.executeUpdate(fixedQuery);
 					queryDuration.set(System.currentTimeMillis() - queryDuration.get());
+					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("\n" + fixedQuery + "\n execution took  " + queryDuration.get() + "ms"); 
 					DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration.get() + "ms", 1);
 					SqlConsolePane.this.saveHistory(fixedQuery, queryDuration.get());
 					handleUpdateResult(rowsAffected);

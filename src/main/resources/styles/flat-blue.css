@@ -1,15 +1,13 @@
 .root { 
     -fx-accent: #1a6ee4;
     -fx-focus-color: -fx-accent;
-    -fx-control-inner-background: derive(-fx-base,30%);
-    -fx-control-inner-background-alt: derive(-fx-control-inner-background, 30%);
+    -fx-base: white;
     -fx-faint-focus-color: transparent;
 	/*-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
 	-fx-selection-bar-non-focused: derive(-fx-base,90%);
 }
-
-
-dock-area-indicator {
+ 
+.dock-area-indicator {
 	-fx-fill: -fx-selection-bar;
 	-fx-opacity: 0.5;
 	-fx-stroke: rgba(50.0, 50.0, 100.0, 0.4);
@@ -20,39 +18,39 @@ dock-area-indicator {
 }
 
 .dock-top {
-  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+  -fx-graphic: url(../styles/flat-dark/icons/pin.png);
 }
 
 .dock-right {
-  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+  -fx-graphic: url(../styles/flat-dark/icons/pin.png);
 }
 
 .dock-bottom {
-  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+  -fx-graphic: url(../styles/flat-dark/icons/pin.png);
 }
 
 .dock-left {
-  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+  -fx-graphic: url(../styles/flat-dark/icons/pin.png);
 }
 
 .dock-center {
-  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+  -fx-graphic: url(../styles/flat-dark/icons/pin.png);
 }
 
 .dock-top-root {
-  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+  -fx-graphic: url(../styles/flat-dark/icons/pin.png);
 }
 
 .dock-right-root {
-  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+  -fx-graphic: url(../styles/flat-dark/icons/pin.png);
 }
 
 .dock-bottom-root {
-  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+  -fx-graphic: url(../styles/flat-dark/icons/pin.png);
 }
 
 .dock-left-root {
-  -fx-graphic: url(../styles/flat-blue/icons/pin.png);
+  -fx-graphic: url(../styles/flat-dark/icons/pin.png);
 }
 
 /* JavaFX developers really seem to have fat fingers? */
@@ -110,7 +108,7 @@ dock-area-indicator {
 }
 
 .dock-title-label {
-	-fx-graphic: url(../styles/flat-blue/icons/docknode.png);
+	/*-fx-graphic: url(docknode.png);*/
 	-fx-padding: 0.0 0.0 3.0 0.0;
 	-fx-text-fill: -fx-text-base-color;
 	-fx-effect: dropshadow(gaussian, rgba(255.0, 255.0, 255.0, 0.2), 0.0,
@@ -127,22 +125,22 @@ dock-area-indicator {
 
 /* Set the icons for the dock title bar's buttons here. */
 .dock-state-button {
-	-fx-graphic: url(../styles/flat-blue/icons/restore.png);
+	-fx-graphic: url(../styles/flat-dark/icons/restore-win.png);
 	-fx-background-color: transparent;
 }
 
 .dock-node:floating .dock-state-button {
-	-fx-graphic: url(../styles/flat-blue/icons/maximize.png);
+	-fx-graphic: url(../styles/flat-dark/icons/maximize-win.png);
 	-fx-background-color: transparent;
 }
 
 .dock-node:maximized .dock-state-button {
-	-fx-graphic: url(../styles/flat-blue/icons/restore.png);
+	-fx-graphic: url(../styles/flat-dark/icons/restore-win.png);
 	-fx-background-color: transparent;
 }
 
 .dock-close-button {
-	-fx-graphic: url(../styles/flat-blue/icons/close.png);
+	-fx-graphic: url(../styles/flat-dark/icons/close-win.png);
 	-fx-background-color: transparent;
 }
 
@@ -161,7 +159,7 @@ dock-area-indicator {
 
 .text-field {
 	-fx-background-color: transparent;
-	-fx-border-color: -fx-base;
+	-fx-border-color: lightgray;
 	-fx-border-width: 0.0 0.0 2.0 0.0;
 }
 
@@ -189,7 +187,7 @@ dock-area-indicator {
 
 .text-area .content {
 	-fx-background-color: transparent;
-	-fx-border-color: -fx-base;
+	-fx-border-color: lightgray;
 	-fx-border-width: 0.0 0.0 2.0 0.0;
 	-fx-padding: 0 5 0 5;
 }

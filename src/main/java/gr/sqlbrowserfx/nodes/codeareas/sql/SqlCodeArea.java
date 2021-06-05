@@ -365,10 +365,35 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		MenuItem menuItemLowerCase = new MenuItem("To Lower Case", JavaFXUtils.createIcon("/icons/lowercase.png"));
 		menuItemLowerCase.setOnAction(action -> this.convertSelectedTextToLowerCase());
 		
+		MenuItem menuItemFormat = new MenuItem("Format", JavaFXUtils.createIcon("/icons/format.png"));
+		menuItemFormat.setOnAction(action -> {
+			if (this.getSelectedText().isEmpty())
+				this.replaceText(SqlFormatter.format(this.getText()));
+			else
+				this.replaceSelection(SqlFormatter.format(this.getSelectedText()));
+		});
+		
+		MenuItem menuItemFormat2 = new MenuItem("Format Default", JavaFXUtils.createIcon("/icons/format.png"));
+		menuItemFormat2.setOnAction(action -> {
+			if (this.getSelectedText().isEmpty())
+				this.replaceText(SqlFormatter.formatDefault(this.getText()));
+			else
+				this.replaceSelection(SqlFormatter.formatDefault(this.getSelectedText()));
+		});
+		
+		MenuItem menuItemFormat3 = new MenuItem("Format Alternate", JavaFXUtils.createIcon("/icons/format.png"));
+		menuItemFormat3.setOnAction(action -> {
+			if (this.getSelectedText().isEmpty())
+				this.replaceText(SqlFormatter.formatAlternative(this.getText()));
+			else
+				this.replaceSelection(SqlFormatter.formatAlternative(this.getSelectedText()));
+		});
+		
 		MenuItem menuItemSaveAs = new MenuItem("Save As...", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSaveAs.setOnAction(action -> this.saveAsFileAction());
 		
-		menu.getItems().addAll(menuItemRun, menuItemCopy, menuItemCut, menuItemPaste, menuItemUperCase, menuItemLowerCase, menuItemSuggestions, menuItemSearchAndReplace, menuItemSaveAs);
+		menu.getItems().addAll(menuItemRun, menuItemCopy, menuItemCut, menuItemPaste, menuItemUperCase,
+				menuItemLowerCase, menuItemFormat, menuItemSuggestions, menuItemSearchAndReplace, menuItemSaveAs);
 		return menu;
 	}
 

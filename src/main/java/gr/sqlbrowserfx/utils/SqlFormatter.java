@@ -6,6 +6,9 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import com.github.vertical_blank.sqlformatter.core.FormatConfig;
+import com.github.vertical_blank.sqlformatter.languages.Dialect;
+
 
 /**
  * Performs formatting of basic SQL statements (DML + query).
@@ -64,7 +67,28 @@ public class SqlFormatter {
 	private static final String INITIAL = "\n    ";
 
 	public static String format(String source) {
+		return
+		com.github.vertical_blank.sqlformatter.SqlFormatter
+			.of(Dialect.N1ql)  // Recommended
+			.format(source,
+				  FormatConfig.builder()
+				    .indent("	") // Defaults to two spaces
+				    .uppercase(true) // Defaults to false (not safe to use when SQL dialect has case-sensitive identifiers)
+				    .linesBetweenQueries(1) // Defaults to 1
+				    .maxColumnLength(100) // Defaults to 50
+//				    .params(Arrays.asList("a", "b", "c")) // Map or List. See Placeholders replacement.
+				    .build()
+				);
+//		SqlBrowserFX's formatter
+//		return new FormatProcess( source ).perform();
+	}
+	
+	public static String formatAlternative(String source) {
 		return new FormatProcess( source ).perform();
+	}
+	
+	public static String formatDefault(String source) {
+		return com.github.vertical_blank.sqlformatter.SqlFormatter.format(source);
 	}
 
 	private static class FormatProcess {
