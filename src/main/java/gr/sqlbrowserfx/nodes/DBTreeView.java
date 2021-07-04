@@ -220,6 +220,8 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 	private void fillTreeView() throws SQLException {
 		new Thread(() -> {
 		try {
+			long timeCounter = System.currentTimeMillis();
+			
 			List<String> newItems = this.getContents();
 			List<TreeItem<String>> found = new ArrayList<>();
 			List<String> sfound = new ArrayList<>();
@@ -255,7 +257,9 @@ public class DBTreeView extends TreeView<String> implements ContextMenuOwner, Si
 				this.setRoot(rootItem);
 				this.fireEvent(new SimpleEvent());
 			});
-
+			
+			timeCounter = (System.currentTimeMillis() - timeCounter) / 1000;
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Database analysis took " + timeCounter + " seconds");
 			this.changed();
 		} catch (Throwable e) {
 			DialogFactory.createErrorDialog(e);

@@ -327,7 +327,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 					//------------------------------------------
 						&&
 					//------------------------------------------
-					(queryToLowerCase.contains("table")   ||
+					(queryToLowerCase.contains("table")    ||
 				 	 queryToLowerCase.contains("view")     ||
 					 queryToLowerCase.contains("trigger")  ||
 					 queryToLowerCase.contains("procedure")||
