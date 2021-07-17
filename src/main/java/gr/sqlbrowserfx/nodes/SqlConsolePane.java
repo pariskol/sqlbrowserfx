@@ -71,6 +71,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private Button settingsButton;
 	private boolean popOverIsShowing = false;
 	private SplitPane splitPane;
+	private Button openButton;
 
 
 	@SuppressWarnings("unchecked")
@@ -94,7 +95,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			if (keyEvent.isControlDown()) {
 				switch (keyEvent.getCode()) {
 				case N:
-					this.createSqlConsoleTab();
+					this.openNewSqlConsoleTab();
 					break;
 				case D:
 //					tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
@@ -152,14 +153,14 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private void addTab() {
 		Tab selectedTab = queryTabPane.getSelectionModel().getSelectedItem();
 		if (selectedTab == newConsoleTab) {
-			this.createSqlConsoleTab();
+			this.openNewSqlConsoleTab();
 		}
 		else {
 			codeAreaRef = ((VirtualizedScrollPane<CSqlCodeArea>) selectedTab.getContent()).getContent(); 
 		}
 	}
 
-	private void createSqlConsoleTab() {
+	private void openNewSqlConsoleTab() {
 		CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
 		sqlCodeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
 		sqlCodeArea.showLinesProperty().bind(this.showLinesCheckBox.selectedProperty());
@@ -181,10 +182,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private void openFileAction() {
 		FileChooser fileChooser = new FileChooser();
 		File selectedFile = fileChooser.showOpenDialog(null);
-		openInNewTab(selectedFile);
+		openNewFileSqlConsoleTab(selectedFile);
 	}
 	
-	private void openInNewTab(File selectedFile) {
+	private void openNewFileSqlConsoleTab(File selectedFile) {
 		FileSqlCodeArea codeArea = new FileSqlCodeArea(selectedFile);
 		
 		VirtualizedScrollPane<CodeArea> vsp = new VirtualizedScrollPane<CodeArea>(codeArea);
@@ -197,13 +198,14 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			e.printStackTrace();
 		}
 		codeArea.replaceText(fileContent);
-		
+
 		Tab tab = new Tab(selectedFile.getName(),vsp);
 		tab.setGraphic(JavaFXUtils.createIcon("/icons/code-file.png"));
 		queryTabPane.getTabs().add(tab);
 		queryTabPane.getSelectionModel().select(tab);
 		codeAreaRef = codeArea;
 		codeArea.requestFocus();
+		codeArea.setRunAction(() -> this.executeButonAction());
 	}
 	
 	@Override
@@ -226,7 +228,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		});
 		settingsButton.setTooltip(new Tooltip("Adjust settings"));
 		
-		Button openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
+		openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
 		openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
 		FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton, settingsButton, openButton);
 		toolbar.setOrientation(Orientation.VERTICAL);

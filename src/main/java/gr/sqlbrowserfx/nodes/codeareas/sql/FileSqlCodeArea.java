@@ -52,10 +52,6 @@ public class FileSqlCodeArea extends CSqlCodeArea {
 		menuItemSave.setOnAction(action -> this.saveFileAction());
 
 		menu.getItems().addAll(menuItemSave);
-		
-		if (getRunAction() == null) {
-			menu.getItems().removeAll(menuItemRun);
-		}
 		return menu;
 	}
 	
