@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 
 import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
@@ -34,6 +35,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	private Button replaceAllButton;
 	private CheckBox wholeWordCheckBox;
 	private CheckBox caseInsensitiveCheckBox;
+	private Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
 //	private volatile int recursionRound = 0;
 	private volatile boolean javafxThreadRunning = false;
@@ -121,7 +123,8 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 			return 0;
 		
 		if (System.currentTimeMillis() >= terminationTime) {
-			System.out.println("Search timeout!");
+			logger.debug("Find action for '" + pattern + "' timed out");
+			Platform.runLater(() -> this.disableButtons(false));
 			return 0;
 		}
 		
@@ -155,7 +158,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 			while (javafxThreadRunning) {
 				synchronized (javafxThreadRunningLock) {
 					try {
-						javafxThreadRunningLock.wait(500);
+						javafxThreadRunningLock.wait(100);
 					} catch (InterruptedException e) {
 						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 					}
@@ -163,6 +166,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 			};
 			
 //				recursionRound = 0;
+			Platform.runLater(() -> this.disableButtons(false));
 			return 1;
 		}
 		else if (lastPos == -1) { // && recursionRound == 1) {
@@ -179,22 +183,41 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 			while (javafxThreadRunning) {
 				synchronized (javafxThreadRunningLock) {
 					try {
-						javafxThreadRunningLock.wait(500);
+						javafxThreadRunningLock.wait(100);
 					} catch (InterruptedException e) {
 						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 					}
 				}
 			}
 			//recursion
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			this.findButtonActionImpl();
 		}
 		
 		return 0;
 	}
 	
+	private void disableButtons(boolean disable) {
+		this.findButton.setDisable(disable);
+		this.replaceButton.setDisable(disable);
+		this.replaceAllButton.setDisable(disable);
+	}
+	
 	private void findButtonAction() {
 		this.resetSearchTerminationTime();
-		executor.execute(this::findButtonActionImpl);
+		this.disableButtons(true);
+		executor.execute(() -> {
+			try {
+				SearchAndReplacePopOver.this.findButtonActionImpl();
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+			}
+		});
 		
 	}
 	
@@ -210,14 +233,20 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 
 	private void replaceButtonAction() {
 		this.resetSearchTerminationTime();
-		executor.execute(this::replaceButtonActionImpl);
+		this.disableButtons(true);
+		executor.execute(() -> {
+			try {
+				SearchAndReplacePopOver.this.replaceButtonActionImpl();
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+			}
+		});
 	}
 	
 	private void replaceButtonActionImpl() {
 		if (terminationTime <= System.currentTimeMillis()) {
-			System.out.println(terminationTime);
-			System.out.println(System.currentTimeMillis());
-			System.out.println("Search timeout!");
+			logger.debug("Replace action timed out");
+			Platform.runLater(() -> this.disableButtons(false));
 			return;
 		}
 		
@@ -238,7 +267,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 			while (javafxThreadRunning) {
 				synchronized (javafxThreadRunningLock) {
 					try {
-						javafxThreadRunningLock.wait(500);
+						javafxThreadRunningLock.wait(100);
 					} catch (InterruptedException e) {
 						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 					}
