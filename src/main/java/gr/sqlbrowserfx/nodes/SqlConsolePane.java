@@ -179,14 +179,11 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		sqlCodeArea.requestFocus();
 	}
 	
-	private void openFileAction() {
-		FileChooser fileChooser = new FileChooser();
-		File selectedFile = fileChooser.showOpenDialog(null);
-		openNewFileSqlConsoleTab(selectedFile);
-	}
-	
 	private void openNewFileSqlConsoleTab(File selectedFile) {
 		FileSqlCodeArea codeArea = new FileSqlCodeArea(selectedFile);
+		codeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
+		codeArea.showLinesProperty().bind(this.showLinesCheckBox.selectedProperty());
+		codeArea.autoCompleteProperty().bind(this.autoCompleteOnTypeCheckBox.selectedProperty());
 		
 		VirtualizedScrollPane<CodeArea> vsp = new VirtualizedScrollPane<CodeArea>(codeArea);
 		String fileContent = null;
@@ -195,10 +192,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				Files.lines(Paths.get(selectedFile.getAbsolutePath()))
 				 	 .collect(Collectors.toList()), "\n");
 		} catch (IOException e) {
-			e.printStackTrace();
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not load file " + selectedFile.getName(), e);
 		}
 		codeArea.replaceText(fileContent);
-
+	
 		Tab tab = new Tab(selectedFile.getName(),vsp);
 		tab.setGraphic(JavaFXUtils.createIcon("/icons/code-file.png"));
 		queryTabPane.getTabs().add(tab);
@@ -206,6 +203,12 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		codeAreaRef = codeArea;
 		codeArea.requestFocus();
 		codeArea.setRunAction(() -> this.executeButonAction());
+	}
+
+	private void openFileAction() {
+		FileChooser fileChooser = new FileChooser();
+		File selectedFile = fileChooser.showOpenDialog(null);
+		openNewFileSqlConsoleTab(selectedFile);
 	}
 	
 	@Override
