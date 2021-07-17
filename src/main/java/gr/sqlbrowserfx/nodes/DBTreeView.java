@@ -113,8 +113,7 @@ public class DBTreeView extends TreeView<String>
 		});
 		nextSearchResultButton = new Button("", JavaFXUtils.createIcon("/icons/next.png"));
 		nextSearchResultButton.setOnAction(event -> {
-			if (searchResultsList.isEmpty())
-				searchFieldAction();
+			searchFieldAction();
 			if (searchResultsList.isEmpty())
 				return;
 			lastSelectedItemPos = lastSelectedItemPos == searchResultsList.size() - 1 ? 0 :  ++lastSelectedItemPos;
