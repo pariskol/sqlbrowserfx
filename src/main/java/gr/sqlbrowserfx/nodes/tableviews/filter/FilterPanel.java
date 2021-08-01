@@ -34,13 +34,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import com.sun.javafx.scene.control.skin.NestedTableColumnHeader;
-import com.sun.javafx.scene.control.skin.TableColumnHeader;
-import com.sun.javafx.scene.control.skin.TableViewSkin;
-
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.WeakInvalidationListener;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.transformation.FilteredList;
@@ -55,6 +50,9 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
+import javafx.scene.control.skin.NestedTableColumnHeader;
+import javafx.scene.control.skin.TableColumnHeader;
+import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -239,10 +237,11 @@ public final class FilterPanel<T,R> extends VBox {
 
     /* Methods below helps will anchor the context menu under the column */
     private static void checkChangeContextMenu(TableViewSkin<?> skin, TableColumn<?, ?> column, FilterPanel filterPanel) {
-        NestedTableColumnHeader header = skin.getTableHeaderRow().getRootHeader();
-        InvalidationListener listener = filterPanel.getOrCreateChangeListener(header, column);
-        header.getColumnHeaders().addListener(new WeakInvalidationListener(listener));
-        changeContextMenu(header, column);
+    	//uncomment for java 8
+//        NestedTableColumnHeader header = skin.getTableHeaderRow().getRootHeader();
+//        InvalidationListener listener = filterPanel.getOrCreateChangeListener(header, column);
+//        header.getColumnHeaders().addListener(new WeakInvalidationListener(listener));
+//        changeContextMenu(header, column);
     }
 
     private InvalidationListener getOrCreateChangeListener(NestedTableColumnHeader header, TableColumn<?, ?> column) {

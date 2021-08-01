@@ -34,6 +34,8 @@ public class SqlTableFilter extends TableFilter<MapTableViewRow>{
 	
 	public static void apply(SqlTableView sqlTableView) {
 		new SqlTableFilter(sqlTableView);
+		// in order to use controlsfx 11 implementation use line bellow 
+//		org.controlsfx.control.table.TableFilter.forTableView(sqlTableView).apply();
 	}
 	
 }

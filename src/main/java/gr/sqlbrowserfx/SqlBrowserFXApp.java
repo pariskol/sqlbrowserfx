@@ -76,7 +76,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
-import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -425,13 +424,13 @@ public class SqlBrowserFXApp extends Application {
 			new DockNode(dockPane, jsonTableView, "JSON table", JavaFXUtils.createIcon("/icons/web.png"));
 		});
 		
-		MenuItem webViewItem = new MenuItem("Open Docs", JavaFXUtils.createIcon("/icons/web.png"));
-		webViewItem.setOnAction(event -> {
-			WebView docsView = new WebView();
-			docsView.getEngine().load("https://www.sqlite.org/index.html");
-			DockNode dockNode = new DockNode(docsView, "Docs", JavaFXUtils.createIcon("/icons/web.png"));
-			dockNode.dock(dockPane, DockPos.RIGHT);	
-		});
+//		MenuItem webViewItem = new MenuItem("Open Docs", JavaFXUtils.createIcon("/icons/web.png"));
+//		webViewItem.setOnAction(event -> {
+//			WebView docsView = new WebView();
+//			docsView.getEngine().load("https://www.sqlite.org/index.html");
+//			DockNode dockNode = new DockNode(docsView, "Docs", JavaFXUtils.createIcon("/icons/web.png"));
+//			dockNode.dock(dockPane, DockPos.RIGHT);	
+//		});
 		
 		MenuItem logItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
 		logItem.setOnAction(actionEvent -> {

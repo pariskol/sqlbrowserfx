@@ -6,10 +6,13 @@ get_version_from_pom() {
 
 cd "$(dirname "$0")"
 
+pom=pom.xml
+[ ! -z "$1" ] && pom=$1
+
 rm -rf dist
 mkdir -p dist/sqlbrowserfx/lib
 
-mvn clean package
+mvn clean package -f $pom
 if [ $? -ne 0 ]
 then
   echo "Error : could not package project!"

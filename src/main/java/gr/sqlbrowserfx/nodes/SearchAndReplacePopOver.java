@@ -37,7 +37,6 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 	private CheckBox caseInsensitiveCheckBox;
 	private Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
-//	private volatile int recursionRound = 0;
 	private volatile boolean javafxThreadRunning = false;
 	private Object javafxThreadRunningLock = new Object();
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
