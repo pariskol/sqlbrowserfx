@@ -166,7 +166,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
         this.setInputMap();
         
         this.addEventHandler(TableColumnFilteringEvent.EVENT_TYPE, event -> {
-        	int diff = getSelectedSqlTableView().getSqlTableRows().size() - getSelectedSqlTableView().getItems().size();
+        	SqlTableView sqlTableView = getSelectedSqlTableView();
+        	int diff = sqlTableView.getSqlTableRows().size() - sqlTableView.getItems().size();
         	setSearchApplied(diff > 0);
 			this.updateRowsCountLabel();
 		});
@@ -313,9 +314,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		sqlTableView.setOnMouseClicked(mouseEvent -> {
 			sqlTableView.requestFocus();
 			if (mouseEvent.getClickCount() == 2) {
-				if (getSelectedSqlTableView().getSelectionModel().getSelectedItem() != null) {
+				SqlTableView tableView = getSelectedSqlTableView();
+				if (tableView.getSelectionModel().getSelectedItem() != null) {
 					if (((Boolean)PropertiesLoader.getProperty("sqlbrowserfx.default.editmode.cell", Boolean.class, false)))
-						getSelectedSqlTableView().getSelectedCell().startEdit();
+						tableView.getSelectedCell().startEdit();
 					else {
 						if (isInFullMode()) {
 							this.editButtonActionFullMode();
@@ -323,7 +325,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 							this.editButtonAction(mouseEvent);
 						}
 					}
-					getSelectedSqlTableView().requestFocus();
+					tableView.requestFocus();
 				}
 			}
 		});
@@ -1069,7 +1071,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	protected void importCsvAction() {
-		if (getSelectedSqlTableView() != null && !getSelectedSqlTableView().titleProperty().get().isEmpty()) {
+		SqlTableView sqlTableView = getSelectedSqlTableView();
+		if (sqlTableView != null && !sqlTableView.titleProperty().get().isEmpty()) {
 			FileChooser fileChooser = new FileChooser();
 			File selectedFile = fileChooser.showOpenDialog(null);
 			if (selectedFile != null) {
@@ -1091,7 +1094,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 								map.put(columns[i], tempValue);
 							}
 							try {
-								getSelectedSqlTableView().insertRecord(map);
+								sqlTableView.insertRecord(map);
 								rows.add(new MapTableViewRow(map));
 							} catch (Exception e) {
 								logger.error(e.getMessage(), e);
@@ -1103,7 +1106,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 					DialogFactory.createErrorDialog(e);
 				} finally {
 					Platform.runLater(() -> {
-						getSelectedSqlTableView().getSqlTableRows().addAll(rows);
+						sqlTableView.getSqlTableRows().addAll(rows);
 					});
 				}
 
@@ -1115,6 +1118,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		if (exportCsvButton.isFocused() && popOver.isShowing())
 			return;
 
+		SqlTableView sqlTableView = getSelectedSqlTableView();
+		
 		exportCsvButton.requestFocus();
 		Button startButton = new Button("Export", JavaFXUtils.createIcon("/icons/csv.png"));
 		Button dirButton = new Button("Search", JavaFXUtils.createIcon("/icons/magnify.png"));
@@ -1124,7 +1129,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			File selectedFile = directoryChooser.showDialog(null);
 			if (selectedFile != null) {
 				String dirPath = selectedFile.getAbsolutePath();
-				pathField.setText(dirPath + "/" + getSelectedSqlTableView().titleProperty().get() + ".csv");
+				pathField.setText(dirPath + "/" + sqlTableView.titleProperty().get() + ".csv");
 			}
 			exportCsvButton.getOnAction().handle(new ActionEvent());
 
@@ -1142,10 +1147,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 					executor.execute(() -> {
 						try {
 							Files.write(Paths.get(filePath),
-									(getSelectedSqlTableView().getSqlTable().columnsToString() + "\n").getBytes(),
+									(sqlTableView.getSqlTable().columnsToString() + "\n").getBytes(),
 									StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 
-							getSelectedSqlTableView().getItems().forEach(row -> {
+							sqlTableView.getItems().forEach(row -> {
 								try {
 									Files.write(Paths.get(filePath), (row.toString() + "\n").getBytes(),
 											StandardOpenOption.APPEND);
@@ -1181,11 +1186,12 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	protected void pasteAction(final SqlTableRowEditBox editBox) {
 		try {
+			SqlTableView sqlTableView = getSelectedSqlTableView();
 			String data = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
 
 			String[] split = data.split(",");
-			for (int i = 0; i < getSelectedSqlTableView().getColumnsNames().size(); i++) {
-				String column = getSelectedSqlTableView().getColumnsNames().get(i);
+			for (int i = 0; i < sqlTableView.getColumnsNames().size(); i++) {
+				String column = sqlTableView.getColumnsNames().get(i);
 				editBox.put(column, split[i]);
 			}
 		} catch (Exception e) {
@@ -1252,7 +1258,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	protected MouseEvent simulateClickEvent() {
-		return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, getSelectedSqlTableView().getContextMenu().getX(), getSelectedSqlTableView().getContextMenu().getY(),
+		SqlTableView sqlTableView = getSelectedSqlTableView();
+		return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, sqlTableView.getContextMenu().getX(), sqlTableView.getContextMenu().getY(),
 				MouseButton.PRIMARY, 1, false, false, false, false, false, false, false, false, false, false, null);
 		// new MouseEvent(source, target, eventType, x, y, screenX, screenY, button,
 		// clickCount, shiftDown, controlDown, altDown, metaDown, primaryButtonDown,

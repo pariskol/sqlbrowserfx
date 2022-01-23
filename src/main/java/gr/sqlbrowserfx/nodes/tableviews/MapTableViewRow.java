@@ -88,10 +88,10 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 		for (SimpleObjectProperty<Object> property: propertiesMap.values()) {
 			Object value = property.get();
 			if (value instanceof String)
-				value = value.toString().replaceAll("\n", " ").replace(",", " ");
+				value = value.toString().replaceAll("\n", " ");//.replace(",", " ");
 			if (value == null)
 				value = "";
-			result += value + ",";
+			result += "\"" + value + "\",";
 		}
 		return result.substring(0,result.length()-1);
 	}
