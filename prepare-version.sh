@@ -10,7 +10,7 @@ then
   exit 1
 fi
 
-sed -i '0,/<version>.*<\/version>/s//<version>$version<\/version>/' pom.xml
+sed -i "0,/<version>.*<\/version>/s//<version>$version<\/version>/" pom.xml
 git add pom.xml
 git commit -m "prepare realase $version"
 git tag $version
