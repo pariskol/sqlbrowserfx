@@ -149,7 +149,7 @@
 		<dependency>
 			<groupId>org.fxmisc.richtext</groupId>
 			<artifactId>richtextfx</artifactId>
-			<version>0.10.5</version>
+			<version>0.10.7</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
@@ -175,10 +175,11 @@
 			<artifactId>log4j-api</artifactId>
 			<version>${log4j.version}</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.javalin/javalin -->
 		<dependency>
-			<groupId>com.sparkjava</groupId>
-			<artifactId>spark-core</artifactId>
-			<version>2.9.4-SNAPSHOT</version>
+		    <groupId>io.javalin</groupId>
+		    <artifactId>javalin</artifactId>
+		    <version>4.3.0</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.json/json -->
 		<dependency>

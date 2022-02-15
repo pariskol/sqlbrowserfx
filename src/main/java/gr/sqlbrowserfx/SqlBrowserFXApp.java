@@ -47,7 +47,7 @@ import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
 import gr.sqlbrowserfx.nodes.tableviews.JSONTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
-import gr.sqlbrowserfx.rest.SparkRESTfulService;
+import gr.sqlbrowserfx.rest.RESTfulService;
 import gr.sqlbrowserfx.utils.HttpClient;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
@@ -233,7 +233,7 @@ public class SqlBrowserFXApp extends Application {
 		SqlConnector sqliteConnector = new SqliteConnector(dbPath);
 		sqliteConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
 		this.sqlConnector = sqliteConnector;
-		if (System.getProperty("mode", "normal").equals("simple")) {
+		if (System.getProperty("sqlbrowserfx.mode", "advanced").equals("simple")) {
 			SqlCodeAreaSyntax.init(SqlBrowserFXAppManager.getDBtype());
 			primaryScene.setRoot(new SqlConsolePane(sqliteConnector));
 			JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
@@ -339,7 +339,7 @@ public class SqlBrowserFXApp extends Application {
 		dockPane.getStylesheets().add(CSS_THEME);
 
 		mainSqlPane = new DSqlPane(sqlConnector);
-		SqlBrowserFXAppManager.registerSqlPane(mainSqlPane);
+		SqlBrowserFXAppManager.registerDSqlPane(mainSqlPane);
 		mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, DockWeights.asDoubleArrray(0.8f));
 		mainSqlPane.asDockNode().setClosable(false);
@@ -396,7 +396,7 @@ public class SqlBrowserFXApp extends Application {
 				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + (SqlBrowserFXAppManager.getActiveSqlPanes().size() + 1));
 				newSqlPane.asDockNode().setDockPane(dockPane);
 				newSqlPane.asDockNode().setFloating(true);
-				SqlBrowserFXAppManager.registerSqlPane(newSqlPane);
+				SqlBrowserFXAppManager.registerDSqlPane(newSqlPane);
 			});
 		});
 		
@@ -470,18 +470,24 @@ public class SqlBrowserFXApp extends Application {
 
 		menu1.getItems().addAll(sqlPaneViewItem, jsonTableViewItem, logItem, terminalItem, sqlConsoleViewItem);
 
-		final Menu menu2 = new Menu("Restful Service", JavaFXUtils.createImageView("/icons/spark.png", 16.0, 16.0));
-		MenuItem restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createImageView("/icons/spark.png", 16.0, 16.0));
+		final Menu menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
+		MenuItem restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
 		restServiceStartItem.setOnAction(actionEvent -> {
 			if (restServiceStarted == false) {
-				SparkRESTfulService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
-				SparkRESTfulService.init(sqlConnector);
-				SparkRESTfulService.start();
-				restServiceStartItem.setText("Stop Restful Service");
-				restServiceStarted = true;
+				try {
+					RESTfulService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
+					RESTfulService.init(sqlConnector);
+					RESTfulService.start();
+					restServiceStartItem.setGraphic(JavaFXUtils.createIcon("/icons/stop.png"));
+					restServiceStartItem.setText("Stop Restful Service");
+					restServiceStarted = true;
+				} catch(Exception e) {
+					DialogFactory.createErrorNotification(e);
+				}
 			} else {
-				SparkRESTfulService.stop();
+				RESTfulService.stop();
 				restServiceStarted = false;
+				restServiceStartItem.setGraphic(JavaFXUtils.createIcon("/icons/play.png"));
 				restServiceStartItem.setText("Start Restful Service");
 			}
 		});
@@ -540,7 +546,7 @@ public class SqlBrowserFXApp extends Application {
 		if (isRestConfigurationShowing)
 			return;
 		
-		ImageView bottleLogo = JavaFXUtils.createImageView("/icons/spark-logo.png", 0.0, 200.0);
+		ImageView bottleLogo = JavaFXUtils.createImageView("/icons/javalin-logo.png", 0.0, 200.0);
 		Label ipLabel = new Label("Ip address");
 		TextField ipField = new TextField(restServiceConfig.getIp());
 		Label portLabel = new Label("Port");
