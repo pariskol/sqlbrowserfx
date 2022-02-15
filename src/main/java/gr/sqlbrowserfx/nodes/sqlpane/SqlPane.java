@@ -80,7 +80,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	protected Button editButton;
 	protected Button deleteButton;
 	protected Button settingsButton;
-	private Button columnsSettingsButton;
+	protected Button columnsSettingsButton;
 	protected Button searchButton;
 	protected Button refreshButton;
 	protected Button tableSelectButton;
@@ -145,8 +145,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		fullModeCheckBox = new CheckBox("Full mode");
 		fullModeCheckBox.setOnMouseClicked(moueEvent -> {
 			SqlTableTab sqlTableTab = getSelectedTableTab();
-			if (isInFullMode() && !sqlTableTab.getCustomText().equals(EMPTY)) {
-				this.enableFullMode(sqlTableTab);
+			if (isInFullMode() && (sqlTableTab != null && !sqlTableTab.getCustomText().equals(EMPTY))) {
+				this.openInFullMode(sqlTableTab);
 			} else {
 				this.disableFullMode();
 			}
@@ -610,12 +610,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		Button clearBtn = new Button("", JavaFXUtils.createIcon("/icons/clear.png"));
 		clearBtn.setTooltip(new Tooltip("Clear"));
 		clearBtn.setOnAction(event -> editBox.clear());
-		addBtn.setOnMouseClicked(event2 -> this.insertRecordToSqlTableViewRef(editBox));
-		addBtn.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				this.insertRecordToSqlTableViewRef(editBox);
-			}
-		});
+		addBtn.setOnAction(event -> this.insertRecordToSqlTableViewRef(editBox));
 	
 		editBox.getToolbar().getChildren().addAll(clearBtn);
 		editBox.setActionButton(addBtn);
@@ -666,7 +661,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 		} finally {
 			this.updateRowsCountLabel();
-			this.enableFullMode(sqlTableTab);
+			this.openInFullMode(sqlTableTab);
 		}
 	}
 
@@ -678,7 +673,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		
 	}
 
-	public void enableFullMode(final SqlTableTab sqlTableTab) {
+	public void openInFullMode(final SqlTableTab sqlTableTab) {
 		Platform.runLater(() -> {
 			if (isInFullMode()) {
 				//TODO records tab pane may should be cleared everytime to avoid memory leaks?
@@ -692,8 +687,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				sqlTableTab.setContent(fullModeSplitPane);
 				sqlTableTab.setRecordsTabPane(recordsTabPane);
 			} 
-//			else
-//				guiState.getTableTab().setContent(guiState.getSqlTableView());
 
 			sqlQueryRunning = false;
 		});
@@ -779,7 +772,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		if (getSelectedRecordsTabPane() == null) {
 			SqlTableTab selectedTab = getSelectedTableTab();
-			this.enableFullMode(selectedTab);
+			this.openInFullMode(selectedTab);
 			return;
 		}
 
@@ -804,13 +797,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		Button editButton = new Button("Edit", JavaFXUtils.createIcon("/icons/check.png"));
 		editButton.setTooltip(new Tooltip("Edit"));
 		editButton.setOnAction(event -> this.updateRecordOfSqlTableView(editBox, sqlTableRow));
-		editButton.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				editButton.getOnAction().handle(new ActionEvent());
-				keyEvent.consume();
-			}
-		});
-
 		editBox.setActionButton(editButton);
 
 		for (Node node : editBox.getChildren()) {
@@ -867,11 +853,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		popOver.setHeight(editBox.getMainBox().getHeight());
 
 		addBtn.setOnAction(submitEvent -> this.insertRecordToSqlTableViewRef(editBox));
-		addBtn.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				addBtn.getOnAction().handle(new ActionEvent());
-			}
-		});
 
 		popOver.show(addButton);
 		addBtn.requestFocus();
@@ -900,11 +881,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			editBtn.setOnAction(submitEvent -> {
 				this.updateRecordOfSqlTableView(editBox, sqlTableRow);
 //				popOver.hide();
-			});
-			editBtn.setOnKeyPressed(keyEvent -> {
-				if (keyEvent.getCode() == KeyCode.ENTER) {
-					editBtn.getOnAction().handle(new ActionEvent());
-				}
 			});
 
 			editBox.setActionButton(editBtn);

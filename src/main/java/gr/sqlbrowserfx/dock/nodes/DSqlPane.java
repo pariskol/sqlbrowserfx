@@ -272,7 +272,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	}
 
 	@Override
-	public void enableFullMode(final SqlTableTab tab) {
+	public void openInFullMode(final SqlTableTab tab) {
 //		super.enableFullMode(tab);
 		Platform.runLater(() -> {
 //			tab.setContent(guiState.getSqlTableView());
@@ -333,7 +333,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 			});
 
 			thisDockNode.setOnClose(() -> {
-				SqlBrowserFXAppManager.unregisterSqlPane(this);
+				SqlBrowserFXAppManager.unregisterDSqlPane(this);
 //				it does not work as expected
 //				if (sqlConsoleBox != null)
 //					sqlConsoleBox.asDockNode().close();

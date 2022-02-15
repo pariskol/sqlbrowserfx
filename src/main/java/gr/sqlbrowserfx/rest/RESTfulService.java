@@ -4,57 +4,54 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
-import spark.Spark;
+import io.javalin.Javalin;
 
-public class SparkRESTfulService {
+public class RESTfulService {
 
+	private static Javalin APP;
+	private static int IP, PORT;
 	static Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
+	
 	public static void init(SqlConnector sqlConnector) {
-		JsonTransformer jsonTransformer = new JsonTransformer();
-		
-		Spark.initExceptionHandler((e) -> logger.error(e.getMessage(), e));
-		
-		Spark.before((request, response) -> {
-			response.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
-			response.header("Access-Control-Allow-Origin", "*");
-			response.header("Access-Control-Allow-Headers", "*");
-			response.header("Access-Control-Allow-Credentials", "true");
-			response.header("Content-Type", "application/json");
+		APP = Javalin.create(config -> {
+			config.enableCorsForAllOrigins();
+			config.enableDevLogging();
+		});
+		APP.exception(Exception.class, (e, ctx) -> {
+			logger.error(e.getMessage());
+			ctx.status(500).result("{ \"message\":\"Oops something went wrong!\" }");
 		});
 		
-		Spark.options("/*", (request, response) -> {
-
-		    String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
-		    if (accessControlRequestHeaders != null) {
-		        response.header("Access-Control-Allow-Headers", accessControlRequestHeaders);
-		    }
-
-		    String accessControlRequestMethod = request.headers("Access-Control-Request-Method");
-		    if (accessControlRequestMethod != null) {
-		        response.header("Access-Control-Allow-Methods", accessControlRequestMethod);
-		    }
-		    return "OK";
+		APP.before(ctx -> {
+			ctx.res.addHeader("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+			ctx.res.addHeader("Access-Control-Allow-Origin", "*");
+			ctx.res.addHeader("Access-Control-Allow-Headers", "*");
+			ctx.res.addHeader("Access-Control-Allow-Credentials", "true");
+			ctx.res.addHeader("Content-Type", "application/json");
 		});
 		
-		Spark.get("/tables", (request, response) -> {
+		
+		APP.get("/tables", ctx-> {
 			List<String> data = new ArrayList<>(sqlConnector.getTables());
 			data.addAll(sqlConnector.getViews());
-			return data;
-		}, jsonTransformer);
+			ctx.result(new JSONArray(data).toString());
+		});
 
 		
-		Spark.post("/save/:table", (request, response) -> {
-			JSONObject jsonObject = new JSONObject(request.body());
+		APP.post("/save/{table}", (ctx) -> {
+			JSONObject jsonObject = new JSONObject(ctx.body());
 			
-			String table = request.params(":table");
+			String table = ctx.pathParam("table");
 			String columns = "";
 			String values = "";
 			List<Object> params = new ArrayList<>();
@@ -72,13 +69,13 @@ public class SparkRESTfulService {
 					+ ") values (" + values + ")";
 			sqlConnector.executeUpdate(query, params);
 			
-			return "{ \"message\": \"Data has been saved\"}";
-		}, jsonTransformer);
+			ctx.result("{ \"message\": \"Data has been saved\"}");
+		});
 		
-		Spark.post("/delete/:table", (request, response) -> {
-			JSONObject jsonObject = new JSONObject(request.body());
+		APP.post("/delete/{table}", (ctx) -> {
+			JSONObject jsonObject = new JSONObject(ctx.body());
 			
-			String table = request.params(":table");
+			String table = ctx.pathParam("table");
 			
 			List<Object> params = new ArrayList<>();
 			String primaryKey = sqlConnector.findPrimaryKey(table);
@@ -89,63 +86,47 @@ public class SparkRESTfulService {
 				}
 			}
 			sqlConnector.executeUpdate(query, params);
-			return "{ message: \"Data has been deleted\"}";
-		}, jsonTransformer);
+			ctx.result("{ message: \"Data has been deleted\"}");
+		});
 		
-		Spark.get("/get/:table", (request, response) -> {
-			String table = request.params(":table");
+		APP.get("/get/{table}", (ctx) -> {
+			String table = ctx.pathParam("table");
 			if (table == null)
-				Spark.halt(404);
+				throw new Exception("param 'table' is invalid");
 
-			StringBuilder whereFilter = new StringBuilder(" where ");
+			StringBuilder whereFilter = new StringBuilder(" where 1=1 ");
 			List<Object> params = new ArrayList<>();
-			for (String queryParam : request.queryParams()) {
-				whereFilter.append(queryParam + " = ? and ");
-				params.add(request.queryParams(queryParam));
-			}
-			if (params.size() > 0)
-				whereFilter.delete(whereFilter.length() - "and ".length(), whereFilter.length());
-			else
-				whereFilter.delete(whereFilter.length() - " where ".length(), whereFilter.length());
+			
+			ctx.queryParamMap().entrySet().forEach(e -> {
+				whereFilter.append(" and " + e.getKey() + " = ? ");
+				params.add(e.getValue().get(0));
+			});
 
 			List<Object> data = new ArrayList<>();
 			try {
-				logger.debug("About to execute query");
+				logger.debug("Executing : select * from " + table + " " + whereFilter.toString()  + " , " + params.toString());
 				sqlConnector.executeQuery("select * from " + table + whereFilter.toString(), params, rset -> {
-					try {
-						HashMap<String, Object> dto = DTOMapper.map(rset);
-						data.add(dto);
-					} catch (Exception e) {
-						logger.error(e.getMessage(), e);
-						Spark.halt(500);
-					}
+					HashMap<String, Object> dto = DTOMapper.mapu(rset);
+					data.add(dto);
 				});
 			} catch (Exception e) {
-				logger.error(e.getMessage(), e);
-				Spark.halt(500);
+				throw e;
 			}
 
-			return data;
-		}, jsonTransformer);
-
-		Spark.exception(Exception.class, (exception, request, response) -> {
-			logger.error(exception.getMessage(), exception);
-			response.body("Ops something went wrong!");
-			Spark.halt(500);
+			ctx.result(new JSONArray(data).toString());
 		});
-		
+
 	}
 	
 	public static void configure(String ip, int port) {
-		Spark.ipAddress(ip);
-		Spark.port(port);
+		PORT = port;
 	}
 	
 	public static void start() {
-		Spark.init();
+		APP.start(PORT);
 	}
 	
 	public static void stop() {
-		Spark.stop();
+		APP.stop();
 	}
 }

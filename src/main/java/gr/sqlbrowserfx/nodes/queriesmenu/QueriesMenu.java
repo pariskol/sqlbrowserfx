@@ -15,6 +15,7 @@ import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
@@ -107,12 +108,15 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 	private void populateSqlCodeAreasAvailable(Menu queryMenuItem) {
 		Platform.runLater(() -> {
 			queryMenuItem.getItems().clear();
-			for (DSqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
-				if (sqlPane.getSqlCodeAreaRef() != null) {
-					MenuItem sendToCodeArea = new MenuItem("Paste in " + sqlPane.asDockNode().getTitle());
+			for (SqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
+				if (sqlPane instanceof DSqlPane)
+					continue;
+				DSqlPane dsqlPane = (DSqlPane) sqlPane;
+				if (dsqlPane.getSqlCodeAreaRef() != null) {
+					MenuItem sendToCodeArea = new MenuItem("Paste in " + dsqlPane.asDockNode().getTitle());
 					sendToCodeArea.setOnAction(action2 -> {
-						sqlPane.getSqlCodeAreaRef().clear();
-						sqlPane.getSqlCodeAreaRef().appendText(queriesMap.get(queryMenuItem.getText()));
+						dsqlPane.getSqlCodeAreaRef().clear();
+						dsqlPane.getSqlCodeAreaRef().appendText(queriesMap.get(queryMenuItem.getText()));
 					});
 					queryMenuItem.getItems().add(sendToCodeArea);
 				}

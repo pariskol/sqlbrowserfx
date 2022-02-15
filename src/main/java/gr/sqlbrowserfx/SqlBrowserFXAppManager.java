@@ -2,6 +2,7 @@ package gr.sqlbrowserfx;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
@@ -12,7 +13,8 @@ import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 public class SqlBrowserFXAppManager {
 
 	private static SqlConnector SQL_CONNECTOR = new SqliteConnector("./sqlbrowser.db");
-	private static List<DSqlPane> SQL_PANES = new ArrayList<>();
+	private static List<DSqlPane> DSQL_PANES = new ArrayList<>();
+	private static List<SqlPane> SQL_PANES = new ArrayList<>();
 	private static List<DDBTreeView> DB_TREE_VIEWS = new ArrayList<>();
 	private static String DB_TYPE = "sqlite";
 	
@@ -20,21 +22,28 @@ public class SqlBrowserFXAppManager {
 		return SQL_CONNECTOR;
 	}
 	
-	public static void registerSqlPane(DSqlPane sqlPane) {
+	public static void registerDSqlPane(DSqlPane sqlPane) {
+		DSQL_PANES.add(sqlPane);
+		DB_TREE_VIEWS.forEach(tv -> tv.populateSqlPanesMenu());
+	}
+	
+	public static void registerSqlPane(SqlPane sqlPane) {
 		SQL_PANES.add(sqlPane);
 		DB_TREE_VIEWS.forEach(tv -> tv.populateSqlPanesMenu());
 	}
 	
-	public static List<DSqlPane> getActiveSqlPanes() {
-		return SQL_PANES;
+	public static List<SqlPane> getActiveSqlPanes() {
+		List<SqlPane> sqlPanes = DSQL_PANES.stream().map(sp -> (SqlPane) sp).collect(Collectors.toList());
+		sqlPanes.addAll(SQL_PANES);
+		return sqlPanes.stream().filter(sp -> sp != null).collect(Collectors.toList());
 	}
 	
 	public static long getActiveSqlCodeAreasNum() {
-		return SQL_PANES.stream().filter(x -> x.getSqlCodeAreaRef() != null).count();
+		return DSQL_PANES.stream().filter(x -> x.getSqlCodeAreaRef() != null).count();
 	}
 	
-	public static void unregisterSqlPane(SqlPane sqlPane) {
-		SQL_PANES.remove(sqlPane);
+	public static void unregisterDSqlPane(DSqlPane sqlPane) {
+		DSQL_PANES.remove(sqlPane);
 		DB_TREE_VIEWS.forEach(tv -> tv.populateSqlPanesMenu());
 	}
 

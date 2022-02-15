@@ -142,16 +142,16 @@ public class MysqlConnector extends SqlConnector {
 
 	@Override
 	public String findPrimaryKey(String tableName) throws SQLException {
-		StringBuilder primaryKeyBulder = new StringBuilder("");
+		StringBuilder primaryKeyBuilder = new StringBuilder("");
 
 		String query = "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME "
 				+ "	FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?";
 		this.executeQuery(query, Arrays.asList(this.database, tableName, "PRIMARY"), rset -> {
-			primaryKeyBulder.append(rset.getString("COLUMN_NAME"));
-			primaryKeyBulder.append(",");
+			primaryKeyBuilder.append(rset.getString("COLUMN_NAME"));
+			primaryKeyBuilder.append(",");
 		});
 		
-		String primaryKey = primaryKeyBulder.toString();
+		String primaryKey = primaryKeyBuilder.toString();
 		if (!primaryKey.isEmpty())
 			primaryKey = primaryKey.substring(0, primaryKey.length() - 1);
 

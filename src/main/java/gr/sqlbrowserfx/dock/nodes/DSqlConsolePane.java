@@ -42,17 +42,18 @@ import javafx.scene.layout.VBox;
 public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
 	private DockNode thisDockNode;
-	private DSqlPane sqlPane;
-	private Button historyButton;
+	private SqlPane sqlPane;
+	protected Button historyButton;
 	private boolean historyShowing = false;
 	private HistorySqlCodeArea historyCodeArea;
 	private DatePicker datePicker;
+	private VBox historyBox;
  
 	public DSqlConsolePane(SqlConnector sqlConnector) {
 		this(sqlConnector, null);
 	}
 	
-	public DSqlConsolePane(SqlConnector sqlConnector, DSqlPane sqlPane) {
+	public DSqlConsolePane(SqlConnector sqlConnector, SqlPane sqlPane) {
 		super(sqlConnector);
 		historyCodeArea = new HistorySqlCodeArea();
 		historyCodeArea.setEditable(false);
@@ -64,6 +65,9 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
             this.getQueriesHistory(dateStr);
 
 		});
+		VirtualizedScrollPane<SqlCodeArea> vsp = new VirtualizedScrollPane<>(historyCodeArea);
+		historyBox = new VBox(datePicker, vsp);
+		VBox.setVgrow(vsp, Priority.ALWAYS);
 		
 		this.getQueriesHistory(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 		
@@ -109,8 +113,9 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
-			if (sqlPane != null) {
-				thisDockNode = new DockNode(sqlPane.asDockNode().getDockPane(), this, sqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.createIcon("/icons/console.png"), 600.0, 400.0);
+			if (sqlPane != null && sqlPane instanceof DSqlPane) {
+				var dsqlPane = (DSqlPane) sqlPane;
+				thisDockNode = new DockNode(dsqlPane.asDockNode().getDockPane(), this, dsqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.createIcon("/icons/console.png"), 600.0, 400.0);
 				thisDockNode.setOnClose(() -> this.listeners.clear());
 			}
 		}
@@ -125,12 +130,9 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		historyButton.setOnMouseClicked(mouseEvent -> {
 			if (!historyShowing) {
 				historyShowing = true;
-				VirtualizedScrollPane<SqlCodeArea> vsp = new VirtualizedScrollPane<>(historyCodeArea);
-				VBox vb = new VBox(datePicker, vsp);
-				DockNode dockNode = new DockNode(vb, "Query history", JavaFXUtils.createIcon("/icons/monitor.png"));
-				VBox.setVgrow(vsp, Priority.ALWAYS);
+				DockNode dockNode = new DockNode(historyBox, "Query history", JavaFXUtils.createIcon("/icons/monitor.png"));
 				datePicker.prefWidthProperty().unbind();
-				datePicker.prefWidthProperty().bind(vb.widthProperty());
+				datePicker.prefWidthProperty().bind(historyBox.widthProperty());
 				dockNode.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),DockWeights.asDoubleArrray(0.7f, 0.3f));
 				dockNode.setOnClose(() -> historyShowing = false);
 			}
@@ -162,7 +164,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		final SqlTableTab fTab = tab;
 		Platform.runLater(() -> {
 			if (sqlPane.isInFullMode()) {
-				sqlPane.enableFullMode(fTab);
+				sqlPane.openInFullMode(fTab);
 			}
 			sqlPane.updateRowsCountLabel();
 		});
@@ -205,6 +207,9 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		this.sqlPane = sqlPane;
 	}
 	
+	public VBox getHistoryBox() {
+		return this.historyBox;
+	}
 	
 
 }

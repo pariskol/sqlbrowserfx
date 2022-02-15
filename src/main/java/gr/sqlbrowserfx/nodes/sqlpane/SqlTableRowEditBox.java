@@ -26,6 +26,7 @@ import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -43,12 +44,15 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 	private ScrollPane scrollPane;
 	private Label messageLabel;
 	private Button actionButton;
+	private TextArea detailsArea;
+	private TextArea lastSelectedTextArea;
 
 	public SqlTableRowEditBox(SqlTableView sqlTableView, MapTableViewRow sqlTableRow, boolean resizeable) {
 		
 		messageLabel = new Label();
 		messageLabel.setTextFill(Color.GREEN);
 		centerBox = new VBox();
+		detailsArea = new TextArea();
 		fieldsMap = new LinkedHashMap<>();
 		columns = sqlTableView.getColumnsNames();
 		for (String columnName : columns) {
@@ -56,20 +60,20 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			label.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
 			label.setTooltip(new Tooltip(columnName));
 			label.setAlignment(Pos.CENTER_RIGHT);
-			TextArea textField = new TextArea();
-			textField.setPrefRowCount(1);
-			textField.setPrefColumnCount(10);
-			textField.setOnKeyPressed(event -> {
+			TextArea textArea = new TextArea();
+//			textArea.addEventFilter(KeyEvent.KEY_PRESSED, new TabAndEnterHandler(textArea));
+			textArea.setPrefRowCount(1);
+			textArea.setPrefColumnCount(10);
+			textArea.setOnKeyPressed(event -> {
 				if (event.getCode() == KeyCode.ENTER) {
 					if (actionButton != null)
 						this.actionButton.requestFocus();
-					event.consume();
 				}
 				else if (event.getCode() == KeyCode.TAB) {
 					List<TextArea> l = new ArrayList<>(fieldsMap.values());
 					int i = 0;
 					for (i=0; i<l.size();i++) {
-						if (l.get(i).equals(textField))
+						if (l.get(i).equals(textArea))
 							break;
 					}
 					if (event.isShiftDown() && i > 0)
@@ -78,54 +82,82 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 						this.actionButton.requestFocus();
 					else if (i < l.size() - 1								)
 						l.get(i+1).requestFocus();
-
-					event.consume();
-						
 				}
+				event.consume();
 			});
 //			textField.setAlignment(Pos.CENTER);
 
 			this.sqlTableRow = sqlTableRow;
 			if (sqlTableRow != null && sqlTableRow.get(columnName) != null) {
-				textField.setText(sqlTableRow.get(columnName).toString());
-				if (textField.getText().contains("\n"))
-					textField.setWrapText(true);
+				textArea.setText(sqlTableRow.get(columnName).toString());
+				if (textArea.getText().contains("\n"))
+					textArea.setWrapText(true);
 			}
 			else
-				textField.setText("");
+				textArea.setText("");
+			//FIXME binding does not work correctly
+			textArea.textProperty().addListener((obs, o, n) -> {
+				detailsArea.setText(n);
+			});
+			textArea.focusedProperty().addListener((obs, unfocused, focused) -> {
+				if (focused) {
+					lastSelectedTextArea = textArea;
+					detailsArea.setText(textArea.getText());
+				}
+			});
+			detailsArea.focusedProperty().addListener((obs, unfocused, focused) -> {
+				if (focused) {
+					detailsArea.textProperty().bindBidirectional(lastSelectedTextArea.textProperty());
 
-			fieldsMap.put(columnName, textField);
+				}
+				else {
+					detailsArea.textProperty().unbindBidirectional(lastSelectedTextArea.textProperty());
+					lastSelectedTextArea.textProperty().unbindBidirectional(detailsArea.textProperty());
+				}
+			});
+			fieldsMap.put(columnName, textArea);
 
 			Button infoButton = new Button("", JavaFXUtils.createIcon("/icons/zoom.png"));
 			infoButton.setFocusTraversable(false);
-			infoButton.setOnMouseClicked(event2 -> {
-				infoButton.requestFocus();
-				if (textField.getText().isEmpty())
-					return;
-
-				TextArea infoText = new TextArea(textField.getText());
-				infoText.setPrefColumnCount(30);
-				infoText.setPrefRowCount(12);
-				textField.textProperty().bind(infoText.textProperty());
-				PopOver info = new SqlPanePopOver(new VBox(infoText));
-				info.setOnHidden(event-> textField.textProperty().unbind());
-				info.show(infoButton);
-				infoText.setOnKeyPressed(event-> {if (event.getCode() == KeyCode.ESCAPE) info.hide();});
-			});
+			
+			if (this.isAdvancedMode()) {
+				infoButton.setOnMouseClicked(event2 -> {
+					infoButton.requestFocus();
+					if (textArea.getText().isEmpty())
+						return;
+	
+					TextArea infoText = new TextArea(textArea.getText());
+					infoText.setWrapText(true);
+					infoText.setPrefColumnCount(30);
+					infoText.setPrefRowCount(12);
+					textArea.textProperty().bind(infoText.textProperty());
+					PopOver info = new SqlPanePopOver(new VBox(infoText));
+					info.setOnHidden(event-> textArea.textProperty().unbind());
+					info.show(infoButton);
+					infoText.setOnKeyPressed(event-> {if (event.getCode() == KeyCode.ESCAPE) info.hide();});
+				});
+			}
+			else {
+				infoButton.setOnAction(action -> {
+					infoButton.requestFocus();
+					lastSelectedTextArea = textArea;
+					detailsArea.requestFocus();
+				});
+			}
 
 			if (sqlTableRow != null && sqlTableView.getPrimaryKey() != null && sqlTableView.getPrimaryKey().contains(columnName)) {
-				textField.setEditable(false);
-				textField.setTooltip(new Tooltip("Primary key can't be edit"));
+				textArea.setEditable(false);
+				textArea.setTooltip(new Tooltip("Primary key can't be edit"));
 				label.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
 			} else if (sqlTableRow != null && sqlTableView.getSqlTable().isForeignKey(columnName)) {
-				textField.setTooltip(new Tooltip("Foreign key"));
+				textArea.setTooltip(new Tooltip("Foreign key"));
 				label.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
 			}
-			HBox node = new HBox(label, textField, infoButton);
+			HBox node = new HBox(label, textArea, infoButton);
 
 			if (resizeable) {
 				label.prefWidthProperty().bind(node.widthProperty().multiply(0.4));
-				textField.prefWidthProperty().bind(node.widthProperty().multiply(0.6));
+				textArea.prefWidthProperty().bind(node.widthProperty().multiply(0.6));
 //				infoButton.prefWidthProperty().bind(node.widthProperty().multiply(0.1));
 			}
 
@@ -133,7 +165,11 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			centerBox.getChildren().add(node);
 		}
 		
-//		this.setBottom(messageLabel);
+		if (!this.isAdvancedMode()) {
+			detailsArea.setPadding(new Insets(5));
+			centerBox.getChildren().add(detailsArea);
+		}
+		
 		if (resizeable) {
 			scrollPane = new ScrollPane(centerBox);
 			scrollPane.hbarPolicyProperty().set(ScrollBarPolicy.NEVER);
@@ -144,11 +180,9 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 		else {
 			this.setCenter(centerBox);
 		}
-	}
-
-	public SqlTableRowEditBox() {
 		
 	}
+
 	public List<TextArea> getTextFields() {
 		return new ArrayList<>(fieldsMap.values());
 	}
@@ -229,7 +263,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 	
 	public void setActionButton(Button button) {
 		this.actionButton = button;
-		this.centerBox.getChildren().add(this.actionButton);
+		this.centerBox.getChildren().add(actionButton);
 	}
 
 	public void setScrollPane(ScrollPane scrollPane) {
@@ -252,6 +286,10 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			sb.append(key + " : " + fieldsMap.get(key).getText() + "\n");
 		}
 		return sb.toString();
+	}
+	
+	private boolean isAdvancedMode() {
+		return (System.getProperty("sqlbrowserfx.mode", "advanced").equals("advanced"));
 	}
 
 }
