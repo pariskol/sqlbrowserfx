@@ -109,20 +109,19 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 		Platform.runLater(() -> {
 			queryMenuItem.getItems().clear();
 			for (SqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
-				if (sqlPane instanceof DSqlPane)
-					continue;
-				DSqlPane dsqlPane = (DSqlPane) sqlPane;
-				if (dsqlPane.getSqlCodeAreaRef() != null) {
-					MenuItem sendToCodeArea = new MenuItem("Paste in " + dsqlPane.asDockNode().getTitle());
-					sendToCodeArea.setOnAction(action2 -> {
-						dsqlPane.getSqlCodeAreaRef().clear();
-						dsqlPane.getSqlCodeAreaRef().appendText(queriesMap.get(queryMenuItem.getText()));
-					});
-					queryMenuItem.getItems().add(sendToCodeArea);
+				if (sqlPane instanceof DSqlPane) {
+					DSqlPane dsqlPane = (DSqlPane) sqlPane;
+					if (dsqlPane.getSqlCodeAreaRef() != null) {
+						MenuItem sendToCodeArea = new MenuItem("Paste in " + dsqlPane.asDockNode().getTitle());
+						sendToCodeArea.setOnAction(action2 -> {
+							dsqlPane.getSqlCodeAreaRef().clear();
+							dsqlPane.getSqlCodeAreaRef().appendText(queriesMap.get(queryMenuItem.getText()));
+						});
+						queryMenuItem.getItems().add(sendToCodeArea);
+					}
 				}
 			}
 			});
-//		queryMenuItem.show();
 	}
 
 	@Override

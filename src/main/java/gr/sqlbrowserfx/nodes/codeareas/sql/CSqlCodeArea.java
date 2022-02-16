@@ -92,12 +92,6 @@ public class CSqlCodeArea extends SqlCodeArea {
 				}
 			});
 		});
-		addButton.setOnKeyPressed(event -> {
-			if (event.getCode() == KeyCode.ENTER) {
-				addButton.getOnAction().handle(new ActionEvent());
-				event.consume();
-			}
-		});
 
 		VBox vb = new VBox(categoryField, descriptionField, addButton);
 		saveQueryPopOver  = new PopOver(vb);
