@@ -9,6 +9,8 @@ then
   echo "Provide target version!"
   exit 1
 fi
+# check groovy
+groovy -version || exit 2
 
 sed -i "0,/<version>.*<\/version>/s//<version>$version<\/version>/" pom.xml
 git add pom.xml
