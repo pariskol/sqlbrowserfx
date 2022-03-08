@@ -13,7 +13,6 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.scene.control.Button;

@@ -81,6 +81,7 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 			parentTableView.getSelectionModel().getSelectedItem().set(column, newValue);
 			try {
 				parentTableView.updateSelectedRow();
+				DialogFactory.createNotification("Record update", "Successfully updated!");
 			} catch (Exception e) {
 				parentTableView.getSelectionModel().getSelectedItem().set(column, oldValue);
 				DialogFactory.createErrorNotification(e.getClass().getSimpleName(), "Could not update cell!\n" + e.getMessage(), e);

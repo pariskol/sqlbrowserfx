@@ -20,6 +20,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
@@ -46,6 +47,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
@@ -61,11 +63,12 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 
 	private Popup autoCompletePopup;
 	protected SearchAndReplacePopOver searchAndReplacePopOver;
-	private ListView<String> suggestionsList;
+	private ListView<Keyword> suggestionsList;
 	private Thread textAnalyzerDaemon;
 	protected MenuItem menuItemRun;
 	private SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
 	private SimpleBooleanProperty autoCompleteProperty = new SimpleBooleanProperty(true);
+	private PopOver goToLinePopOver = null;
 	
 
 	public SqlCodeArea() {
@@ -117,10 +120,13 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	}
 
 	protected void onMouseClicked() {
-		if (autoCompletePopupShowing) {
+		if (autoCompletePopupShowing)
 			hideAutocompletePopup();
-		}
+		
 		searchAndReplacePopOver.hide();
+		
+		if (goToLinePopOver != null)
+			goToLinePopOver.hide();
 	}
 
 	private void initTextAnalyzerDaemon() {
@@ -259,7 +265,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 				action -> this.convertSelectedTextToUpperCase()
         );
 		InputMap<Event> toLower = InputMap.consume(
-				EventPattern.keyPressed(KeyCode.L, KeyCombination.CONTROL_DOWN),
+				EventPattern.keyPressed(KeyCode.I, KeyCombination.CONTROL_DOWN),
 				action -> this.convertSelectedTextToLowerCase()
         );
 // FIXME Desired behaviour can't be achieved with input map autocomplete popover does not hide.
@@ -288,6 +294,10 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 						this.replaceSelection(SqlFormatter.format(this.getSelectedText()));
 				}
 		);
+		InputMap<Event> goToLine = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.L, KeyCombination.CONTROL_DOWN),
+				action -> this.goToLineAction()
+        );
 		
         Nodes.addFallbackInputMap(this, addTabs);
         Nodes.addFallbackInputMap(this, removeTabs);
@@ -299,6 +309,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
         Nodes.addInputMap(this, toUpper);
         Nodes.addInputMap(this, toLower);
         Nodes.addInputMap(this, format);
+        Nodes.addInputMap(this, goToLine);
 //        Nodes.addFallbackInputMap(this, backspace);
         Nodes.addFallbackInputMap(this, enter);
 	}
@@ -389,14 +400,44 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 				this.replaceSelection(SqlFormatter.formatAlternative(this.getSelectedText()));
 		});
 		
+		MenuItem menuItemGoToLine = new MenuItem("Go to line...", JavaFXUtils.createIcon("/icons/next.png"));
+		menuItemGoToLine.setOnAction(action -> this.goToLineAction());
+		
 		MenuItem menuItemSaveAs = new MenuItem("Save As...", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSaveAs.setOnAction(action -> this.saveAsFileAction());
 		
 		menu.getItems().addAll(menuItemRun, menuItemCopy, menuItemCut, menuItemPaste, menuItemUperCase,
-				menuItemLowerCase, menuItemFormat, menuItemSuggestions, menuItemSearchAndReplace, menuItemSaveAs);
+				menuItemLowerCase, menuItemFormat, menuItemFormat3, menuItemGoToLine, menuItemSuggestions, menuItemSearchAndReplace, menuItemSaveAs);
 		return menu;
 	}
 
+	private void goToLineAction() {
+		if (goToLinePopOver != null)
+			return;
+		
+		TextField textField = new TextField();
+		textField.setPromptText("Go to line");
+		textField.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ENTER) {
+				if (textField.getText().isEmpty())
+					return;
+				
+				int targetParagraph = Integer.parseInt(textField.getText()) - 1;
+				if (targetParagraph > 0 && targetParagraph < this.getParagraphs().size()) {
+					this.moveTo(targetParagraph, 0);
+					this.requestFollowCaret();
+					goToLinePopOver.hide();
+					goToLinePopOver = null;
+				}
+			}
+		});
+		goToLinePopOver = new PopOver(textField);
+		goToLinePopOver.setOnHidden(event -> goToLinePopOver = null);
+		goToLinePopOver.setArrowSize(0);
+		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		goToLinePopOver.show(this, boundsInScene.getMaxX() - goToLinePopOver.getWidth() - 200, boundsInScene.getMinY());
+	}
+	
 	private void convertSelectedTextToUpperCase() {
 		if (!this.getSelectedText().isEmpty()) {
 			String toUpperCase = this.getSelectedText().toUpperCase();
@@ -417,29 +458,32 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		return new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, false, true, false, false);
 	}
 
-	private ListView<String> createSuggestionsListView(List<String> suggestions) {
-		ListView<String> suggestionsList = new ListView<>();
+	private ListView<Keyword> createSuggestionsListView(List<Keyword> suggestions) {
+		ListView<Keyword> suggestionsList = new ListView<>();
 		if (suggestions != null) {
 			suggestionsList.getItems().addAll(FXCollections.observableList(suggestions));
-			suggestionsList.setPrefHeight(100);
+			suggestionsList.setPrefHeight(200);
 		}
 		suggestionsList.setCellFactory(callback -> {
-			return new SuggestionListCell();
+			return new SuggestionListCell(suggestionsList);
 		});
 		return suggestionsList;
 	}
 
 	private void saveAsFileAction() {
 		FileChooser fileChooser = new FileChooser();
-		File selectedFile = fileChooser.showOpenDialog(null);
+		fileChooser.setInitialFileName("new.sql");
+		File selectedFile = fileChooser.showSaveDialog(null);
 		
 		if (selectedFile == null) return;
 		
 		try {
-		    Files.createFile(Paths.get(selectedFile.getPath()));
+			if (!Files.exists(Paths.get(selectedFile.getPath())))
+				Files.createFile(Paths.get(selectedFile.getPath()));
+			
 			Files.write(Paths.get(selectedFile.getPath()), this.getText().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
 		} catch (IOException e) {
-			e.printStackTrace();
+			DialogFactory.createErrorDialog(e);
 		}
 		DialogFactory.createNotification("File saved", "File saved at " + new Date().toString());
 	} 
@@ -448,7 +492,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		
 		String ch = event.getCharacter();
 		if (event.isShiftDown() && event.isControlDown() && event.getCode() == KeyCode.SPACE) {
-			autoCompletePopup = this.createPopup();
+			autoCompletePopup = this.createAutoCompletePopup();
 			
 			int caretPosition = this.getCaretPosition();
 			String query = this.calculateQuery(caretPosition);
@@ -457,10 +501,9 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 				if (event.getCode() == KeyCode.ENTER)
 					return;
 
-				List<String> suggestions = this.getSavedQueries(query);
+				List<Keyword> suggestions = this.getSavedQueries(query);
 				
 				suggestionsList = this.createSuggestionsListView(suggestions);
-				suggestionsList.setPrefSize(400, 200);
 				if (suggestionsList.getItems().size() != 0) {
 					autoCompletePopup.getContent().setAll(suggestionsList);
 					this.showAutoCompletePopup();
@@ -474,6 +517,10 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 				this.hideAutocompletePopup();
 			}
 		}
+		else if(ch.equals("'")) {
+			this.insertText(this.getCaretPosition(), "'");
+			return;
+		}
 		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
 				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
 				|| ch.equals(".") || ch.equals(",") || ch.equals("_")
@@ -483,10 +530,10 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			int caretPosition = this.getCaretPosition();
 			String query = this.calculateQuery(caretPosition);
 			
-			autoCompletePopup = this.createPopup();
+			autoCompletePopup = this.createAutoCompletePopup();
 
 			if (!query.isEmpty()) {
-				List<String> suggestions = null;
+				List<Keyword> suggestions = null;
 				if (event.getCode() == KeyCode.ENTER) {
 					return;
 				}
@@ -517,7 +564,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		event.consume();
 	}
 
-	private List<String> getSavedQueries(String query) {
+	private List<Keyword> getSavedQueries(String query) {
 		List<String> suggestions = new ArrayList<>();
 		String sql = "select query from saved_queries where description like '%" + query + "%' ";
 		try {
@@ -525,7 +572,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		} catch (SQLException e) {
 			DialogFactory.createErrorNotification(e);
 		}
-		return suggestions;
+		return suggestions.stream().map(kw -> new Keyword(kw, KeywordType.QUERY)).collect(Collectors.toList());
 	}
 
 	private void hideAutocompletePopup() {
@@ -535,7 +582,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		}
 	}
 
-	private void setOnSuggestionListKeyPressed(ListView<String> suggestionsList,
+	private void setOnSuggestionListKeyPressed(ListView<Keyword> suggestionsList,
 			final String query, final int caretPosition) {
 		
 		suggestionsList.setOnKeyPressed(keyEvent -> {
@@ -552,11 +599,11 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 									false, false, false, false)));
 	}
 
-	private void listViewOnEnterActrion(ListView<String> suggestionsList, final String query, final int caretPosition,
+	private void listViewOnEnterActrion(ListView<Keyword> suggestionsList, final String query, final int caretPosition,
 			KeyEvent keyEvent) {
 		final String word = (suggestionsList.getSelectionModel().getSelectedItem() != null) ?
-								suggestionsList.getSelectionModel().getSelectedItem().replaceAll("@", "")	 :
-									suggestionsList.getItems().get(0).replaceAll("@", "");
+								suggestionsList.getSelectionModel().getSelectedItem().getKeyword()	 :
+									suggestionsList.getItems().get(0).getKeyword();
 
 		Platform.runLater(() -> {
 			if (insertMode) {
@@ -587,7 +634,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		}
 	}
 
-	private Popup createPopup() {
+	private Popup createAutoCompletePopup() {
 		if (autoCompletePopup != null)
 			return autoCompletePopup;
 		
@@ -637,18 +684,18 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
         return keywords.substring(last + 1).trim();
     }
 
-	private List<String> getQuerySuggestions(String query) {
-        List<String> suggestions = SqlCodeAreaSyntax.KEYWORDS_lIST.stream()
-        							.filter(keyword -> keyword != null && keyword.startsWith(query)).collect(Collectors.toList());
-        return suggestions;
-    }
+	private List<Keyword> getQuerySuggestions(String query) {
+		List<Keyword> suggestions = SqlCodeAreaSyntax.KEYWORDS_lIST.stream()
+				.filter(keyword -> keyword != null && keyword.getKeyword().startsWith(query))
+				.collect(Collectors.toList());
+		return suggestions;
+	}
     
-    private List<String> getColumnsSuggestions(String query) {
+    private List<Keyword> getColumnsSuggestions(String query) {
     	String[] split = query.split("\\.");
-    	
     	String tableAlias = split[0];
     	String columnPattern = split.length > 1 ? split[1] : null;
-    	
+
     	for (String knownTable : tableAliases.keySet()) {
     		Collection<String> shortcuts = tableAliases.get(knownTable);
     		for (String s : shortcuts) {
@@ -656,15 +703,18 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
         	    	if (columnPattern != null) {
         	    		return SqlCodeAreaSyntax.COLUMNS_MAP.get(knownTable)
         	    							.stream().filter(col -> col.toLowerCase().contains(columnPattern.toLowerCase()))
+        	    							.map(kw -> new Keyword(kw, KeywordType.COLUMN))
         	    							.collect(Collectors.toList());
         	    	}
         	    	else {
-        	    		return SqlCodeAreaSyntax.COLUMNS_MAP.get(knownTable);
+						return SqlCodeAreaSyntax.COLUMNS_MAP.get(knownTable).stream()
+								.map(kw -> new Keyword(kw, KeywordType.COLUMN)).collect(Collectors.toList());
         	    	}
     			}
     		}
     	}
-    	return SqlCodeAreaSyntax.COLUMNS_MAP.get(tableAlias);
+		return SqlCodeAreaSyntax.COLUMNS_MAP.get(tableAlias).stream().map(kw -> new Keyword(kw, KeywordType.COLUMN))
+				.collect(Collectors.toList());
     }
 
 	private Map<String, Set<String>> analyzeTextForTablesAliases(String text) {
@@ -685,7 +735,8 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		return newTableAliases;
 	}
 	
-	protected void enableShowLineNumbers(boolean enable) {
+	@Override
+	public void enableShowLineNumbers(boolean enable) {
 		if (enable)
 			this.setParagraphGraphicFactory(LineNumberFactory.get(this));
 		else

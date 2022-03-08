@@ -11,14 +11,14 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.SqlConnector;
-import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import io.javalin.Javalin;
 
 public class RESTfulService {
 
 	private static Javalin APP;
-	private static int IP, PORT;
+	private static int PORT;
+	private static String IP;
 	static Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
 	
@@ -41,14 +41,14 @@ public class RESTfulService {
 		});
 		
 		
-		APP.get("/tables", ctx-> {
+		APP.get("/api/tables", ctx-> {
 			List<String> data = new ArrayList<>(sqlConnector.getTables());
 			data.addAll(sqlConnector.getViews());
 			ctx.result(new JSONArray(data).toString());
 		});
 
 		
-		APP.post("/save/{table}", (ctx) -> {
+		APP.post("/api/save/{table}", (ctx) -> {
 			JSONObject jsonObject = new JSONObject(ctx.body());
 			
 			String table = ctx.pathParam("table");
@@ -72,7 +72,7 @@ public class RESTfulService {
 			ctx.result("{ \"message\": \"Data has been saved\"}");
 		});
 		
-		APP.post("/delete/{table}", (ctx) -> {
+		APP.post("/api/delete/{table}", (ctx) -> {
 			JSONObject jsonObject = new JSONObject(ctx.body());
 			
 			String table = ctx.pathParam("table");
@@ -89,7 +89,7 @@ public class RESTfulService {
 			ctx.result("{ message: \"Data has been deleted\"}");
 		});
 		
-		APP.get("/get/{table}", (ctx) -> {
+		APP.get("/api/get/{table}", (ctx) -> {
 			String table = ctx.pathParam("table");
 			if (table == null)
 				throw new Exception("param 'table' is invalid");
@@ -119,11 +119,12 @@ public class RESTfulService {
 	}
 	
 	public static void configure(String ip, int port) {
+		IP = ip;
 		PORT = port;
 	}
 	
 	public static void start() {
-		APP.start(PORT);
+		APP.start(IP,PORT);
 	}
 	
 	public static void stop() {

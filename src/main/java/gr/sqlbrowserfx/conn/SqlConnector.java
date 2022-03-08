@@ -509,4 +509,7 @@ public abstract class SqlConnector {
 
 	public abstract void rollbackAll();
 
+	public Integer getLastGeneratedId() throws SQLException {
+		return -1;
+	}
 }

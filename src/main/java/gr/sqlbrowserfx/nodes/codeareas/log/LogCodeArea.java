@@ -6,7 +6,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.regex.Matcher;
 
+import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -18,15 +20,21 @@ import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 
 public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLighter {
 
 	private SearchAndReplacePopOver searchAndReplacePopOver;
+	private SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
+	private SimpleBooleanProperty followCarretProperty = new SimpleBooleanProperty(true);
+	private PopOver goToLinePopOver = null;
+
 
 	public LogCodeArea() {
 		super();
@@ -35,7 +43,17 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		this.enableHighlighting();
 		this.setContextMenu(this.createContextMenu());
 		this.setInputMap();
-//		this.setKeys();
+		this.showLinesProperty.addListener((ob,ov,nv) -> enableShowLineNumbers(nv));
+		
+		this.setOnMouseClicked(mouseEvent -> this.onMouseClicked());
+	}
+	
+	@Override
+	public void enableShowLineNumbers(boolean enable) {
+		if (enable)
+			this.setParagraphGraphicFactory(LineNumberFactory.get(this));
+		else
+			this.setParagraphGraphicFactory(null);
 	}
 	
 	@Override
@@ -53,24 +71,15 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
 				action -> this.showSearchAndReplacePopup()
         ));
-		Nodes.addInputMap(this, 
-				InputMap.consume(
-				EventPattern.keyPressed(KeyCode.D, KeyCombination.CONTROL_DOWN),
-				action -> {
-					boolean hasInitialSelectedText = false;
-					if (this.getSelectedText().isEmpty())
-						this.selectLine();
-					else
-						hasInitialSelectedText = true;
-					
-					this.replaceSelection("");
-					
-					if (!hasInitialSelectedText && this.getCaretPosition() != 0) {
-						this.deletePreviousChar();
-						this.moveTo(this.getCaretPosition() + 1);
-					}
-				}
+		Nodes.addInputMap(this,InputMap.consume(
+				EventPattern.keyPressed(KeyCode.L, KeyCombination.CONTROL_DOWN),
+				action -> this.goToLineAction()
         ));
+	}
+	
+	protected void onMouseClicked() {
+		if (goToLinePopOver != null)
+			goToLinePopOver.hide();
 	}
 	
 	@SuppressWarnings("unused")
@@ -79,20 +88,6 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.F) {
 				this.showSearchAndReplacePopup();
-			}
-			else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.D) {
-				boolean hasInitialSelectedText = false;
-				if (this.getSelectedText().isEmpty())
-					this.selectLine();
-				else
-					hasInitialSelectedText = true;
-				
-				this.replaceSelection("");
-				
-				if (!hasInitialSelectedText && this.getCaretPosition() != 0) {
-					this.deletePreviousChar();
-					this.moveTo(this.getCaretPosition() + 1);
-				}
 			}
 		});
 	}
@@ -113,8 +108,6 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 			String styleClass = matcher.group("KEYWORD") != null ? "keyword"
 					: matcher.group("FUNCTION") != null ? "function"
 							: matcher.group("METHOD") != null ? "method" : matcher.group("PAREN") != null ? "paren"
-//							: matcher.group("BRACE") != null ? "brace"
-//									: matcher.group("BRACKET") != null ? "bracket"
 									: matcher.group("SEMICOLON") != null ? "semicolon"
 											: matcher.group("STRING2") != null ? "string2"
 													: matcher.group("STRING") != null ? "string"
@@ -138,8 +131,38 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
 		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
-		menu.getItems().addAll(menuItemCopy,menuItemSearchAndReplace);
+		MenuItem menuItemGoToLine = new MenuItem("Go to line...", JavaFXUtils.createIcon("/icons/next.png"));
+		menuItemGoToLine.setOnAction(action -> this.goToLineAction());
+		
+		menu.getItems().addAll(menuItemCopy,menuItemSearchAndReplace, menuItemGoToLine);
 		return menu;
+	}
+	
+	private void goToLineAction() {
+		if (goToLinePopOver != null)
+			return;
+		
+		TextField textField = new TextField();
+		textField.setPromptText("Go to line ...");
+		textField.setOnKeyPressed(keyEvent -> {
+			if (keyEvent.getCode() == KeyCode.ENTER) {
+				if (textField.getText().isEmpty())
+					return;
+				
+				int targetParagraph = Integer.parseInt(textField.getText()) - 1;
+				if (targetParagraph > 0 && targetParagraph < this.getParagraphs().size()) {
+					this.moveTo(targetParagraph, 0);
+					this.requestFollowCaret();
+					goToLinePopOver.hide();
+					goToLinePopOver = null;
+				}
+			}
+		});
+		goToLinePopOver = new PopOver(textField);
+		goToLinePopOver.setOnHidden(event -> goToLinePopOver = null);
+		goToLinePopOver.setArrowSize(0);
+		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		goToLinePopOver.show(this, boundsInScene.getMaxX() - goToLinePopOver.getWidth() - 200, boundsInScene.getMinY());
 	}
 	
 	protected void showSearchAndReplacePopup() {
@@ -150,5 +173,13 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
 		searchAndReplacePopOver.show(this, boundsInScene.getMaxX() - searchAndReplacePopOver.getWidth(),
 				boundsInScene.getMinY());
+	}
+	
+	public SimpleBooleanProperty showLinesProperty() {
+		return showLinesProperty;
+	}
+	
+	public SimpleBooleanProperty followCarretProperty() {
+		return followCarretProperty;
 	}
 }

@@ -74,9 +74,10 @@ public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner {
 		scemaDetailsButton.setOnAction(actionEvent -> {
 			SqlCodeArea codeArea = new SqlCodeArea(this.dbTreeView.copyScemaAction(), false, false);
 			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
-			scrollPane.setPrefWidth(500);
+			scrollPane.setPrefSize(600, 400);
 
 			PopOver popOver = new PopOver(scrollPane);
+			popOver.setArrowSize(0);
 			popOver.setDetachable(false);
 			popOver.show(scemaDetailsButton);
 		});

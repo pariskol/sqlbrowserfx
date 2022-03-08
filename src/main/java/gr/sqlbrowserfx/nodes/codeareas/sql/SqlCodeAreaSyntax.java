@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,7 @@ public class SqlCodeAreaSyntax {
 	public static  String[] TYPES;
 	public static  String[] KEYWORDS;
 
-	public static final Set<String> KEYWORDS_lIST = new LinkedHashSet<>();
+	public static final Set<Keyword> KEYWORDS_lIST = new LinkedHashSet<>();
 	public static final Map<String, List<String>> COLUMNS_MAP = new HashMap<>();
 
 	private static final String PAREN_PATTERN = "\\(|\\)";
@@ -63,9 +64,12 @@ public class SqlCodeAreaSyntax {
 								+ "|(?<METHOD>" + METHOD_PATTERN + ")" 
 								+ "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
 		
-		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.KEYWORDS));
-		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.TYPES));
-        KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.FUNCTIONS));
+		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.KEYWORDS).stream()
+				.map(kw -> new Keyword(kw, KeywordType.KEYWORD)).collect(Collectors.toList()));
+		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.TYPES).stream()
+				.map(kw -> new Keyword(kw, KeywordType.TYPE)).collect(Collectors.toList()));
+		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntax.FUNCTIONS).stream()
+				.map(kw -> new Keyword(kw, KeywordType.FUNCTION)).collect(Collectors.toList()));
 	}
 	
 	private static String[] getAutocomplteWords(String category) {
@@ -89,8 +93,14 @@ public class SqlCodeAreaSyntax {
 		return list.toArray(array);
 	}
 	
-    public static void bind(List<String> list) {
-        KEYWORDS_lIST.addAll(list);
+//    public static void bind(List<String> list2) {
+//		KEYWORDS_lIST
+//				.addAll(list.stream().map(kw -> new Keyword(kw, KeywordType.KEYWORD)).collect(Collectors.toList()));
+//    }
+    
+    public static void bind(List<Keyword> list) {
+		KEYWORDS_lIST
+				.addAll(list);
     }
     
     public static void bind(String table, List<String> columns) {

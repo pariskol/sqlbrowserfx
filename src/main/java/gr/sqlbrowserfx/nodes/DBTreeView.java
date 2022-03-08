@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.controlsfx.control.PopOver;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
@@ -28,6 +29,7 @@ import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
+import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
@@ -319,7 +321,7 @@ public class DBTreeView extends TreeView<String>
 
 		sqlConnector.getSchemas(treeItem.getValue(), rset -> {
 			String schema = rset.getString(schemaColumn);
-			TreeItem<String> schemaItem = new TreeItem<String>(schema);
+			TreeItem<String> schemaItem = new TreeItem<>(schema);
 			schemaTree.getChildren().add(schemaItem);
 		});
 
@@ -434,9 +436,21 @@ public class DBTreeView extends TreeView<String>
 				this.collapseAll(this.getSelectionModel().getSelectedItem());
 		});
 
-		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemDrop, menuItemSearch, menuItemRefresh,
-				menuItemCollapseAll);
+		MenuItem menuItemOpenSchema = new MenuItem("Show schema", JavaFXUtils.createIcon("/icons/script.png"));
+		menuItemOpenSchema.setOnAction(action -> {
+			SqlCodeArea codeArea = new SqlCodeArea(this.copyScemaAction(), false, false);
+			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
+			scrollPane.setPrefSize(600, 400);
 
+			PopOver popOver = new PopOver(scrollPane);
+			popOver.setArrowSize(0);
+			popOver.setDetachable(false);
+			popOver.show(this.getSelectionModel().getSelectedItem().getGraphic());
+		});
+		
+		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemDrop, menuItemSearch, menuItemRefresh,
+				menuItemCollapseAll, menuItemOpenSchema);
+		
 		return contextMenu;
 	}
 

@@ -5,7 +5,7 @@
     -fx-control-inner-background: derive(-fx-base,30%);
     -fx-control-inner-background-alt: derive(-fx-control-inner-background, 30%);
     -fx-faint-focus-color: transparent;
-    /*-fx-font-size: 11pt;
+    -fx-font-size: 13pt;
 	/*-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
 	-fx-selection-bar-non-focused: derive(-fx-base,90%);
 }
@@ -443,10 +443,12 @@
 
 .styled-text-area .text.string {
     -fx-fill: #e6da74;
+    -fx-font-weight: bold;
 }
 
 .styled-text-area .text.string2 {
     -fx-fill: #e6da74;
+    -fx-font-weight: bold;
 }
 
 .styled-text-area .text.todo {

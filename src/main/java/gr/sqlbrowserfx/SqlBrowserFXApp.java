@@ -15,13 +15,10 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import org.apache.commons.io.input.Tailer;
-import org.apache.commons.io.input.TailerListener;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
 import org.dockfx.DockWeights;
-import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
 
@@ -33,21 +30,22 @@ import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
+import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.HelpTabPane;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
-import gr.sqlbrowserfx.nodes.codeareas.log.CodeAreaTailerListener;
-import gr.sqlbrowserfx.nodes.codeareas.log.LogCodeArea;
+import gr.sqlbrowserfx.nodes.codeareas.sql.Keyword;
+import gr.sqlbrowserfx.nodes.codeareas.sql.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
 import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
 import gr.sqlbrowserfx.nodes.tableviews.JSONTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
-import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
 import gr.sqlbrowserfx.rest.RESTfulService;
+import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
 import gr.sqlbrowserfx.utils.HttpClient;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
@@ -350,7 +348,7 @@ public class SqlBrowserFXApp extends Application {
 		ddbTreePane.getDBTreeView().asDockNode().setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
 		
 		ddbTreePane.getDBTreeView().addObserver(value -> {
-			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x + "@").collect(Collectors.toList()));
+			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(kw -> new Keyword(kw, KeywordType.TABLE)).collect(Collectors.toList()));
 //			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x.toUpperCase() + "@").collect(Collectors.toList()));
 		});
 		mainSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
@@ -433,23 +431,7 @@ public class SqlBrowserFXApp extends Application {
 //		});
 		
 		MenuItem logItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
-		logItem.setOnAction(actionEvent -> {
-			LogCodeArea logArea = new LogCodeArea();
-			TailerListener listener = new CodeAreaTailerListener(logArea);
-		    Tailer tailer = new Tailer(new File("./logs/sqlbrowserfx.log"), listener, 1000);
-		    Thread tailerDaemon = new Thread(tailer, "Logfile Tailer Daemon");
-		    tailerDaemon.setDaemon(true);
-		    tailerDaemon.start();
-		      
-		    VirtualizedScrollPane<LogCodeArea> virtualizedScrollPane =new VirtualizedScrollPane<>(logArea);
-		    JavaFXUtils.applyJMetro(virtualizedScrollPane);
-			DockNode dockNode = new DockNode(dockPane, virtualizedScrollPane, "Log", JavaFXUtils.createIcon("/icons/monitor.png"));
-			dockNode.setOnClose(() -> {
-				tailer.stop();
-				tailerDaemon.interrupt();
-			});
-
-		});
+		logItem.setOnAction(actionEvent -> new DLogConsolePane(dockPane).asDockNode());
 		
 		MenuItem terminalItem = new MenuItem("Open Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
 		terminalItem.setOnAction(event -> {
@@ -481,12 +463,14 @@ public class SqlBrowserFXApp extends Application {
 					restServiceStartItem.setGraphic(JavaFXUtils.createIcon("/icons/stop.png"));
 					restServiceStartItem.setText("Stop Restful Service");
 					restServiceStarted = true;
+					DialogFactory.createNotification("Restful Service", "Restful Service started !");
 				} catch(Exception e) {
 					DialogFactory.createErrorNotification(e);
 				}
 			} else {
 				RESTfulService.stop();
 				restServiceStarted = false;
+				DialogFactory.createNotification("Restful Service", "Restful Service stopped !");
 				restServiceStartItem.setGraphic(JavaFXUtils.createIcon("/icons/play.png"));
 				restServiceStartItem.setText("Start Restful Service");
 			}

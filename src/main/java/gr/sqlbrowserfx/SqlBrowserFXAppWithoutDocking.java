@@ -21,6 +21,8 @@ import gr.sqlbrowserfx.dock.nodes.DSqlConsolePaneNH;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
+import gr.sqlbrowserfx.nodes.codeareas.sql.Keyword;
+import gr.sqlbrowserfx.nodes.codeareas.sql.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
 import gr.sqlbrowserfx.nodes.sqlpane.SimpleSqlPane;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
@@ -266,7 +268,7 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 				.setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
 
 		ddbTreePane.getDBTreeView().addObserver(value -> {
-			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x + "@")
+			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(kw -> new Keyword(kw, KeywordType.TABLE))
 					.collect(Collectors.toList()));
 		});
 

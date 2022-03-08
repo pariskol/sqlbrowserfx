@@ -31,7 +31,7 @@ public class HelpShortcutsTabPane extends TabPane {
 		addShortcut("Switch Tabs", "Ctrl+Page Up", rows);
 		addShortcut("Switch Tabs", "Ctrl+Page Down", rows);
 		addShortcut("To Upper Case (selected text)", "Ctrl+U", rows);
-		addShortcut("To Lower Case (selected text)", "Ctrl+L", rows);
+		addShortcut("To Lower Case (selected text)", "Ctrl+I", rows);
 		addShortcut("Add Tabs (to selected text)", "Ctrl+Tab", rows);
 		addShortcut("Remove Tabs (from selected text)", "Ctrl+Shift+Tab", rows);
 		addShortcut("Autocomplete", "Ctrl+Space", rows);
@@ -52,6 +52,7 @@ public class HelpShortcutsTabPane extends TabPane {
 		addShortcut("Scroll To End", "Ctrl+End", rows);
 		addShortcut("Go To Start Of Line", "Home", rows);
 		addShortcut("Go To End Of Line", "End", rows);
+		addShortcut("Go To Line", "Ctrl+L", rows);
 		addShortcut("Skip Rows", "Page Up/Page Down", rows);
 		addShortcut("Navigation", "Arrows", rows);
 		addShortcut("Context Menu", "Right Click", rows);

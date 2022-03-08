@@ -4,6 +4,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
+import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableRowEditBox;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
 import gr.sqlbrowserfx.nodes.tableviews.filter.SqlTableFilter;
@@ -489,7 +491,26 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		logger.debug(message);
 		final String query = sqlQuery;
 		sqlConnector.executeUpdate(query, params);
-		this.getSqlTableRows().add(new MapTableViewRow(entry));
+//		if (sqlConnector instanceof MysqlConnector) {
+		try {
+			Integer lastId = sqlConnector.getLastGeneratedId();
+			if (lastId == -1)
+				throw new Exception("Could not retrieve last inserted id");
+			
+			sqlConnector.executeQuery(
+					"select " + StringUtils.join(columns, ", ") + " from " + this.getTableName() + " where " + this.getSqlTable().getPrimaryKey() + " = ? ",
+					Arrays.asList(lastId), 
+					rset -> {
+						try {
+							this.getSqlTableRows().add(new MapTableViewRow(DTOMapper.map(rset)));
+						} catch (Exception e) {
+							DialogFactory.createErrorDialog(e);
+						}
+					});
+		} catch(Exception e) {
+			// fallback option if query to retrieve last id failed
+			this.getSqlTableRows().add(new MapTableViewRow(entry));
+		}
 //		this.sort();
 	}
 

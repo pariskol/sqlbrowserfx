@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.sql.DataSource;
 
@@ -235,5 +236,14 @@ public class MysqlConnector extends SqlConnector {
 			}
 		});
 		return tables;
+	}
+	
+	@Override
+	public Integer getLastGeneratedId() throws SQLException {
+		AtomicInteger lastId = new AtomicInteger();
+		this.executeQuery("select last_insert_id()", rset -> {
+			lastId.set(rset.getInt(1));
+		});
+		return lastId.get();
 	}
 }
