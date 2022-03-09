@@ -92,7 +92,7 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		this.enableHighlighting();
 	}
 
-	public SqlCodeArea(String text, boolean editable, boolean withMenu) {
+	public SqlCodeArea(String text, boolean editable, boolean withMenu, boolean autoFormat) {
 		super();
 	
 		if (!withMenu)
@@ -117,6 +117,10 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 				this.deselect();
 			}
 		});
+		
+		if (autoFormat) {
+			this.formatText();
+		}
 	}
 
 	protected void onMouseClicked() {
@@ -751,5 +755,8 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		return autoCompleteProperty;
 	}
 
+	public void formatText() {
+		this.replaceText(SqlFormatter.format(this.getText()));
+	}
 	
 }

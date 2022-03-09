@@ -50,7 +50,7 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 		ContextMenu menu = super.createContextMenu();
 		openInSqlPaneMenu = new Menu("Open in..." , JavaFXUtils.createIcon("/icons/openTab.png"));
 		this.populateSqlPanesMenu();
-		menu.getItems().add(menu.getItems().size()-1, openInSqlPaneMenu);
+		menu.getItems().add(openInSqlPaneMenu);
 		return menu;
 		
 	}

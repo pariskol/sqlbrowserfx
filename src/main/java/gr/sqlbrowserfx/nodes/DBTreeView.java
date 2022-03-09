@@ -23,7 +23,6 @@ import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
-import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
@@ -35,6 +34,7 @@ import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -117,20 +117,21 @@ public class DBTreeView extends TreeView<String>
 		nextSearchResultButton.setOnAction(event -> {
 			if (searchResultsList.isEmpty())
 				return;
-			lastSelectedItemPos = lastSelectedItemPos == searchResultsList.size() - 1 ? 0 :  ++lastSelectedItemPos;
+			lastSelectedItemPos = lastSelectedItemPos == searchResultsList.size() - 1 ? 0 : ++lastSelectedItemPos;
 			this.getSelectionModel().clearSelection();
 			this.getSelectionModel().select(searchResultsList.get(lastSelectedItemPos));
 			int row = this.getRow(searchResultsList.get(lastSelectedItemPos));
 			this.scrollTo(row);
 		});
-		
+
 		this.setInputMap();
 //		this.setKeys();
 	}
 
 	protected void setInputMap() {
-		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
-				action -> this.showSearchField()));
+		// enable following line if this view used as standalone
+//		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
+//				action -> this.showSearchPopup()));
 		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.C, KeyCombination.CONTROL_DOWN),
 				action -> this.copyAction()));
 	}
@@ -145,7 +146,7 @@ public class DBTreeView extends TreeView<String>
 					this.copyAction();
 					break;
 				case F:
-					this.showSearchField();
+					this.showSearchPopup();
 					break;
 				default:
 					break;
@@ -215,10 +216,16 @@ public class DBTreeView extends TreeView<String>
 		}
 	}
 
-	public void showSearchField() {
+	public void showSearchPopup() {
 		PopOver popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
 		popOver.setArrowSize(0);
-		popOver.show(rootItem.getGraphic());
+		popOver.show(this);;
+	}
+	
+	public void showSearchPopup(Node owner) {
+		PopOver popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
+		popOver.setArrowSize(0);
+		popOver.show(owner);;
 	}
 
 	private void clearAll() {
@@ -321,7 +328,8 @@ public class DBTreeView extends TreeView<String>
 
 		sqlConnector.getSchemas(treeItem.getValue(), rset -> {
 			String schema = rset.getString(schemaColumn);
-			TreeItem<String> schemaItem = new TreeItem<>(schema);
+			TreeItem<String> schemaItem = new TreeItem<>(schema); // , new SqlCodeArea(schema, false, false,
+																	// isUsingMysql()));
 			schemaTree.getChildren().add(schemaItem);
 		});
 
@@ -336,7 +344,8 @@ public class DBTreeView extends TreeView<String>
 					fkeys.stream().map(x -> x.get(SqlConnector.FOREIGN_KEY)).collect(Collectors.toList()));
 			sqlTable.getColumns();
 			for (String column : sqlTable.getColumns()) {
-				TreeItem<String> columnTreeItem = new TreeItem<String>(column);
+				TreeItem<String> columnTreeItem = new TreeItem<>(column);
+				columnTreeItem.setGraphic(JavaFXUtils.createIcon("/icons/blue.png"));
 				if (sqlTable.getPrimaryKey() != null && sqlTable.getPrimaryKey().contains(column))
 					columnTreeItem.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
 				else if (sqlTable.isForeignKey(column)) {
@@ -348,6 +357,7 @@ public class DBTreeView extends TreeView<String>
 						String refColumn = map.get(SqlConnector.REFERENCED_TABLE) + ": "
 								+ map.get(SqlConnector.REFERENCED_KEY);
 						TreeItem<String> referenceItem = new TreeItem<>(refColumn);
+						referenceItem.setGraphic(JavaFXUtils.createIcon("/icons/blue.png"));
 						columnTreeItem.getChildren().add(referenceItem);
 					}
 
@@ -417,19 +427,6 @@ public class DBTreeView extends TreeView<String>
 		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.createIcon("/icons/minus.png"));
 		menuItemDrop.setOnAction(event -> dropAction());
 
-		MenuItem menuItemSearch = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
-		menuItemSearch.setOnAction(event -> this.showSearchField());
-
-		MenuItem menuItemRefresh = new MenuItem("Refresh View", JavaFXUtils.createIcon("/icons/refresh.png"));
-		menuItemRefresh.setOnAction(event -> {
-			try {
-				this.refreshTreeView();
-				if (!(sqlConnector instanceof SqliteConnector))
-					this.refreshFunctionAndProcedures();
-			} catch (SQLException e) {
-				DialogFactory.createErrorDialog(e);
-			}
-		});
 		MenuItem menuItemCollapseAll = new MenuItem("Collapse All", JavaFXUtils.createIcon("/icons/collapse.png"));
 		menuItemCollapseAll.setOnAction(event -> {
 			if (this.getSelectionModel().getSelectedItem() != null)
@@ -438,7 +435,7 @@ public class DBTreeView extends TreeView<String>
 
 		MenuItem menuItemOpenSchema = new MenuItem("Show schema", JavaFXUtils.createIcon("/icons/script.png"));
 		menuItemOpenSchema.setOnAction(action -> {
-			SqlCodeArea codeArea = new SqlCodeArea(this.copyScemaAction(), false, false);
+			SqlCodeArea codeArea = new SqlCodeArea(this.copyScemaAction(), false, false, isUsingMysql());
 			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
 			scrollPane.setPrefSize(600, 400);
 
@@ -447,10 +444,10 @@ public class DBTreeView extends TreeView<String>
 			popOver.setDetachable(false);
 			popOver.show(this.getSelectionModel().getSelectedItem().getGraphic());
 		});
-		
-		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemDrop, menuItemSearch, menuItemRefresh,
-				menuItemCollapseAll, menuItemOpenSchema);
-		
+
+		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemOpenSchema, menuItemDrop,
+				menuItemCollapseAll);
+
 		return contextMenu;
 	}
 
@@ -459,7 +456,7 @@ public class DBTreeView extends TreeView<String>
 		treeItem.setExpanded(false);
 	}
 
-	private void refreshTreeView() throws SQLException {
+	public void refreshItems() throws SQLException {
 		if (this.parent != null)
 			parent.setLoading(true);
 		this.clearAll();
@@ -540,7 +537,9 @@ public class DBTreeView extends TreeView<String>
 			TreeItem<String> startItem = this.getSelectionModel().getSelectedItems().get(0);
 
 			if (tablesRootItem.getChildren().contains(startItem) || viewsRootItem.getChildren().contains(startItem)
-					|| indexesRootItem.getChildren().contains(startItem)) {
+					|| indexesRootItem.getChildren().contains(startItem)
+					|| proceduresRootItem.getChildren().contains(startItem)
+					|| functionsRootItem.getChildren().contains(startItem)) {
 				text = startItem.getChildren().get(0).getChildren().get(0).getValue();
 			}
 
@@ -569,7 +568,7 @@ public class DBTreeView extends TreeView<String>
 		this.lastSelectedItemPos = -1;
 		this.searchResultsList.clear();
 		this.getSelectionModel().clearSelection();
-		
+
 		searchRootItem(tablesRootItem);
 		searchRootItem(viewsRootItem);
 		searchRootItem(indexesRootItem);
@@ -580,7 +579,7 @@ public class DBTreeView extends TreeView<String>
 	private void searchRootItem(TreeItem<String> rootItem) {
 		if (rootItem == null)
 			return;
-		
+
 		for (TreeItem<String> t : rootItem.getChildren()) {
 			if (t.getValue().matches("(?i:.*" + searchField.getText() + ".*)")) {
 				this.getSelectionModel().select(t);
@@ -610,7 +609,7 @@ public class DBTreeView extends TreeView<String>
 		return colums;
 	}
 
-	private void refreshFunctionAndProcedures() {
+	public void refreshFunctionAndProcedures() {
 		proceduresRootItem.getChildren().clear();
 		functionsRootItem.getChildren().clear();
 		this.getFunctionsAndProcedures();
@@ -649,5 +648,9 @@ public class DBTreeView extends TreeView<String>
 	@Override
 	public void removeObserver(SimpleObserver<String> listener) {
 		listeners.remove(listener);
+	}
+
+	private boolean isUsingMysql() {
+		return sqlConnector instanceof MysqlConnector;
 	}
 }
