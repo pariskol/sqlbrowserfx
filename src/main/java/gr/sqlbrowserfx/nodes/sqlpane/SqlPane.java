@@ -1044,7 +1044,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			Executors.newSingleThreadExecutor().execute(() -> {
 				try {
 					String filePath = selectedFile.getAbsolutePath();
-					Platform.runLater(() -> tab.load());
+					Platform.runLater(() -> tab.startLoading());
 					
 					String[] columns = null;
 					ObservableList<MapTableViewRow> rows = FXCollections.observableArrayList();

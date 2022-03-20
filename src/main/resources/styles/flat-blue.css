@@ -1,8 +1,9 @@
 .root { 
     -fx-accent: #1a6ee4;
     -fx-focus-color: -fx-accent;
-    -fx-base: white;
+    -fx-base: #ededed;
     -fx-faint-focus-color: transparent;
+    -fx-font-size: 13pt;
 	/*-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
 	-fx-selection-bar-non-focused: derive(-fx-base,90%);
 }
@@ -291,12 +292,10 @@
 	-fx-background-color: transparent;
 }
 .button:hover {
-	-fx-text-fill: white;
 	-fx-background-color: -fx-focus-color;
 }
 
 .button:focused {
-	-fx-text-fill: white;
     -fx-background-color: -fx-focus-color; 
 }
 .button:default {
@@ -522,7 +521,7 @@
 }
 
 .popover > .content > .title > .icon > .graphics > .line {
-	-fx-stroke: white ;
+	-fx-stroke: #ededed ;
 	-fx-stroke-width: 2;
 }
 
