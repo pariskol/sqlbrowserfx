@@ -174,7 +174,7 @@ public class SqliteConnector extends SqlConnector {
 	}
 
 	@Override
-	public void getSchemas(String name, ResultSetAction action) throws SQLException {
+	public void getSchema(String name, ResultSetAction action) throws SQLException {
 		this.executeQuery(SCHEMA_QUERY, Arrays.asList(name), action);
 	}
 
@@ -189,7 +189,7 @@ public class SqliteConnector extends SqlConnector {
 	}
 
 	@Override
-	public String getIndexColumnName() {
+	public String getIndexSchemaColumn() {
 		return SCHEMA_COLUMN;
 	}
 

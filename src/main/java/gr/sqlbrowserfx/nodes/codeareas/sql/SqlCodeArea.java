@@ -717,8 +717,8 @@ public class SqlCodeArea extends CodeArea implements ContextMenuOwner, HighLight
     			}
     		}
     	}
-		return SqlCodeAreaSyntax.COLUMNS_MAP.get(tableAlias).stream().map(kw -> new Keyword(kw, KeywordType.COLUMN))
-				.collect(Collectors.toList());
+		return SqlCodeAreaSyntax.COLUMNS_MAP.get(tableAlias) != null ? SqlCodeAreaSyntax.COLUMNS_MAP.get(tableAlias).stream().map(kw -> new Keyword(kw, KeywordType.COLUMN))
+				.collect(Collectors.toList()) : new ArrayList<>();
     }
 
 	private Map<String, Set<String>> analyzeTextForTablesAliases(String text) {

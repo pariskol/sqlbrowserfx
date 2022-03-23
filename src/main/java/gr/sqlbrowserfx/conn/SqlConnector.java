@@ -65,7 +65,7 @@ public abstract class SqlConnector {
 				try {
 					SqlConnector.this.checkConnection();
 					i = 0;
-					Thread.sleep(60000);
+					Thread.sleep(600000);
 				} catch (SQLException e) {
 					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 					if ( i == max)
@@ -437,7 +437,7 @@ public abstract class SqlConnector {
 	
 	abstract public void getTriggers(String table, ResultSetAction action) throws SQLException;
 	
-	abstract public void getSchemas(String name, ResultSetAction action) throws SQLException;
+	abstract public void getSchema(String name, ResultSetAction action) throws SQLException;
 
 	public void getContents(ResultSetAction action) throws SQLException {
 		this.executeQuery(getContentsQuery(), action);
@@ -447,13 +447,13 @@ public abstract class SqlConnector {
 
 	public abstract String getViewSchemaColumn();
 
-	public abstract String getIndexColumnName();
+	public abstract String getIndexSchemaColumn();
 
-	public String getName() {
+	public String getTableNameColumn() {
 		return "name";
 	}
 
-	public String getType() {
+	public String getTableTypeColumn() {
 		return "type";
 	}
 

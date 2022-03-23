@@ -23,6 +23,7 @@ import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
+import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
@@ -91,8 +92,8 @@ public class DBTreeView extends TreeView<String>
 
 		try {
 			this.fillTreeView();
-			// TODO implement in a more abstract way
-			if (sqlConnector instanceof MysqlConnector) {
+			// FIXME implement in a more abstract way
+			if (!(sqlConnector instanceof SqliteConnector)) {
 				proceduresRootItem = new TreeItem<>("Procedures", JavaFXUtils.createIcon("/icons/procedure.png"));
 				functionsRootItem = new TreeItem<>("Functions", JavaFXUtils.createIcon("/icons/function.png"));
 				rootItem.getChildren().addAll(proceduresRootItem, functionsRootItem);
@@ -125,7 +126,6 @@ public class DBTreeView extends TreeView<String>
 		});
 
 		this.setInputMap();
-//		this.setKeys();
 	}
 
 	protected void setInputMap() {
@@ -160,8 +160,31 @@ public class DBTreeView extends TreeView<String>
 		this.parent = parent;
 	}
 
+	/**
+	 * This is function is needed because postgresql and mysql have same
+	 * column names for some result sets but with different cases.
+	 * It is being used in getFunctionsAndProcedures() method.
+	 * 
+	 * @param map
+	 * @param col
+	 * @return
+	 */
+	private String getULN(Map<String, Object> map, String col) {
+		try {
+			return map.get(col.toUpperCase()).toString();
+		} catch(Exception e) {
+			try {
+				return map.get(col.toLowerCase()).toString();
+			} catch(Exception e2) {
+				return null;
+			}
+		}
+	}
+	
+	// FIXME: This should be moved to sql connector level.
+	// Currently this works for mysql and postgresql.
 	private void getFunctionsAndProcedures() {
-		if (!(sqlConnector instanceof MysqlConnector))
+		if (sqlConnector instanceof SqliteConnector)
 			return;
 
 		try {
@@ -169,8 +192,9 @@ public class DBTreeView extends TreeView<String>
 					Arrays.asList(sqlConnector.getDbSchema()), rset -> {
 						Map<String, Object> map = DTOMapper.mapu(rset);
 						TreeItem<String> ti = new TreeItem<>();
-						ti.setValue(map.get("ROUTINE_NAME").toString());
-						String routineType = map.get("ROUTINE_TYPE").toString();
+						ti.setValue(String.valueOf(getULN(map, "ROUTINE_NAME")));
+						String routineType = getULN(map, "ROUTINE_TYPE");
+						
 						if (routineType.equals("PROCEDURE"))
 							ti.setGraphic(JavaFXUtils.createIcon("/icons/procedure.png"));
 						else
@@ -178,7 +202,7 @@ public class DBTreeView extends TreeView<String>
 
 						TreeItem<String> bodyTreeItem = new TreeItem<String>("body",
 								JavaFXUtils.createIcon("/icons/script.png"));
-						bodyTreeItem.getChildren().add(new TreeItem<String>(map.get("ROUTINE_DEFINITION").toString()));
+						bodyTreeItem.getChildren().add(new TreeItem<String>(getULN(map, "ROUTINE_DEFINITION")));
 						ti.getChildren().add(bodyTreeItem);
 
 						TreeItem<String> paramsTreeItem = new TreeItem<>("parameters",
@@ -187,21 +211,21 @@ public class DBTreeView extends TreeView<String>
 
 						sqlConnector.executeQuery(
 								"select * from INFORMATION_SCHEMA.PARAMETERS where SPECIFIC_NAME = ? ",
-								Arrays.asList(map.get("ROUTINE_NAME")), rset2 -> {
+								Arrays.asList(getULN(map, "SPECIFIC_NAME")), rset2 -> {
 									Map<String, Object> map2 = DTOMapper.mapu(rset2);
 
-									if (map2.get("PARAMETER_MODE") != null) {
+									if (getULN(map2, "PARAMETER_MODE") != null) {
 										String param = "";
-										if (map2.get("PARAMETER_NAME") != null)
-											param += map2.get("PARAMETER_NAME").toString() + " ";
-										if (map2.get("PARAMETER_MODE") != null)
-											param += map2.get("PARAMETER_MODE").toString() + " ";
-										if (map2.get("DATA_TYPE") != null)
-											param += map2.get("DATA_TYPE").toString();
+										if (getULN(map2, "PARAMETER_NAME") != null)
+											param += getULN(map2, "PARAMETER_NAME") + " ";
+										if (getULN(map2, "PARAMETER_MODE") != null)
+											param += getULN(map2, "PARAMETER_MODE") + " ";
+										if (getULN(map2, "DATA_TYPE") != null)
+											param += getULN(map2, "DATA_TYPE");
 
 										paramsTreeItem.getChildren().add(new TreeItem<String>(param));
 									} else {
-										ti.setValue(ti.getValue() + " returns " + map2.get("DATA_TYPE").toString());
+										ti.setValue(ti.getValue() + " returns " + getULN(map2, "DATA_TYPE"));
 									}
 								});
 
@@ -209,6 +233,7 @@ public class DBTreeView extends TreeView<String>
 							proceduresRootItem.getChildren().add(ti);
 						else
 							functionsRootItem.getChildren().add(ti);
+						
 					});
 
 		} catch (SQLException e1) {
@@ -292,8 +317,8 @@ public class DBTreeView extends TreeView<String>
 			try {
 				HashMap<String, Object> dto = DTOMapper.mapR(rset);
 
-				String name = (String) dto.get(sqlConnector.getName());
-				String type = (String) dto.get(sqlConnector.getType());
+				String name = (String) dto.get(sqlConnector.getTableNameColumn());
+				String type = (String) dto.get(sqlConnector.getTableTypeColumn());
 
 				newItems.add(name);
 				if (!allItems.contains(name)) {
@@ -326,7 +351,7 @@ public class DBTreeView extends TreeView<String>
 		TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.createIcon("/icons/script.png"));
 		treeItem.getChildren().add(schemaTree);
 
-		sqlConnector.getSchemas(treeItem.getValue(), rset -> {
+		sqlConnector.getSchema(treeItem.getValue(), rset -> {
 			String schema = rset.getString(schemaColumn);
 			TreeItem<String> schemaItem = new TreeItem<>(schema); // , new SqlCodeArea(schema, false, false,
 																	// isUsingMysql()));
@@ -408,8 +433,8 @@ public class DBTreeView extends TreeView<String>
 		TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.createIcon("/icons/script.png"));
 		treeItem.getChildren().add(schemaTree);
 
-		sqlConnector.getSchemas(treeItem.getValue(), rset -> {
-			String schema = rset.getString(sqlConnector.getIndexColumnName());
+		sqlConnector.getSchema(treeItem.getValue(), rset -> {
+			String schema = rset.getString(sqlConnector.getIndexSchemaColumn());
 			schemaTree.getChildren().add(new TreeItem<String>(schema));
 		});
 	}

@@ -99,8 +99,7 @@ public class MySqlConfigBox extends VBox {
 
 		SqlBrowserFXAppManager.getConfigSqlConnector()
 							  .executeQueryRawAsync(
-			"select url, user, database, timestamp, id from connections_history_localtime"
-			+ " where database_type = 'mysql' order by timestamp desc",
+			this.getHistoryQuery(),
 			rset -> {
 				sqlTableView.setItemsLater(rset);
 			}
@@ -121,6 +120,11 @@ public class MySqlConfigBox extends VBox {
 		urlField.setText(url);
 	}
 
+	public String getHistoryQuery() {
+		return "select url, user, database, timestamp, id from connections_history_localtime"
+				+ " where database_type = 'mysql' order by timestamp desc";
+	}
+	
 	public TextField getUserField() {
 		return userField;
 	}
@@ -169,12 +173,16 @@ public class MySqlConfigBox extends VBox {
 		Platform.runLater(() -> this.loader.setVisible(show));
 	}
 
+	public String getSaveType() {
+		return "mysql";
+	}
+	
 	public void saveToHistory() {
 		SqlBrowserFXAppManager.getConfigSqlConnector().executeAsync(() -> {
 			try {
 				String query = "insert into connections_history (url, user, database, database_type) values (?, ?, ?, ?)";
 				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
-						Arrays.asList(urlField.getText(), userField.getText(), databaseField.getText(), "mysql"));
+						Arrays.asList(urlField.getText(), userField.getText(), databaseField.getText(), this.getSaveType()));
 			} catch (SQLException e) {
 				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 			}

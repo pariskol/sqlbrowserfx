@@ -129,7 +129,7 @@ public class MysqlConnector extends SqlConnector {
 	}
 	
 	@Override
-	public void getSchemas(String name, ResultSetAction action) throws SQLException {
+	public void getSchema(String name, ResultSetAction action) throws SQLException {
 		try {
 			this.executeQuery(SCHEMA_TABLE_QUERY + name, action);
 		} catch (SQLException e) {
@@ -187,23 +187,23 @@ public class MysqlConnector extends SqlConnector {
 	}
 
 	@Override
-	public String getIndexColumnName() {
+	public String getIndexSchemaColumn() {
 		return "COLUMN_NAME";
 	}
 	
 	@Override
-	public String getDbSchema() {
-		return database;
-	}
-	
-	@Override
-	public String getName() {
+	public String getTableNameColumn() {
 		return "TABLE_NAME";
 	}
 	
 	@Override
-	public String getType() {
+	public String getTableTypeColumn() {
 		return "TABLE_TYPE";
+	}
+
+	@Override
+	public String getDbSchema() {
+		return database;
 	}
 
 	@Override

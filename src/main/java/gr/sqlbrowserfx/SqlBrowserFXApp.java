@@ -27,6 +27,7 @@ import com.kodedu.terminalfx.TerminalTab;
 import com.kodedu.terminalfx.config.TerminalConfig;
 
 import gr.sqlbrowserfx.conn.MysqlConnector;
+import gr.sqlbrowserfx.conn.PostgreSqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
@@ -35,6 +36,7 @@ import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.HelpTabPane;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
+import gr.sqlbrowserfx.nodes.PostgreSqlConfigBox;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.codeareas.sql.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.sql.KeywordType;
@@ -189,16 +191,36 @@ public class SqlBrowserFXApp extends Application {
 		Tab sqliteTab = new Tab("Sqlite", borderPane);
 		sqliteTab.setGraphic(JavaFXUtils.createImageView("/icons/sqlite.png", 28.0, 28.0));
 		sqliteTab.setClosable(false);
+		
 		MySqlConfigBox mySqlConfigBox = new MySqlConfigBox();
 		mySqlConfigBox.getConnectButton().setOnAction(actionEvent -> {
 			mySqlConfigBox.showLoader(true);
 			dbSelectionAction(mySqlConfigBox);
 		});
-//		mySqlConfigBox.getChildren().add(new ListView<String>(FXCollections.observableArrayList(Arrays.asList("Yesterday", "jdbc:mysql://localhost:3306/sakila?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"))));
 		Tab mysqlTab = new Tab("MySQL", mySqlConfigBox);
 		mysqlTab.setGraphic(JavaFXUtils.createImageView("/icons/mysql.png", 28.0, 28.0));
 		mysqlTab.setClosable(false);
-		TabPane dbTabPane = new TabPane(sqliteTab, mysqlTab);
+		
+		MySqlConfigBox mariadbConfigBox = new MySqlConfigBox();
+		mariadbConfigBox.getConnectButton().setOnAction(actionEvent -> {
+			mariadbConfigBox.showLoader(true);
+			dbSelectionAction(mariadbConfigBox);
+		});
+		Tab mariadbTab = new Tab("MariaDB", mariadbConfigBox);
+		mariadbTab.setGraphic(JavaFXUtils.createImageView("/icons/mariadb.png", 28.0, 28.0));
+		mariadbTab.setClosable(false);
+		
+		
+		PostgreSqlConfigBox postgreSqlConfigBox = new PostgreSqlConfigBox();
+		postgreSqlConfigBox.getConnectButton().setOnAction(actionEvent -> {
+			postgreSqlConfigBox.showLoader(true);
+			dbSelectionAction(postgreSqlConfigBox);
+		});
+		Tab postgresqlTab = new Tab("PostgreSQL", postgreSqlConfigBox);
+		postgresqlTab.setGraphic(JavaFXUtils.createImageView("/icons/postgre.png", 28.0, 28.0));
+		postgresqlTab.setClosable(false);
+		
+		TabPane dbTabPane = new TabPane(sqliteTab, mysqlTab, mariadbTab, postgresqlTab);
 		
 		JavaFXUtils.applyJMetro(dbTabPane);
 		
@@ -275,6 +297,40 @@ public class SqlBrowserFXApp extends Application {
 				});
 			});
 	}
+	
+	private void dbSelectionAction(PostgreSqlConfigBox configBox) {
+		configBox.getConnectButton().setDisable(true);
+		DB = configBox.getDatabaseField().getText();
+		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
+			SqlConnector mysqlConnector = new PostgreSqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
+					configBox.getUserField().getText(), configBox.getPasswordField().getText());
+			this.sqlConnector = mysqlConnector;
+			
+			Executors.newSingleThreadExecutor().execute(() -> {
+				try {
+					mysqlConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
+					mysqlConnector.checkConnection();
+				} catch (SQLException e) {
+					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
+					configBox.showLoader(false);
+					DialogFactory.createErrorDialog(e);
+					configBox.getConnectButton().setDisable(false);
+					return;
+				}
+				
+				configBox.saveToHistory();
+				Platform.runLater(() -> {
+					if (System.getProperty("mode", "normal").equals("simple")) {
+						SqlCodeAreaSyntax.init(SqlBrowserFXAppManager.getDBtype());
+						primaryScene.setRoot(new SqlConsolePane(mysqlConnector));
+						JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
+						STAGE.setScene(primaryScene);
+					}
+					else
+						createAppView(mysqlConnector);
+				});
+			});
+	}
 
 	private VBox createJsonTableView() {
 		JSONTableView tableView = new JSONTableView();
@@ -321,6 +377,8 @@ public class SqlBrowserFXApp extends Application {
 		if (sqlConnector instanceof SqliteConnector)
 			dbType = "sqlite";
 		else if (sqlConnector instanceof MysqlConnector)
+			dbType = "mysql";
+		else if (sqlConnector instanceof PostgreSqlConnector)
 			dbType = "mysql";
 		return dbType;
 	}
