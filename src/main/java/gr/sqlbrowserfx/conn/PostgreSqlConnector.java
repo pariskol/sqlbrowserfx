@@ -1,7 +1,9 @@
 package gr.sqlbrowserfx.conn;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,9 +36,33 @@ public class PostgreSqlConnector extends SqlConnector {
 	}
 
 	@Override
-	public Object castToDBType(SqlTable sqlTable, String columnName, String text) {
-		return text;
+	public Object castToDBType(SqlTable table, String label, String value) {
+		Object actualValue = null;
+		if (table.getColumnsMap().get(label).contains("int") && value != null && !value.isEmpty()) {
+			Integer integerValue = Integer.parseInt(value);
+			actualValue = integerValue.intValue();
+		} else if (table.getColumnsMap().get(label).equals("numeric")  && value != null && !value.isEmpty()) {
+			Double doubleValue = Double.parseDouble(value);
+			actualValue = doubleValue.doubleValue();
+		} 
+		else if (table.getColumnsMap().get(label).contains("bool") && value != null && !value.isEmpty()) {
+			Boolean booleanValue = Boolean.parseBoolean(value);
+			actualValue = booleanValue.booleanValue();
+		}
+		else if (table.getColumnsMap().get(label).contains("date") && value != null && !value.isEmpty()) {
+			Date dateValue = Date.valueOf((String) value);
+			actualValue = dateValue;
+		}
+		else if (table.getColumnsMap().get(label).contains("stamp") && value != null && !value.isEmpty()) {
+			Timestamp dateValue = Timestamp.valueOf((String) value);
+			actualValue = dateValue;
+		}
+		else {
+			actualValue = value;
+		}
+		return actualValue;
 	}
+	
 
 	@Override
 	public String getContentsQuery() {
