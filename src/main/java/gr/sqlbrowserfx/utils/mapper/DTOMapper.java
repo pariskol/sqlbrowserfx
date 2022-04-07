@@ -43,7 +43,7 @@ public class DTOMapper {
 	 * @return LinkedHashMap
 	 * @throws Exception
 	 */
-	public static LinkedHashMap<String, Object> mapR(ResultSet rset) throws Exception {
+	public static LinkedHashMap<String, Object> mapUsingRealColumnNames(ResultSet rset) throws Exception {
 
 		LinkedHashMap<String, Object> dto = new LinkedHashMap<>();
 		ResultSetMetaData rsmd = rset.getMetaData();
@@ -64,7 +64,7 @@ public class DTOMapper {
 	 * @return HashMap
 	 * @throws RuntimeException
 	 */
-	public static HashMap<String, Object> mapu(ResultSet rset) throws RuntimeException {
+	public static HashMap<String, Object> mapUnsafely(ResultSet rset) throws RuntimeException {
 
 		LinkedHashMap<String, Object> dto = null;
 		try {

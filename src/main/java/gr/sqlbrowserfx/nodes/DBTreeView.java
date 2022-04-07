@@ -190,7 +190,7 @@ public class DBTreeView extends TreeView<String>
 		try {
 			sqlConnector.executeQueryAsync("select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA = ? ",
 					Arrays.asList(sqlConnector.getDbSchema()), rset -> {
-						Map<String, Object> map = DTOMapper.mapu(rset);
+						Map<String, Object> map = DTOMapper.mapUnsafely(rset);
 						TreeItem<String> ti = new TreeItem<>();
 						ti.setValue(String.valueOf(getULN(map, "ROUTINE_NAME")));
 						String routineType = getULN(map, "ROUTINE_TYPE");
@@ -212,7 +212,7 @@ public class DBTreeView extends TreeView<String>
 						sqlConnector.executeQuery(
 								"select * from INFORMATION_SCHEMA.PARAMETERS where SPECIFIC_NAME = ? ",
 								Arrays.asList(getULN(map, "SPECIFIC_NAME")), rset2 -> {
-									Map<String, Object> map2 = DTOMapper.mapu(rset2);
+									Map<String, Object> map2 = DTOMapper.mapUnsafely(rset2);
 
 									if (getULN(map2, "PARAMETER_MODE") != null) {
 										String param = "";
@@ -315,7 +315,7 @@ public class DBTreeView extends TreeView<String>
 		List<String> newItems = new ArrayList<>();
 		sqlConnector.getContents(rset -> {
 			try {
-				HashMap<String, Object> dto = DTOMapper.mapR(rset);
+				HashMap<String, Object> dto = DTOMapper.mapUsingRealColumnNames(rset);
 
 				String name = (String) dto.get(sqlConnector.getTableNameColumn());
 				String type = (String) dto.get(sqlConnector.getTableTypeColumn());

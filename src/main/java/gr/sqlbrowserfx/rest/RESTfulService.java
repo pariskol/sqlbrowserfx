@@ -106,7 +106,7 @@ public class RESTfulService {
 			try {
 				logger.debug("Executing : select * from " + table + " " + whereFilter.toString()  + " , " + params.toString());
 				sqlConnector.executeQuery("select * from " + table + whereFilter.toString(), params, rset -> {
-					HashMap<String, Object> dto = DTOMapper.mapu(rset);
+					HashMap<String, Object> dto = DTOMapper.mapUnsafely(rset);
 					data.add(dto);
 				});
 			} catch (Exception e) {
