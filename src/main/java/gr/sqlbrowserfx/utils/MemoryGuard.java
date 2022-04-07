@@ -20,7 +20,7 @@ public class MemoryGuard {
 	 * 
 	 * @param rset
 	 */
-	public static void startMemoryGuard(ResultSet rset) {
+	public static void protect(ResultSet rset) {
 		new Thread(() -> {
 			try {
 				long heapMaxSize = Runtime.getRuntime().maxMemory();
@@ -54,7 +54,7 @@ public class MemoryGuard {
 	 * 
 	 * @param statement
 	 */
-	public static void startMemoryGuard(Statement statement) {
+	public static void protect(Statement statement) {
 		new Thread(() -> {
 			try {
 				long heapMaxSize = Runtime.getRuntime().maxMemory();

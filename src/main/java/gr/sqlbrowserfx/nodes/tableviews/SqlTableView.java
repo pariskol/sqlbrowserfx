@@ -251,7 +251,7 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 			logger.info(e.getMessage());
 		}
 		
-		MemoryGuard.startMemoryGuard(rs);
+		MemoryGuard.protect(rs);
 		try {
 			while (rs.next()) {
 				LinkedHashMap<String, Object> entry = DTOMapper.map(rs);

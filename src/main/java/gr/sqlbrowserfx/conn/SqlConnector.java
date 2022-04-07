@@ -154,7 +154,7 @@ public abstract class SqlConnector {
 		ResultSet rset = null;
 		try (Connection conn = dataSource.getConnection();
 			 Statement statement = conn.createStatement();) {
-			MemoryGuard.startMemoryGuard(statement);
+			MemoryGuard.protect(statement);
 			rset = statement.executeQuery(query);
 			action.onResultSet(rset);
 			System.gc();
@@ -213,7 +213,7 @@ public abstract class SqlConnector {
 		try (Connection conn = dataSource.getConnection();
 				Statement statement = conn.createStatement();) {
 			statementAction.onStatement(statement);
-			MemoryGuard.startMemoryGuard(statement);
+			MemoryGuard.protect(statement);
 			rset = statement.executeQuery(query);
 			action.onResultSet(rset);
 		} finally {
