@@ -1,6 +1,6 @@
 package gr.sqlbrowserfx.nodes;
 
-public class PostgreSqlConfigBox extends MySqlConfigBox {
+public class PostgreSqlConfigBox extends DbConfigBox {
 
 	@Override
 	public String getHistoryQuery() {
