@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -84,6 +85,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		this.showLinesProperty.addListener((ob,ov,nv) -> enableShowLineNumbers(nv));
 		this.setParagraphGraphicFactory(LineNumberFactory.get(this));
 		this.enableHighlighting();
+		this.enableIndentationMaintenance();
 		
 		this.syntaxProvider = this.initSyntaxProvider();
 		
@@ -196,12 +198,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 ////					this.autoCompleteAction(keyEvent, auoCompletePopup);
 //				}
 //        );
-		InputMap<Event> enter = InputMap.consume(
-				EventPattern.keyPressed(KeyCode.ENTER),
-				action -> this.autoCompleteAction(new KeyEvent(this, this, 
-						KeyEvent.KEY_PRESSED, null, null, KeyCode.ENTER, 
-						false, false, false, false))
-        );
 		
 		InputMap<Event> format = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
@@ -227,9 +223,19 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         Nodes.addInputMap(this, format);
         Nodes.addInputMap(this, goToLine);
 //        Nodes.addFallbackInputMap(this, backspace);
-        Nodes.addFallbackInputMap(this, enter);
 	}
 	
+	private void enableIndentationMaintenance() {
+		Pattern whiteSpace = Pattern.compile("^\\s+");
+		this.addEventFilter(KeyEvent.KEY_PRESSED, KE -> {
+			if (KE.getCode() == KeyCode.ENTER) {
+				Matcher m = whiteSpace.matcher(this.getParagraph(this.getCurrentParagraph()).getSegments().get(0));
+				if (m.find())
+					Platform.runLater(() -> this.insertText(this.getCaretPosition(), m.group()));
+			}
+		});
+	}
+
 	private void setKeys() {
 		// FIXME Desired behaviour can't be achieved with input map autocomplete popover does not hide.
 //		 Use traditional javafx way for this specific case
@@ -266,6 +272,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 				boundsInScene.getMinY());
 	}
 
+	
 	@Override
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = new ContextMenu();
