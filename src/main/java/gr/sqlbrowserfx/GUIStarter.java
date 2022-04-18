@@ -10,5 +10,5 @@ public class GUIStarter {
 		else
 			SqlBrowserFXAppWithoutDocking.main(args);
 	}
-	
+
 }

@@ -34,6 +34,8 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	private SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
 	private SimpleBooleanProperty followCarretProperty = new SimpleBooleanProperty(true);
 	private PopOver goToLinePopOver = null;
+	private LogCodeAreaSyntaxProvider syntaxProvider = new LogCodeAreaSyntaxProvider();
+
 
 
 	public LogCodeArea() {
@@ -101,7 +103,7 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	
 	@Override
 	public StyleSpans<Collection<String>> computeHighlighting(String text) {
-		Matcher matcher = LogCodeAreaSyntax.PATTERN.matcher(text);
+		Matcher matcher = syntaxProvider.getPatternMatcher(text);
 		int lastKwEnd = 0;
 		StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
 		while (matcher.find()) {

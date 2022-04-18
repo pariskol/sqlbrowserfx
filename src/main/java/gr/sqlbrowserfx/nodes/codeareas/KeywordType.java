@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.nodes.codeareas.sql;
+package gr.sqlbrowserfx.nodes.codeareas;
 
 public enum KeywordType {
 	KEYWORD,

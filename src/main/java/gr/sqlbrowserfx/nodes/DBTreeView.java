@@ -30,7 +30,7 @@ import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
-import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
+import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
@@ -329,7 +329,7 @@ public class DBTreeView extends TreeView<String>
 						tablesRootItem.getChildren().add(treeItem);
 						treeItem.setGraphic(JavaFXUtils.createIcon("/icons/table.png"));
 						// TODO find another way with no calls to static class SqlCodeAreaSyntax
-						SqlCodeAreaSyntax.bind(name, this.getColumnsForTable(name));
+						SqlCodeAreaSyntaxProvider.bind(name, this.getColumnsForTable(name));
 					} else if (type.toLowerCase().contains("view")) {
 						this.fillViewTreeItem(treeItem);
 						viewsRootItem.getChildren().add(treeItem);

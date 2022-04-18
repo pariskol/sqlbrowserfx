@@ -21,9 +21,9 @@ import gr.sqlbrowserfx.dock.nodes.DSqlConsolePaneNH;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
-import gr.sqlbrowserfx.nodes.codeareas.sql.Keyword;
-import gr.sqlbrowserfx.nodes.codeareas.sql.KeywordType;
-import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntax;
+import gr.sqlbrowserfx.nodes.codeareas.Keyword;
+import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
+import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
 import gr.sqlbrowserfx.nodes.sqlpane.SimpleSqlPane;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
@@ -201,7 +201,7 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 		sqliteConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
 		this.sqlConnector = sqliteConnector;
 		if (System.getProperty("mode", "normal").equals("simple")) {
-			SqlCodeAreaSyntax.init(SqlBrowserFXAppManager.getDBtype());
+			SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
 			primaryScene.setRoot(new SqlConsolePane(sqliteConnector));
 			JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
 			STAGE.setScene(primaryScene);
@@ -232,7 +232,7 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 			configBox.saveToHistory();
 			Platform.runLater(() -> {
 				if (System.getProperty("mode", "normal").equals("simple")) {
-					SqlCodeAreaSyntax.init(SqlBrowserFXAppManager.getDBtype());
+					SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
 					primaryScene.setRoot(new SqlConsolePane(mysqlConnector));
 					JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
 					STAGE.setScene(primaryScene);
@@ -254,7 +254,7 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 	private void createAppView(SqlConnector sqlConnector) {
 
 		SqlBrowserFXAppManager.setDBtype(determineDBType(sqlConnector));
-		SqlCodeAreaSyntax.init(SqlBrowserFXAppManager.getDBtype());
+		SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
 		
 		STAGE.setMaximized(true);
 
@@ -268,7 +268,7 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 				.setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
 
 		ddbTreePane.getDBTreeView().addObserver(value -> {
-			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(kw -> new Keyword(kw, KeywordType.TABLE))
+			SqlCodeAreaSyntaxProvider.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(kw -> new Keyword(kw, KeywordType.TABLE))
 					.collect(Collectors.toList()));
 		});
 

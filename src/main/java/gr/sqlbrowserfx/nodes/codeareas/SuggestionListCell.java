@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.nodes.codeareas.sql;
+package gr.sqlbrowserfx.nodes.codeareas;
 
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.beans.value.ObservableValue;
