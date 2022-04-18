@@ -5,8 +5,8 @@
     -fx-control-inner-background: -fx-base;
     -fx-control-inner-background-alt: -fx-control-inner-background ;
     -fx-faint-focus-color: transparent;
-    /*-fx-font-size: 13pt;
-	-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
+    -fx-font-size: 13pt;
+	/*-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
 	-fx-selection-bar-non-focused: derive(-fx-base,50%);
 }
 
@@ -155,6 +155,10 @@
 	-fx-background-color: -fx-base;
 }
 
+.border-pane {
+	-fx-background-color: -fx-base;
+}
+
 .vbox {
 	-fx-background-color: -fx-base;
 }
@@ -165,8 +169,13 @@
 
 .scroll-pane {
 	-fx-background-color: -fx-base;
-	-fx-border-color: transparent;
+	-fx-border-color: -fx-base;
 }
+
+.scroll-pane > .viewport {
+   -fx-background-color: -fx-base;
+}
+
 
 .text-area {
 	-fx-background-color: -fx-base;
@@ -212,6 +221,10 @@
 
 .tab-pane {
 	-fx-tab-min-width: 2.0em;
+	-fx-background-color: -fx-base;
+}
+
+.tab {
 	-fx-background-color: -fx-base;
 }
 
