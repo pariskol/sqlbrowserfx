@@ -56,5 +56,22 @@ public class Keyword {
 
 	}
 	
+	@Override
+	public int hashCode() {
+		// return always 0 to always invoke equals in sets
+		return 0;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Keyword) {
+			Keyword keyword = (Keyword) obj;
+			return this.getKeyword().equals(keyword.getKeyword()) && this.getType() == keyword.getType();
+		}
+		else {
+			return super.equals(obj);
+		}
+	}
+	
 
 }
