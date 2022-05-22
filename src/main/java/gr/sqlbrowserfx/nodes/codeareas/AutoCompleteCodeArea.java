@@ -57,7 +57,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 	protected SearchAndReplacePopOver searchAndReplacePopOver;
 	private SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
 	private SimpleBooleanProperty autoCompleteProperty = new SimpleBooleanProperty(true);
-	private PopOver goToLinePopOver = null;
+	protected PopOver goToLinePopOver = null;
 	
 
 	public AutoCompleteCodeArea() {
@@ -210,7 +210,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		);
 		InputMap<Event> goToLine = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.L, KeyCombination.CONTROL_DOWN),
-				action -> this.goToLineAction()
+				action -> this.showGoToLinePopOver()
         );
 		
         Nodes.addFallbackInputMap(this, addTabs);
@@ -268,7 +268,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 			searchAndReplacePopOver.getFindField().selectAll();
 		}
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-		searchAndReplacePopOver.show(this, boundsInScene.getMaxX() - searchAndReplacePopOver.getWidth(),
+		searchAndReplacePopOver.show(this, boundsInScene.getMaxX() - 400,
 				boundsInScene.getMinY());
 	}
 
@@ -323,7 +323,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		});
 		
 		MenuItem menuItemGoToLine = new MenuItem("Go to line...", JavaFXUtils.createIcon("/icons/next.png"));
-		menuItemGoToLine.setOnAction(action -> this.goToLineAction());
+		menuItemGoToLine.setOnAction(action -> this.showGoToLinePopOver());
 		
 		MenuItem menuItemSaveAs = new MenuItem("Save As...", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSaveAs.setOnAction(action -> this.saveAsFileAction());
@@ -333,10 +333,23 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		return menu;
 	}
 
-	private void goToLineAction() {
+	protected void showGoToLinePopOver() {
 		if (goToLinePopOver != null)
 			return;
 		
+		goToLinePopOver = createGoToLinePopOver();
+		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		goToLinePopOver.show(this, boundsInScene.getMaxX() - goToLinePopOver.getWidth() - 170, boundsInScene.getMinY());
+	}
+
+	private void hideGoToLinePopOver() {
+		if (goToLinePopOver != null) {
+			goToLinePopOver.hide();
+			goToLinePopOver = null;
+		}
+	}
+	
+	protected PopOver createGoToLinePopOver() {
 		TextField textField = new TextField();
 		textField.setPromptText("Go to line");
 		textField.setOnKeyPressed(keyEvent -> {
@@ -348,16 +361,15 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 				if (targetParagraph > 0 && targetParagraph < this.getParagraphs().size()) {
 					this.moveTo(targetParagraph, 0);
 					this.requestFollowCaret();
-					goToLinePopOver.hide();
-					goToLinePopOver = null;
+					this.hideAutocompletePopup();
 				}
 			}
 		});
 		goToLinePopOver = new PopOver(textField);
 		goToLinePopOver.setOnHidden(event -> goToLinePopOver = null);
 		goToLinePopOver.setArrowSize(0);
-		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-		goToLinePopOver.show(this, boundsInScene.getMaxX() - goToLinePopOver.getWidth() - 200, boundsInScene.getMinY());
+		
+		return goToLinePopOver;
 	}
 	
 	private void convertSelectedTextToUpperCase() {
@@ -581,11 +593,12 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
     
 	protected String calculateQuery(int position) {
+		if (this.getText().charAt(position -1) == '\n') return "";
+		
         int limit = (position > WORD_LENGTH_LIMIT) ? WORD_LENGTH_LIMIT : position;
-        String keywords = this.getText().substring(position - limit, position);
-        keywords = keywords.replaceAll("\\n", " ").trim();
-        int last = keywords.lastIndexOf(" ");
-        return keywords.substring(last + 1).trim();
+        String query = this.getText().substring(position - limit, position);
+        int last = query.lastIndexOf(" ");
+        return query.substring(last + 1).trim();
     }
     
     
