@@ -598,7 +598,8 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         int limit = (position > WORD_LENGTH_LIMIT) ? WORD_LENGTH_LIMIT : position;
         String query = this.getText().substring(position - limit, position);
         int last = query.lastIndexOf(" ");
-        return query.substring(last + 1).trim();
+        String[] split = query.substring(last + 1).trim().split("\n");
+        return split[split.length - 1].trim();
     }
     
     
