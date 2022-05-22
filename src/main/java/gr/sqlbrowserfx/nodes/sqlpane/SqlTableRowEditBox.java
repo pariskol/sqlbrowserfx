@@ -1,5 +1,6 @@
 package gr.sqlbrowserfx.nodes.sqlpane;
 
+import java.awt.TextField;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -60,31 +61,51 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			label.setTooltip(new Tooltip(columnName));
 			label.setAlignment(Pos.CENTER_RIGHT);
 			TextArea textArea = new TextArea();
-//			textArea.addEventFilter(KeyEvent.KEY_PRESSED, new TabAndEnterHandler(textArea));
 			textArea.setPrefRowCount(1);
 			textArea.setPrefColumnCount(10);
 			textArea.setOnKeyPressed(event -> {
+				if (!event.isControlDown())
+					return;
+				
 				if (event.getCode() == KeyCode.ENTER) {
 					if (actionButton != null)
 						this.actionButton.requestFocus();
-				}
-				else if (event.getCode() == KeyCode.TAB) {
+				} else if (event.getCode() == KeyCode.TAB) {
 					List<TextArea> l = new ArrayList<>(fieldsMap.values());
 					int i = 0;
-					for (i=0; i<l.size();i++) {
+					for (i = 0; i < l.size(); i++) {
 						if (l.get(i).equals(textArea))
 							break;
 					}
 					if (event.isShiftDown() && i > 0)
-						l.get(i-1).requestFocus();
+						l.get(i - 1).requestFocus();
 					else if (actionButton != null && (i == l.size() - 1 || (event.isShiftDown() && i == 0)))
 						this.actionButton.requestFocus();
-					else if (i < l.size() - 1								)
-						l.get(i+1).requestFocus();
+					else if (i < l.size() - 1)
+						l.get(i + 1).requestFocus();
+				}
+				else if(event.getCode() == KeyCode.DOWN) {
+					List<TextArea> l = new ArrayList<>(fieldsMap.values());
+					int i = 0;
+					for (i = 0; i < l.size(); i++) {
+						if (l.get(i).equals(textArea))
+							break;
+					}
+					if (i < l.size() - 1)
+						l.get(i + 1).requestFocus();
+				}
+				else if(event.getCode() == KeyCode.UP) {
+					List<TextArea> l = new ArrayList<>(fieldsMap.values());
+					int i = 0;
+					for (i = 0; i < l.size(); i++) {
+						if (l.get(i).equals(textArea))
+							break;
+					}
+					if (i > 0)
+						l.get(i - 1).requestFocus();
 				}
 				event.consume();
 			});
-//			textField.setAlignment(Pos.CENTER);
 
 			this.sqlTableRow = sqlTableRow;
 			if (sqlTableRow != null && sqlTableRow.get(columnName) != null) {
@@ -262,6 +283,17 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 	
 	public void setActionButton(Button button) {
 		this.actionButton = button;
+		this.actionButton.setOnKeyPressed(event -> {
+			if (event.getCode() == KeyCode.TAB) {
+				List<TextArea> fields = new ArrayList<>(fieldsMap.values());
+				if (event.isShiftDown())
+					fields.get(fields.size() - 1).requestFocus();
+				else
+					fields.get(0).requestFocus();
+				
+				event.consume();
+			}
+		});
 		this.centerBox.getChildren().add(actionButton);
 	}
 
