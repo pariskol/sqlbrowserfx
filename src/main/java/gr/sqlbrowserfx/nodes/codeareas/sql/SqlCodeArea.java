@@ -1,6 +1,9 @@
 package gr.sqlbrowserfx.nodes.codeareas.sql;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,6 +13,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
@@ -24,14 +29,22 @@ import gr.sqlbrowserfx.nodes.codeareas.AutoCompleteCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlPanePopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import gr.sqlbrowserfx.utils.mapper.DTOMapper;
+import javafx.application.Platform;
 import javafx.event.Event;
+import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 
 public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider> implements ContextMenuOwner, HighLighter {
@@ -46,6 +59,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	protected MenuItem menuItemRun;
 	
 	private Runnable runAction;
+	private SqlPanePopOver historyPopOver;
 
 
 	public SqlCodeArea() {
@@ -197,6 +211,17 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		event.consume();
 	}
 
+	@Override
+	protected void onMouseClicked() {
+		super.onMouseClicked();
+		if(isHistoryPopOverShowing())
+			historyPopOver.hide();
+	}
+	
+	private boolean isHistoryPopOverShowing() {
+		return historyPopOver != null && historyPopOver.isShowing();
+	}
+	
 	private List<Keyword> getSavedQueries(String query) {
 		List<String> suggestions = new ArrayList<>();
 		String sql = "select query from saved_queries where description like '%" + query + "%' ";
@@ -280,8 +305,63 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 				EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
 				action -> this.autoCompleteAction(new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, true, true, false, false))
         );
+		InputMap<Event> history = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.H, KeyCombination.CONTROL_DOWN),
+				action -> {
+					if (isHistoryPopOverShowing()) {
+						historyPopOver.requestFocus();
+						return;
+					}
+					
+					showHistoryPopOver();
+				}
+        );
         Nodes.addInputMap(this, run);
         Nodes.addInputMap(this, autocomplete);
+        Nodes.addInputMap(this, history);
+	}
+
+	private void showHistoryPopOver() {
+		PHistorySqlCodeArea codeArea = new PHistorySqlCodeArea();
+		DatePicker datePicker = new DatePicker(LocalDate.now());
+
+		datePicker.setOnAction(actionEvent -> {
+		    LocalDate date = datePicker.getValue();
+		    String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		    this.getQueriesHistory(codeArea,dateStr);
+
+		});
+		VirtualizedScrollPane<CodeArea> pane = new VirtualizedScrollPane<>(codeArea);
+		pane.setPrefSize(600, 400);
+		HBox hbox = new HBox(codeArea.getSearchAndReplacePopOver(), codeArea.createGoToLinePopOver().getContentNode(), datePicker);
+		hbox.setSpacing(20);
+		historyPopOver = new SqlPanePopOver(
+				new VBox(new Label("Query History"), hbox, pane));
+		historyPopOver.setOnHidden(event -> SqlCodeArea.this.historyPopOver = null);
+		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		historyPopOver.show(this, boundsInScene.getMaxX() - 620,
+				boundsInScene.getMinY());
+		this.getQueriesHistory(codeArea, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+	}
+
+	private void getQueriesHistory(CodeArea codeArea, String dateStr) {
+		SqlBrowserFXAppManager.getConfigSqlConnector().executeQueryRawAsync("select query, duration, datetime(timestamp,'localtime') timestamp from queries_history "
+				+ "where date(datetime(timestamp,'localtime')) = '" + dateStr + "' order by id",
+			rset -> {
+				StringBuilder history = new StringBuilder();
+				while (rset.next()) {
+					try {
+						Map<String, Object> map = DTOMapper.map(rset);
+						history.append("\n--  Executed at : " + map.get("timestamp") + " Duration: " + map.get("duration") + "ms --\n");
+						history.append(map.get("query"));
+						history.append("\n");
+					} catch (Exception e) {
+						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not get query");
+					}
+				}
+				Platform.runLater(() -> codeArea.replaceText(history.toString()));
+			}
+		);
 	}
 	
 	@Override
@@ -290,6 +370,9 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		menuItemRun = new MenuItem("Run", JavaFXUtils.createIcon("/icons/play.png"));
 		menuItemRun.setOnAction(event -> runAction.run());
 		menu.getItems().add(0, menuItemRun);
+		MenuItem menuItemHistory = new MenuItem("History", JavaFXUtils.createIcon("/icons/monitor.png"));
+		menuItemHistory.setOnAction(event -> SqlCodeArea.this.showHistoryPopOver());
+		menu.getItems().add(menu.getItems().size(), menuItemHistory);
 		return menu;
 	}
 	

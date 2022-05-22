@@ -103,13 +103,15 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 		caseInsensitiveCheckBox.setFocusTraversable(false);
 		
 		this.setArrowSize(0);
-		if (enableReplace)
+		if (enableReplace) {
 			this.setContentNode(new HBox(new VBox(findField, replaceField, new HBox(findButton, replaceButton, replaceAllButton)),
 										 new VBox(wholeWordCheckBox, caseInsensitiveCheckBox))
 					);
-		else
+		}
+		else {
 			this.setContentNode(new HBox(new VBox(findField, findButton),
 										 new VBox(wholeWordCheckBox, caseInsensitiveCheckBox)));
+		}
 
 		this.setAutoHide(true);
 		this.setDetachable(false);
