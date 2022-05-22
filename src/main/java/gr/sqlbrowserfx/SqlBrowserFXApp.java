@@ -86,16 +86,16 @@ public class SqlBrowserFXApp extends Application {
 
 	private static String DB;
 	private static RESTfulServiceConfig restServiceConfig;
+	private boolean restServiceStarted;
+	private boolean isRestConfigurationShowing = false;
 
 	private Scene primaryScene;
 	public static Stage STAGE;
 	private DSqlPane mainSqlPane;
 
 	private SqlConnector sqlConnector;
-	private boolean restServiceStarted;
 	private DDBTreePane ddbTreePane;
 	private boolean isInternalDBShowing = false;
-	private boolean isRestConfigurationShowing = false;
 	private QueriesMenu queriesMenu;
 	
 	@SuppressWarnings("unused")
@@ -452,13 +452,15 @@ public class SqlBrowserFXApp extends Application {
 				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + (SqlBrowserFXAppManager.getActiveSqlPanes().size() + 1));
 				newSqlPane.asDockNode().setDockPane(dockPane);
 				newSqlPane.asDockNode().setFloating(true);
+				JavaFXUtils.zoomToCurrentFactor(newSqlPane);
 				SqlBrowserFXAppManager.registerDSqlPane(newSqlPane);
 			});
 		});
 		
 		MenuItem sqlConsoleViewItem = new MenuItem("Open Simple Console View", JavaFXUtils.createIcon("/icons/console.png"));
 		sqlConsoleViewItem.setOnAction(event -> {
-			new DockNode(dockPane, new SqlConsolePane(sqlConnector), "Simple SqlConsole", JavaFXUtils.createIcon("/icons/console.png"));
+			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, new SqlConsolePane(sqlConnector),
+					"Simple SqlConsole", JavaFXUtils.createIcon("/icons/console.png")));
 		});
 //		MenuItem bashCodeAreaItem = new MenuItem("Open BashFX", JavaFXUtils.createIcon("/icons/console.png"));
 //		bashCodeAreaItem.setOnAction(event -> {
@@ -477,7 +479,8 @@ public class SqlBrowserFXApp extends Application {
 		jsonTableViewItem.setOnAction(event -> {
 			VBox jsonTableView = this.createJsonTableView();
 		    JavaFXUtils.applyJMetro(jsonTableView);
-			new DockNode(dockPane, jsonTableView, "JSON table", JavaFXUtils.createIcon("/icons/web.png"));
+			JavaFXUtils.zoomToCurrentFactor(
+					new DockNode(dockPane, jsonTableView, "JSON table", JavaFXUtils.createIcon("/icons/web.png")));
 		});
 		
 //		MenuItem webViewItem = new MenuItem("Open Docs", JavaFXUtils.createIcon("/icons/web.png"));
@@ -489,7 +492,7 @@ public class SqlBrowserFXApp extends Application {
 //		});
 		
 		MenuItem logItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
-		logItem.setOnAction(actionEvent -> new DLogConsolePane(dockPane).asDockNode());
+		logItem.setOnAction(actionEvent -> JavaFXUtils.zoomToCurrentFactor(new DLogConsolePane(dockPane).asDockNode()));
 		
 		MenuItem terminalItem = new MenuItem("Open Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
 		terminalItem.setOnAction(event -> {
@@ -504,11 +507,12 @@ public class SqlBrowserFXApp extends Application {
 			TabPane tabPane = new TabPane();
 			new DraggingTabPaneSupport().addSupport(tabPane);
 			tabPane.getTabs().add(terminal);
-			
-			new DockNode(dockPane, tabPane, "Terminal", JavaFXUtils.createIcon("/icons/console.png"));
+
+			JavaFXUtils.zoomToCurrentFactor(
+					new DockNode(dockPane, tabPane, "Terminal", JavaFXUtils.createIcon("/icons/console.png")));
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, jsonTableViewItem, logItem, terminalItem, sqlConsoleViewItem);
+		menu1.getItems().addAll(sqlPaneViewItem, logItem, terminalItem);
 
 		final Menu menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		MenuItem restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
