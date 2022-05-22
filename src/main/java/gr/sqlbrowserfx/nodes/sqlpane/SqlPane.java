@@ -306,7 +306,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		SqlTableView sqlTableView = new SqlTableView();
 		sqlTableView.autoResizeProperty().bind(resizeModeCheckBox.selectedProperty());
 		sqlTableView.enableColumnFiltering(isColumnFilteringEnabled);
-		sqlTableView.setColumnWidth(0, 0, 350);
+		sqlTableView.setColumnWidth(0, 0, 500);
 		sqlTableView.setSqlConnector(sqlConnector);
 		sqlTableView.setOnMouseClicked(mouseEvent -> {
 			sqlTableView.requestFocus();
@@ -1131,6 +1131,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		getSelectedSqlTableView().getSelectionModel().getSelectedItems()
 				.forEach(row -> content.append(row.toString() + "\n"));
+		if (content.length() > 0)
+			content.delete(content.length() - 1, content.length());
 
 		StringSelection stringSelection = new StringSelection(content.toString());
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -1145,7 +1147,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			String[] split = data.split(",");
 			for (int i = 0; i < sqlTableView.getColumnsNames().size(); i++) {
 				String column = sqlTableView.getColumnsNames().get(i);
-				editBox.put(column, split[i]);
+				editBox.put(column, split[i].replaceAll("\"", ""));
 			}
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
