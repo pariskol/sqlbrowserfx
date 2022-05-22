@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
@@ -27,6 +28,7 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 	private HashMap<String, Menu> menuItemsMap;
 	private HashMap<String, String> queriesMap;
 	private long codeAreasAvailable = 0;
+	private DSqlConsolePane sqlConsolePane;
 	
 	public QueriesMenu() {
 		super("Saved queries", JavaFXUtils.createIcon("/icons/thunder.png"));
@@ -38,6 +40,22 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 		this.getItems().add(refreshMenuItem);
 		this.loadQueries();
 		this.startCodeAreasAgent();
+	
+	}
+	
+	public QueriesMenu(DSqlConsolePane sqlConsolePane) {
+		super("Saved queries", JavaFXUtils.createIcon("/icons/thunder.png"));
+		menuItemsMap = new HashMap<>();
+		queriesMap = new HashMap<>();
+		
+		MenuItem refreshMenuItem = new MenuItem("Refresh Queries", JavaFXUtils.createIcon("/icons/refresh.png"));
+		refreshMenuItem.setOnAction(action -> this.loadQueries());
+		this.getItems().add(refreshMenuItem);
+		this.loadQueries();
+		this.sqlConsolePane = sqlConsolePane;
+		
+		if (sqlConsolePane != null)
+			this.startCodeAreasAgent();
 	
 	}
 
@@ -108,18 +126,23 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 	private void populateSqlCodeAreasAvailable(Menu queryMenuItem) {
 		Platform.runLater(() -> {
 			queryMenuItem.getItems().clear();
-			for (SqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
-				if (sqlPane instanceof DSqlPane) {
-					DSqlPane dsqlPane = (DSqlPane) sqlPane;
-					if (dsqlPane.getSqlCodeAreaRef() != null) {
-						MenuItem sendToCodeArea = new MenuItem("Paste in " + dsqlPane.asDockNode().getTitle());
-						sendToCodeArea.setOnAction(action2 -> {
-							dsqlPane.getSqlCodeAreaRef().clear();
-							dsqlPane.getSqlCodeAreaRef().appendText(queriesMap.get(queryMenuItem.getText()));
-						});
-						queryMenuItem.getItems().add(sendToCodeArea);
+
+			if (sqlConsolePane == null) {
+				for (SqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
+					if (sqlPane instanceof DSqlPane) {
+						DSqlPane dsqlPane = (DSqlPane) sqlPane;
+						if (dsqlPane.getSqlCodeAreaRef() != null) {
+							MenuItem sendToCodeArea = new MenuItem("Paste in " + dsqlPane.asDockNode().getTitle());
+							sendToCodeArea.setOnAction(action2 -> dsqlPane.getSqlCodeAreaRef().replaceText(queriesMap.get(queryMenuItem.getText())));
+							queryMenuItem.getItems().add(sendToCodeArea);
+						}
 					}
 				}
+			}
+			else {
+				MenuItem sendToCodeArea = new MenuItem("Paste in code area");
+				sendToCodeArea.setOnAction(action2 -> sqlConsolePane.getCodeAreaRef().replaceText(queriesMap.get(queryMenuItem.getText())));
+				queryMenuItem.getItems().add(sendToCodeArea);
 			}
 			});
 	}

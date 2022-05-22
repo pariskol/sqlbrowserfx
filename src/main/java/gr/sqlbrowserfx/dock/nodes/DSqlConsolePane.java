@@ -11,8 +11,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 import org.dockfx.DockNode;
-import org.dockfx.DockPos;
-import org.dockfx.DockWeights;
 import org.dockfx.Dockable;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.slf4j.LoggerFactory;

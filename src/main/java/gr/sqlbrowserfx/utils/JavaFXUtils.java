@@ -52,13 +52,17 @@ public class JavaFXUtils {
 	            double zoomFactor = 1.05;
 	            double deltaY = event.getDeltaY();
 	            if (deltaY < 0){
-	                zoomFactor = 2.0 - zoomFactor;
+	            	zoomFactor = 2.0 - zoomFactor;
 	            }
 	            node.setScaleX(node.getScaleX() * zoomFactor);
 	            node.setScaleY(node.getScaleY() * zoomFactor);
 	            event.consume();
         	}
         });
+	}
+	
+	public static void zoomToCurrentFactor(Node node) {
+//		node.setStyle("-fx-font-size: " + ZOOM + "em;");
 	}
 	
 	public static void addZoomInOutSupport(Node node) {

@@ -24,9 +24,12 @@ import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
+import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
 import gr.sqlbrowserfx.nodes.sqlpane.SimpleSqlPane;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
+import gr.sqlbrowserfx.rest.RESTfulService;
+import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
 import javafx.application.Application;
@@ -38,9 +41,14 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
@@ -67,9 +75,16 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 
 	private SqlConnector sqlConnector;
 	private DDBTreePane ddbTreePane;
+	
+	private static RESTfulServiceConfig restServiceConfig;
+	private boolean restServiceStarted;
+	private boolean isRestConfigurationShowing = false;
+	
+	private QueriesMenu queriesMenu;
 
 	@SuppressWarnings("unused")
 	private double fontSize;
+	private DSqlConsolePaneNH sqlConsolePane;
 
 	public static void main(String[] args) {
 		PropertiesLoader.setLogger(LoggerFactory.getLogger(LoggerConf.LOGGER_NAME));
@@ -89,6 +104,8 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 			createDBselectBox();
 		else
 			dbSelectionAction(DB);
+		
+		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
 
 		primaryStage.setScene(primaryScene);
 		primaryStage.sizeToScene();
@@ -251,6 +268,77 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 		return dbType;
 	}
 
+	private MenuBar createMenu() {
+
+		final Menu menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
+		MenuItem restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
+		restServiceStartItem.setOnAction(actionEvent -> {
+			if (restServiceStarted == false) {
+				try {
+					RESTfulService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
+					RESTfulService.init(sqlConnector);
+					RESTfulService.start();
+					restServiceStartItem.setGraphic(JavaFXUtils.createIcon("/icons/stop.png"));
+					restServiceStartItem.setText("Stop Restful Service");
+					restServiceStarted = true;
+					DialogFactory.createNotification("Restful Service", "Restful Service started !");
+				} catch(Exception e) {
+					DialogFactory.createErrorNotification(e);
+				}
+			} else {
+				RESTfulService.stop();
+				restServiceStarted = false;
+				DialogFactory.createNotification("Restful Service", "Restful Service stopped !");
+				restServiceStartItem.setGraphic(JavaFXUtils.createIcon("/icons/play.png"));
+				restServiceStartItem.setText("Start Restful Service");
+			}
+		});
+
+		MenuItem restServiceConfigItem = new MenuItem("Configure Restful Service", JavaFXUtils.createIcon("/icons/settings.png"));
+		restServiceConfigItem.setOnAction(actionEvent -> createRestServiceConfigBox());
+		
+		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
+
+		MenuBar menuBar = new MenuBar();
+		queriesMenu = new QueriesMenu(sqlConsolePane);
+		menuBar.getMenus().addAll(menu2, queriesMenu);
+
+		return menuBar;
+	}
+	
+	private void createRestServiceConfigBox() {
+		if (isRestConfigurationShowing)
+			return;
+		
+		ImageView bottleLogo = JavaFXUtils.createImageView("/icons/javalin-logo.png", 0.0, 200.0);
+		Label ipLabel = new Label("Ip address");
+		TextField ipField = new TextField(restServiceConfig.getIp());
+		Label portLabel = new Label("Port");
+		TextField portField = new TextField(restServiceConfig.getPort().toString());
+		Button saveButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
+
+		VBox vBox = new VBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
+		JavaFXUtils.applyJMetro(vBox);
+		vBox.setPadding(new Insets(15));
+
+		Stage stage = new Stage();
+		Scene scene = new Scene(vBox);
+		for (String styleSheet : primaryScene.getStylesheets())
+			scene.getStylesheets().add(styleSheet);
+		stage.setTitle("Rest service configuration");
+		stage.setScene(scene);
+		stage.show();
+		
+		saveButton.setOnAction(actionEvent -> {
+			restServiceConfig.setIp(ipField.getText());
+			restServiceConfig.setPort(Integer.parseInt(portField.getText()));
+			isRestConfigurationShowing  = false;
+			stage.close();
+		});
+		isRestConfigurationShowing = true;
+		stage.setOnCloseRequest(windowEvent -> isRestConfigurationShowing  = false);
+	}
+	
 	private void createAppView(SqlConnector sqlConnector) {
 
 		SqlBrowserFXAppManager.setDBtype(determineDBType(sqlConnector));
@@ -261,7 +349,7 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 		mainSqlPane = new SimpleSqlPane(sqlConnector);
 		SqlBrowserFXAppManager.registerSqlPane(mainSqlPane);
 		ddbTreePane = new DDBTreePane(DB, sqlConnector);
-		var sqlConsolePane = new DSqlConsolePaneNH(sqlConnector, mainSqlPane);
+		sqlConsolePane = new DSqlConsolePaneNH(sqlConnector, mainSqlPane);
 		sqlConsolePane.addObserver(ddbTreePane.getDBTreeView());
 		SqlBrowserFXAppManager.registerDDBTreeView(ddbTreePane.getDBTreeView());
 		ddbTreePane.getDBTreeView().asDockNode()
@@ -277,14 +365,16 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 		verticalSp.setOrientation(Orientation.VERTICAL);
 		verticalSp.setDividerPositions(0.3, 0.7);
 
-		var tp = new TabPane(new Tab("DB View", ddbTreePane), new Tab("History View", sqlConsolePane.getHistoryBox()));
-		tp.getTabs().forEach(tab -> tab.setClosable(false));
-		var mainSp = new SplitPane(tp, verticalSp);
+//		var tp = new TabPane(new Tab("DB View", ddbTreePane), new Tab("History View", sqlConsolePane.getHistoryBox()));
+//		tp.getTabs().forEach(tab -> tab.setClosable(false));
+		var mainSp = new SplitPane(ddbTreePane, verticalSp);
 		mainSp.setDividerPositions(0.2, 0.8);
-;
+
+		MenuBar menuBar = createMenu();
+
 		var vbox = new VBox();
 		vbox.setAlignment(Pos.CENTER);
-		vbox.getChildren().addAll(mainSp);
+		vbox.getChildren().addAll(menuBar, mainSp);
 		VBox.setVgrow(mainSp, Priority.ALWAYS);
 
 		JavaFXUtils.applyJMetro(vbox);

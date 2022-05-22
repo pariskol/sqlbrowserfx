@@ -446,7 +446,7 @@ public class DBTreeView extends TreeView<String>
 		MenuItem menuItemCopy = new MenuItem("Copy text", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copyAction());
 
-		MenuItem menuItemCopyScema = new MenuItem("Copy schema", JavaFXUtils.createIcon("/icons/copy.png"));
+		MenuItem menuItemCopyScema = new MenuItem("Copy schema", JavaFXUtils.createIcon("/icons/script.png"));
 		menuItemCopyScema.setOnAction(event -> this.copyScemaAction());
 
 		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.createIcon("/icons/minus.png"));
@@ -458,7 +458,7 @@ public class DBTreeView extends TreeView<String>
 				this.collapseAll(this.getSelectionModel().getSelectedItem());
 		});
 
-		MenuItem menuItemOpenSchema = new MenuItem("Show schema", JavaFXUtils.createIcon("/icons/script.png"));
+		MenuItem menuItemOpenSchema = new MenuItem("Show schema", JavaFXUtils.createIcon("/icons/details.png"));
 		menuItemOpenSchema.setOnAction(action -> {
 			SqlCodeArea codeArea = new SqlCodeArea(this.copyScemaAction(), false, false, isUsingMysql());
 			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
