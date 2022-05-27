@@ -342,6 +342,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		goToLinePopOver.show(this, boundsInScene.getMaxX() - goToLinePopOver.getWidth() - 170, boundsInScene.getMinY());
 	}
 
+	@SuppressWarnings("unused")
 	private void hideGoToLinePopOver() {
 		if (goToLinePopOver != null) {
 			goToLinePopOver.hide();
@@ -534,12 +535,13 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 						trl = split[1].length();
 					}
 				}
-				this.insertText(this.getCaretPosition(), word.substring(0 + trl));
+				int lastDotIndex = this.getText().lastIndexOf(".") + 1;
+				this.replaceText(lastDotIndex, lastDotIndex + trl, word); 
 			} else {
 				this.replaceText(caretPosition - query.length(), caretPosition, word);
 				this.moveTo(caretPosition + word.length() - query.length());
 			}
-			insertMode = false;
+			enableInsertMode(false);
 		});
 		
 		AutoCompleteCodeArea.this.hideAutocompletePopup();

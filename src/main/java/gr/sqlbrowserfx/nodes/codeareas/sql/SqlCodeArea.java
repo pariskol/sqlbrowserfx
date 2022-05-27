@@ -189,6 +189,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 					suggestions = this.getColumnsSuggestions(query);
 				}
 				else {
+					enableInsertMode(false);
 					suggestions = this.getQuerySuggestions(query);
 				}
 				
@@ -383,5 +384,4 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	public void setRunAction(Runnable action) {
 		runAction = action;
 	}
-	
 }
