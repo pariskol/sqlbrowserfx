@@ -535,8 +535,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 						trl = split[1].length();
 					}
 				}
-				int lastDotIndex = this.getText().lastIndexOf(".") + 1;
-				this.replaceText(lastDotIndex, lastDotIndex + trl, word); 
+				this.replaceText(this.getCaretPosition() - trl, this.getCaretPosition(), word); 
 			} else {
 				this.replaceText(caretPosition - query.length(), caretPosition, word);
 				this.moveTo(caretPosition + word.length() - query.length());
