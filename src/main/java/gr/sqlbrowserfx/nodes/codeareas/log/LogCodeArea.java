@@ -8,7 +8,6 @@ import java.util.regex.Matcher;
 
 import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -19,6 +18,7 @@ import org.reactfx.Subscription;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
+import gr.sqlbrowserfx.nodes.codeareas.sql.SimpleLineNumberFactory;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.geometry.Bounds;
@@ -53,7 +53,7 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 	@Override
 	public void enableShowLineNumbers(boolean enable) {
 		if (enable)
-			this.setParagraphGraphicFactory(LineNumberFactory.get(this));
+			this.setParagraphGraphicFactory(new SimpleLineNumberFactory(this));
 		else
 			this.setParagraphGraphicFactory(null);
 	}
