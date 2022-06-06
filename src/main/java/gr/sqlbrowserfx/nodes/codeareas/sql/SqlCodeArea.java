@@ -166,6 +166,12 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		}
 		else if(ch.equals("'")) {
 			this.insertText(this.getCaretPosition(), "'");
+			this.moveTo(this.getCaretPosition() - 1);
+			return;
+		}
+		else if(ch.equals("(")) {
+			this.insertText(this.getCaretPosition(), ")");
+			this.moveTo(this.getCaretPosition() - 1);
 			return;
 		}
 		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
