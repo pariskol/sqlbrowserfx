@@ -453,10 +453,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 				this.hideAutocompletePopup();
 			}
 		}
-		else if(ch.equals("'")) {
-			this.insertText(this.getCaretPosition(), "'");
-			return;
-		}
 		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
 				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
 				|| ch.equals(".") || ch.equals(",") || ch.equals("_")
@@ -600,7 +596,8 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         String query = this.getText().substring(position - limit, position);
         int last = query.lastIndexOf(" ");
         String[] split = query.substring(last + 1).trim().split("\n");
-        return split[split.length - 1].trim();
+        query = split[split.length - 1].trim().replace("(", "");
+        return query;
     }
     
     
