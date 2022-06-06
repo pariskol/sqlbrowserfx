@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -29,6 +28,7 @@ import org.reactfx.Subscription;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
+import gr.sqlbrowserfx.nodes.codeareas.sql.SimpleLineNumberFactory;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -83,7 +83,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		});
 
 		this.showLinesProperty.addListener((ob,ov,nv) -> enableShowLineNumbers(nv));
-		this.setParagraphGraphicFactory(LineNumberFactory.get(this));
+		this.enableShowLineNumbers(this.showLinesProperty.get());
 		this.enableHighlighting();
 		this.enableIndentationMaintenance();
 		
@@ -614,7 +614,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 	@Override
 	public void enableShowLineNumbers(boolean enable) {
 		if (enable)
-			this.setParagraphGraphicFactory(LineNumberFactory.get(this));
+			this.setParagraphGraphicFactory(new SimpleLineNumberFactory(this));
 		else
 			this.setParagraphGraphicFactory(null);
 	}
