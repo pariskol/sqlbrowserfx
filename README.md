@@ -17,13 +17,15 @@ SqlBrowserFX is a feature rich cross platform sql client for SQLite , MySQL, Mar
 * Savable queries.
 * Support for SQLite.
 * Support for MySQL, MariaDB.
+* Partial Support for PostgreSQL
 * Cross Platform.
+* Css themable (Dark, Light etc)
 
 
 ### Prerequisites
 
 * Java 11 +
-* MySQL server for usage with mysql.
+* Installation of desired database.
 
 ### Installing
 
