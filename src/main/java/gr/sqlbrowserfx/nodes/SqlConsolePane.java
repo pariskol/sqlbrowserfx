@@ -34,6 +34,7 @@ import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
+import javafx.event.EventHandler;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -43,6 +44,9 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
@@ -143,6 +147,38 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 		// initial create one tab
 		this.addTab();
+		
+		this.setOnDragOver(new EventHandler<DragEvent>() {
+			
+			@Override
+			public void handle(DragEvent event) {
+				if (event.getGestureSource() != SqlConsolePane.this && event.getDragboard().hasFiles()) {
+					/* allow for both copying and moving, whatever user chooses */
+					event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+				}
+				event.consume();
+			}
+		});
+
+		this.setOnDragDropped(new EventHandler<DragEvent>() {
+
+			@Override
+			public void handle(DragEvent event) {
+				Dragboard db = event.getDragboard();
+				boolean success = false;
+				if (db.hasFiles()) {
+					File file = db.getFiles().get(0);
+					SqlConsolePane.this.openNewFileSqlConsoleTab(file);
+					success = true;
+				}
+				/*
+				 * let the source know whether the string was successfully transferred and used
+				 */
+				event.setDropCompleted(success);
+
+				event.consume();
+			}
+		});
 	}
 
 	public void destroySplitPane() {
