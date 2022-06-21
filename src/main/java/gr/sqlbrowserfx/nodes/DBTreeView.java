@@ -303,7 +303,7 @@ public class DBTreeView extends TreeView<String>
 
 				timeCounter = (System.currentTimeMillis() - timeCounter) / 1000;
 				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME)
-						.debug("Database analysis took " + timeCounter + " seconds");
+						.info("Database analysis took " + timeCounter + " seconds");
 				this.changed();
 			} catch (Throwable e) {
 				DialogFactory.createErrorDialog(e);

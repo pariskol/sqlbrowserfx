@@ -304,8 +304,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		InputMap<Event> run = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.ENTER, KeyCombination.CONTROL_DOWN),
 				action -> { 
-					if(runAction != null)
+					if(runAction != null) {
 						runAction.run();
+						action.consume();
+					}
 				}
         );
 		InputMap<Event> autocomplete = InputMap.consume(
