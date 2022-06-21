@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.richtext.LineNumberFactory;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -29,6 +28,7 @@ import org.reactfx.Subscription;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
+import gr.sqlbrowserfx.nodes.codeareas.sql.SimpleLineNumberFactory;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -83,7 +83,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		});
 
 		this.showLinesProperty.addListener((ob,ov,nv) -> enableShowLineNumbers(nv));
-		this.setParagraphGraphicFactory(LineNumberFactory.get(this));
+		this.enableShowLineNumbers(this.showLinesProperty.get());
 		this.enableHighlighting();
 		this.enableIndentationMaintenance();
 		
@@ -453,10 +453,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 				this.hideAutocompletePopup();
 			}
 		}
-		else if(ch.equals("'")) {
-			this.insertText(this.getCaretPosition(), "'");
-			return;
-		}
 		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
 				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
 				|| ch.equals(".") || ch.equals(",") || ch.equals("_")
@@ -600,7 +596,8 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         String query = this.getText().substring(position - limit, position);
         int last = query.lastIndexOf(" ");
         String[] split = query.substring(last + 1).trim().split("\n");
-        return split[split.length - 1].trim();
+        query = split[split.length - 1].trim().replace("(", "");
+        return query;
     }
     
     
@@ -617,7 +614,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 	@Override
 	public void enableShowLineNumbers(boolean enable) {
 		if (enable)
-			this.setParagraphGraphicFactory(LineNumberFactory.get(this));
+			this.setParagraphGraphicFactory(new SimpleLineNumberFactory(this));
 		else
 			this.setParagraphGraphicFactory(null);
 	}
