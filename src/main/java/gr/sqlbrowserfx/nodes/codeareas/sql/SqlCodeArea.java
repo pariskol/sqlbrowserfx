@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
@@ -50,6 +51,7 @@ import javafx.stage.Popup;
 public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider> implements ContextMenuOwner, HighLighter {
 
 	private Map<String, Set<String>> tableAliases = new HashMap<>();
+	private Set<String> variablesAliases = new HashSet<>();
 	private SqlCodeAreaSyntaxProvider syntaxProvider = new SqlCodeAreaSyntaxProvider();
 
 	private Popup autoCompletePopup;
@@ -84,6 +86,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 					Map<String, Set<String>> newTableAliases = this.analyzeTextForTablesAliases(this.getText());
 					if (!this.areMapsEqual(this.tableAliases, newTableAliases))
 						this.tableAliases = newTableAliases;
+					this.variablesAliases = this.analyzeTextForVariables(this.getText());
 				} catch (InterruptedException e) {
 					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug(e.getMessage());
 					break;
@@ -241,7 +244,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	}
 
 	private List<Keyword> getQuerySuggestions(String query) {
-		List<Keyword> suggestions = syntaxProvider.getKeywords().stream()
+		List<Keyword> suggestions = Stream.concat(variablesAliases.stream().map(v -> new Keyword(v, KeywordType.KEYWORD)), syntaxProvider.getKeywords()
+				.stream())
+				.collect(Collectors.toList())
+				.stream()
 				.filter(keyword -> keyword != null && keyword.getKeyword().startsWith(query))
 				.collect(Collectors.toList());
 		return suggestions;
@@ -291,6 +297,18 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 			}
 		}
 		return newTableAliases;
+	}
+	
+	private Set<String> analyzeTextForVariables(String text) {
+		Set<String> newVariables = new HashSet<>();
+		String[] words = text.split("\\W+");
+		for (int i = 0; i < words.length; i++) {
+			String word = words[i];
+			if (!word.isEmpty() && word.toLowerCase().equals("declare") && i < words.length - 1) {
+				newVariables.add(words[i+1]);
+			} 
+		}
+		return newVariables;
 	}
 
 	@Override
