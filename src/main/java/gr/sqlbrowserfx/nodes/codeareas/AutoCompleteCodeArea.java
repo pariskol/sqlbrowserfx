@@ -57,6 +57,8 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 	protected SearchAndReplacePopOver searchAndReplacePopOver;
 	private SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
 	private SimpleBooleanProperty autoCompleteProperty = new SimpleBooleanProperty(true);
+	private SimpleBooleanProperty isTextSelectedProperty = new SimpleBooleanProperty(false);;
+
 	protected PopOver goToLinePopOver = null;
 	
 
@@ -71,6 +73,10 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 	public AutoCompleteCodeArea(String text, boolean editable, boolean withMenu, boolean autoFormat) {
 		super();
 	
+		this.setEditable(editable);
+
+		this.selectedTextProperty().addListener((ob, ov, nv) -> this.isTextSelectedProperty.set(!nv.isEmpty()));
+		
 		autoCompletePopup = new Popup();
 		searchAndReplacePopOver = new SearchAndReplacePopOver(this);
 
@@ -97,8 +103,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 			this.setPrefHeight(countLines(text)*18);
 		}
 		
-		this.setEditable(editable);
-	
 		
 		if (autoFormat) {
 			this.formatText();
@@ -118,6 +122,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 	}
 
 	protected void setInputMap() {
+		if (!isEditable())
+			return;
+		
 		InputMap<Event> addTabs = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.TAB, KeyCombination.CONTROL_DOWN),
 				action -> {
@@ -245,6 +252,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 					// uncomment this to activate autocomplete on backspace
 //					this.autoCompleteAction(keyEvent, auoCompletePopup);
 				}
+				// keycode N must be excluded to delefate event to queries tab pane
+				if (keyEvent.getCode() != KeyCode.ESCAPE && keyEvent.getCode() != KeyCode.N)
+					keyEvent.consume();
 		});
 		this.setInputMap();
 	}
@@ -279,9 +289,11 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
 		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copy());
+		menuItemCopy.disableProperty().bind(this.isTextSelectedProperty().not());
 
 		MenuItem menuItemCut = new MenuItem("Cut", JavaFXUtils.createIcon("/icons/cut.png"));
 		menuItemCut.setOnAction(event -> this.cut());
+		menuItemCut.disableProperty().bind(this.isTextSelectedProperty().not());
 
 		MenuItem menuItemPaste = new MenuItem("Paste", JavaFXUtils.createIcon("/icons/paste.png"));
 		menuItemPaste.setOnAction(event -> this.paste());
@@ -295,8 +307,11 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		
 		MenuItem menuItemUperCase = new MenuItem("To Upper Case", JavaFXUtils.createIcon("/icons/uppercase.png"));
 		menuItemUperCase.setOnAction(action -> this.convertSelectedTextToUpperCase());
+		menuItemUperCase.disableProperty().bind(this.isTextSelectedProperty().not());
+
 		MenuItem menuItemLowerCase = new MenuItem("To Lower Case", JavaFXUtils.createIcon("/icons/lowercase.png"));
 		menuItemLowerCase.setOnAction(action -> this.convertSelectedTextToLowerCase());
+		menuItemLowerCase.disableProperty().bind(this.isTextSelectedProperty().not());
 		
 		MenuItem menuItemFormat = new MenuItem("Format", JavaFXUtils.createIcon("/icons/format.png"));
 		menuItemFormat.setOnAction(action -> {
@@ -359,11 +374,14 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 					return;
 				
 				int targetParagraph = Integer.parseInt(textField.getText()) - 1;
-				if (targetParagraph > 0 && targetParagraph < this.getParagraphs().size()) {
+				if (targetParagraph >= 0 && targetParagraph < this.getParagraphs().size()) {
 					this.moveTo(targetParagraph, 0);
 					this.requestFollowCaret();
 					this.hideAutocompletePopup();
 				}
+			}
+			else {
+				keyEvent.consume();
 			}
 		});
 		goToLinePopOver = new PopOver(textField);
@@ -596,13 +614,13 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         String query = this.getText().substring(position - limit, position);
         int last = query.lastIndexOf(" ");
         String[] split = query.substring(last + 1).trim().split("\n");
-        query = split[split.length - 1].trim().replace("(", "");
+        query = split[split.length - 1].trim().replaceAll(".*\\(", "");
         return query;
     }
     
     
 
-    @SuppressWarnings({ "unused", "unchecked" })
+    @SuppressWarnings({ "unchecked" })
 	private List<Keyword> getQuerySuggestions(String query) {
 		List<Keyword> suggestions = (List<Keyword>) syntaxProvider.getKeywords().stream()
 				.filter(keyword -> keyword != null && ((Keyword) keyword).getKeyword().startsWith(query))
@@ -621,6 +639,10 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
 	public SimpleBooleanProperty showLinesProperty() {
 		return showLinesProperty;
+	}
+	
+	public SimpleBooleanProperty isTextSelectedProperty() {
+		return isTextSelectedProperty;
 	}
 	
 	public SimpleBooleanProperty autoCompleteProperty() {

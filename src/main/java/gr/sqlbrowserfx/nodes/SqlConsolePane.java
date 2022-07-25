@@ -101,9 +101,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				case N:
 					this.openNewSqlConsoleTab();
 					break;
-				case D:
-//					tabPane.getTabs().remove(tabPane.getSelectionModel().getSelectedItem());
-					break;
 				default:
 					break;
 				}
@@ -269,6 +266,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		
 		openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
 		openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
+		openButton.setTooltip(new Tooltip("Open file"));
 		FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton, settingsButton, openButton);
 		toolbar.setOrientation(Orientation.VERTICAL);
 		return toolbar;

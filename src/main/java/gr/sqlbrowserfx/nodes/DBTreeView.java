@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
+import gr.sqlbrowserfx.conn.DbCash;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
@@ -34,6 +35,8 @@ import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -70,6 +73,10 @@ public class DBTreeView extends TreeView<String>
 	private Integer lastSelectedItemPos = 0;
 	private List<TreeItem<String>> searchResultsList = new ArrayList<>();
 	private Button nextSearchResultButton;
+	private SimpleBooleanProperty hasSelectedSchemaProperty = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty canSelectedOpenProperty = new SimpleBooleanProperty(false);
+
+	
 
 	@SuppressWarnings("unchecked")
 	public DBTreeView(String dbPath, SqlConnector sqlConnector) {
@@ -77,6 +84,46 @@ public class DBTreeView extends TreeView<String>
 		this.sqlConnector = sqlConnector;
 		this.allItems = new ArrayList<>();
 		this.listeners = new ArrayList<>();
+
+		this.getSelectionModel().selectedItemProperty().addListener((ob, ov, nv) -> {
+			String selected = nv.getValue();			
+			canSelectedOpenProperty.set(false);
+			hasSelectedSchemaProperty.set(false);
+			
+			List<String> tables = tablesRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
+			if (tables.contains(selected)) {
+				hasSelectedSchemaProperty.set(true);
+				canSelectedOpenProperty.set(true);
+				return;
+			}
+			List<String> views = viewsRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
+			if (views.contains(selected)) {
+				hasSelectedSchemaProperty.set(true);
+				canSelectedOpenProperty.set(true);
+				return;
+			}
+			List<String> indexes = indexesRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
+			if (indexes.contains(selected)) {
+				hasSelectedSchemaProperty.set(true);
+				return;
+			}
+			
+			if (isUsingMysql()) {
+				List<String> procedures = proceduresRootItem.getChildren().stream().map(ti -> ti.getValue())
+						.collect(Collectors.toList());
+				if (procedures.contains(selected)) {
+					hasSelectedSchemaProperty.set(true);
+					return;
+				}
+				List<String> functions = functionsRootItem.getChildren().stream().map(ti -> ti.getValue())
+						.collect(Collectors.toList());
+				if (functions.contains(selected)) {
+					hasSelectedSchemaProperty.set(true);
+					return;
+				}
+			}
+			
+		});
 
 		rootItem = new TreeItem<>(dbPath, JavaFXUtils.createIcon("/icons/database.png"));
 		rootItem.setExpanded(true);
@@ -329,11 +376,12 @@ public class DBTreeView extends TreeView<String>
 						tablesRootItem.getChildren().add(treeItem);
 						treeItem.setGraphic(JavaFXUtils.createIcon("/icons/table.png"));
 						// TODO find another way with no calls to static class SqlCodeAreaSyntax
-						SqlCodeAreaSyntaxProvider.bind(name, this.getColumnsForTable(name));
+						SqlCodeAreaSyntaxProvider.bind(name, this.getColumnsFor(name));
 					} else if (type.toLowerCase().contains("view")) {
 						this.fillViewTreeItem(treeItem);
 						viewsRootItem.getChildren().add(treeItem);
 						treeItem.setGraphic(JavaFXUtils.createIcon("/icons/view.png"));
+						SqlCodeAreaSyntaxProvider.bind(name, this.getColumnsFor(name));
 					} else if (type.toLowerCase().contains("index")) {
 						this.fillIndexTreeItem(treeItem);
 						indexesRootItem.getChildren().add(treeItem);
@@ -353,6 +401,8 @@ public class DBTreeView extends TreeView<String>
 
 		sqlConnector.getSchema(treeItem.getValue(), rset -> {
 			String schema = rset.getString(schemaColumn);
+			// FIXME: find a more abstract way
+			DbCash.addSchemaFor(treeItem.getValue(), schema);
 			TreeItem<String> schemaItem = new TreeItem<>(schema); // , new SqlCodeArea(schema, false, false,
 																	// isUsingMysql()));
 			schemaTree.getChildren().add(schemaItem);
@@ -448,9 +498,11 @@ public class DBTreeView extends TreeView<String>
 
 		MenuItem menuItemCopyScema = new MenuItem("Copy schema", JavaFXUtils.createIcon("/icons/script.png"));
 		menuItemCopyScema.setOnAction(event -> this.copyScemaAction());
-
+		menuItemCopyScema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
+		
 		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.createIcon("/icons/minus.png"));
 		menuItemDrop.setOnAction(event -> dropAction());
+		menuItemDrop.disableProperty().bind(this.hasSelectedSchemaProperty.not());
 
 		MenuItem menuItemCollapseAll = new MenuItem("Collapse All", JavaFXUtils.createIcon("/icons/collapse.png"));
 		menuItemCollapseAll.setOnAction(event -> {
@@ -469,6 +521,7 @@ public class DBTreeView extends TreeView<String>
 			popOver.setDetachable(false);
 			popOver.show(this.getSelectionModel().getSelectedItem().getGraphic());
 		});
+		menuItemOpenSchema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
 
 		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemOpenSchema, menuItemDrop,
 				menuItemCollapseAll);
@@ -617,9 +670,10 @@ public class DBTreeView extends TreeView<String>
 		return allItems;
 	}
 
-	public List<String> getColumnsForTable(String table) {
+	@SuppressWarnings("unchecked")
+	public List<String> getColumnsFor(String table) {
 		List<String> colums = new ArrayList<>();
-		for (TreeItem<String> ti : tablesRootItem.getChildren()) {
+		for (TreeItem<String> ti : FXCollections.concat(tablesRootItem.getChildren(), viewsRootItem.getChildren())) {
 			if (ti.getValue().equals(table)) {
 				ti.getChildren().forEach(c -> {
 					if (c.getValue().contentEquals("columns")) {
@@ -678,4 +732,14 @@ public class DBTreeView extends TreeView<String>
 	private boolean isUsingMysql() {
 		return sqlConnector instanceof MysqlConnector;
 	}
+
+	public SimpleBooleanProperty hasSelectedSchemaProperty() {
+		return hasSelectedSchemaProperty;
+	}
+
+	public SimpleBooleanProperty canSelectedOpenProperty() {
+		return canSelectedOpenProperty;
+	}
+	
+	
 }

@@ -105,6 +105,7 @@ public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner {
 				DialogFactory.createErrorDialog(e);
 			}
 		});
+		refreshButton.setTooltip(new Tooltip("Refresh"));
 		FlowPane toolbar =  new FlowPane(searchButton, addButton, deleteButton, scemaDetailsButton, refreshButton);
 		toolbar.setPrefWidth(addButton.getWidth());
 		return toolbar;
