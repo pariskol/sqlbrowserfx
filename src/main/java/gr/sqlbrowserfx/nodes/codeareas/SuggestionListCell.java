@@ -29,6 +29,10 @@ public class SuggestionListCell extends ListCell<Keyword>{
 				this.setGraphic(JavaFXUtils.createIcon("/icons/thunder.png"));
 			else if (item.isColumn())
 				this.setGraphic(JavaFXUtils.createIcon("/icons/blue.png"));
+			else if (item.isVariable())
+				this.setGraphic(JavaFXUtils.createIcon("/icons/var.png"));
+			else if (item.isAlias())
+				this.setGraphic(JavaFXUtils.createIcon("/icons/table-y.png"));
 			else
 				this.setGraphic(JavaFXUtils.createIcon("/icons/green.png"));
 			

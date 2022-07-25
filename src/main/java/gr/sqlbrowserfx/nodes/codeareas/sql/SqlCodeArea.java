@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.controlsfx.control.PopOver;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -23,9 +24,9 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
+import gr.sqlbrowserfx.conn.DbCash;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
-import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.codeareas.AutoCompleteCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
@@ -55,15 +56,14 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	private SqlCodeAreaSyntaxProvider syntaxProvider = new SqlCodeAreaSyntaxProvider();
 
 	private Popup autoCompletePopup;
-	protected SearchAndReplacePopOver searchAndReplacePopOver;
 	private ListView<Keyword> suggestionsList;
 	private Thread textAnalyzerDaemon;
 	protected MenuItem menuItemRun;
 	
 	private Runnable runAction;
 	private SqlPanePopOver historyPopOver;
-
-
+	private PopOver schemaPopOver;
+	
 	public SqlCodeArea() {
 		this(null);
 	}
@@ -82,11 +82,11 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		this.textAnalyzerDaemon = new Thread(() -> {
 			while (!textAnalyzerDaemon.isInterrupted()) {
 				try {
-					Thread.sleep(1000);
-					Map<String, Set<String>> newTableAliases = this.analyzeTextForTablesAliases(this.getText());
+					Map<String, Set<String>> newTableAliases = this.analyzeTextForTables(this.getText());
 					if (!this.areMapsEqual(this.tableAliases, newTableAliases))
 						this.tableAliases = newTableAliases;
 					this.variablesAliases = this.analyzeTextForVariables(this.getText());
+					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug(e.getMessage());
 					break;
@@ -128,13 +128,13 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	@Override
 	public void appendText(String text) {
 		super.appendText(text);
-		this.analyzeTextForTablesAliases(text);
+		this.analyzeTextForTables(text);
 	}
 	
 	@Override
 	public void paste() {
 		super.paste();
-		this.analyzeTextForTablesAliases(this.getText());
+		this.analyzeTextForTables(this.getText());
 	}
 	
 	@Override
@@ -226,10 +226,16 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		super.onMouseClicked();
 		if(isHistoryPopOverShowing())
 			historyPopOver.hide();
+		if (schemaPopOver != null)
+			schemaPopOver.hide();
 	}
 	
 	private boolean isHistoryPopOverShowing() {
 		return historyPopOver != null && historyPopOver.isShowing();
+	}
+	
+	private boolean isSchemaPopOverShowing() {
+		return schemaPopOver != null && schemaPopOver.isShowing();
 	}
 	
 	private List<Keyword> getSavedQueries(String query) {
@@ -244,10 +250,16 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	}
 
 	private List<Keyword> getQuerySuggestions(String query) {
-		List<Keyword> suggestions = Stream.concat(variablesAliases.stream().map(v -> new Keyword(v, KeywordType.KEYWORD)), syntaxProvider.getKeywords()
-				.stream())
-				.collect(Collectors.toList())
-				.stream()
+		List<Keyword> suggestions =
+				Stream.concat(
+					Stream.concat(
+						variablesAliases.stream().map(v -> new Keyword(v, KeywordType.VARIABLE)), 
+						tableAliases.values().stream()
+									.flatMap(s -> s.stream())
+									.map(t -> new Keyword(t, KeywordType.ALIAS))
+					),
+					syntaxProvider.getKeywords().stream()
+					)
 				.filter(keyword -> keyword != null && keyword.getKeyword().startsWith(query))
 				.collect(Collectors.toList());
 		return suggestions;
@@ -281,7 +293,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
     	return syntaxProvider.getKeywords(KeywordType.COLUMN, table).size() > 0;
     }
     
-	private Map<String, Set<String>> analyzeTextForTablesAliases(String text) {
+	private Map<String, Set<String>> analyzeTextForTables(String text) {
 		Map<String, Set<String>> newTableAliases = new HashMap<>();
 		String[] words = text.split("\\W+");
 		String saveTableShortcut = null;
@@ -304,8 +316,15 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		String[] words = text.split("\\W+");
 		for (int i = 0; i < words.length; i++) {
 			String word = words[i];
-			if (!word.isEmpty() && word.toLowerCase().equals("declare") && i < words.length - 1) {
-				newVariables.add(words[i+1]);
+			if (!word.isEmpty() && 
+				(word.toLowerCase().equals("declare") || 
+				 word.toLowerCase().equals("in") || 
+				 word.toLowerCase().equals("out")
+				) && 
+				i < words.length - 1) {
+				if (!words[i+1].startsWith("(")) {
+					newVariables.add(words[i+1]);
+				}
 			} 
 		}
 		return newVariables;
@@ -318,6 +337,9 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	
 	@Override
 	protected void setInputMap() {
+		if (!isEditable())
+			return;
+		
 		super.setInputMap();
 		InputMap<Event> run = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.ENTER, KeyCombination.CONTROL_DOWN),
@@ -399,8 +421,32 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		menu.getItems().add(0, menuItemRun);
 		MenuItem menuItemHistory = new MenuItem("History", JavaFXUtils.createIcon("/icons/monitor.png"));
 		menuItemHistory.setOnAction(event -> SqlCodeArea.this.showHistoryPopOver());
+		
+		MenuItem menuItemShowSchema = new MenuItem("Show Schema", JavaFXUtils.createIcon("/icons/script.png"));
+		menuItemShowSchema.setOnAction(action -> SqlCodeArea.this.showSchemaPopOver());
 		menu.getItems().add(menu.getItems().size(), menuItemHistory);
+		menuItemShowSchema.disableProperty().bind(this.isTextSelectedProperty().not());
+		menu.getItems().add(menuItemShowSchema);
+		
 		return menu;
+	}
+
+	private void showSchemaPopOver() {
+		String table = this.getSelectedText();
+		String schema = DbCash.getSchemaFor(table);
+		
+		if (schema == null)
+			return;
+		
+		SqlCodeArea codeArea = new SqlCodeArea(schema, false, false, true);
+		VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
+		scrollPane.setPrefSize(600, 400);
+
+		schemaPopOver = new PopOver(scrollPane);
+		schemaPopOver.setArrowSize(0);
+		schemaPopOver.setDetachable(false);
+		schemaPopOver.setOnHidden(event -> schemaPopOver = null);
+		schemaPopOver.show(this, this.getContextMenu().getX(), this.getContextMenu().getY());
 	}
 	
 	public Runnable getRunAction() {

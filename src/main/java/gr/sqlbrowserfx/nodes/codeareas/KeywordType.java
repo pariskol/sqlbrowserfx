@@ -4,7 +4,10 @@ public enum KeywordType {
 	KEYWORD,
 	FUNCTION,
 	TABLE,
+	ALIAS,
+	VIEW,
 	COLUMN,
 	TYPE,
-	QUERY
+	QUERY,
+	VARIABLE
 }

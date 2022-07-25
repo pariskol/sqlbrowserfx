@@ -56,6 +56,14 @@ public class Keyword {
 
 	}
 	
+	public boolean isVariable() {
+		return this.type == KeywordType.VARIABLE;
+	}
+	
+	public boolean isAlias() {
+		return this.type == KeywordType.ALIAS;
+	}
+	
 	@Override
 	public int hashCode() {
 		// return always 0 to always invoke equals in sets

@@ -6,6 +6,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
@@ -578,7 +579,11 @@ public class SqlBrowserFXApp extends Application {
 		customGraphic.setSpacing(5);
 		menu5.setGraphic(customGraphic);
 		menu5.getGraphic().setOnMouseClicked(mouseEvent -> {
-			new DockNode(dockPane, new HelpTabPane(), "Help", null);
+			try {
+				new DockNode(dockPane, new HelpTabPane(), "Help", null);
+			} catch (IOException e) {
+				DialogFactory.createErrorDialog(e);
+			}
 		});
 
 		MenuBar menuBar = new MenuBar();
