@@ -58,6 +58,8 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 				this.hide();
 			} else if (keyEvent.getCode() == KeyCode.ENTER) {
 				this.findButtonAction();
+			} else {
+				keyEvent.consume();
 			}
 		});
 		replaceField = new TextField();
@@ -67,6 +69,9 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 			}
 			else if (keyEvent.getCode() == KeyCode.ENTER) {
 				this.replaceButtonAction();
+			}
+			else {
+				keyEvent.consume();
 			}
 		});
 		replaceField.setPromptText("Replace...");
@@ -78,12 +83,18 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 				this.findButtonAction();
 				keyEvent.consume();
 			}
+			else {
+				keyEvent.consume();
+			}
 		});
 		replaceButton = new Button("Replace", JavaFXUtils.createIcon("/icons/replace.png"));
 		replaceButton.setOnMouseClicked(mouseEvent -> this.replaceButtonAction());
 		replaceButton.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				this.replaceButtonAction();
+				keyEvent.consume();
+			}
+			else {
 				keyEvent.consume();
 			}
 		});
@@ -93,6 +104,9 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 		replaceAllButton.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				this.replaceAllButtonAction();
+				keyEvent.consume();
+			}
+			else {
 				keyEvent.consume();
 			}
 		});
