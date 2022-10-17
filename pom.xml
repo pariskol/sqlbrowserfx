@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gr.sqlbrowserfx</groupId>
 	<artifactId>sqlbrowserfx</artifactId>
@@ -149,7 +147,7 @@
 		<dependency>
 			<groupId>org.fxmisc.richtext</groupId>
 			<artifactId>richtextfx</artifactId>
-			<version>0.10.7</version>
+			<version>0.10.9</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
@@ -177,9 +175,9 @@
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/io.javalin/javalin -->
 		<dependency>
-		    <groupId>io.javalin</groupId>
-		    <artifactId>javalin</artifactId>
-		    <version>4.3.0</version>
+			<groupId>io.javalin</groupId>
+			<artifactId>javalin</artifactId>
+			<version>4.3.0</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.json/json -->
 		<dependency>
@@ -228,9 +226,16 @@
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
 		<dependency>
-		    <groupId>org.postgresql</groupId>
-		    <artifactId>postgresql</artifactId>
-		    <version>42.3.3</version>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.3.3</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/com.sap.cloud.db.jdbc/ngdbc -->
+		<dependency>
+			<groupId>com.sap.cloud.db.jdbc</groupId>
+			<artifactId>ngdbc</artifactId>
+			<version>2.13.9</version>
+			<type>pom</type>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
