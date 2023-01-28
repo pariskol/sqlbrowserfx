@@ -15,9 +15,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.controlsfx.control.PopOver;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
@@ -31,10 +33,12 @@ import gr.sqlbrowserfx.nodes.codeareas.sql.CSqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.FileSqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
+import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
+import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -46,6 +50,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
@@ -76,6 +82,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private boolean popOverIsShowing = false;
 	private SplitPane splitPane;
 	private Button openButton;
+	private Button searchButton;
+	private CustomPopOver fileSearchPopOver;
 
 
 	@SuppressWarnings("unchecked")
@@ -106,6 +114,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				}
 			}
 		});
+		
+		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.O, KeyCombination.CONTROL_DOWN),
+				action -> this.showFileSearchPopOver()));
 
 		splitPane = new SplitPane(queryTabPane, historyArea);
 		splitPane.setOrientation(Orientation.VERTICAL);
@@ -192,6 +203,22 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			codeAreaRef = ((VirtualizedScrollPane<CSqlCodeArea>) selectedTab.getContent()).getContent(); 
 		}
 	}
+	
+	private void createFileSearchPopover() {
+		if(this.fileSearchPopOver != null) return;
+		
+		this.fileSearchPopOver = new FileSearchPopOver(file -> openNewFileSqlConsoleTab(file));
+	}
+	
+	private void showFileSearchPopOver() {
+		if (popOverIsShowing) return;
+		
+		createFileSearchPopover();
+		
+		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		fileSearchPopOver.show(searchButton, boundsInScene.getMaxX() - 620,
+				boundsInScene.getMinY());
+	}
 
 	private void openNewSqlConsoleTab() {
 		CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
@@ -255,19 +282,24 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		
 		settingsButton = new Button("", JavaFXUtils.createIcon("/icons/settings.png"));
 		settingsButton.setOnMouseClicked(mouseEvent -> {
-			if (!popOverIsShowing) {
-				popOverIsShowing = true;
-				PopOver popOver = new PopOver(new VBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox, showLinesCheckBox));
-				popOver.setOnHidden(event -> popOverIsShowing = false);
-				popOver.show(settingsButton);
-			}
+			if (popOverIsShowing) return;
+			
+			popOverIsShowing = true;
+			var popOver = new CustomPopOver(new VBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox, showLinesCheckBox));
+			popOver.setOnHidden(event -> popOverIsShowing = false);
+			popOver.show(settingsButton);
 		});
 		settingsButton.setTooltip(new Tooltip("Adjust settings"));
 		
 		openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
 		openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
 		openButton.setTooltip(new Tooltip("Open file"));
-		FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton, settingsButton, openButton);
+		
+		searchButton = new Button("", JavaFXUtils.createIcon("/icons/magnify.png"));
+		searchButton.setOnMouseClicked(mouseEvent -> this.showFileSearchPopOver());
+		searchButton.setTooltip(new Tooltip("Search file"));
+		
+		FlowPane toolbar = new FlowPane(searchButton, executeButton, stopExecutionButton, settingsButton, openButton);
 		toolbar.setOrientation(Orientation.VERTICAL);
 		return toolbar;
 	}

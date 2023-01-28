@@ -35,7 +35,9 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
@@ -83,6 +85,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		this.setOnKeyTyped(keyEvent -> this.autoCompleteAction(keyEvent));
 		this.setContextMenu(this.createContextMenu());
 		this.setKeys();
+		JavaFXUtils.addZoomInOutSupport(this);
 
 		this.setOnMouseClicked(mouseEvent -> {
 			this.onMouseClicked();
@@ -220,6 +223,17 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 				action -> this.showGoToLinePopOver()
         );
 		
+		
+		InputMap<Event> stringify = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.QUOTE, KeyCombination.CONTROL_DOWN),
+				action -> this.replaceSelection("'" + getSelectedText() + "'")
+        );
+		
+		InputMap<Event> parentesisfy = InputMap.consume(
+				EventPattern.keyPressed(KeyCode.DIGIT9, KeyCombination.CONTROL_DOWN),
+				action -> this.replaceSelection("(" + getSelectedText() + ")")
+        );
+		
         Nodes.addFallbackInputMap(this, addTabs);
         Nodes.addFallbackInputMap(this, removeTabs);
         Nodes.addInputMap(this, autocomplete);
@@ -229,6 +243,8 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         Nodes.addInputMap(this, toLower);
         Nodes.addInputMap(this, format);
         Nodes.addInputMap(this, goToLine);
+        Nodes.addInputMap(this, stringify);
+        Nodes.addInputMap(this, parentesisfy);
 //        Nodes.addFallbackInputMap(this, backspace);
 	}
 	
@@ -252,9 +268,12 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 					// uncomment this to activate autocomplete on backspace
 //					this.autoCompleteAction(keyEvent, auoCompletePopup);
 				}
-				// keycode N must be excluded to delefate event to queries tab pane
-				if (keyEvent.getCode() != KeyCode.ESCAPE && keyEvent.getCode() != KeyCode.N)
+				// These keycodes must be excluded to delegate event to queries tab pane
+			if (keyEvent.getCode() != KeyCode.ESCAPE 
+					&& keyEvent.getCode() != KeyCode.N
+					&& keyEvent.getCode() != KeyCode.O) {
 					keyEvent.consume();
+			}
 		});
 		this.setInputMap();
 	}
@@ -380,10 +399,13 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 					this.hideAutocompletePopup();
 				}
 			}
-			else {
-				keyEvent.consume();
+			else if (keyEvent.getCode() == KeyCode.ESCAPE){
+				goToLinePopOver.hide();
 			}
+
+			keyEvent.consume();
 		});
+		
 		goToLinePopOver = new PopOver(textField);
 		goToLinePopOver.setOnHidden(event -> goToLinePopOver = null);
 		goToLinePopOver.setArrowSize(0);
@@ -522,19 +544,19 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		
 		suggestionsList.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
-				listViewOnEnterActrion(suggestionsList, query, caretPosition, keyEvent);
+				listViewOnEnterAction(suggestionsList, query, caretPosition, keyEvent);
 			}
 			else if (keyEvent.getCode() == KeyCode.ESCAPE || keyEvent.getCode() == KeyCode.SPACE) {
 				hideAutocompletePopup();
 			}
 		});
-		suggestionsList.setOnMouseClicked(mouseEvent -> listViewOnEnterActrion(suggestionsList, query, caretPosition,
+		suggestionsList.setOnMouseClicked(mouseEvent -> listViewOnEnterAction(suggestionsList, query, caretPosition,
 							new KeyEvent(suggestionsList, suggestionsList, 
 									KeyEvent.KEY_PRESSED, null, null, KeyCode.ENTER, 
 									false, false, false, false)));
 	}
 
-	protected void listViewOnEnterActrion(ListView<Keyword> suggestionsList, final String query, final int caretPosition,
+	protected void listViewOnEnterAction(ListView<Keyword> suggestionsList, final String query, final int caretPosition,
 			KeyEvent keyEvent) {
 		final String word = (suggestionsList.getSelectionModel().getSelectedItem() != null) ?
 								suggestionsList.getSelectionModel().getSelectedItem().getKeyword()	 :

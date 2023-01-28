@@ -31,7 +31,7 @@ import gr.sqlbrowserfx.nodes.codeareas.AutoCompleteCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
-import gr.sqlbrowserfx.nodes.sqlpane.SqlPanePopOver;
+import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
@@ -61,7 +61,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	protected MenuItem menuItemRun;
 	
 	private Runnable runAction;
-	private SqlPanePopOver historyPopOver;
+	private CustomPopOver historyPopOver;
 	private PopOver schemaPopOver;
 	
 	public SqlCodeArea() {
@@ -167,11 +167,13 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 				this.hideAutocompletePopup();
 			}
 		}
-		else if(ch.equals("'")) {
-			this.insertText(this.getCaretPosition(), "'");
-			this.moveTo(this.getCaretPosition() - 1);
-			return;
-		}
+		// FIXME: this may be removed as a new key combination Ctrl + ' stringifies selected text
+//		else if(ch.equals("'")) {
+//			this.insertText(this.getCaretPosition(), "'");
+//			this.moveTo(this.getCaretPosition() - 1);
+//			
+//			return;
+//		}
 		else if(ch.equals("(")) {
 			this.insertText(this.getCaretPosition(), ")");
 			this.moveTo(this.getCaretPosition() - 1);
@@ -365,6 +367,9 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 					showHistoryPopOver();
 				}
         );
+		
+
+		
         Nodes.addInputMap(this, run);
         Nodes.addInputMap(this, autocomplete);
         Nodes.addInputMap(this, history);
@@ -384,8 +389,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		pane.setPrefSize(600, 400);
 		HBox hbox = new HBox(codeArea.getSearchAndReplacePopOver(), codeArea.createGoToLinePopOver().getContentNode(), datePicker);
 		hbox.setSpacing(20);
-		historyPopOver = new SqlPanePopOver(
-				new VBox(new Label("Query History"), hbox, pane));
+		
+		VBox vbox = new VBox(new Label("Query History"), hbox, pane);
+		historyPopOver = new CustomPopOver(vbox);
+		
 		historyPopOver.setOnHidden(event -> SqlCodeArea.this.historyPopOver = null);
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
 		historyPopOver.show(this, boundsInScene.getMaxX() - 620,
