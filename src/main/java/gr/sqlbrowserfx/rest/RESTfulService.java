@@ -98,8 +98,27 @@ public class RESTfulService {
 			List<Object> params = new ArrayList<>();
 			
 			ctx.queryParamMap().entrySet().forEach(e -> {
-				whereFilter.append(" and " + e.getKey() + " = ? ");
-				params.add(e.getValue().get(0));
+				String actualParam = e.getKey();
+				String value = e.getValue().get(0);
+				String actualValue = value;
+				String operator = "=";
+				String logic = " and ";
+				
+				if (value.startsWith(">=") || value.startsWith("<=")) {
+					operator = value.substring(0, 2);
+					actualValue = value.substring(2, value.length());
+				} else if (value.startsWith(">") || value.startsWith("<")) {
+					operator = value.substring(0, 1);
+					actualValue = value.substring(1, value.length());
+				}
+				
+				if (actualParam.startsWith("|")) {
+					logic = " or ";
+					actualParam = actualParam.substring(1, actualParam.length());
+				}
+				
+				whereFilter.append(logic + actualParam + operator + "?");
+				params.add(actualValue);
 			});
 
 			List<Object> data = new ArrayList<>();
