@@ -120,7 +120,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		sqlQueryRunning = false;
 
-		popOver = new SqlPanePopOver();
+		popOver = new CustomPopOver();
 		pathField = new TextField();
 
 		toolBar = this.createToolbar();
@@ -250,7 +250,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			columnsSettingsButton.setOnMouseClicked(mouseEvent -> this.columnsSettingsButtonAction());
 			columnsSettingsButton.setTooltip(new Tooltip("Select visible columns"));
 
-			return new FlowPane(searchButton, settingsButton, columnsSettingsButton, tableSelectButton, refreshButton,
+			return new FlowPane(searchButton, tableSelectButton, settingsButton, columnsSettingsButton, refreshButton,
 					addButton, editButton, deleteButton, importCsvButton, exportCsvButton, sqlConsoleButton);
 		} else {
 			return new FlowPane(searchButton, settingsButton);
@@ -828,7 +828,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		addBtn.setTooltip(new Tooltip("Add"));
 		editBox.setActionButton(addBtn);
 
-		popOver = new SqlPanePopOver(editBox);
+		popOver = new CustomPopOver(editBox);
 		popOver.setHeight(editBox.getMainBox().getHeight());
 
 		addBtn.setOnAction(submitEvent -> this.insertRecordToSqlTableViewRef(editBox));
@@ -852,7 +852,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		SqlTableRowEditBox editBox = this.createEditBox(sqlTableRow, false);
 		sqlTableRow.addObserver(editBox);
 
-		popOver = new SqlPanePopOver(editBox);
+		popOver = new CustomPopOver(editBox);
 
 		if (sqlTableView.getPrimaryKey() != null) {
 			Button editBtn = new Button("Edit", JavaFXUtils.createIcon("/icons/check.png"));
@@ -951,7 +951,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			getSelectedTableTab().getRecordsTabPane().getSelectionModel().select(compareTab);
 		} else {
 			compareBox.setPrefWidth(800);
-			popOver = new SqlPanePopOver(compareBox);
+			popOver = new CustomPopOver(compareBox);
 			popOver.setOnHidden(closeEvent -> {
 				for (Node node : compareBox.getChildren()) {
 					HBox hbox = (HBox) node;
@@ -974,7 +974,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		ComboBox<String> viewsBox = this.createViewsBox();
 		viewsBox.prefWidthProperty().bind(tablesBox.widthProperty());
 
-		popOver = new SqlPanePopOver(new VBox(new Label("Select"), tablesBox, viewsBox));
+		popOver = new CustomPopOver(new VBox(new Label("Select"), tablesBox, viewsBox));
 		popOver.show(tableSelectButton);
 	}
 
@@ -997,7 +997,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 
 		settingsButton.requestFocus();
-		popOver = new SqlPanePopOver(new VBox(resizeModeCheckBox, fullModeCheckBox, limitModeCheckBox));
+		popOver = new CustomPopOver(new VBox(resizeModeCheckBox, fullModeCheckBox, limitModeCheckBox));
 		popOver.show(settingsButton);
 	}
 
@@ -1012,7 +1012,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				popOver.hide();
 			}
 		});
-		popOver = new SqlPanePopOver(searchBox);
+		popOver = new CustomPopOver(searchBox);
 //		popOver.setOnHidden(closeEvent -> sqlTableView.setItems(sqlTableView.getSqlTableRows()));
 		popOver.show(searchButton);
 	}
@@ -1029,7 +1029,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			for (CheckBox checkBox : columnCheckBoxesMap.values()) {
 				vBox.getChildren().add(checkBox);
 			}
-			popOver = new SqlPanePopOver(vBox);
+			popOver = new CustomPopOver(vBox);
 			popOver.show(columnsSettingsButton);
 		}
 	}

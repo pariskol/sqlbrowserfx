@@ -151,7 +151,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 					infoText.setPrefColumnCount(30);
 					infoText.setPrefRowCount(12);
 					textArea.textProperty().bind(infoText.textProperty());
-					PopOver info = new SqlPanePopOver(new VBox(infoText));
+					PopOver info = new CustomPopOver(new VBox(infoText));
 					info.setOnHidden(event-> textArea.textProperty().unbind());
 					info.show(infoButton);
 					infoText.setOnKeyPressed(event-> {if (event.getCode() == KeyCode.ESCAPE) info.hide();});

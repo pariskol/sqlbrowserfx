@@ -4,13 +4,13 @@ import org.controlsfx.control.PopOver;
 
 import javafx.scene.Node;
 
-public class SqlPanePopOver extends PopOver{
+public class CustomPopOver extends PopOver{
 
-	public SqlPanePopOver() {
+	public CustomPopOver() {
 		this(null);
 	}
 	
-	public SqlPanePopOver(Node node) {
+	public CustomPopOver(Node node) {
 		super(node);
 		this.setDetachable(false);
 		this.setArrowSize(0);
