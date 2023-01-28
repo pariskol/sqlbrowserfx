@@ -15,17 +15,17 @@
   <manifest></manifest>
   <icon>./sqlbrowser-fx.ico</icon>
   <classPath>
-    <mainClass>gr.sqlbrowserfx.SqlBrowserFXApp</mainClass>
+    <mainClass>gr.sqlbrowserfx.GUIStarter</mainClass>
     <cp>./lib/*</cp>
   </classPath>
   <jre>
     <path>jre</path>
     <bundledJre64Bit>true</bundledJre64Bit>
     <bundledJreAsFallback>false</bundledJreAsFallback>
-    <minVersion></minVersion>
+    <minVersion>17</minVersion>
     <maxVersion></maxVersion>
     <jdkPreference>jdkOnly</jdkPreference>
     <runtimeBits>64</runtimeBits>
-    <opt>-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 </opt>
+    <opt>-Xmx512m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 </opt>
   </jre>
 </launch4jConfig>
