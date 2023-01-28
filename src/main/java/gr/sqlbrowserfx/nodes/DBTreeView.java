@@ -6,7 +6,6 @@ import java.awt.datatransfer.StringSelection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -86,6 +85,8 @@ public class DBTreeView extends TreeView<String>
 		this.listeners = new ArrayList<>();
 
 		this.getSelectionModel().selectedItemProperty().addListener((ob, ov, nv) -> {
+			if (nv == null) return;
+			
 			String selected = nv.getValue();			
 			canSelectedOpenProperty.set(false);
 			hasSelectedSchemaProperty.set(false);
@@ -362,10 +363,14 @@ public class DBTreeView extends TreeView<String>
 		List<String> newItems = new ArrayList<>();
 		sqlConnector.getContents(rset -> {
 			try {
-				HashMap<String, Object> dto = DTOMapper.mapUsingRealColumnNames(rset);
-
-				String name = (String) dto.get(sqlConnector.getTableNameColumn());
-				String type = (String) dto.get(sqlConnector.getTableTypeColumn());
+				// In every sql connector implementation columns must be ordered as 'name','type' in contents query
+				String name = rset.getString(1);
+				String type = rset.getString(2);
+				
+				if (name == null || type == null) {
+					logger.error("Could not map table name or type, type: " + type + " ,name: " + name);
+					return;
+				}
 
 				newItems.add(name);
 				if (!allItems.contains(name)) {
@@ -411,6 +416,7 @@ public class DBTreeView extends TreeView<String>
 		TreeItem<String> columnsTree = new TreeItem<>("columns", JavaFXUtils.createIcon("/icons/columns.png"));
 		treeItem.getChildren().add(columnsTree);
 
+		// executing a query that will return zero results just to resolve columns
 		sqlConnector.executeQueryRaw("select * from " + treeItem.getValue() + " where 1 = 2", rset -> {
 			SqlTable sqlTable = new SqlTable(rset.getMetaData());
 			sqlTable.setPrimaryKey(sqlConnector.findPrimaryKey(treeItem.getValue()));

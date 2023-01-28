@@ -191,15 +191,6 @@ public class MysqlConnector extends SqlConnector {
 		return "COLUMN_NAME";
 	}
 	
-	@Override
-	public String getTableNameColumn() {
-		return "TABLE_NAME";
-	}
-	
-	@Override
-	public String getTableTypeColumn() {
-		return "TABLE_TYPE";
-	}
 
 	@Override
 	public String getDbSchema() {

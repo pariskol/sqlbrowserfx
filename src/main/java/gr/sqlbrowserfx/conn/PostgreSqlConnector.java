@@ -77,16 +77,6 @@ public class PostgreSqlConnector extends SqlConnector {
 	}
 	
 	@Override
-	public String getTableNameColumn() {
-		return "table_name";
-	}
-	
-	@Override
-	public String getTableTypeColumn() {
-		return "table_type";
-	}
-	
-	@Override
 	public void getTriggers(String table, ResultSetAction action) throws SQLException {
 		String query = 
 			"select event_object_schema as table_schema, "

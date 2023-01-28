@@ -449,13 +449,6 @@ public abstract class SqlConnector {
 
 	public abstract String getIndexSchemaColumn();
 
-	public String getTableNameColumn() {
-		return "name";
-	}
-
-	public String getTableTypeColumn() {
-		return "type";
-	}
 
 	public String getDriver() {
 		return driver;
