@@ -56,7 +56,6 @@ public abstract class DbConfigBox extends VBox {
 		passwordField = new PasswordField();
 		passwordField.setPromptText("Enter password ...");
 		this.getChildren().add(passwordField);
-		this.getChildren().add(new Label("Database"));
 		connectButton = new Button("Connect", JavaFXUtils.createIcon("/icons/database.png"));
 		
 		this.loader = new ProgressIndicator();

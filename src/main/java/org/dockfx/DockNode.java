@@ -44,8 +44,6 @@ import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
-import jfxtras.styles.jmetro.JMetro;
-import jfxtras.styles.jmetro.Style;
 
 /**
  * Base class for a dock node that provides the layout of the content along with
@@ -329,10 +327,9 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 			}
 			
 			Scene scene = new Scene(borderPane, width, height);
-			if (ENABLE_JMETRO && JMETRO.equals("dark"))
-				new JMetro(Style.DARK).setParent(borderPane);	
-			else if (ENABLE_JMETRO && JMETRO.equals("light"))
-				new JMetro(Style.LIGHT).setParent(borderPane);
+			
+			JavaFXUtils.applyJMetro(borderPane);
+			
 			if (dockPane != null) {
 				for (String styleSheet : dockPane.getStylesheets())
 					scene.getStylesheets().add(styleSheet);

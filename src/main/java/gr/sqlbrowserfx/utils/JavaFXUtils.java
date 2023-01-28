@@ -12,8 +12,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.ScrollEvent;
-import jfxtras.styles.jmetro.JMetro;
-import jfxtras.styles.jmetro.Style;
 
 public class JavaFXUtils {
 
@@ -89,10 +87,11 @@ public class JavaFXUtils {
 	}
 	
 	public static void applyJMetro(Node node) {
-		Parent parent = (Parent) node;
-		if (ENABLE_JMETRO && JMETRO.equals("dark"))
-			new JMetro(Style.DARK).setParent(parent);	
-		else if (ENABLE_JMETRO && JMETRO.equals("light"))
-			new JMetro(Style.LIGHT).setParent(parent);
+		// FIXME: Jmetro is broken after update
+//		Parent parent = (Parent) node;
+//		if (ENABLE_JMETRO && JMETRO.equals("dark"))
+//			JMetro(Style.).setParent(parent);	
+//		else if (ENABLE_JMETRO && JMETRO.equals("light"))
+//			new JMetro(Style.LIGHT).setParent(parent);
 	}
 }
