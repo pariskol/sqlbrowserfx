@@ -66,6 +66,9 @@ public class FileSearchPopOver extends CustomPopOver {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				search();
 			}
+			else if (keyEvent.getCode() != KeyCode.ESCAPE) {
+				keyEvent.consume();
+			}
 		});
 
 		this.setContentNode(new VBox(new Label("File Search"), searchField, filesListView));
