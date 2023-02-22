@@ -55,7 +55,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 		findField.setPromptText("Search...");
 		findField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
-				this.hide();
+				return;
 			} else if (keyEvent.getCode() == KeyCode.ENTER) {
 				this.findButtonAction();
 			} 
@@ -66,7 +66,7 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 		replaceField = new TextField();
 		replaceField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
-				this.hide();
+				return;
 			}
 			else if (keyEvent.getCode() == KeyCode.ENTER) {
 				this.replaceButtonAction();

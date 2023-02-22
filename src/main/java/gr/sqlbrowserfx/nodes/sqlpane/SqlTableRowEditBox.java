@@ -1,6 +1,5 @@
 package gr.sqlbrowserfx.nodes.sqlpane;
 
-import java.awt.TextField;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
