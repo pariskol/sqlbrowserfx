@@ -7,15 +7,19 @@ import java.util.concurrent.TimeUnit;
 
 import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.FilesUtils;
+import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 
 public class FileSearchPopOver extends CustomPopOver {
 
@@ -24,6 +28,7 @@ public class FileSearchPopOver extends CustomPopOver {
 		public void run(File selectedFile);
 	}
 
+	private Action action;
 	private ScheduledExecutorService executor;
 	private TextField searchField;
 	private ListView<String> filesListView;
@@ -33,6 +38,11 @@ public class FileSearchPopOver extends CustomPopOver {
 	public FileSearchPopOver(Action action) {
 		super();
 
+		this.action = action;
+		var openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
+		openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
+		openButton.setTooltip(new Tooltip("Open file"));
+		
 		filesListView = new ListView<String>();
 		filesListView.setCellFactory(param -> new ListCell<String>() {
 			@Override
@@ -61,16 +71,19 @@ public class FileSearchPopOver extends CustomPopOver {
 		filesListView.setPrefSize(600, 400);
 
 		searchField = new TextField();
+//		searchField.setPrefWidth(576);
 		searchField.setPromptText("Search for file...");
 		searchField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				search();
 			}
-			else if (keyEvent.getCode() != KeyCode.ESCAPE) {
+			
+			if (keyEvent.getCode() != KeyCode.ESCAPE) {
 				keyEvent.consume();
 			}
 		});
 
+		// TODO: add open button if has any value
 		this.setContentNode(new VBox(new Label("File Search"), searchField, filesListView));
 		this.setOnHidden(event -> {
 			if (executor != null) {
@@ -78,6 +91,9 @@ public class FileSearchPopOver extends CustomPopOver {
 			}
 		});
 
+		this.setOnShown(event -> searchField.requestFocus());
+		this.setHideOnEscape(true);
+		
 		filesListView.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				var filePath = filesListView.getSelectionModel().getSelectedItem();
@@ -94,6 +110,12 @@ public class FileSearchPopOver extends CustomPopOver {
 		});
 	}
 
+	private void openFileAction() {
+		var fileChooser = new FileChooser();
+		var selectedFile = fileChooser.showOpenDialog(null);
+		action.run(selectedFile);
+	}
+	
 	private void search() {
 		searchField.setDisable(true);
 		filesListView.setDisable(true);
