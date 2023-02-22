@@ -67,7 +67,7 @@ public class JavaFXUtils {
 		InputMap<Event> zoomIn = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.EQUALS, KeyCombination.CONTROL_DOWN),
 				action -> {
-					if (ZOOM < 2.0)
+					if (ZOOM < 2.5)
 						ZOOM += 0.1;
 					node.setStyle("-fx-font-size: " + ZOOM + "em;");
 				}
