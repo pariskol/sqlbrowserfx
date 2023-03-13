@@ -9,6 +9,7 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<attach.version>4.0.10</attach.version>
+		<!-- It also compiles and run with latest 19.0.2.1 but 16 seems more stable without errors -->
 		<javafx.version>16</javafx.version>
 		<log4j.version>2.19.0</log4j.version>
 	</properties>

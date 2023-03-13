@@ -19,6 +19,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 
 public class FileSearchPopOver extends CustomPopOver {
@@ -84,7 +85,19 @@ public class FileSearchPopOver extends CustomPopOver {
 		});
 
 		// TODO: add open button if has any value
-		this.setContentNode(new VBox(new Label("File Search"), searchField, filesListView));
+		var descIcon = JavaFXUtils.createIcon("/icons/settings.png");
+		
+		var descLabel = new Label("File Search in: " + rootPath, descIcon);
+		descLabel.setOnMouseClicked(event -> {
+			this.hide();
+			var dirChooser = new DirectoryChooser();
+			var selectedDir = dirChooser.showDialog(this.getOwnerWindow());
+			this.rootPath = selectedDir.getAbsolutePath();
+			descLabel.setText("File Search in: " + rootPath);
+		});
+		descLabel.setTooltip(new Tooltip("Click to change root path"));
+		
+		this.setContentNode(new VBox(descLabel, searchField, filesListView));
 		this.setOnHidden(event -> {
 			if (executor != null) {
 				executor.shutdownNow();
