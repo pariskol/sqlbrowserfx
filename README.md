@@ -30,7 +30,7 @@ SqlBrowserFX is a feature rich cross platform sql client for SQLite , MySQL, Mar
 ### Installing
 
 Copy sqlbrowser-for-build.db to sqlbrowser.db.
-Import the project to your favorite ide as maven project and run SQlBrowserFXApp class.
+Import the project to your favorite ide as maven project and run GUIStarter class.
 You can also run install.sh script , if you are using linux in order to install sqlbrowserfx as cli command
 'sqlfx'.
 
