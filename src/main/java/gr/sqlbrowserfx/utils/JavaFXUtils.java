@@ -6,7 +6,6 @@ import org.fxmisc.wellbehaved.event.Nodes;
 
 import javafx.event.Event;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -26,6 +25,10 @@ public class JavaFXUtils {
 		} catch (Exception e) {
 			CSS_THEME = "/styles/flat-dark";
 		}
+	}
+	
+	public static Double getZoomFactorApplied() {
+		return ZOOM;
 	}
 	
 	public static ImageView createIcon(String url) {

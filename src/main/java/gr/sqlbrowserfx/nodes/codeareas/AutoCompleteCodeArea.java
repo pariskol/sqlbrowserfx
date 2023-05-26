@@ -49,7 +49,9 @@ import javafx.stage.Popup;
 public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> extends CodeArea
 		implements ContextMenuOwner, HighLighter {
 
-	private static final int Y_OFFSET = 45;
+	// this is a random offset that achieves to locate correctly 
+	// the autocomplete pop up when zooming
+	private static final int Y_OFFSET = (int) (Math.round(JavaFXUtils.getZoomFactorApplied() * 35 + 5));
 	private boolean autoCompletePopupShowing = false;
 	private boolean insertMode = false;
 	private T syntaxProvider;
