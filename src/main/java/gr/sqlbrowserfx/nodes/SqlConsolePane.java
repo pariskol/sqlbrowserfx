@@ -1,9 +1,6 @@
 package gr.sqlbrowserfx.nodes;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -12,9 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -32,8 +27,8 @@ import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.CSqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.FileSqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
-import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
+import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -246,17 +241,19 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		codeArea.autoCompleteProperty().bind(this.autoCompleteOnTypeCheckBox.selectedProperty());
 		
 		VirtualizedScrollPane<CodeArea> vsp = new VirtualizedScrollPane<CodeArea>(codeArea);
-		String fileContent = null;
-		try {
-			fileContent = StringUtils.join(
-				Files.lines(Paths.get(selectedFile.getAbsolutePath()))
-				 	 .collect(Collectors.toList()), "\n");
-		} catch (IOException e) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not load file " + selectedFile.getName(), e);
-		}
-		codeArea.replaceText(fileContent);
 	
 		Tab tab = new Tab(selectedFile.getName(),vsp);
+		tab.setOnCloseRequest((event) -> {
+			event.consume();
+			if (codeArea.isTextDirty()) {
+				if (DialogFactory.createConfirmationDialog(
+						"Unsaved work", 
+						"Do you want to discard changes ?") == 1
+				) {
+					queryTabPane.getTabs().remove(tab);
+				}
+			}
+		});
 		tab.setGraphic(JavaFXUtils.createIcon("/icons/code-file.png"));
 		queryTabPane.getTabs().add(tab);
 		queryTabPane.getSelectionModel().select(tab);
