@@ -244,8 +244,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	
 		Tab tab = new Tab(selectedFile.getName(),vsp);
 		tab.setOnCloseRequest((event) -> {
-			event.consume();
 			if (codeArea.isTextDirty()) {
+				event.consume();
+
 				if (DialogFactory.createConfirmationDialog(
 						"Unsaved work", 
 						"Do you want to discard changes ?") == 1

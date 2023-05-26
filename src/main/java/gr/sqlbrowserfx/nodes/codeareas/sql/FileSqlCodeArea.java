@@ -43,7 +43,7 @@ public class FileSqlCodeArea extends CSqlCodeArea {
 	}
 	
 	public boolean isTextDirty() {
-		return this.getText() != this.lastSavedContent;
+		return !this.getText().equals(this.lastSavedContent);
 	}
 	
     public String getPath() {
