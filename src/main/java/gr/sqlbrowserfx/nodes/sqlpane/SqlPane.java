@@ -452,6 +452,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	public void createSqlTableTabWithData(String table) {
 		if (!sqlQueryRunning) {
 			final SqlTableTab tab = this.addSqlTableTab();
+			tab.startLoading();
 			this.createTablesBox();
 			this.createViewsBox();
 			sqlConnector.executeAsync(() -> this.getDataFromDB(table, tab));
@@ -462,6 +463,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		this.createTablesBox();
 		this.createViewsBox();
 		final SqlTableTab tab = this.addSqlTableTab();
+		tab.startLoading();
 		sqlConnector.executeAsync(() -> this.getDataFromDB(table, tab));
 	}
 
