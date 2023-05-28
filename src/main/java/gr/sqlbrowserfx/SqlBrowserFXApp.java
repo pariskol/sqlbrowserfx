@@ -23,10 +23,6 @@ import org.dockfx.DockWeights;
 import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
 
-import com.kodedu.terminalfx.TerminalBuilder;
-import com.kodedu.terminalfx.TerminalTab;
-import com.kodedu.terminalfx.config.TerminalConfig;
-
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.PostgreSqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -43,7 +39,6 @@ import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
 import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
-import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
 import gr.sqlbrowserfx.nodes.tableviews.JSONTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
@@ -74,7 +69,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.FileChooser;
@@ -484,36 +478,12 @@ public class SqlBrowserFXApp extends Application {
 					new DockNode(dockPane, jsonTableView, "JSON table", JavaFXUtils.createIcon("/icons/web.png")));
 		});
 		
-//		MenuItem webViewItem = new MenuItem("Open Docs", JavaFXUtils.createIcon("/icons/web.png"));
-//		webViewItem.setOnAction(event -> {
-//			WebView docsView = new WebView();
-//			docsView.getEngine().load("https://www.sqlite.org/index.html");
-//			DockNode dockNode = new DockNode(docsView, "Docs", JavaFXUtils.createIcon("/icons/web.png"));
-//			dockNode.dock(dockPane, DockPos.RIGHT);	
-//		});
 		
 		MenuItem logItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
 		logItem.setOnAction(actionEvent -> JavaFXUtils.zoomToCurrentFactor(new DLogConsolePane(dockPane).asDockNode()));
-		
-		MenuItem terminalItem = new MenuItem("Open Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
-		terminalItem.setOnAction(event -> {
-			TerminalConfig darkConfig = new TerminalConfig();
-			darkConfig.setBackgroundColor(Color.rgb(16, 16, 16));
-			darkConfig.setForegroundColor(Color.rgb(240, 240, 240));
-			darkConfig.setCursorColor(Color.rgb(255, 0, 0, 0.5));
 
-			TerminalBuilder terminalBuilder = new TerminalBuilder(darkConfig);
-			TerminalTab terminal = terminalBuilder.newTerminal();
 
-			TabPane tabPane = new TabPane();
-			new DraggingTabPaneSupport().addSupport(tabPane);
-			tabPane.getTabs().add(terminal);
-
-			JavaFXUtils.zoomToCurrentFactor(
-					new DockNode(dockPane, tabPane, "Terminal", JavaFXUtils.createIcon("/icons/console.png")));
-		});
-
-		menu1.getItems().addAll(sqlPaneViewItem, logItem, terminalItem);
+		menu1.getItems().addAll(sqlPaneViewItem, logItem);
 
 		final Menu menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		MenuItem restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));

@@ -14,24 +14,6 @@
 		<log4j.version>2.19.0</log4j.version>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>Gluon</id>
-			<url>https://nexus.gluonhq.com/nexus/content/repositories/releases</url>
-		</repository>
-		<repository>
-			<id>terminalfx-repo</id>
-			<url>https://github.com/javaterminal/terminalfx/raw/master/releases</url>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>gluon-releases</id>
-			<url>https://nexus.gluonhq.com/nexus/content/repositories/releases/</url>
-		</pluginRepository>
-	</pluginRepositories>
-
 	<build>
 		<plugins>
 			<plugin>
@@ -70,79 +52,14 @@
 					<mainClass>gr.sqlbrowserfx.SqlBrowserFXApp</mainClass>
 				</configuration>
 			</plugin>
-
-			<plugin>
-				<groupId>com.gluonhq</groupId>
-				<artifactId>client-maven-plugin</artifactId>
-				<version>0.1.36</version>
-				<configuration>
-					<target>${client.target}</target>
-					<attachList>
-						<list>display</list>
-						<list>lifecycle</list>
-						<list>statusbar</list>
-						<list>storage</list>
-					</attachList>
-					<mainClass>gr.sqlbrowserfx.GUIStarter</mainClass>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
-
-	<profiles>
-		<profile>
-			<id>desktop</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
-			<properties>
-				<client.target>host</client.target>
-			</properties>
-			<dependencies>
-				<dependency>
-					<groupId>com.gluonhq.attach</groupId>
-					<artifactId>display</artifactId>
-					<version>${attach.version}</version>
-					<classifier>desktop</classifier>
-				</dependency>
-				<dependency>
-					<groupId>com.gluonhq.attach</groupId>
-					<artifactId>lifecycle</artifactId>
-					<version>${attach.version}</version>
-					<classifier>desktop</classifier>
-				</dependency>
-				<dependency>
-					<groupId>com.gluonhq.attach</groupId>
-					<artifactId>storage</artifactId>
-					<version>${attach.version}</version>
-					<classifier>desktop</classifier>
-				</dependency>
-			</dependencies>
-		</profile>
-		<profile>
-			<id>ios</id>
-			<properties>
-				<client.target>ios</client.target>
-			</properties>
-		</profile>
-		<profile>
-			<id>android</id>
-			<properties>
-				<client.target>android</client.target>
-			</properties>
-		</profile>
-	</profiles>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.github.vertical-blank</groupId>
 			<artifactId>sql-formatter</artifactId>
 			<version>2.0.3</version>
-		</dependency>
-		<dependency>
-			<groupId>com.kodedu.terminalfx</groupId>
-			<artifactId>terminalfx</artifactId>
-			<version>1.2.0</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.fxmisc.richtext/richtextfx -->
 		<dependency>

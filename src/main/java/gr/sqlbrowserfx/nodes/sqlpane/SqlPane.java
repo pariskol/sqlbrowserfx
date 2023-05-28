@@ -1273,7 +1273,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		this.setLeft(null);
 		toolBar.orientationProperty().set(Orientation.HORIZONTAL);
 		this.setTop(toolBar);
-
 	}
 
 	public void setToolBarLeft() {
