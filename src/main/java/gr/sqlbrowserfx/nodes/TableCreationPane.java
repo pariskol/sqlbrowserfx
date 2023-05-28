@@ -12,6 +12,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Priority;
@@ -53,20 +54,24 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner, Simpl
 			ColumnCreationBox columnCreationBox = new ColumnCreationBox(sqlConnector, columnBoxesListView);
 			columnBoxesListView.getItems().add(columnCreationBox);
 		});
+		addButton.setTooltip(new Tooltip("Add new column"));
 		Button deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
 		deleteButton.setOnAction(actionEvent -> {
 			if (columnBoxesListView.getSelectionModel().getSelectedItem() != null)
 				columnBoxesListView.getItems().remove(columnBoxesListView.getSelectionModel().getSelectedIndex());	
 		});
+		deleteButton.setTooltip(new Tooltip("Delete selected column"));
 		Button createQueryButton = new Button("", JavaFXUtils.createIcon("/icons/details.png"));
 		createQueryButton.setOnAction(actionEvent -> {
 			sqlCodeArea.clear();
 			sqlCodeArea.appendText(createCreateQuery());
 		});
-		Button createTableButton = new Button("", JavaFXUtils.createIcon("/icons/check.png"));
+		createQueryButton.setTooltip(new Tooltip("Generate sql create statement"));
+		Button createTableButton = new Button("", JavaFXUtils.createIcon("/icons/play.png"));
 		createTableButton.setOnAction(actionEvent -> {
 			sqlConsolePane.executeButonAction();
 		});
+		createTableButton.setTooltip(new Tooltip("Run generated sql create statement"));
 		FlowPane toolbar = new FlowPane(addButton, deleteButton, createQueryButton, createTableButton);
 		toolbar.setPrefWidth(addButton.getWidth());
 		return toolbar;
