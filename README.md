@@ -24,13 +24,13 @@ SqlBrowserFX is a feature rich cross platform sql client for SQLite , MySQL, Mar
 
 ### Prerequisites
 
-* Java 11 +
+* Java 17 +
 * Installation of desired database.
 
 ### Installing
 
 Copy sqlbrowser-for-build.db to sqlbrowser.db.
-Import the project to your favorite ide as maven project and run SQlBrowserFXApp class.
+Import the project to your favorite ide as maven project and run GUIStarter class.
 You can also run install.sh script , if you are using linux in order to install sqlbrowserfx as cli command
 'sqlfx'.
 
@@ -50,8 +50,6 @@ Run SqlBrowserFX.exe for Windows, or run sqlbrowserfx.sh for Linux.
 * [Javalin](https://github.com/tipsy/javalin) - The NEW web framework used.
 * [Icons8](https://icons8.com/) - The icons used.
 
-## Other Notes
-SqlBrowserFX is now java 11 compatible (without using the module system) and will not support java 8 from now on. If you want to run it with java 8 check tag 1.5.0 (last for java 8).
 
 
 
