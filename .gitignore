@@ -1,0 +1,13 @@
+.classpath
+.project
+.settings
+logs
+out
+target
+lib
+*.log
+dist
+.gradle/
+.idea/
+sqlbrowserfx.iml
+sqlbrowser.db
