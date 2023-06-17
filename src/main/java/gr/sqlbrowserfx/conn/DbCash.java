@@ -5,6 +5,8 @@ import java.util.Map;
 
 public class DbCash {
 	private static Map<String, String> SCHEMAS_MAP = new HashMap<>();
+	private static Map<String, SqlTable> TABLES_MAP = new HashMap<>();
+
 
 	
 	public static synchronized String getSchemaFor(String table) {
@@ -13,5 +15,9 @@ public class DbCash {
 	
 	public static synchronized void addSchemaFor(String table, String schema) {
 		SCHEMAS_MAP.put(table, schema);
+	}
+	
+	public static synchronized void addTable(SqlTable table) {
+		TABLES_MAP.put(table.getName(), table);
 	}
 }

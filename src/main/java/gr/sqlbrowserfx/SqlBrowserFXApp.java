@@ -11,7 +11,10 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -26,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.PostgreSqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
 import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
@@ -482,8 +486,37 @@ public class SqlBrowserFXApp extends Application {
 		MenuItem logItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
 		logItem.setOnAction(actionEvent -> JavaFXUtils.zoomToCurrentFactor(new DLogConsolePane(dockPane).asDockNode()));
 
+		MenuItem dbDiagramItem = new MenuItem("Open DB Diagram");
+		dbDiagramItem.setOnAction(event -> {
+			sqlConnector.executeAsync(() -> {
+				var sqlTables = new ArrayList<SqlTable>();
+				try {
+					sqlConnector.getContents(rset -> {
+						String name = rset.getString(1);
+						String type = rset.getString(2);
+						
+						if (type.toLowerCase().contains("table")) {
+							sqlConnector.executeQueryRaw("select * from " + name + " where 1 = 2", rset2 -> {
+								DialogFactory.createNotification("", "Loading table: " + name);
+								SqlTable sqlTable = new SqlTable(rset2.getMetaData());
+								sqlTable.setPrimaryKey(sqlConnector.findPrimaryKey(name));
+								List<Map<String, String>> fkeys = sqlConnector.findFoireignKeyReferences(name);
+								sqlTable.setForeignKeys(
+										fkeys.stream().map(x -> x.get(SqlConnector.FOREIGN_KEY)).collect(Collectors.toList()));
+								sqlTable.setRelatedTables(fkeys.stream().map(x -> x.get(SqlConnector.REFERENCED_TABLE)).collect(Collectors.toList()));
+								sqlTables.add(sqlTable);
+							});
+						}
+					});
+				} catch (SQLException e) {
+					DialogFactory.createErrorDialog(e);
+				}
 
-		menu1.getItems().addAll(sqlPaneViewItem, logItem);
+				Platform.runLater(() -> new DockNode(dockPane, new DbDiagramPane(sqlTables), "DB Diagram", JavaFXUtils.createIcon("/icons/web.png")));
+			});
+		});
+
+		menu1.getItems().addAll(sqlPaneViewItem, logItem, dbDiagramItem);
 
 		final Menu menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		MenuItem restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));

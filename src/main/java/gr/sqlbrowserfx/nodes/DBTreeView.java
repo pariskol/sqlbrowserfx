@@ -445,6 +445,7 @@ public class DBTreeView extends TreeView<String>
 				}
 				columnsTree.getChildren().add(columnTreeItem);
 			}
+			DbCash.addTable(sqlTable);
 		});
 	}
 

@@ -10,10 +10,11 @@ import java.util.Set;
 
 public class SqlTable {
 
-	String name;
-	String primaryKey;
-	List<String> foreignKeys;
-	LinkedHashMap<String, String> columnsMap;
+	private String name;
+	private String primaryKey;
+	private List<String> foreignKeys;
+	private List<String> relatedTables;
+	private LinkedHashMap<String, String> columnsMap;
 
 	public SqlTable(ResultSetMetaData rsmd) {
 
@@ -110,6 +111,14 @@ public class SqlTable {
 			result += column + ",";
 		}
 		return result.substring(0, result.length() - 1);
+	}
+
+	public List<String> getRelatedTables() {
+		return this.relatedTables;
+	}
+	
+	public void setRelatedTables(List<String> relatedTables) {
+		this.relatedTables = relatedTables;
 	}
 
 }
