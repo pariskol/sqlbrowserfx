@@ -1,5 +1,8 @@
 package gr.sqlbrowserfx;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.controlsfx.control.PopOver;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 
@@ -12,12 +15,19 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Line;
 
 public class SqlTableNode extends VBox {
 
 	private SqlTable table;
+	private String color;
+	private List<Line> lines = new ArrayList<>();
 
 	public SqlTableNode(SqlTable table) {
+		// restore this line to have colorful lines
+//		this.color = table.getPrimaryKey() != null ? JavaFXUtils.getRandomColor() : "-fx-control-inner-background-alt";
+		this.color = "-fx-control-inner-background-alt";
+
 		this.table = table;
 		this.setMinWidth(150);
 		var titleLabel = new Label(table.getName(), JavaFXUtils.createIcon("/icons/table.png"));
@@ -27,7 +37,8 @@ public class SqlTableNode extends VBox {
 		var columnsVbox = new VBox();
 		table.getColumns().forEach(col -> {
 			if (table.isPrimaryKey(col)) {
-				columnsVbox.getChildren().add(new Label(table.getPrimaryKey(), JavaFXUtils.createIcon("/icons/primary-key.png")));
+				columnsVbox.getChildren()
+						.add(new Label(table.getPrimaryKey(), JavaFXUtils.createIcon("/icons/primary-key.png")));
 			} else if (table.isForeignKey(col)) {
 				columnsVbox.getChildren().add(new Label(col, JavaFXUtils.createIcon("/icons/foreign-key.png")));
 			} else {
@@ -41,7 +52,7 @@ public class SqlTableNode extends VBox {
 
 		titleLabel.prefWidthProperty().bind(columnsVbox.widthProperty());
 		configureBorder(this);
-		
+
 		this.setOnMouseClicked(event -> {
 			var schema = DbCash.getSchemaFor(table.getName());
 			SqlCodeArea codeArea = new SqlCodeArea(schema, false, false, true);
@@ -53,49 +64,58 @@ public class SqlTableNode extends VBox {
 			popOver.setDetachable(false);
 			popOver.show(this);
 		});
-		
+
 	}
-	
 
 	public SqlTable getSqlTable() {
 		return this.table;
 	}
-	
+
+	public String getColor() {
+		return this.color;
+	}
+
+	public List<Line> getLines() {
+		return lines;
+	}
+
 	public void highlight() {
 		configureSelectedBorder(this);
 	}
-	
+
 	public void unhighlight() {
 		configureBorder(this);
 	}
-	
+
 	private void configureBorder(final Region region) {
-		region.setStyle("""
+		region.setStyle(
+//		"-fx-border-color: " + color + ";" + 
+		"""
 			-fx-background-color: -fx-control-inner-background-alt;
 			-fx-background-radius: 6;
-			-fx-border-color: -fx-base;
 			-fx-border-width: 1;
 			-fx-border-radius: 6;
 			-fx-padding: 6 0 6 0;
 		""");
 	}
-	
+
 	private void configureSelectedBorder(final Region region) {
 		region.setStyle("""
-			-fx-border-color: -fx-accent;
-			-fx-background-color: -fx-control-inner-background-alt;
-			-fx-background-radius: 6;
-			-fx-border-width: 3;
-			-fx-border-radius: 6;
-			-fx-padding: 6 0 6 0;
-		""");
+					-fx-border-color: -fx-accent;
+					-fx-background-color: -fx-control-inner-background-alt;
+					-fx-background-radius: 6;
+					-fx-border-width: 3;
+					-fx-border-radius: 6;
+					-fx-padding: 6 0 6 0;
+				""");
 	}
-	
+
 	private void configureTitleBorder(final Region region) {
 		region.setStyle("""
-			-fx-border-color: black;
-			-fx-border-width: 0 0 1 0;
-		""");
+					-fx-border-color: black;
+					-fx-border-width: 0 0 1 0;
+				""");
 	}
+
 
 }

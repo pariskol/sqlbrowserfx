@@ -4,20 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import gr.sqlbrowserfx.conn.SqlTable;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
+import gr.sqlbrowserfx.utils.JavaFXUtils;
+import javafx.application.Platform;
 import javafx.scene.Group;
-import javafx.scene.Node;
-import javafx.scene.control.CheckBox;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 
-public final class DbDiagramPane extends BorderPane {
+public class DbDiagramPane extends ScrollPane {
 
 	private int counter = 0;
 	private int rows = 0;
@@ -26,23 +21,34 @@ public final class DbDiagramPane extends BorderPane {
 
 	private final Pane diagramPane = new Pane();
 	private List<SqlTableNode> diagramNodes = new ArrayList<>();
-	private List<Line> lines = new ArrayList<>();
 
+	public DbDiagramPane() {
+	}
+	
 	public DbDiagramPane(List<SqlTable> tables) {
+		init(tables);
+	}
+	
+	public void setLoading(boolean loading) {
+		if (loading) {
+			ProgressIndicator progressIndicator = new ProgressIndicator();
+			progressIndicator.setMaxHeight(40);
+			progressIndicator.setMaxWidth(40);
+			this.setContent(progressIndicator);
+		}
+		else {
+			Platform.runLater(() -> this.setContent(this.diagramPane));
+		}
+	}
+	
+	public void init(List<SqlTable> tables) {
 		this.grid = new int[(int) Math.ceil(tables.size() / COLS_NUM) + 1][COLS_NUM];
 		
-		BorderPane.setAlignment(diagramPane, Pos.TOP_LEFT);
-		this.setCenter(new ScrollPane(diagramPane));
-
-		final CheckBox dragModeCheckbox = new CheckBox("Drag mode");
-		BorderPane.setMargin(dragModeCheckbox, new Insets(6));
-		this.setBottom(dragModeCheckbox);
-
-		dragModeActiveProperty.bind(dragModeCheckbox.selectedProperty());
+		this.setContent(diagramPane);
 
 		tables.forEach(table -> {
 			final var tableDiagramNode = new SqlTableNode(table);
-			final Node node = makeDraggable(tableDiagramNode);
+			var node = new Group(tableDiagramNode);
 
 			if (counter == COLS_NUM) {
 				rows++;
@@ -62,7 +68,8 @@ public final class DbDiagramPane extends BorderPane {
 			
 			counter++;
 		});
-
+		
+		JavaFXUtils.timer(500, () -> connectAllTableNodes());
 	}
 	
 	// check length of cells above current cell
@@ -84,23 +91,38 @@ public final class DbDiagramPane extends BorderPane {
 		tableDiagramNode.highlight();
 		diagramNodes.stream()
 			.filter(node -> tableDiagramNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
-			.forEach(node -> {
-				node.highlight();
-				connectNodes(tableDiagramNode, node);
-			});
+			.forEach(node -> node.highlight());
+		
+		tableDiagramNode.getLines().forEach(line -> {
+			line.setStyle(
+				"""
+					-fx-stroke: -fx-accent;
+					-fx-stroke-width: 3;
+	        	"""
+			);
+		});
 	}
 	
 	private void clearHighlight(SqlTableNode tableDiagramNode) {
-		diagramPane.getChildren().removeAll(lines);
-		lines.clear();
-		
 		tableDiagramNode.unhighlight();
+		tableDiagramNode.getLines().forEach(line -> line.setStyle("-fx-stroke: " + tableDiagramNode.getColor() + ";" + "-fx-stroke-width: 1;"));
 		diagramNodes.stream()
 			.filter(node -> tableDiagramNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
 			.forEach(node -> node.unhighlight());
 	}
 	
-	public void connectNodes(SqlTableNode node1, SqlTableNode node2) {
+	private void connectAllTableNodes() {
+		diagramNodes
+			.forEach(targetNode -> {
+				diagramPane.getChildren().removeAll(targetNode.getLines());
+				targetNode.getLines().clear();
+				diagramNodes.stream()
+				.filter(node -> targetNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
+				.forEach(node -> targetNode.getLines().addAll(connectNodes(targetNode, node, targetNode.getColor())));
+			});
+	}
+	
+	public List<Line> connectNodes(SqlTableNode node1, SqlTableNode node2, String lineColor) {
 		var startX = node1.localToScene(node1.getBoundsInLocal()).getMinX() + node1.getWidth() / 2;
 		var startY = node1.localToScene(node1.getBoundsInLocal()).getMinY() + node1.getHeight() / 2;
 		var endX = node2.localToScene(node2.getBoundsInLocal()).getMinX() + node2.getWidth() / 2;
@@ -118,56 +140,11 @@ public final class DbDiagramPane extends BorderPane {
         diagramPane.getChildren().addAll(lines);
         
         lines.forEach(line -> {
-        	line.setStyle("""
-	    		-fx-stroke: -fx-accent;
-				-fx-stroke-width: 3;
-        	""");
+    		line.setStyle("-fx-stroke: " + lineColor + ";");
         	line.toBack();
         });
         
-        this.lines.addAll(lines);
+        return lines;
 	}
 
-	private final BooleanProperty dragModeActiveProperty = new SimpleBooleanProperty(this, "dragModeActive", true);
-
-	private Node makeDraggable(final SqlTableNode node) {
-		final DragContext dragContext = new DragContext();
-		final Group wrapGroup = new Group(node);
-
-		wrapGroup.addEventFilter(MouseEvent.ANY, mouseEvent -> {
-			if (dragModeActiveProperty.get()) {
-				// disable mouse events for all children
-				mouseEvent.consume();
-			}
-		});
-
-		wrapGroup.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
-			if (dragModeActiveProperty.get()) {
-				// remember initial mouse cursor coordinates
-				// and node position
-				dragContext.mouseAnchorX = mouseEvent.getX();
-				dragContext.mouseAnchorY = mouseEvent.getY();
-				dragContext.initialTranslateX = node.getTranslateX();
-				dragContext.initialTranslateY = node.getTranslateY();
-			}
-		});
-
-		wrapGroup.addEventFilter(MouseEvent.MOUSE_DRAGGED, mouseEvent -> {
-			if (dragModeActiveProperty.get()) {
-				// shift node from its initial position by delta
-				// calculated from mouse cursor movement
-				node.setTranslateX(dragContext.initialTranslateX + mouseEvent.getX() - dragContext.mouseAnchorX);
-				node.setTranslateY(dragContext.initialTranslateY + mouseEvent.getY() - dragContext.mouseAnchorY);
-			}
-		});
-
-		return wrapGroup;
-	}
-
-	private static final class DragContext {
-		public double mouseAnchorX;
-		public double mouseAnchorY;
-		public double initialTranslateX;
-		public double initialTranslateY;
-	}
 }

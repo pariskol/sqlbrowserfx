@@ -20,4 +20,8 @@ public class DbCash {
 	public static synchronized void addTable(SqlTable table) {
 		TABLES_MAP.put(table.getName(), table);
 	}
+	
+	public static synchronized SqlTable getTable(String table) {
+		return TABLES_MAP.get(table);
+	}
 }
