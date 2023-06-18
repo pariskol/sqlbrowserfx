@@ -1,9 +1,14 @@
 package gr.sqlbrowserfx.utils;
 
+import java.util.Random;
+
+import javax.swing.Timer;
+
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 
+import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
@@ -96,5 +101,39 @@ public class JavaFXUtils {
 //			JMetro(Style.).setParent(parent);	
 //		else if (ENABLE_JMETRO && JMETRO.equals("light"))
 //			new JMetro(Style.LIGHT).setParent(parent);
+	}
+
+	public static void timer(int delay, Runnable action) {
+		var timer = new Timer(delay, event -> Platform.runLater(action));
+		timer.setRepeats(false);
+		timer.start();
+	}
+	
+	public static String getRandomColor() {
+		Random random = new Random();
+
+		// Generate random RGB values
+		int red = random.nextInt(256);
+		int green = random.nextInt(256);
+		int blue = random.nextInt(256);
+
+		// Convert RGB values to hexadecimal format
+		String hexRed = Integer.toHexString(red);
+		String hexGreen = Integer.toHexString(green);
+		String hexBlue = Integer.toHexString(blue);
+
+		// Ensure two-digit hexadecimal representation
+		hexRed = padZero(hexRed);
+		hexGreen = padZero(hexGreen);
+		hexBlue = padZero(hexBlue);
+
+		// Concatenate RGB values to create the color string
+		String color = "#" + hexRed + hexGreen + hexBlue;
+
+		return color;
+	}
+
+	private static String padZero(String hexValue) {
+		return hexValue.length() == 1 ? "0" + hexValue : hexValue;
 	}
 }
