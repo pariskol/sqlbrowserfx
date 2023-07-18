@@ -35,6 +35,7 @@ import gr.sqlbrowserfx.nodes.HelpTabPane;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.PostgreSqlConfigBox;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
+import gr.sqlbrowserfx.nodes.FilesTreeView;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
@@ -71,6 +72,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -438,12 +440,12 @@ public class SqlBrowserFXApp extends Application {
 	}
 
 	private MenuBar createMenu(DockPane dockPane) {
-		final Menu menu1 = new Menu("Views", JavaFXUtils.createIcon("/icons/open-view.png"));
+		final var menu1 = new Menu("Views", JavaFXUtils.createIcon("/icons/open-view.png"));
 		
-		MenuItem sqlPaneViewItem = new MenuItem("Open Table View", JavaFXUtils.createIcon("/icons/database.png"));
+		var sqlPaneViewItem = new MenuItem("Open Table View", JavaFXUtils.createIcon("/icons/database.png"));
 		sqlPaneViewItem.setOnAction(event -> {
 			Platform.runLater(() -> {
-				DSqlPane newSqlPane = new DSqlPane(sqlConnector);
+				var newSqlPane = new DSqlPane(sqlConnector);
 				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + (SqlBrowserFXAppManager.getActiveSqlPanes().size() + 1));
 				newSqlPane.asDockNode().setDockPane(dockPane);
 				newSqlPane.asDockNode().setFloating(true);
@@ -452,37 +454,46 @@ public class SqlBrowserFXApp extends Application {
 			});
 		});
 		
-		MenuItem sqlConsoleViewItem = new MenuItem("Open Simple Console View", JavaFXUtils.createIcon("/icons/console.png"));
+		var sqlConsoleViewItem = new MenuItem("Open Simple Console View", JavaFXUtils.createIcon("/icons/console.png"));
 		sqlConsoleViewItem.setOnAction(event -> {
 			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, new SqlConsolePane(sqlConnector),
 					"Simple SqlConsole", JavaFXUtils.createIcon("/icons/console.png")));
 		});
-//		MenuItem bashCodeAreaItem = new MenuItem("Open BashFX", JavaFXUtils.createIcon("/icons/console.png"));
-//		bashCodeAreaItem.setOnAction(event -> {
-//			Node vb = new BashFXApp().createBashFXAppBox(true);
-//		    JavaFXUtils.applyJMetro(vb);
-//			new DockNode(dockPane, vb, "BashFX", JavaFXUtils.createIcon("/icons/console.png"));
-//		});
-		MenuItem tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.createIcon("/icons/details.png"));
+		
+		var tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.createIcon("/icons/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
-			DDBTreePane treeView = new DDBTreePane(DB, sqlConnector);
+			var treeView = new DDBTreePane(DB, sqlConnector);
 			DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.createIcon("/icons/details.png"));
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 		
-		MenuItem jsonTableViewItem = new MenuItem("Open JSON Table View", JavaFXUtils.createIcon("/icons/web.png"));
+		var jsonTableViewItem = new MenuItem("Open JSON Table View", JavaFXUtils.createIcon("/icons/web.png"));
 		jsonTableViewItem.setOnAction(event -> {
-			VBox jsonTableView = this.createJsonTableView();
+			var jsonTableView = this.createJsonTableView();
 		    JavaFXUtils.applyJMetro(jsonTableView);
 			JavaFXUtils.zoomToCurrentFactor(
 					new DockNode(dockPane, jsonTableView, "JSON table", JavaFXUtils.createIcon("/icons/web.png")));
 		});
 		
+		var filesTreeViewItem = new MenuItem("Open Files Tree View", JavaFXUtils.createIcon("/icons/structure.png"));
+		filesTreeViewItem.setOnAction(event -> {
+			var chooser = new DirectoryChooser();
+			var selectedDir = chooser.showDialog(null);
+			
+			if (selectedDir == null) return;
+			
+			var filesTreeView = new FilesTreeView(selectedDir.getAbsolutePath());
+			if (selectedDir != null) {
+				JavaFXUtils.zoomToCurrentFactor(
+						new DockNode(dockPane, filesTreeView, "Files Tree View", JavaFXUtils.createIcon("/icons/structure.png")));
+			}
+		});
 		
-		MenuItem logItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
+		
+		var logItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
 		logItem.setOnAction(actionEvent -> JavaFXUtils.zoomToCurrentFactor(new DLogConsolePane(dockPane).asDockNode()));
 
-		MenuItem dbDiagramItem = new MenuItem("Open DB Diagram", JavaFXUtils.createIcon("/icons/diagram.png"));
+		var dbDiagramItem = new MenuItem("Open DB Diagram", JavaFXUtils.createIcon("/icons/diagram.png"));
 		dbDiagramItem.setOnAction(event -> {
 			var dbDiagramPane = new DDbDiagramPane(sqlConnector);
 			dbDiagramPane.asDockNode().setDockPane(dockPane);
@@ -491,8 +502,8 @@ public class SqlBrowserFXApp extends Application {
 
 		menu1.getItems().addAll(sqlPaneViewItem, logItem, dbDiagramItem);
 
-		final Menu menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
-		MenuItem restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
+		final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
+		var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
 		restServiceStartItem.setOnAction(actionEvent -> {
 			if (restServiceStarted == false) {
 				try {
@@ -515,13 +526,13 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 
-		MenuItem restServiceConfigItem = new MenuItem("Configure Restful Service", JavaFXUtils.createIcon("/icons/settings.png"));
+		var restServiceConfigItem = new MenuItem("Configure Restful Service", JavaFXUtils.createIcon("/icons/settings.png"));
 		restServiceConfigItem.setOnAction(actionEvent -> createRestServiceConfigBox());
 		
 		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
 
-		Menu menu3 = new Menu();
-		HBox customGraphic = new HBox(JavaFXUtils.createIcon("/icons/settings.png"), new Label("Internal DB"));
+		var menu3 = new Menu();
+		var customGraphic = new HBox(JavaFXUtils.createIcon("/icons/settings.png"), new Label("Internal DB"));
 		customGraphic.setSpacing(5);
 		menu3.setGraphic(customGraphic);
 		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
@@ -539,18 +550,18 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 		
-		Menu menu4 = new Menu("Transactions", JavaFXUtils.createIcon("/icons/transaction.png"));
-		MenuItem commitAllItem = new MenuItem("Commit all", JavaFXUtils.createIcon("/icons/check.png"));
+		var menu4 = new Menu("Transactions", JavaFXUtils.createIcon("/icons/transaction.png"));
+		var commitAllItem = new MenuItem("Commit all", JavaFXUtils.createIcon("/icons/check.png"));
 		commitAllItem.setOnAction(actionEvent -> sqlConnector.commitAll());
 		
-		MenuItem rollbackAllItem = new MenuItem("Rollback all", JavaFXUtils.createIcon("/icons/refresh.png"));
+		var rollbackAllItem = new MenuItem("Rollback all", JavaFXUtils.createIcon("/icons/refresh.png"));
 		rollbackAllItem.setOnAction(actionEvent -> sqlConnector.rollbackAll());
 		
 		menu4.getItems().addAll(commitAllItem, rollbackAllItem);
 		if (sqlConnector.isAutoCommitModeEnabled())
 			menu4.setDisable(true);
 		
-		Menu menu5 = new Menu();
+		var menu5 = new Menu();
 		customGraphic = new HBox(JavaFXUtils.createIcon("/icons/help.png"), new Label("Help"));
 		customGraphic.setSpacing(5);
 		menu5.setGraphic(customGraphic);
@@ -562,7 +573,7 @@ public class SqlBrowserFXApp extends Application {
 			}
 		});
 
-		MenuBar menuBar = new MenuBar();
+		var menuBar = new MenuBar();
 		queriesMenu = new QueriesMenu();
 		menuBar.getMenus().addAll(menu1, menu2, queriesMenu, menu4, menu3, menu5);
 
