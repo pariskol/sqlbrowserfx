@@ -12,7 +12,7 @@ public class DSqlConsolePaneNH extends DSqlConsolePane {
 	
 	@Override
 	public FlowPane createToolbar() {
-		var toolbar = super.createToolbar();
+		FlowPane toolbar = super.createToolbar();
 		toolbar.getChildren().remove(historyButton);
 		return toolbar;
 	}

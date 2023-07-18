@@ -1,6 +1,7 @@
 package gr.sqlbrowserfx.nodes;
 
 import java.io.File;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,7 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
@@ -40,7 +42,7 @@ public class FileSearchPopOver extends CustomPopOver {
 		super();
 
 		this.action = action;
-		var openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
+		Button openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
 		openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
 		openButton.setTooltip(new Tooltip("Open file"));
 		
@@ -85,13 +87,13 @@ public class FileSearchPopOver extends CustomPopOver {
 		});
 
 		// TODO: add open button if has any value
-		var descIcon = JavaFXUtils.createIcon("/icons/settings.png");
+		ImageView descIcon = JavaFXUtils.createIcon("/icons/settings.png");
 		
-		var descLabel = new Label("File Search in: " + rootPath, descIcon);
+		Label descLabel = new Label("File Search in: " + rootPath, descIcon);
 		descLabel.setOnMouseClicked(event -> {
 			this.hide();
-			var dirChooser = new DirectoryChooser();
-			var selectedDir = dirChooser.showDialog(this.getOwnerWindow());
+			DirectoryChooser dirChooser = new DirectoryChooser();
+			File selectedDir = dirChooser.showDialog(this.getOwnerWindow());
 			this.rootPath = selectedDir.getAbsolutePath();
 			descLabel.setText("File Search in: " + rootPath);
 		});
@@ -109,7 +111,7 @@ public class FileSearchPopOver extends CustomPopOver {
 		
 		filesListView.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
-				var filePath = filesListView.getSelectionModel().getSelectedItem();
+				String filePath = filesListView.getSelectionModel().getSelectedItem();
 				action.run(new File(filePath));
 			} else if (keyEvent.getCode() == KeyCode.ESCAPE) {
 				this.hide();
@@ -117,15 +119,15 @@ public class FileSearchPopOver extends CustomPopOver {
 		});
 		filesListView.setOnMouseClicked(mouseEvent -> {
 			if (mouseEvent.getClickCount() == 2) {
-				var filePath = filesListView.getSelectionModel().getSelectedItem();
+				String filePath = filesListView.getSelectionModel().getSelectedItem();
 				action.run(new File(filePath));
 			}
 		});
 	}
 
 	private void openFileAction() {
-		var fileChooser = new FileChooser();
-		var selectedFile = fileChooser.showOpenDialog(null);
+		FileChooser fileChooser = new FileChooser();
+		File selectedFile = fileChooser.showOpenDialog(null);
 		action.run(selectedFile);
 	}
 	
@@ -133,11 +135,11 @@ public class FileSearchPopOver extends CustomPopOver {
 		searchField.setDisable(true);
 		filesListView.setDisable(true);
 		
-		var pattern = searchField.getText();
+		String pattern = searchField.getText();
 
 		executor = Executors.newSingleThreadScheduledExecutor();
 		executor.schedule(() -> {
-			var filesPathsFound = FilesUtils.walk(rootPath, pattern);
+			Set<String> filesPathsFound = FilesUtils.walk(rootPath, pattern);
 			Platform.runLater(() -> {
 				filesListView.setItems(FXCollections.observableArrayList(filesPathsFound));
 				searchField.setDisable(false);

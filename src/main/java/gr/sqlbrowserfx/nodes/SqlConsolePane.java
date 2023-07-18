@@ -24,6 +24,11 @@ import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
+import gr.sqlbrowserfx.nodes.codeareas.AutoCompleteCodeArea;
+import gr.sqlbrowserfx.nodes.codeareas.FileCodeArea;
+import gr.sqlbrowserfx.nodes.codeareas.SimpleFileCodeArea;
+import gr.sqlbrowserfx.nodes.codeareas.TextAnalyzer;
+import gr.sqlbrowserfx.nodes.codeareas.java.FileJavaCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.CSqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.FileSqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
@@ -32,7 +37,6 @@ import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
-import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Button;
@@ -43,7 +47,6 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
@@ -127,14 +130,16 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		queryTabPane.getSelectionModel().selectedItemProperty().addListener(
 			    (ChangeListener<Tab>) (ov, oldTab, newTab) -> {
 			    	if ((VirtualizedScrollPane<SqlCodeArea>)newTab.getContent() != null) {
-			    		SqlCodeArea sqlCodeArea = ((VirtualizedScrollPane<SqlCodeArea>)oldTab.getContent() != null) ?((VirtualizedScrollPane<SqlCodeArea>)oldTab.getContent()).getContent()
+			    		CodeArea codeArea = ((VirtualizedScrollPane<CodeArea>)oldTab.getContent() != null) ?((VirtualizedScrollPane<CodeArea>)oldTab.getContent()).getContent()
 			    				: null;
-			    		if (sqlCodeArea != null) {
-				    		sqlCodeArea.stopTextAnalyzerDaemon();
+			    		
+			    		if (codeArea != null && codeArea instanceof TextAnalyzer) {
+				    		((TextAnalyzer) codeArea).stopTextAnalyzerDaemon();
 				    	}
-			    		sqlCodeArea = ((VirtualizedScrollPane<SqlCodeArea>)newTab.getContent()).getContent();
-				    	if (sqlCodeArea != null) {
-				    		sqlCodeArea.startTextAnalyzerDaemon();
+			    		
+			    		codeArea = ((VirtualizedScrollPane<CodeArea>)newTab.getContent()).getContent();
+				    	if (codeArea != null && codeArea instanceof TextAnalyzer) {
+				    		((TextAnalyzer) codeArea).startTextAnalyzerDaemon();
 				    	}
 			    	}
 			    });
@@ -151,36 +156,28 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		// initial create one tab
 		this.addTab();
 		
-		this.setOnDragOver(new EventHandler<DragEvent>() {
-			
-			@Override
-			public void handle(DragEvent event) {
-				if (event.getGestureSource() != SqlConsolePane.this && event.getDragboard().hasFiles()) {
-					/* allow for both copying and moving, whatever user chooses */
-					event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-				}
-				event.consume();
+		this.setOnDragOver(event -> {
+			if (event.getGestureSource() != SqlConsolePane.this && event.getDragboard().hasFiles()) {
+				/* allow for both copying and moving, whatever user chooses */
+				event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
 			}
+			event.consume();
 		});
-
-		this.setOnDragDropped(new EventHandler<DragEvent>() {
-
-			@Override
-			public void handle(DragEvent event) {
-				Dragboard db = event.getDragboard();
-				boolean success = false;
-				if (db.hasFiles()) {
-					File file = db.getFiles().get(0);
-					SqlConsolePane.this.openNewFileSqlConsoleTab(file);
-					success = true;
-				}
-				/*
-				 * let the source know whether the string was successfully transferred and used
-				 */
-				event.setDropCompleted(success);
-
-				event.consume();
+		
+		this.setOnDragDropped(event -> {
+			Dragboard db = event.getDragboard();
+			boolean success = false;
+			if (db.hasFiles()) {
+				File file = db.getFiles().get(0);
+				SqlConsolePane.this.openNewFileTab(file);
+				success = true;
 			}
+			/*
+			 * let the source know whether the string was successfully transferred and used
+			 */
+			event.setDropCompleted(success);
+
+			event.consume();
 		});
 	}
 
@@ -195,14 +192,17 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			this.openNewSqlConsoleTab();
 		}
 		else {
-			codeAreaRef = ((VirtualizedScrollPane<CSqlCodeArea>) selectedTab.getContent()).getContent(); 
+			CodeArea codeArea = ((VirtualizedScrollPane<CodeArea>) selectedTab.getContent()).getContent();
+			if (codeArea instanceof CSqlCodeArea) {
+				codeAreaRef = (CSqlCodeArea) codeArea;
+			}
 		}
 	}
 	
 	private void createFileSearchPopover() {
 		if(this.fileSearchPopOver != null) return;
 		
-		this.fileSearchPopOver = new FileSearchPopOver(file -> openNewFileSqlConsoleTab(file));
+		this.fileSearchPopOver = new FileSearchPopOver(file -> openNewFileTab(file));
 	}
 	
 	private void showFileSearchPopOver() {
@@ -234,17 +234,30 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		sqlCodeArea.requestFocus();
 	}
 	
-	private void openNewFileSqlConsoleTab(File selectedFile) {
-		FileSqlCodeArea codeArea = new FileSqlCodeArea(selectedFile);
+	public void openNewFileTab(File selectedFile) {
+		AutoCompleteCodeArea codeArea = null;
+		if (selectedFile.getName().endsWith(".java")) {
+			codeArea = new FileJavaCodeArea(selectedFile);
+		}
+		else if (selectedFile.getName().endsWith(".sql")) {
+			codeArea = new FileSqlCodeArea(selectedFile);
+		}
+		else {
+			codeArea = new SimpleFileCodeArea(selectedFile);
+		}
+		
 		codeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
 		codeArea.showLinesProperty().bind(this.showLinesCheckBox.selectedProperty());
 		codeArea.autoCompleteProperty().bind(this.autoCompleteOnTypeCheckBox.selectedProperty());
 		
 		VirtualizedScrollPane<CodeArea> vsp = new VirtualizedScrollPane<CodeArea>(codeArea);
 	
+		FileCodeArea fileCodeArea = (FileCodeArea) codeArea;
+		
 		Tab tab = new Tab(selectedFile.getName(),vsp);
 		tab.setOnCloseRequest((event) -> {
-			if (codeArea.isTextDirty()) {
+			
+			if (fileCodeArea.isTextDirty()) {
 				event.consume();
 
 				if (DialogFactory.createConfirmationDialog(
@@ -258,15 +271,19 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		tab.setGraphic(JavaFXUtils.createIcon("/icons/code-file.png"));
 		queryTabPane.getTabs().add(tab);
 		queryTabPane.getSelectionModel().select(tab);
-		codeAreaRef = codeArea;
-		codeArea.requestFocus();
-		codeArea.setRunAction(() -> this.executeButonAction());
+		
+		if (codeArea instanceof CSqlCodeArea) {
+			CSqlCodeArea casted = (CSqlCodeArea) codeArea;
+			codeAreaRef = casted;
+			codeArea.requestFocus();
+			casted.setRunAction(() -> this.executeButonAction());
+		}
 	}
 
 	private void openFileAction() {
 		FileChooser fileChooser = new FileChooser();
 		File selectedFile = fileChooser.showOpenDialog(null);
-		openNewFileSqlConsoleTab(selectedFile);
+		openNewFileTab(selectedFile);
 	}
 	
 	@Override
@@ -283,7 +300,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 			if (popOverIsShowing) return;
 			
 			popOverIsShowing = true;
-			var popOver = new CustomPopOver(new VBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox, showLinesCheckBox));
+			CustomPopOver popOver = new CustomPopOver(new VBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox, showLinesCheckBox));
 			popOver.setOnHidden(event -> popOverIsShowing = false);
 			popOver.show(settingsButton);
 		});

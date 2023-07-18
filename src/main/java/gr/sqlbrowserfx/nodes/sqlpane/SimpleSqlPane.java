@@ -12,7 +12,7 @@ public class SimpleSqlPane extends SqlPane {
 	
 	@Override
 	public FlowPane createToolbar() {
-		var toolbar = super.createToolbar();
+		FlowPane toolbar = super.createToolbar();
 		toolbar.getChildren().removeAll(sqlConsoleButton, columnsSettingsButton);
 		return toolbar;
 	}

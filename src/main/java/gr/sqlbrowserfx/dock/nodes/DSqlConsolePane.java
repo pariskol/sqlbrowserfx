@@ -112,7 +112,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
 			if (sqlPane != null && sqlPane instanceof DSqlPane) {
-				var dsqlPane = (DSqlPane) sqlPane;
+				DSqlPane dsqlPane = (DSqlPane) sqlPane;
 				thisDockNode = new DockNode(dsqlPane.asDockNode().getDockPane(), this, dsqlPane.asDockNode().getTitle() + " : SqlConsole", JavaFXUtils.createIcon("/icons/console.png"), 600.0, 400.0);
 				thisDockNode.setOnClose(() -> this.listeners.clear());
 			}
