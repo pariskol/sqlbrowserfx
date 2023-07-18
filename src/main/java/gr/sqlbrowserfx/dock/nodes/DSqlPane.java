@@ -25,7 +25,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	private List<SimpleObserver<String>> listeners;
 
 	private DockNode thisDockNode = null;
-	private DSqlConsolePane sqlConsoleBox;
+	private DSqlConsolePane sqlConsolePane;
 	private DockNode dRecordsTabPane = null;
 
 	public DSqlPane() {
@@ -41,16 +41,16 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 
 	@Override
 	protected void sqlConsoleButtonAction() {
-		if (sqlConsoleBox == null) {
-			sqlConsoleBox = new DSqlConsolePane(this.sqlConnector, this);
-			sqlConsoleBox.asDockNode().setOnClose(() -> sqlConsoleBox = null);
-			sqlConsoleBox.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.TOP, this.asDockNode(),
+		if (sqlConsolePane == null) {
+			sqlConsolePane = new DSqlConsolePane(this.sqlConnector, this);
+			sqlConsolePane.asDockNode().setOnClose(() -> sqlConsolePane = null);
+			sqlConsolePane.asDockNode().dock(this.asDockNode().getDockPane(), DockPos.TOP, this.asDockNode(),
 					DockWeights.asDoubleArrray(0.4f, 0.6f));
 		}
 	}
 
 	public final CodeArea getSqlCodeAreaRef() {
-		return sqlConsoleBox != null ? sqlConsoleBox.getCodeAreaRef() : null;
+		return sqlConsolePane != null ? sqlConsolePane.getCodeAreaRef() : null;
 	}
 
 
@@ -164,8 +164,8 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 		this.sqlConsoleButtonAction();
 	}
 
-	public DSqlConsolePane getSqlConsoleBox() {
-		return sqlConsoleBox;
+	public DSqlConsolePane getSqlConsolePane() {
+		return sqlConsolePane;
 	}
 
 }

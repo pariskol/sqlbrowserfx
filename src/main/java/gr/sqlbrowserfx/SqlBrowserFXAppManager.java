@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreeView;
+import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 
@@ -40,6 +41,19 @@ public class SqlBrowserFXAppManager {
 	
 	public static long getActiveSqlCodeAreasNum() {
 		return DSQL_PANES.stream().filter(x -> x.getSqlCodeAreaRef() != null).count();
+	}
+	
+	public static DSqlConsolePane getFirstActiveDSqlConsolePane() {
+		DSqlPane activeSqlPane = DSQL_PANES.stream()
+				.filter(sqlPane -> sqlPane.getSqlConsolePane() != null)
+				.findFirst()
+				.orElse(null);
+		
+		if (activeSqlPane != null) {
+			return activeSqlPane.getSqlConsolePane();
+		}
+		
+		return null;
 	}
 	
 	public static void unregisterDSqlPane(DSqlPane sqlPane) {

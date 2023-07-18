@@ -406,7 +406,7 @@ public class SqlBrowserFXApp extends Application {
 			SqlCodeAreaSyntaxProvider.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(kw -> new Keyword(kw, KeywordType.TABLE)).collect(Collectors.toList()));
 //			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x.toUpperCase() + "@").collect(Collectors.toList()));
 		});
-		mainSqlPane.getSqlConsoleBox().addObserver(ddbTreePane.getDBTreeView());
+		mainSqlPane.getSqlConsolePane().addObserver(ddbTreePane.getDBTreeView());
 		ddbTreePane.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
 		ddbTreePane.asDockNode().setClosable(false);
 		// fixed size 
@@ -500,7 +500,7 @@ public class SqlBrowserFXApp extends Application {
 			dbDiagramPane.asDockNode().setFloating(true);
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, logItem, dbDiagramItem);
+		menu1.getItems().addAll(sqlPaneViewItem, dbDiagramItem, filesTreeViewItem, logItem);
 
 		final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));

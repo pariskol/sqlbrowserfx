@@ -1,15 +1,14 @@
 package gr.sqlbrowserfx.nodes;
 
-import java.util.List;
+import java.io.File;
 
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
+import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.TransferMode;
 
 public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenuOwner {
 
@@ -21,29 +20,42 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		this.setContextMenu(this.createContextMenu());
 
 		// FIXME: drag and drop does not work from here to sql console pane
-		this.setCellFactory(tv -> {
-			var cell = new TreeCell<TreeViewFile>() {
-				@Override
-				protected void updateItem(TreeViewFile file, boolean empty) {
-					super.updateItem(file, empty);
-					if (file != null && !empty) {
-						setText(file.toString());
-					}
+//		this.setCellFactory(tv -> {
+//			var cell = new TreeCell<TreeViewFile>() {
+//				@Override
+//				protected void updateItem(TreeViewFile file, boolean empty) {
+//					super.updateItem(file, empty);
+//					if (file != null && !empty) {
+//						setText(file.toString());
+//					}
+//				}
+//			};
+//			cell.setOnDragDetected(event -> {
+//				var selectedItem = cell.getText();
+//				if (selectedItem != null) {
+//					var dragboard = cell.startDragAndDrop(TransferMode.ANY);
+//					var content = new ClipboardContent();
+//					content.putString(selectedItem);
+//					dragboard.setContent(content);
+//					dragboard.setDragView(cell.snapshot(null, null));
+//				}
+//				event.consume();
+//			});
+//
+//			return cell;
+//		});
+		
+		this.setOnMouseClicked(event -> {
+			if (event.getClickCount() == 2) {
+				File file = this.getSelectionModel().getSelectedItem().getValue().asFile();
+				
+				if (file.isFile()) {
+					DSqlConsolePane sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
+					sqlConsolePane.openNewFileTab(file);
 				}
-			};
-			cell.setOnDragDetected(event -> {
-				var selectedItem = cell.getText();
-				if (selectedItem != null) {
-					var dragboard = cell.startDragAndDrop(TransferMode.ANY);
-					var content = new ClipboardContent();
-					content.putString(selectedItem);
-					dragboard.setContent(content);
-					dragboard.setDragView(cell.snapshot(null, null));
-				}
-				event.consume();
-			});
-
-			return cell;
+			}
+			
+			event.consume();
 		});
 	}
 
