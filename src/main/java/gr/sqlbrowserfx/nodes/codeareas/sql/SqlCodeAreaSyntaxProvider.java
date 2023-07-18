@@ -63,8 +63,8 @@ public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String>
 		KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
 		FUNCTIONS_PATTERN = "\\b(" + String.join("|", FUNCTIONS) + ")\\b";
 		PATTERN = Pattern.compile("(?<KEYWORD>" + KEYWORD_PATTERN + ")" + "|(?<PAREN>" + PAREN_PATTERN + ")"
-				+ "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")" + "|(?<STRING>" + STRING_PATTERN + ")" + "|(?<STRING2>"
-				+ STRING_PATTERN_2 + ")" + "|(?<COMMENT>" + COMMENT_PATTERN + ")" + "|(?<METHOD>" + METHOD_PATTERN + ")"
+				+ "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")" + "|(?<STRING>" + STRING_PATTERN + ")" 
+				+ "|(?<STRING2>" + STRING_PATTERN_2 + ")" + "|(?<COMMENT>" + COMMENT_PATTERN + ")" + "|(?<METHOD>" + METHOD_PATTERN + ")"
 				+ "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
 
 		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntaxProvider.KEYWORDS).stream()

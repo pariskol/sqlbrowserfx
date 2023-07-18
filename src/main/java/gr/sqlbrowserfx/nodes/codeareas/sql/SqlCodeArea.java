@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.controlsfx.control.PopOver;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -31,6 +30,7 @@ import gr.sqlbrowserfx.nodes.codeareas.AutoCompleteCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
+import gr.sqlbrowserfx.nodes.codeareas.TextAnalyzer;
 import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
@@ -49,7 +49,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 
-public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider> implements ContextMenuOwner, HighLighter {
+public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider> implements ContextMenuOwner, HighLighter, TextAnalyzer {
 
 	private Map<String, Set<String>> tableAliases = new HashMap<>();
 	private Set<String> variablesAliases = new HashSet<>();
@@ -62,7 +62,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	
 	private Runnable runAction;
 	private CustomPopOver historyPopOver;
-	private PopOver schemaPopOver;
+	private CustomPopOver schemaPopOver;
 	
 	public SqlCodeArea() {
 		this(null);
@@ -251,7 +251,8 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		return suggestions.stream().map(kw -> new Keyword(kw, KeywordType.QUERY)).collect(Collectors.toList());
 	}
 
-	private List<Keyword> getQuerySuggestions(String query) {
+	@Override
+	protected List<Keyword> getQuerySuggestions(String query) {
 		List<Keyword> suggestions =
 				Stream.concat(
 					Stream.concat(
@@ -449,9 +450,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
 		scrollPane.setPrefSize(600, 400);
 
-		schemaPopOver = new PopOver(scrollPane);
-		schemaPopOver.setArrowSize(0);
-		schemaPopOver.setDetachable(false);
+		schemaPopOver = new CustomPopOver(scrollPane);
 		schemaPopOver.setOnHidden(event -> schemaPopOver = null);
 		schemaPopOver.show(this, this.getContextMenu().getX(), this.getContextMenu().getY());
 	}

@@ -618,7 +618,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	private List<Keyword> getQuerySuggestions(String query) {
+	protected List<Keyword> getQuerySuggestions(String query) {
 		List<Keyword> suggestions = (List<Keyword>) syntaxProvider.getKeywords().stream()
 				.filter(keyword -> keyword != null && ((Keyword) keyword).getKeyword().startsWith(query))
 				.collect(Collectors.toList());

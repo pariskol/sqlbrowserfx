@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.nodes.codeareas.sql;
+package gr.sqlbrowserfx.nodes.codeareas.java;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,12 +24,12 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 
-public class FileSqlCodeArea extends CSqlCodeArea implements FileCodeArea {
+public class FileJavaCodeArea extends JavaCodeArea implements FileCodeArea {
 
 	private File file;
 	private String lastSavedContent;
 	
-	public FileSqlCodeArea(File file) {
+	public FileJavaCodeArea(File file) {
 		super();
 		this.file = file;
 		try {

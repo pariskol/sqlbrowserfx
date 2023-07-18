@@ -104,7 +104,7 @@ public class JavaFXUtils {
 	}
 
 	public static void timer(int delay, Runnable action) {
-		var timer = new Timer(delay, event -> Platform.runLater(action));
+		Timer timer = new Timer(delay, event -> Platform.runLater(action));
 		timer.setRepeats(false);
 		timer.start();
 	}

@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx.nodes.codeareas.sql;
+package gr.sqlbrowserfx.nodes.codeareas;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.nodes.codeareas.FileCodeArea;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.event.Event;
 import javafx.scene.control.ContextMenu;
@@ -24,12 +23,12 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 
-public class FileSqlCodeArea extends CSqlCodeArea implements FileCodeArea {
+public class SimpleFileCodeArea extends AutoCompleteCodeArea<SimpleFileCodeAreaSyntaxProvider> implements FileCodeArea {
 
 	private File file;
 	private String lastSavedContent;
 	
-	public FileSqlCodeArea(File file) {
+	public SimpleFileCodeArea(File file) {
 		super();
 		this.file = file;
 		try {
@@ -84,5 +83,10 @@ public class FileSqlCodeArea extends CSqlCodeArea implements FileCodeArea {
 				action -> this.saveFileAction()
         );
 		Nodes.addInputMap(this, save);
+	}
+
+	@Override
+	protected SimpleFileCodeAreaSyntaxProvider initSyntaxProvider() {
+		return new SimpleFileCodeAreaSyntaxProvider();
 	}
 }
