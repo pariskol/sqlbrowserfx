@@ -455,6 +455,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			tab.startLoading();
 			this.createTablesBox();
 			this.createViewsBox();
+			tab.startLoading();
 			sqlConnector.executeAsync(() -> this.getDataFromDB(table, tab));
 		}
 	}
@@ -734,8 +735,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	// Buttons' actions -------------------------------------------------------
 	protected void tableComboBoxAction(ComboBox<String> comboBox) {
 		if (!sqlQueryRunning) {
+			SqlTableTab tab = getSelectedTableTab();
+			tab.startLoading();
 			sqlConnector.executeAsync(
-					() -> this.getDataFromDB(comboBox.getSelectionModel().getSelectedItem(), getSelectedTableTab()));
+					() -> this.getDataFromDB(comboBox.getSelectionModel().getSelectedItem(), tab));
 		}
 	}
 
@@ -987,7 +990,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			if (tablesTabPane.getSelectionModel().getSelectedItem() != null
 					&& !getSelectedTableTab().getCustomText().equals(EMPTY)) {
 				String tableName = getSelectedTableTab().getCustomText();
-				sqlConnector.executeAsync(() -> this.getDataFromDB(tableName, getSelectedTableTab()));
+				SqlTableTab tab = getSelectedTableTab();
+				tab.startLoading();
+				sqlConnector.executeAsync(() -> this.getDataFromDB(tableName, tab));
 				this.setSearchApplied(false);
 				this.updateRowsCountLabel();
 			}

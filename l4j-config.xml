@@ -2,8 +2,8 @@
 <launch4jConfig>
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
-  <jar>./sqlbrowserfx.jar</jar>
-  <outfile>./SqlBrowserFX.exe</outfile>
+  <jar>.\sqlbrowserfx.jar</jar>
+  <outfile>.\SqlBrowserFX.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -13,19 +13,17 @@
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon>./sqlbrowser-fx.ico</icon>
+  <icon>.\sqlbrowser-fx.ico</icon>
   <classPath>
     <mainClass>gr.sqlbrowserfx.GUIStarter</mainClass>
     <cp>./lib/*</cp>
   </classPath>
   <jre>
     <path>jre</path>
-    <bundledJre64Bit>true</bundledJre64Bit>
-    <bundledJreAsFallback>false</bundledJreAsFallback>
+    <requiresJdk>false</requiresJdk>
+    <requires64Bit>true</requires64Bit>
     <minVersion>17</minVersion>
     <maxVersion></maxVersion>
-    <jdkPreference>jdkOnly</jdkPreference>
-    <runtimeBits>64</runtimeBits>
     <opt>-Xmx512m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 </opt>
   </jre>
 </launch4jConfig>

@@ -24,8 +24,8 @@ public class RESTfulService {
 	
 	public static void init(SqlConnector sqlConnector) {
 		APP = Javalin.create(config -> {
-			config.enableCorsForAllOrigins();
-			config.enableDevLogging();
+			config.plugins.enableCors(cors -> cors.add(corsConfig -> corsConfig.anyHost()));
+			config.plugins.enableDevLogging();
 		});
 		APP.exception(Exception.class, (e, ctx) -> {
 			logger.error(e.getMessage());
@@ -33,11 +33,11 @@ public class RESTfulService {
 		});
 		
 		APP.before(ctx -> {
-			ctx.res.addHeader("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
-			ctx.res.addHeader("Access-Control-Allow-Origin", "*");
-			ctx.res.addHeader("Access-Control-Allow-Headers", "*");
-			ctx.res.addHeader("Access-Control-Allow-Credentials", "true");
-			ctx.res.addHeader("Content-Type", "application/json");
+			ctx.res().addHeader("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+			ctx.res().addHeader("Access-Control-Allow-Origin", "*");
+			ctx.res().addHeader("Access-Control-Allow-Headers", "*");
+			ctx.res().addHeader("Access-Control-Allow-Credentials", "true");
+			ctx.res().addHeader("Content-Type", "application/json");
 		});
 		
 		
