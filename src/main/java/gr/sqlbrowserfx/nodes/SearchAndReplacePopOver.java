@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
+import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
@@ -22,7 +23,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-public class SearchAndReplacePopOver extends PopOver implements SimpleObservable<String> {
+public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObservable<String> {
 
 	private CodeArea codeArea;
 	private volatile int lastPos;
@@ -89,7 +90,6 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 		caseInsensitiveCheckBox = new CheckBox("ci");
 		caseInsensitiveCheckBox.setFocusTraversable(false);
 		
-		this.setArrowSize(0);
 		if (enableReplace) {
 			this.setContentNode(new HBox(new VBox(findField, replaceField, new HBox(findButton, replaceButton, replaceAllButton)),
 										 new VBox(wholeWordCheckBox, caseInsensitiveCheckBox))
@@ -99,9 +99,6 @@ public class SearchAndReplacePopOver extends PopOver implements SimpleObservable
 			this.setContentNode(new HBox(new VBox(findField, findButton),
 										 new VBox(wholeWordCheckBox, caseInsensitiveCheckBox)));
 		}
-
-		this.setAutoHide(true);
-		this.setDetachable(false);
 	}
 	
 	private int findButtonActionImpl() {

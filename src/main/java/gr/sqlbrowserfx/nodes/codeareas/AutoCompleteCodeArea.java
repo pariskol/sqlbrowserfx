@@ -282,7 +282,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 			searchAndReplacePopOver.getFindField().selectAll();
 		}
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-		searchAndReplacePopOver.show(this, boundsInScene.getMaxX() - 400, boundsInScene.getMinY());
+		searchAndReplacePopOver.show(getParent(), boundsInScene.getMaxX() - 400, boundsInScene.getMinY());
 	}
 
 	@Override
@@ -356,7 +356,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
 		goToLinePopOver = createGoToLinePopOver();
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-		goToLinePopOver.show(this, boundsInScene.getMaxX() - goToLinePopOver.getWidth() - 170, boundsInScene.getMinY());
+		goToLinePopOver.show(getParent(), boundsInScene.getMaxX() - goToLinePopOver.getWidth() - 170, boundsInScene.getMinY());
 	}
 
 	@SuppressWarnings("unused")

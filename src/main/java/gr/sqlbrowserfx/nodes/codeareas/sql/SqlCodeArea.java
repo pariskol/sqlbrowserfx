@@ -392,11 +392,13 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		hbox.setSpacing(20);
 		
 		VBox vbox = new VBox(new Label("Query History"), hbox, pane);
+		vbox.setPrefSize(600, 400);
+
 		historyPopOver = new CustomPopOver(vbox);
 		
 		historyPopOver.setOnHidden(event -> SqlCodeArea.this.historyPopOver = null);
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-		historyPopOver.show(this, boundsInScene.getMaxX() - 620,
+		historyPopOver.show(getParent(), boundsInScene.getMaxX() - 620,
 				boundsInScene.getMinY());
 		this.getQueriesHistory(codeArea, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 	}
