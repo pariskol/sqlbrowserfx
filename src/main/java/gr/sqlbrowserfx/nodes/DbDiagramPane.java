@@ -3,7 +3,6 @@ package gr.sqlbrowserfx.nodes;
 import java.util.ArrayList;
 import java.util.List;
 
-import gr.sqlbrowserfx.SqlTableNode;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
