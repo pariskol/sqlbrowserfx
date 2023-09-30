@@ -18,6 +18,7 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
@@ -1098,7 +1099,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		if (exportCsvButton.isFocused() && popOver.isShowing())
 			return;
 
-		SqlTableView sqlTableView = getSelectedSqlTableView();
+		final SqlTableView sqlTableView = getSelectedSqlTableView();
 
 		exportCsvButton.requestFocus();
 
@@ -1109,28 +1110,28 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		if (selectedFile == null)
 			return;
 
-		try {
-			if (!Files.exists(Paths.get(selectedFile.getPath())))
-				Files.createFile(Paths.get(selectedFile.getPath()));
+		Thread exportThread = new Thread(() -> {
+			try {
+				DialogFactory.createNotification("CSV Export", "Export started");
 
-			Files.write(Paths.get(selectedFile.getAbsolutePath()),
-					(sqlTableView.getSqlTable().columnsToString() + "\n").getBytes(), StandardOpenOption.CREATE,
-					StandardOpenOption.APPEND);
+				if (!Files.exists(Paths.get(selectedFile.getPath())))
+					Files.createFile(Paths.get(selectedFile.getPath()));
 
-			sqlTableView.getItems().forEach(row -> {
-				try {
-					Files.write(Paths.get(selectedFile.getAbsolutePath()), (row.toString() + "\n").getBytes(),
-							StandardOpenOption.APPEND);
-				} catch (IOException e) {
-					logger.error(e.getMessage(), e);
-					;
-				}
-			});
-			DialogFactory.createNotification("CSV Export", "Export to csv has been completed\n" + pathField.getText());
+				Files.write(Paths.get(selectedFile.getAbsolutePath()),
+						(sqlTableView.getSqlTable().columnsToString() + "\n").getBytes(), StandardOpenOption.CREATE,
+						StandardOpenOption.APPEND);
 
-		} catch (IOException e) {
-			DialogFactory.createErrorDialog(e);
-		}
+				List<String> data = sqlTableView.getItems().stream().map(row -> row.toString()).toList();
+				String dataStr = StringUtils.join(data, "\n");
+				Files.write(Paths.get(selectedFile.getAbsolutePath()), dataStr.getBytes(),
+						StandardOpenOption.APPEND);
+				DialogFactory.createNotification("CSV Export", "Export to csv has been completed\n" + pathField.getText());
+			} catch (IOException e) {
+				DialogFactory.createErrorDialog(e);
+			}
+		});
+		exportThread.setDaemon(true);
+		exportThread.start();
 	}
 
 	protected void copyAction() {
