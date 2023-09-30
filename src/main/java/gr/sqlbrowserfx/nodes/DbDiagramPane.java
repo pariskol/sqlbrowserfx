@@ -1,8 +1,9 @@
-package gr.sqlbrowserfx;
+package gr.sqlbrowserfx.nodes;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import gr.sqlbrowserfx.SqlTableNode;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
@@ -56,7 +57,7 @@ public class DbDiagramPane extends ScrollPane {
 			}
 			
 			var sizeOfCellAbove = getSizeOfCellsAbove();
-			var extraSpace = sizeOfCellAbove * 10;
+			var extraSpace = sizeOfCellAbove * 15;
 
 			node.relocate(20 + counter * 240, 20 + rows * 300 + extraSpace);
 			this.grid[rows][counter] = table.getColumns().size();

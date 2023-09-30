@@ -28,6 +28,7 @@ import gr.sqlbrowserfx.conn.PostgreSqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
+import gr.sqlbrowserfx.dock.nodes.DDbDiagramPane;
 import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;

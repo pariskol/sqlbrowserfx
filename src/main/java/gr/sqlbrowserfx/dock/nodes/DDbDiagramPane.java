@@ -1,4 +1,4 @@
-package gr.sqlbrowserfx;
+package gr.sqlbrowserfx.dock.nodes;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -12,6 +12,7 @@ import org.dockfx.Dockable;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.DbDiagramPane;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 
