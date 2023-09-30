@@ -485,8 +485,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		MenuItem menuItemCellEdit = new MenuItem("Edit cell", JavaFXUtils.createIcon("/icons/edit.png"));
 
 		menuItemCellEdit.setOnAction(event -> {
-			if (getSelectedSqlTableView().getSelectedCell() != null)
-				getSelectedSqlTableView().getSelectedCell().startEdit();
+			SqlTableView sqlTableView = getSelectedSqlTableView();
+			if (sqlTableView.areCellsEditable() && sqlTableView.getSelectedCell() != null)
+				sqlTableView.getSelectedCell().startEdit();
 		});
 
 		MenuItem menuItemCopyCell = new MenuItem("Copy cell", JavaFXUtils.createIcon("/icons/copy.png"));
@@ -627,6 +628,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		try {
 			sqlConnector.executeQueryRawSafely(query, resultSet -> {
 				sqlTableView.setItemsLater(resultSet);
+				// in case the query contains a view reset name
 				sqlTableView.setTableName(table);
 			});
 
