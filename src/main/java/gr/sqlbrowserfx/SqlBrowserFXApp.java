@@ -405,7 +405,6 @@ public class SqlBrowserFXApp extends Application {
 		
 		ddbTreePane.getDBTreeView().addObserver(value -> {
 			SqlCodeAreaSyntaxProvider.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(kw -> new Keyword(kw, KeywordType.TABLE)).collect(Collectors.toList()));
-//			SqlCodeAreaSyntax.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(x -> x.toUpperCase() + "@").collect(Collectors.toList()));
 		});
 		mainSqlPane.getSqlConsolePane().addObserver(ddbTreePane.getDBTreeView());
 		ddbTreePane.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
@@ -415,7 +414,6 @@ public class SqlBrowserFXApp extends Application {
 		
 		VBox vbox = new VBox();
 		vbox.setAlignment(Pos.CENTER);
-//		TabPane tp = new TabPane(new Tab("SqlBrowserFX", dockPane), new Tab("BashFX", new BashFXApp().createBashFXAppBox(primaryStage)));
 		vbox.getChildren().addAll(menuBar, dockPane);
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
 		

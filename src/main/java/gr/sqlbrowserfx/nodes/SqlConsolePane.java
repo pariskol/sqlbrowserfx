@@ -320,10 +320,11 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	}
 
 	@SuppressWarnings("unchecked")
-	private CodeArea getSelectedSqlCodeArea() {
+	private final CodeArea getSelectedSqlCodeArea() {
 		return ((VirtualizedScrollPane<CodeArea>) queryTabPane.getSelectionModel().getSelectedItem().getContent()).getContent();
 	}
 	
+	// TODO: needs polishing
 	public String executeButonAction() {
 		CodeArea sqlConsoleArea = this.getSelectedSqlCodeArea();
 		String query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
@@ -425,9 +426,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				}
 			});
 		}
-		
-//		if (!fixedQuery.isEmpty())
-//			this.saveHistory(fixedQuery, queryDuration.get());
 		
 		return fixedQuery;
 	}

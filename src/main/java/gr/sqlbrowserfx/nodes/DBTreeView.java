@@ -84,47 +84,7 @@ public class DBTreeView extends TreeView<String>
 		this.allItems = new ArrayList<>();
 		this.listeners = new ArrayList<>();
 
-		this.getSelectionModel().selectedItemProperty().addListener((ob, ov, nv) -> {
-			if (nv == null) return;
-			
-			String selected = nv.getValue();			
-			canSelectedOpenProperty.set(false);
-			hasSelectedSchemaProperty.set(false);
-			
-			List<String> tables = tablesRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
-			if (tables.contains(selected)) {
-				hasSelectedSchemaProperty.set(true);
-				canSelectedOpenProperty.set(true);
-				return;
-			}
-			List<String> views = viewsRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
-			if (views.contains(selected)) {
-				hasSelectedSchemaProperty.set(true);
-				canSelectedOpenProperty.set(true);
-				return;
-			}
-			List<String> indexes = indexesRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
-			if (indexes.contains(selected)) {
-				hasSelectedSchemaProperty.set(true);
-				return;
-			}
-			
-			if (isUsingMysql()) {
-				List<String> procedures = proceduresRootItem.getChildren().stream().map(ti -> ti.getValue())
-						.collect(Collectors.toList());
-				if (procedures.contains(selected)) {
-					hasSelectedSchemaProperty.set(true);
-					return;
-				}
-				List<String> functions = functionsRootItem.getChildren().stream().map(ti -> ti.getValue())
-						.collect(Collectors.toList());
-				if (functions.contains(selected)) {
-					hasSelectedSchemaProperty.set(true);
-					return;
-				}
-			}
-			
-		});
+		this.setupSelectionChangeListener();
 
 		rootItem = new TreeItem<>(dbPath, JavaFXUtils.createIcon("/icons/database.png"));
 		rootItem.setExpanded(true);
@@ -176,6 +136,50 @@ public class DBTreeView extends TreeView<String>
 		this.setInputMap();
 	}
 
+	private void setupSelectionChangeListener() {
+		this.getSelectionModel().selectedItemProperty().addListener((ob, ov, nv) -> {
+			if (nv == null) return;
+			
+			String selected = nv.getValue();			
+			canSelectedOpenProperty.set(false);
+			hasSelectedSchemaProperty.set(false);
+			
+			List<String> tables = tablesRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
+			if (tables.contains(selected)) {
+				hasSelectedSchemaProperty.set(true);
+				canSelectedOpenProperty.set(true);
+				return;
+			}
+			List<String> views = viewsRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
+			if (views.contains(selected)) {
+				hasSelectedSchemaProperty.set(true);
+				canSelectedOpenProperty.set(true);
+				return;
+			}
+			List<String> indexes = indexesRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
+			if (indexes.contains(selected)) {
+				hasSelectedSchemaProperty.set(true);
+				return;
+			}
+			
+			if (isUsingMysql()) {
+				List<String> procedures = proceduresRootItem.getChildren().stream().map(ti -> ti.getValue())
+						.collect(Collectors.toList());
+				if (procedures.contains(selected)) {
+					hasSelectedSchemaProperty.set(true);
+					return;
+				}
+				List<String> functions = functionsRootItem.getChildren().stream().map(ti -> ti.getValue())
+						.collect(Collectors.toList());
+				if (functions.contains(selected)) {
+					hasSelectedSchemaProperty.set(true);
+					return;
+				}
+			}
+			
+		});
+	}
+	
 	protected void setInputMap() {
 		// enable following line if this view used as standalone
 //		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
@@ -243,44 +247,16 @@ public class DBTreeView extends TreeView<String>
 						ti.setValue(String.valueOf(getULN(map, "ROUTINE_NAME")));
 						String routineType = getULN(map, "ROUTINE_TYPE");
 						
-						if (routineType.equals("PROCEDURE"))
-							ti.setGraphic(JavaFXUtils.createIcon("/icons/procedure.png"));
-						else
-							ti.setGraphic(JavaFXUtils.createIcon("/icons/function.png"));
+						String url = "/icons/" + (routineType.equals("PROCEDURE") ? "procedure" : "function") + ".png";
+						ti.setGraphic(JavaFXUtils.createIcon(url));
+						this.fillFPTreeItem(ti, map);
 
-						TreeItem<String> bodyTreeItem = new TreeItem<String>("body",
-								JavaFXUtils.createIcon("/icons/script.png"));
-						bodyTreeItem.getChildren().add(new TreeItem<String>(getULN(map, "ROUTINE_DEFINITION")));
-						ti.getChildren().add(bodyTreeItem);
-
-						TreeItem<String> paramsTreeItem = new TreeItem<>("parameters",
-								JavaFXUtils.createIcon("/icons/var.png"));
-						ti.getChildren().add(paramsTreeItem);
-
-						sqlConnector.executeQuery(
-								"select * from INFORMATION_SCHEMA.PARAMETERS where SPECIFIC_NAME = ? ",
-								Arrays.asList(getULN(map, "SPECIFIC_NAME")), rset2 -> {
-									Map<String, Object> map2 = DTOMapper.mapUnsafely(rset2);
-
-									if (getULN(map2, "PARAMETER_MODE") != null) {
-										String param = "";
-										if (getULN(map2, "PARAMETER_NAME") != null)
-											param += getULN(map2, "PARAMETER_NAME") + " ";
-										if (getULN(map2, "PARAMETER_MODE") != null)
-											param += getULN(map2, "PARAMETER_MODE") + " ";
-										if (getULN(map2, "DATA_TYPE") != null)
-											param += getULN(map2, "DATA_TYPE");
-
-										paramsTreeItem.getChildren().add(new TreeItem<String>(param));
-									} else {
-										ti.setValue(ti.getValue() + " returns " + getULN(map2, "DATA_TYPE"));
-									}
-								});
-
-						if (routineType.equals("PROCEDURE"))
+						if (routineType.equals("PROCEDURE")) {
 							proceduresRootItem.getChildren().add(ti);
-						else
+						}
+						else {
 							functionsRootItem.getChildren().add(ti);
+						}
 						
 					});
 
@@ -289,77 +265,7 @@ public class DBTreeView extends TreeView<String>
 		}
 	}
 
-	public void showSearchPopup() {
-		PopOver popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
-		popOver.setArrowSize(0);
-		popOver.show(this);;
-	}
-	
-	public void showSearchPopup(Node owner) {
-		PopOver popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
-		popOver.setArrowSize(0);
-		popOver.show(owner);;
-	}
-
-	private void clearAll() {
-		tablesRootItem.getChildren().clear();
-		viewsRootItem.getChildren().clear();
-		indexesRootItem.getChildren().clear();
-		allItems.clear();
-	}
-
-	private void fillTreeView() throws SQLException {
-		new Thread(() -> {
-			try {
-				long timeCounter = System.currentTimeMillis();
-
-				List<String> newItems = this.getContents();
-				List<TreeItem<String>> found = new ArrayList<>();
-				List<String> sfound = new ArrayList<>();
-
-				tablesRootItem.getChildren().forEach(treeItem -> {
-					if (!newItems.contains(treeItem.getValue())) {
-						found.add(treeItem);
-						sfound.add(treeItem.getValue());
-					}
-				});
-				tablesRootItem.getChildren().removeAll(found);
-				allItems.removeAll(sfound);
-
-				viewsRootItem.getChildren().forEach(treeItem -> {
-					if (!newItems.contains(treeItem.getValue())) {
-						found.add(treeItem);
-						sfound.add(treeItem.getValue());
-					}
-				});
-				viewsRootItem.getChildren().removeAll(found);
-				allItems.removeAll(sfound);
-
-				indexesRootItem.getChildren().forEach(treeItem -> {
-					if (!newItems.contains(treeItem.getValue())) {
-						found.add(treeItem);
-						sfound.add(treeItem.getValue());
-					}
-				});
-				indexesRootItem.getChildren().removeAll(found);
-				allItems.removeAll(sfound);
-
-				Platform.runLater(() -> {
-					this.setRoot(rootItem);
-					this.fireEvent(new SimpleEvent());
-				});
-
-				timeCounter = (System.currentTimeMillis() - timeCounter) / 1000;
-				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME)
-						.info("Database analysis took " + timeCounter + " seconds");
-				this.changed();
-			} catch (Throwable e) {
-				DialogFactory.createErrorDialog(e);
-			}
-		}).start();
-	}
-
-	private List<String> getContents() throws SQLException {
+	private List<String> setupTreeItems() throws SQLException {
 		List<String> newItems = new ArrayList<>();
 		sqlConnector.getContents(rset -> {
 			try {
@@ -371,7 +277,7 @@ public class DBTreeView extends TreeView<String>
 					logger.error("Could not map table name or type, type: " + type + " ,name: " + name);
 					return;
 				}
-
+	
 				newItems.add(name);
 				if (!allItems.contains(name)) {
 					allItems.add(name);
@@ -397,13 +303,102 @@ public class DBTreeView extends TreeView<String>
 				logger.error(e.getMessage(), e);
 			}
 		});
+		
 		return newItems;
 	}
 
+	private void updateTriggers() throws SQLException {
+		for (TreeItem<String> treeItem : tablesRootItem.getChildren()) {
+			// triggers tree item is the 2nd child
+			treeItem.getChildren().get(2).getChildren().clear();
+			sqlConnector.getTriggers(treeItem.getValue(), rset -> {
+				TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString(TRIGGER_NAME),
+						JavaFXUtils.createIcon("/icons/trigger.png"));
+				String schema = rset.getString(ACTION_STATEMENT);
+				triggerTreeItem.getChildren()
+						.add(new TreeItem<String>(schema, JavaFXUtils.createIcon("/icons/script.png")));
+				ObservableList<TreeItem<String>> triggerItems = treeItem.getChildren().get(2).getChildren();
+				triggerItems.add(triggerTreeItem);
+			});
+		}
+	}
+
+	private void clearAll() {
+		tablesRootItem.getChildren().clear();
+		viewsRootItem.getChildren().clear();
+		indexesRootItem.getChildren().clear();
+		allItems.clear();
+	}
+
+	private void removeMissingtreeItems(List<String> newItems) {
+		List<TreeItem<String>> found = new ArrayList<>();
+		List<String> sfound = new ArrayList<>();
+		
+		tablesRootItem.getChildren().forEach(treeItem -> {
+			if (!newItems.contains(treeItem.getValue())) {
+				found.add(treeItem);
+				sfound.add(treeItem.getValue());
+			}
+		});
+		tablesRootItem.getChildren().removeAll(found);
+		allItems.removeAll(sfound);
+
+		viewsRootItem.getChildren().forEach(treeItem -> {
+			if (!newItems.contains(treeItem.getValue())) {
+				found.add(treeItem);
+				sfound.add(treeItem.getValue());
+			}
+		});
+		viewsRootItem.getChildren().removeAll(found);
+		allItems.removeAll(sfound);
+
+		indexesRootItem.getChildren().forEach(treeItem -> {
+			if (!newItems.contains(treeItem.getValue())) {
+				found.add(treeItem);
+				sfound.add(treeItem.getValue());
+			}
+		});
+		indexesRootItem.getChildren().removeAll(found);
+		allItems.removeAll(sfound);
+	}
+	
+	private void fillTreeView() throws SQLException {
+		Thread thread = new Thread(() -> {
+			try {
+				long timeCounter = System.currentTimeMillis();
+	
+				List<String> newItems = this.setupTreeItems();
+				this.removeMissingtreeItems(newItems);
+	
+				Platform.runLater(() -> {
+					this.setRoot(rootItem);
+					this.fireEvent(new SimpleEvent());
+				});
+	
+				timeCounter = (System.currentTimeMillis() - timeCounter) / 1000;
+				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME)
+						.info("Database analysis took " + timeCounter + " seconds");
+				this.changed();
+			} catch (Throwable e) {
+				DialogFactory.createErrorDialog(e);
+			}
+		});
+		
+		thread.setDaemon(true);
+		thread.start();
+	}
+
+	/**
+	 * Fills a treeItem that is either referring to a table or view.
+	 * 
+	 * @param treeItem
+	 * @param schemaColumn
+	 * @throws SQLException
+	 */
 	private void fillTVTreeItem(TreeItem<String> treeItem, String schemaColumn) throws SQLException {
 		TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.createIcon("/icons/script.png"));
 		treeItem.getChildren().add(schemaTree);
-
+	
 		sqlConnector.getSchema(treeItem.getValue(), rset -> {
 			String schema = rset.getString(schemaColumn);
 			// FIXME: find a more abstract way
@@ -412,10 +407,10 @@ public class DBTreeView extends TreeView<String>
 																	// isUsingMysql()));
 			schemaTree.getChildren().add(schemaItem);
 		});
-
+	
 		TreeItem<String> columnsTree = new TreeItem<>("columns", JavaFXUtils.createIcon("/icons/columns.png"));
 		treeItem.getChildren().add(columnsTree);
-
+	
 		// executing a query that will return zero results just to resolve columns
 		sqlConnector.executeQueryRaw("select * from " + treeItem.getValue() + " where 1 = 2", rset -> {
 			SqlTable sqlTable = new SqlTable(rset.getMetaData());
@@ -441,27 +436,12 @@ public class DBTreeView extends TreeView<String>
 						referenceItem.setGraphic(JavaFXUtils.createIcon("/icons/blue.png"));
 						columnTreeItem.getChildren().add(referenceItem);
 					}
-
+	
 				}
 				columnsTree.getChildren().add(columnTreeItem);
 			}
 			DbCash.addTable(sqlTable);
 		});
-	}
-
-	private void updateTriggers() throws SQLException {
-		for (TreeItem<String> treeItem : tablesRootItem.getChildren()) {
-			treeItem.getChildren().get(2).getChildren().clear();
-			sqlConnector.getTriggers(treeItem.getValue(), rset -> {
-				TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString(TRIGGER_NAME),
-						JavaFXUtils.createIcon("/icons/trigger.png"));
-				String schema = rset.getString(ACTION_STATEMENT);
-				triggerTreeItem.getChildren()
-						.add(new TreeItem<String>(schema, JavaFXUtils.createIcon("/icons/script.png")));
-				ObservableList<TreeItem<String>> triggerItems = treeItem.getChildren().get(2).getChildren();
-				triggerItems.add(triggerTreeItem);
-			});
-		}
 	}
 
 	private void fillTableTreeItem(TreeItem<String> treeItem) throws SQLException {
@@ -477,9 +457,7 @@ public class DBTreeView extends TreeView<String>
 			triggersTreeItem.getChildren().add(triggerTreeItem);
 		});
 
-//		TreeItem<String> indexesTreeItem = new TreeItem<String>("indexes", JavaFXUtils.createIcon("/icons/index.png"));
 		treeItem.getChildren().add(triggersTreeItem);
-
 	}
 
 	private void fillViewTreeItem(TreeItem<String> treeItem) throws SQLException {
@@ -494,6 +472,56 @@ public class DBTreeView extends TreeView<String>
 			String schema = rset.getString(sqlConnector.getIndexSchemaColumn());
 			schemaTree.getChildren().add(new TreeItem<String>(schema));
 		});
+	}
+
+	/**
+	 * Fills a treeItem that is either referring to a procedure or function.
+	 * 
+	 * @param treeItem
+	 * @param map
+	 * @throws SQLException
+	 */
+	private void fillFPTreeItem(TreeItem<String> treeItem, Map<String, Object> map) throws SQLException {
+		TreeItem<String> bodyTreeItem = new TreeItem<String>("body",
+				JavaFXUtils.createIcon("/icons/script.png"));
+		bodyTreeItem.getChildren().add(new TreeItem<String>(getULN(map, "ROUTINE_DEFINITION")));
+		treeItem.getChildren().add(bodyTreeItem);
+	
+		TreeItem<String> paramsTreeItem = new TreeItem<>("parameters",
+				JavaFXUtils.createIcon("/icons/var.png"));
+		treeItem.getChildren().add(paramsTreeItem);
+	
+		sqlConnector.executeQuery(
+				"select * from INFORMATION_SCHEMA.PARAMETERS where SPECIFIC_NAME = ? ",
+				Arrays.asList(getULN(map, "SPECIFIC_NAME")), rset2 -> {
+					Map<String, Object> map2 = DTOMapper.mapUnsafely(rset2);
+	
+					if (getULN(map2, "PARAMETER_MODE") != null) {
+						String param = "";
+						if (getULN(map2, "PARAMETER_NAME") != null)
+							param += getULN(map2, "PARAMETER_NAME") + " ";
+						if (getULN(map2, "PARAMETER_MODE") != null)
+							param += getULN(map2, "PARAMETER_MODE") + " ";
+						if (getULN(map2, "DATA_TYPE") != null)
+							param += getULN(map2, "DATA_TYPE");
+	
+						paramsTreeItem.getChildren().add(new TreeItem<String>(param));
+					} else {
+						treeItem.setValue(treeItem.getValue() + " returns " + getULN(map2, "DATA_TYPE"));
+					}
+				});
+	}
+
+	public void showSearchPopup() {
+		PopOver popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
+		popOver.setArrowSize(0);
+		popOver.show(this);;
+	}
+
+	public void showSearchPopup(Node owner) {
+		PopOver popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
+		popOver.setArrowSize(0);
+		popOver.show(owner);;
 	}
 
 	@Override
@@ -722,8 +750,6 @@ public class DBTreeView extends TreeView<String>
 
 	@Override
 	public void changed(String data) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -747,6 +773,4 @@ public class DBTreeView extends TreeView<String>
 	public SimpleBooleanProperty canSelectedOpenProperty() {
 		return canSelectedOpenProperty;
 	}
-	
-	
 }

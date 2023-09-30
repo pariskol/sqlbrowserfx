@@ -32,19 +32,8 @@ public class SqlTable {
 	}
 
 	public SqlTable(String tableName, ResultSetMetaData rsmd) {
-
-		foreignKeys = new ArrayList<>();
-		try {
-			name = tableName;
-			columnsMap = new LinkedHashMap<>();
-			for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-				if (rsmd.getTableName(i).equals(name))
-					columnsMap.put(rsmd.getColumnLabel(i), rsmd.getColumnTypeName(i));
-			}
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		this(rsmd);
+		name = tableName;
 	}
 
 	public String getName() {
