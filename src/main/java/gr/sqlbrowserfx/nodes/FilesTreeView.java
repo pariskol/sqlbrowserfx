@@ -1,6 +1,7 @@
 package gr.sqlbrowserfx.nodes;
 
 import java.io.File;
+import java.util.Arrays;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
@@ -59,18 +60,41 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		});
 	}
 
+	private String determineIcon(String fileName) {
+		var url = "/icons/";
+		if (fileName.endsWith(".java")) {
+			url += "green.png";
+		}
+		else if (fileName.endsWith(".sql")) {
+			url += "blue.png";
+		}
+		else {
+			url += "red.png";
+		}
+		
+		return url;
+	}
+	
 	private TreeItem<TreeViewFile> createTreeView(String path) {
 		var file = new TreeViewFile(path);
 		var rootItem = new TreeItem<>(file);
 
-		var files = file.listFiles();
+		var files = Arrays.asList(file.listFiles());
+		files.sort((a,b) -> {
+			if (a.isDirectory() && b.isFile()) return -1;
+			if (a.isDirectory() && b.isDirectory()) a.getName().compareTo(b.getName());
+			if (a.isFile() && b.isFile()) return a.getName().compareTo(b.getName());
+			return 1;
+		});
 		if (files != null) {
 			for (var newFile : files) {
 				if (newFile.isDirectory()) {
 					var childItem = createTreeView(newFile.getAbsolutePath());
+					childItem.setGraphic(JavaFXUtils.createIcon("/icons/folder.png"));
 					rootItem.getChildren().add(childItem);
 				} else {
 					var childItem = new TreeItem<>(new TreeViewFile(newFile.getAbsolutePath()));
+					childItem.setGraphic(JavaFXUtils.createIcon(this.determineIcon(newFile.getName())));
 					rootItem.getChildren().add(childItem);
 				}
 			}
