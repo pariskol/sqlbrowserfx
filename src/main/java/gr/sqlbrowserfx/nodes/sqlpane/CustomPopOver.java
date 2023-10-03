@@ -15,5 +15,6 @@ public class CustomPopOver extends PopOver{
 		this.setDetachable(false);
 		this.setArrowSize(0);
 		this.setHideOnEscape(true);
+		this.setAutoFix(true);
 	}
 }

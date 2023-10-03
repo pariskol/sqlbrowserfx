@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +18,7 @@ import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -85,9 +85,11 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 		replaceAllButton = new Button("Replace all", JavaFXUtils.createIcon("/icons/replace.png"));
 		replaceAllButton.setOnAction(event -> this.replaceAllButtonAction());
 
-		wholeWordCheckBox = new CheckBox("ww");
+		wholeWordCheckBox = new CheckBox("w");
+		wholeWordCheckBox.setTooltip(new Tooltip("Whole Word"));
 		wholeWordCheckBox.setFocusTraversable(false);
 		caseInsensitiveCheckBox = new CheckBox("ci");
+		caseInsensitiveCheckBox.setTooltip(new Tooltip("Case Insensitive"));
 		caseInsensitiveCheckBox.setFocusTraversable(false);
 		
 		if (enableReplace) {

@@ -392,7 +392,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		HBox hbox = new HBox(codeArea.getSearchAndReplacePopOver(), codeArea.createGoToLinePopOver().getContentNode(), datePicker);
 		hbox.setSpacing(20);
 		
-		VBox vbox = new VBox(new Label("Query History"), hbox, pane);
+		VBox vbox = new VBox(new Label("Query History", JavaFXUtils.createIcon("/icons/monitor.png")), hbox, pane);
 		vbox.setPrefSize(600, 500);
 
 		historyPopOver = new CustomPopOver(vbox);

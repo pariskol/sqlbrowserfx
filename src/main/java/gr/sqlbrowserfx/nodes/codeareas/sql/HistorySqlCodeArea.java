@@ -57,7 +57,7 @@ public class HistorySqlCodeArea extends CSqlCodeArea {
 			searchAndReplacePopOver.getFindField().selectAll();
 		}
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-		searchAndReplacePopOver.show(this, boundsInScene.getMaxX() - searchAndReplacePopOver.getWidth(),
+		searchAndReplacePopOver.show(getParent(), boundsInScene.getMaxX() - searchAndReplacePopOver.getWidth(),
 				boundsInScene.getMinY());
 	}
 	
