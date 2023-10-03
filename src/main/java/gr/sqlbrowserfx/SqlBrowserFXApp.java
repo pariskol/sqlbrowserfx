@@ -2,7 +2,6 @@
 package gr.sqlbrowserfx;
 
 import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,7 +11,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
@@ -32,11 +30,11 @@ import gr.sqlbrowserfx.dock.nodes.DDbDiagramPane;
 import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.FilesTreeView;
 import gr.sqlbrowserfx.nodes.HelpTabPane;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.PostgreSqlConfigBox;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
-import gr.sqlbrowserfx.nodes.FilesTreeView;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
@@ -65,7 +63,6 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
-import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
@@ -109,7 +106,7 @@ public class SqlBrowserFXApp extends Application {
 
 	@Override
 	public void start(Stage primaryStage) {
-		Font defaultFont = Font.getDefault();
+		var defaultFont = Font.getDefault();
 		fontSize = defaultFont.getSize();
 		SqlBrowserFXApp.STAGE = primaryStage;
 		primaryStage.setTitle("SqlBrowserFX");
@@ -125,8 +122,9 @@ public class SqlBrowserFXApp extends Application {
 		primaryStage.show();
 
 		primaryStage.setOnCloseRequest(closeEvent -> {
-			if (sqlConnector instanceof SqliteConnector) 
+			if (sqlConnector instanceof SqliteConnector) {
 				saveConnectionToHistory();
+			}
 			
 			Platform.exit();
 			System.exit(0);
@@ -135,17 +133,17 @@ public class SqlBrowserFXApp extends Application {
 	}
 
 	private void createDBselectBox() {
-		Label selectedDBtext = new Label("No database selected");
-		Button openButton = new Button("Open", JavaFXUtils.createIcon("/icons/database.png"));
+		var selectedDBtext = new Label("No database selected");
+		var openButton = new Button("Open", JavaFXUtils.createIcon("/icons/database.png"));
 		openButton.setOnAction(actionEvent -> dbSelectionAction(selectedDBtext.getText()));
-		HBox bottomBox = new HBox(selectedDBtext, openButton);
+		var bottomBox = new HBox(selectedDBtext, openButton);
 		bottomBox.setPadding(new Insets(5));
 		bottomBox.setSpacing(5);
 		bottomBox.setAlignment(Pos.CENTER_RIGHT);
 
-		VBox rightBox = new VBox();
-		Label text = new Label("Browse system for database...");
-		Button fileChooserButton = new Button("Search", JavaFXUtils.createIcon("/icons/magnify.png"));
+		var rightBox = new VBox();
+		var text = new Label("Browse system for database...");
+		var fileChooserButton = new Button("Search", JavaFXUtils.createIcon("/icons/magnify.png"));
 		fileChooserButton.setOnAction(actionEvent -> {
 			FileChooser fileChooser = new FileChooser();
 			File selectedFile = fileChooser.showOpenDialog(null);
@@ -158,10 +156,10 @@ public class SqlBrowserFXApp extends Application {
 		rightBox.setAlignment(Pos.CENTER);
 		rightBox.setSpacing(5);
 
-		Label recentDBsText = new Label("History");
+		var recentDBsText = new Label("History");
 		recentDBsText.setTextAlignment(TextAlignment.CENTER);
 
-		HistorySqlTableView recentDBsTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
+		var recentDBsTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
 		
 		SqlBrowserFXAppManager
 			.getConfigSqlConnector()
@@ -177,49 +175,49 @@ public class SqlBrowserFXApp extends Application {
 						dbSelectionAction(selectedDBtext.getText());
 				}
 			});
-		VBox leftBox = new VBox(recentDBsText, recentDBsTableView);
+		var leftBox = new VBox(recentDBsText, recentDBsTableView);
 		leftBox.setAlignment(Pos.CENTER);
 		leftBox.setPadding(new Insets(5));
 		leftBox.setSpacing(5);
 
-		BorderPane borderPane = new BorderPane();
+		var borderPane = new BorderPane();
 		borderPane.setCenter(rightBox);
 		borderPane.setLeft(leftBox);
 		borderPane.setBottom(bottomBox);
 
-		Tab sqliteTab = new Tab("Sqlite", borderPane);
+		var sqliteTab = new Tab("Sqlite", borderPane);
 		sqliteTab.setGraphic(JavaFXUtils.createImageView("/icons/sqlite.png", 28.0, 28.0));
 		sqliteTab.setClosable(false);
 		
-		MySqlConfigBox mySqlConfigBox = new MySqlConfigBox();
+		var mySqlConfigBox = new MySqlConfigBox();
 		mySqlConfigBox.getConnectButton().setOnAction(actionEvent -> {
 			mySqlConfigBox.showLoader(true);
 			dbSelectionAction(mySqlConfigBox);
 		});
-		Tab mysqlTab = new Tab("MySQL", mySqlConfigBox);
+		var mysqlTab = new Tab("MySQL", mySqlConfigBox);
 		mysqlTab.setGraphic(JavaFXUtils.createImageView("/icons/mysql.png", 28.0, 28.0));
 		mysqlTab.setClosable(false);
 		
-		MySqlConfigBox mariadbConfigBox = new MySqlConfigBox();
+		var mariadbConfigBox = new MySqlConfigBox();
 		mariadbConfigBox.getConnectButton().setOnAction(actionEvent -> {
 			mariadbConfigBox.showLoader(true);
 			dbSelectionAction(mariadbConfigBox);
 		});
-		Tab mariadbTab = new Tab("MariaDB", mariadbConfigBox);
+		var mariadbTab = new Tab("MariaDB", mariadbConfigBox);
 		mariadbTab.setGraphic(JavaFXUtils.createImageView("/icons/mariadb.png", 28.0, 28.0));
 		mariadbTab.setClosable(false);
 		
 		
-		PostgreSqlConfigBox postgreSqlConfigBox = new PostgreSqlConfigBox();
+		var postgreSqlConfigBox = new PostgreSqlConfigBox();
 		postgreSqlConfigBox.getConnectButton().setOnAction(actionEvent -> {
 			postgreSqlConfigBox.showLoader(true);
 			dbSelectionAction(postgreSqlConfigBox);
 		});
-		Tab postgresqlTab = new Tab("PostgreSQL", postgreSqlConfigBox);
+		var postgresqlTab = new Tab("PostgreSQL", postgreSqlConfigBox);
 		postgresqlTab.setGraphic(JavaFXUtils.createImageView("/icons/postgre.png", 28.0, 28.0));
 		postgresqlTab.setClosable(false);
 		
-		TabPane dbTabPane = new TabPane(sqliteTab, mysqlTab, mariadbTab, postgresqlTab);
+		var dbTabPane = new TabPane(sqliteTab, mysqlTab, mariadbTab, postgresqlTab);
 		
 		JavaFXUtils.applyJMetro(dbTabPane);
 		
@@ -249,7 +247,7 @@ public class SqlBrowserFXApp extends Application {
 		DB = dbPath;
 		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
 
-		SqlConnector sqliteConnector = new SqliteConnector(dbPath);
+		var sqliteConnector = new SqliteConnector(dbPath);
 		sqliteConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
 		this.sqlConnector = sqliteConnector;
 		if (System.getProperty("sqlbrowserfx.mode", "advanced").equals("simple")) {
@@ -267,7 +265,7 @@ public class SqlBrowserFXApp extends Application {
 		configBox.getConnectButton().setDisable(true);
 		DB = configBox.getDatabaseField().getText();
 		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
-			SqlConnector mysqlConnector = new MysqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
+			var mysqlConnector = new MysqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
 					configBox.getUserField().getText(), configBox.getPasswordField().getText());
 			this.sqlConnector = mysqlConnector;
 			
@@ -301,7 +299,7 @@ public class SqlBrowserFXApp extends Application {
 		configBox.getConnectButton().setDisable(true);
 		DB = configBox.getDatabaseField().getText();
 		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
-			SqlConnector mysqlConnector = new PostgreSqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
+			var mysqlConnector = new PostgreSqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
 					configBox.getUserField().getText(), configBox.getPasswordField().getText());
 			this.sqlConnector = mysqlConnector;
 			
@@ -325,24 +323,25 @@ public class SqlBrowserFXApp extends Application {
 						JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
 						STAGE.setScene(primaryScene);
 					}
-					else
+					else {
 						createAppView(mysqlConnector);
+					}
 				});
 			});
 	}
 
 	private VBox createJsonTableView() {
-		JSONTableView tableView = new JSONTableView();
+		var tableView = new JSONTableView();
 		
-		TextField requestField = new TextField();
+		var requestField = new TextField();
 		requestField.setPromptText("Enter url...");
-		final Executor executor = Executors.newSingleThreadExecutor();
+		final var executor = Executors.newSingleThreadExecutor();
 		requestField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				executor.execute(() -> {
 					try {
 						
-						JSONArray jsonArray = new JSONArray(HttpClient.GET(requestField.getText()));
+						var jsonArray = new JSONArray(HttpClient.GET(requestField.getText()));
 						tableView.setItemsLater(jsonArray);
 					} catch (Throwable e) {
 						DialogFactory.createErrorNotification(e);
@@ -352,13 +351,13 @@ public class SqlBrowserFXApp extends Application {
 		});
 		tableView.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.C) {
-				StringBuilder content = new StringBuilder();
+				var content = new StringBuilder();
 				for (MapTableViewRow row :tableView.getSelectionModel().getSelectedItems()) {
 					content.append(row.toString());
 				}
 				
-				StringSelection stringSelection = new StringSelection(content.toString());
-				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				var stringSelection = new StringSelection(content.toString());
+				var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 				clipboard.setContents(stringSelection, null);
 			}
 			else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.F) {
@@ -366,7 +365,7 @@ public class SqlBrowserFXApp extends Application {
 				requestField.selectAll();
 			}
 		});
-		VBox vbox = new VBox(requestField, tableView);
+		var vbox = new VBox(requestField, tableView);
 		VBox.setVgrow(tableView, Priority.ALWAYS);
 		return vbox;
 	}
@@ -388,8 +387,8 @@ public class SqlBrowserFXApp extends Application {
 		SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
 		
 		STAGE.setMaximized(true);
-		DockPane dockPane = new DockPane();
-		MenuBar menuBar = createMenu(dockPane);
+		var dockPane = new DockPane();
+		var menuBar = createMenu(dockPane);
 
 		dockPane.getStylesheets().add(CSS_THEME);
 
@@ -413,7 +412,7 @@ public class SqlBrowserFXApp extends Application {
 		// fixed size 
 		SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
 		
-		VBox vbox = new VBox();
+		var vbox = new VBox();
 		vbox.setAlignment(Pos.CENTER);
 		vbox.getChildren().addAll(menuBar, dockPane);
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
@@ -586,19 +585,19 @@ public class SqlBrowserFXApp extends Application {
 		if (isRestConfigurationShowing)
 			return;
 		
-		ImageView bottleLogo = JavaFXUtils.createImageView("/icons/javalin-logo.png", 0.0, 200.0);
-		Label ipLabel = new Label("Ip address");
-		TextField ipField = new TextField(restServiceConfig.getIp());
-		Label portLabel = new Label("Port");
-		TextField portField = new TextField(restServiceConfig.getPort().toString());
-		Button saveButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
+		var bottleLogo = JavaFXUtils.createImageView("/icons/javalin-logo.png", 0.0, 200.0);
+		var ipLabel = new Label("Ip address");
+		var ipField = new TextField(restServiceConfig.getIp());
+		var portLabel = new Label("Port");
+		var portField = new TextField(restServiceConfig.getPort().toString());
+		var saveButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
 
-		VBox vBox = new VBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
+		var vBox = new VBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
 		JavaFXUtils.applyJMetro(vBox);
 		vBox.setPadding(new Insets(15));
 
-		Stage stage = new Stage();
-		Scene scene = new Scene(vBox);
+		var stage = new Stage();
+		var scene = new Scene(vBox);
 		for (String styleSheet : primaryScene.getStylesheets())
 			scene.getStylesheets().add(styleSheet);
 		stage.setTitle("Rest service configuration");
@@ -618,7 +617,7 @@ public class SqlBrowserFXApp extends Application {
 	private void saveConnectionToHistory() {
 		SqlBrowserFXAppManager.getConfigSqlConnector().executeAsync(() -> {
 			try {
-				String query = "insert into connections_history (database, database_type) values (?, ?)";
+				var query = "insert into connections_history (database, database_type) values (?, ?)";
 				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
 						Arrays.asList(DB, "sqlite"));
 			} catch (SQLException e) {
