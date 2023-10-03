@@ -610,6 +610,10 @@
 	/* Border width */
 }
 
+.context-menu > * > .separator > .line {
+    -fx-border-color: derive(-fx-base, 40%);
+}
+
 /* Remove the default border and background */
 .check-box {
 	-fx-background-color: transparent;
