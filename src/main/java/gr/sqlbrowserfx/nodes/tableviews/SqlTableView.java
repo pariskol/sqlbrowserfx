@@ -24,6 +24,7 @@ import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.InputMapOwner;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableRowEditBox;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlTableTab;
 import gr.sqlbrowserfx.nodes.tableviews.filter.SqlTableFilter;
@@ -43,7 +44,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 
-public class SqlTableView extends TableView<MapTableViewRow> {
+public class SqlTableView extends TableView<MapTableViewRow> implements InputMapOwner {
 
 	protected ObservableList<MapTableViewRow> rows;
 
@@ -85,7 +86,8 @@ public class SqlTableView extends TableView<MapTableViewRow> {
 		autoResizeProperty.addListener((ob, ov, nv) -> this.autoResizedColumns());
 	}
 
-	protected void setInputMap() {
+	@Override
+	public void setInputMap() {
 		Nodes.addInputMap(this,
 				InputMap.consume(EventPattern.keyPressed(KeyCode.LEFT, KeyCombination.CONTROL_DOWN), action -> {
 					if (currentColumnPos < getColumns().size() - 1)

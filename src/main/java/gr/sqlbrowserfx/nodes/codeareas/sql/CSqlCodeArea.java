@@ -35,7 +35,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 	@Override
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = super.createContextMenu();
-		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/check.png"));
+		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/thunder.png"));
 		menuItemSave.setOnAction(action -> this.saveQueryAction());
 		menuItemSave.disableProperty().bind(this.isTextSelectedProperty().not());
 		menu.getItems().addAll(menuItemSave);
@@ -50,7 +50,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 	}
 	
 	@Override
-	protected void setInputMap() {
+	public void setInputMap() {
 		if (!isEditable())
 			return;
 		

@@ -26,6 +26,7 @@ import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.event.Event;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
@@ -133,7 +134,7 @@ public class JavaCodeArea extends AutoCompleteCodeArea<JavaCodeAreaSyntaxProvide
 	}
 	
 	@Override
-	protected void setInputMap() {
+	public void setInputMap() {
 		if (!isEditable())
 			return;
 		
@@ -171,7 +172,7 @@ public class JavaCodeArea extends AutoCompleteCodeArea<JavaCodeAreaSyntaxProvide
 			sqlQueryPopOver.show(this, this.getContextMenu().getX(), this.getContextMenu().getY());
 
 		});
-		menu.getItems().add(menuItemEditSqlQuery);
+		menu.getItems().addAll(new SeparatorMenuItem(), menuItemEditSqlQuery);
 		
 		return menu;
 	}

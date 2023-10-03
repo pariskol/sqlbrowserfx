@@ -7,7 +7,7 @@ import javafx.scene.control.MenuItem;
 public class PHistorySqlCodeArea extends HistorySqlCodeArea {
 	
 	@Override
-	protected void setInputMap() {
+	public void setInputMap() {
 		// no map
 	}
 	
@@ -18,7 +18,7 @@ public class PHistorySqlCodeArea extends HistorySqlCodeArea {
 		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copy());
 		
-		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/check.png"));
+		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSave.setOnAction(action -> this.saveQueryAction());
 		
 		menu.getItems().addAll(menuItemCopy, menuItemSave);

@@ -15,6 +15,7 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
+import gr.sqlbrowserfx.nodes.InputMapOwner;
 import gr.sqlbrowserfx.nodes.TableCreationPane;
 import gr.sqlbrowserfx.nodes.ToolbarOwner;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
@@ -28,7 +29,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 
-public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner {
+public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner, InputMapOwner {
 
 	private FlowPane toolBar;
 	private DDBTreeView dbTreeView;
@@ -111,11 +112,10 @@ public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner {
 		return toolbar;
 	}
 
-	protected void setInputMap() {
+	@Override
+	public void setInputMap() {
 		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
-				action -> {
-					dbTreeView.showSearchPopup(searchButton);
-				;}));
+				action -> dbTreeView.showSearchPopup(searchButton)));
 	}
 	
 	@Override

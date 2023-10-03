@@ -27,6 +27,7 @@ import org.reactfx.Subscription;
 
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
+import gr.sqlbrowserfx.nodes.InputMapOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SimpleLineNumberFactory;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -38,6 +39,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
@@ -47,7 +49,7 @@ import javafx.stage.Popup;
 
 @SuppressWarnings("rawtypes")
 public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> extends CodeArea
-		implements ContextMenuOwner, HighLighter {
+		implements ContextMenuOwner, InputMapOwner, HighLighter {
 
 	// this is a random offset that achieves to locate correctly 
 	// the autocomplete pop up when zooming
@@ -123,7 +125,8 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 			goToLinePopOver.hide();
 	}
 
-	protected void setInputMap() {
+	@Override
+	public void setInputMap() {
 		if (!isEditable())
 			return;
 
@@ -338,14 +341,18 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 				this.replaceSelection(syntaxProvider.format(this.getText(), FormatterMode.ALTERNATE));
 		});
 
-		MenuItem menuItemGoToLine = new MenuItem("Go to line...", JavaFXUtils.createIcon("/icons/next.png"));
+		MenuItem menuItemGoToLine = new MenuItem("Go To Line...", JavaFXUtils.createIcon("/icons/next.png"));
 		menuItemGoToLine.setOnAction(action -> this.showGoToLinePopOver());
 
-		MenuItem menuItemSaveAs = new MenuItem("Save As...", JavaFXUtils.createIcon("/icons/save.png"));
+		MenuItem menuItemSaveAs = new MenuItem("Save File As...", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSaveAs.setOnAction(action -> this.saveAsFileAction());
 
 		menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste, menuItemUperCase, menuItemLowerCase,
-				menuItemFormat, menuItemFormat3, menuItemGoToLine, menuItemSuggestions, menuItemSearchAndReplace,
+				new SeparatorMenuItem(),
+				menuItemFormat, menuItemFormat3, 
+				new SeparatorMenuItem(),
+				menuItemSearchAndReplace, menuItemGoToLine, menuItemSuggestions,
+				new SeparatorMenuItem(),
 				menuItemSaveAs);
 		return menu;
 	}

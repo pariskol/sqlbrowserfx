@@ -11,6 +11,7 @@ import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 
 public class DDBTreeView extends DBTreeView implements Dockable {
 
@@ -51,7 +52,8 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 		openInSqlPaneMenu = new Menu("Open in..." , JavaFXUtils.createIcon("/icons/openTab.png"));
 		this.populateSqlPanesMenu();
 		openInSqlPaneMenu.disableProperty().bind(this.canSelectedOpenProperty().not());
-		menu.getItems().add(openInSqlPaneMenu);
+		menu.getItems().add(0, new SeparatorMenuItem());
+		menu.getItems().add(0, openInSqlPaneMenu);
 		return menu;
 		
 	}

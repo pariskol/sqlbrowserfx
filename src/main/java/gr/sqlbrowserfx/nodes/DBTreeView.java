@@ -31,6 +31,7 @@ import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
+import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
@@ -42,6 +43,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -50,7 +52,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.HBox;
 
 public class DBTreeView extends TreeView<String>
-		implements ContextMenuOwner, SimpleObserver<String>, SimpleObservable<String> {
+		implements ContextMenuOwner, InputMapOwner, SimpleObserver<String>, SimpleObservable<String> {
 
 	private static final String ACTION_STATEMENT = "ACTION_STATEMENT";
 	private static final String TRIGGER_NAME = "TRIGGER_NAME";
@@ -180,7 +182,8 @@ public class DBTreeView extends TreeView<String>
 		});
 	}
 	
-	protected void setInputMap() {
+	@Override
+	public void setInputMap() {
 		// enable following line if this view used as standalone
 //		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
 //				action -> this.showSearchPopup()));
@@ -519,8 +522,7 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	public void showSearchPopup(Node owner) {
-		PopOver popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
-		popOver.setArrowSize(0);
+		CustomPopOver popOver = new CustomPopOver(new HBox(searchField, nextSearchResultButton));
 		popOver.show(owner);;
 	}
 
@@ -558,8 +560,7 @@ public class DBTreeView extends TreeView<String>
 		});
 		menuItemOpenSchema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
 
-		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, menuItemOpenSchema, menuItemDrop,
-				menuItemCollapseAll);
+		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, new SeparatorMenuItem(), menuItemCollapseAll, menuItemOpenSchema, new SeparatorMenuItem(), menuItemDrop);
 
 		return contextMenu;
 	}

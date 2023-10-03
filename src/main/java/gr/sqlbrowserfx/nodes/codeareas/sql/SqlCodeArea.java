@@ -42,6 +42,7 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
@@ -339,7 +340,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	}
 	
 	@Override
-	protected void setInputMap() {
+	public void setInputMap() {
 		if (!isEditable())
 			return;
 		
@@ -428,16 +429,17 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		ContextMenu menu = super.createContextMenu();
 		menuItemRun = new MenuItem("Run", JavaFXUtils.createIcon("/icons/play.png"));
 		menuItemRun.setOnAction(event -> runAction.run());
+		menu.getItems().add(0, new SeparatorMenuItem());
 		menu.getItems().add(0, menuItemRun);
 		MenuItem menuItemHistory = new MenuItem("History", JavaFXUtils.createIcon("/icons/monitor.png"));
 		menuItemHistory.setOnAction(event -> SqlCodeArea.this.showHistoryPopOver());
 		
 		MenuItem menuItemShowSchema = new MenuItem("Show Schema", JavaFXUtils.createIcon("/icons/script.png"));
 		menuItemShowSchema.setOnAction(action -> SqlCodeArea.this.showSchemaPopOver());
-		menu.getItems().add(menu.getItems().size(), menuItemHistory);
 		menuItemShowSchema.disableProperty().bind(this.isTextSelectedProperty().not());
-		menu.getItems().add(menuItemShowSchema);
 		
+		menu.getItems().addAll(new SeparatorMenuItem(), menuItemHistory, menuItemShowSchema);
+
 		return menu;
 	}
 

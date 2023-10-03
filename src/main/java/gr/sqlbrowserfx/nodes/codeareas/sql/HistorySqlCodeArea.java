@@ -35,8 +35,7 @@ public class HistorySqlCodeArea extends CSqlCodeArea {
 	}
 	
 	@Override
-	protected void setInputMap() {
-
+	public void setInputMap() {
 		InputMap<Event> searchAndReplace = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
 				action -> this.showSearchAndReplacePopup()
@@ -72,7 +71,7 @@ public class HistorySqlCodeArea extends CSqlCodeArea {
 		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
 		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
-		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/check.png"));
+		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSave.setOnAction(action -> this.saveQueryAction());
 		
 		menu.getItems().addAll(menuItemCopy, menuItemSearchAndReplace, menuItemSave);

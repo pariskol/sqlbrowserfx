@@ -20,6 +20,7 @@ import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.event.Event;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 
@@ -68,15 +69,15 @@ public class SimpleFileCodeArea extends AutoCompleteCodeArea<SimpleFileCodeAreaS
 	@Override
 	public ContextMenu createContextMenu() {
 		ContextMenu menu = super.createContextMenu();
-		MenuItem menuItemSave = new MenuItem("Save", JavaFXUtils.createIcon("/icons/save.png"));
+		MenuItem menuItemSave = new MenuItem("Save File", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSave.setOnAction(action -> this.saveFileAction());
 
-		menu.getItems().addAll(menuItemSave);
+		menu.getItems().addAll(new SeparatorMenuItem(), menuItemSave);
 		return menu;
 	}
 	
 	@Override
-	protected void setInputMap() {
+	public void setInputMap() {
 		super.setInputMap();
 		InputMap<Event> save = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.S, KeyCombination.CONTROL_DOWN),

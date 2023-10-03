@@ -32,6 +32,7 @@ import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.TableColumnFilteringEvent;
 import gr.sqlbrowserfx.listeners.TableSearchFilteringEvent;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
+import gr.sqlbrowserfx.nodes.InputMapOwner;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.ToolbarOwner;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
@@ -54,6 +55,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -71,7 +73,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwner {
+public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwner, InputMapOwner {
 
 	protected FlowPane toolBar;
 	protected Button addButton;
@@ -251,7 +253,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			columnsSettingsButton.setOnMouseClicked(mouseEvent -> this.columnsSettingsButtonAction());
 			columnsSettingsButton.setTooltip(new Tooltip("Select visible columns"));
 
-			return new FlowPane(searchButton, tableSelectButton, settingsButton, columnsSettingsButton, refreshButton,
+			return new FlowPane(searchButton, tableSelectButton, columnsSettingsButton, settingsButton, refreshButton,
 					addButton, editButton, deleteButton, importCsvButton, exportCsvButton, sqlConsoleButton);
 		} else {
 			return new FlowPane(searchButton, settingsButton);
@@ -337,7 +339,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return tab;
 	}
 
-	private void setInputMap() {
+	@Override
+	public void setInputMap() {
 		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
 				action -> this.searchButtonAction()));
 		Nodes.addInputMap(this,
@@ -507,11 +510,14 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		MenuItem menuItemCopy = new MenuItem("Copy row", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(actionEvent -> this.copyAction());
 
+		MenuItem menuItemSearch = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
+		menuItemSearch.setOnAction(actionEvent -> searchButtonAction());
+		
 		MenuItem menuItemCompare = new MenuItem("Compare", JavaFXUtils.createIcon("/icons/compare.png"));
 		menuItemCompare.setOnAction(actionEvent -> compareAction(simulateClickEvent()));
 
-		contextMenu.getItems().addAll(menuItemEdit, menuItemCellEdit, menuItemCopyCell, menuItemCopy, menuItemCompare,
-				menuItemDelete);
+		contextMenu.getItems().addAll(menuItemCopyCell, menuItemCopy, new SeparatorMenuItem(), menuItemEdit, menuItemCellEdit,
+				menuItemDelete, new SeparatorMenuItem(), menuItemSearch, menuItemCompare);
 
 		return contextMenu;
 	}

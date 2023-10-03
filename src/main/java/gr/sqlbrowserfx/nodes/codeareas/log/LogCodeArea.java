@@ -16,6 +16,7 @@ import org.fxmisc.wellbehaved.event.Nodes;
 import org.reactfx.Subscription;
 
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
+import gr.sqlbrowserfx.nodes.InputMapOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SimpleLineNumberFactory;
@@ -28,7 +29,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 
-public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLighter {
+public class LogCodeArea extends CodeArea implements ContextMenuOwner, InputMapOwner, HighLighter {
 
 	private SearchAndReplacePopOver searchAndReplacePopOver;
 	private SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
@@ -67,7 +68,8 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, HighLight
 		}
 	}
 	
-	protected void setInputMap() {
+	@Override
+	public void setInputMap() {
 		Nodes.addInputMap(this, 
 				InputMap.consume(
 				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),

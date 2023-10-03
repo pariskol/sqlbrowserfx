@@ -8,6 +8,7 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import org.json.JSONArray;
 
+import gr.sqlbrowserfx.nodes.InputMapOwner;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,7 +18,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 
-public class JSONTableView extends TableView<MapTableViewRow> {
+public class JSONTableView extends TableView<MapTableViewRow> implements InputMapOwner {
 
 	protected List<String> columns;
 	protected ObservableList<MapTableViewRow> rows;
@@ -56,7 +57,8 @@ public class JSONTableView extends TableView<MapTableViewRow> {
 		});
 	}
 
-	protected void setInputMap() {
+	@Override
+	public void setInputMap() {
 		Nodes.addInputMap(this, 
 				InputMap.consume(
 				EventPattern.keyPressed(KeyCode.LEFT, KeyCombination.CONTROL_DOWN),
