@@ -55,6 +55,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
@@ -75,6 +76,7 @@ import javafx.stage.Stage;
 
 public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwner, InputMapOwner {
 
+	private static final int MAX_ENTRY_POP_OVER_HEIGHT = 800;
 	protected FlowPane toolBar;
 	protected Button addButton;
 	protected Button editButton;
@@ -524,22 +526,21 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	@SuppressWarnings("unused")
 	private SqlTableRowEditBox createEditBox(final MapTableViewRow sqlTableRow) {
-		return isInFullMode() ? createEditBox(sqlTableRow, true) : createEditBox(sqlTableRow, false);
+		return createEditBox(sqlTableRow, isInFullMode());
 	}
 
 	@SuppressWarnings("unused")
 	private SqlTableRowEditBox createEditBox(final MapTableViewRow sqlTableRow, Orientation toolBarOrientation) {
-		return isInFullMode() ? createEditBox(sqlTableRow, true, toolBarOrientation)
-				: createEditBox(sqlTableRow, false, toolBarOrientation);
+		return createEditBox(sqlTableRow, isInFullMode(), toolBarOrientation);
 	}
 
-	private SqlTableRowEditBox createEditBox(final MapTableViewRow sqlTableRow, boolean resizeable) {
-		return createEditBox(sqlTableRow, resizeable, Orientation.HORIZONTAL);
+	private SqlTableRowEditBox createEditBox(final MapTableViewRow sqlTableRow, boolean isResizable) {
+		return createEditBox(sqlTableRow, isResizable, Orientation.HORIZONTAL);
 	}
 
-	private SqlTableRowEditBox createEditBox(final MapTableViewRow sqlTableRow, boolean resizeable,
+	private SqlTableRowEditBox createEditBox(final MapTableViewRow sqlTableRow, boolean isResizable,
 			Orientation toolBarOrientation) {
-		SqlTableRowEditBox editBox = new SqlTableRowEditBox(getSelectedSqlTableView(), sqlTableRow, resizeable);
+		SqlTableRowEditBox editBox = new SqlTableRowEditBox(getSelectedSqlTableView(), sqlTableRow, isResizable);
 
 		Button copyButton = new Button("", JavaFXUtils.createIcon("/icons/copy.png"));
 		copyButton.setTooltip(new Tooltip("Copy"));
@@ -572,6 +573,12 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			break;
 		}
 
+		if (isResizable) {
+			for (Node node : editBox.getChildren()) {
+				if (node instanceof HBox)
+					((HBox) node).prefWidthProperty().bind(editBox.widthProperty());
+			}
+		}
 		return editBox;
 	}
 
@@ -602,11 +609,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		editBox.getToolbar().getChildren().addAll(clearBtn);
 		editBox.setActionButton(addBtn);
-
-		for (Node node : editBox.getChildren()) {
-			if (node instanceof HBox)
-				((HBox) node).prefWidthProperty().bind(editBox.widthProperty());
-		}
 
 		addRecordTab.setContent(editBox);
 		recordsTabPane.getTabs().add(0, addRecordTab);
@@ -792,10 +794,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		editButton.setOnAction(event -> this.updateRecordOfSqlTableView(editBox, sqlTableRow));
 		editBox.setActionButton(editButton);
 
-		for (Node node : editBox.getChildren()) {
-			if (node instanceof HBox)
-				((HBox) node).prefWidthProperty().bind(editBox.widthProperty());
-		}
 
 		String tabTitle = sqlTableRow.get(getSelectedSqlTableView().getPrimaryKey()) != null
 				? sqlTableRow.get(getSelectedSqlTableView().getPrimaryKey()).toString()
@@ -842,8 +840,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		addBtn.setTooltip(new Tooltip("Add"));
 		editBox.setActionButton(addBtn);
 
-		popOver = new CustomPopOver(editBox);
-		popOver.setHeight(editBox.getMainBox().getHeight());
+		ScrollPane sp = new ScrollPane(editBox);
+		sp.setMaxHeight(MAX_ENTRY_POP_OVER_HEIGHT);
+		sp.setFitToWidth(true);
+		popOver = new CustomPopOver(sp);
 
 		addBtn.setOnAction(submitEvent -> this.insertRecordToSqlTableViewRef(editBox));
 
@@ -866,7 +866,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		SqlTableRowEditBox editBox = this.createEditBox(sqlTableRow, false);
 		sqlTableRow.addObserver(editBox);
 
-		popOver = new CustomPopOver(editBox);
+		ScrollPane sp = new ScrollPane(editBox);
+		sp.setMaxHeight(MAX_ENTRY_POP_OVER_HEIGHT);
+		sp.setFitToWidth(true);
+		popOver = new CustomPopOver(sp);
 
 		if (sqlTableView.getPrimaryKey() != null) {
 			Button editBtn = new Button("Edit", JavaFXUtils.createIcon("/icons/check.png"));
@@ -919,20 +922,13 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	private void compareAction(MouseEvent mouseEvent) {
-		if (getSelectedSqlTableView().getSelectionModel().getSelectedItems().size() > 4) {
+		if (getSelectedSqlTableView().getSelectionModel().getSelectedItems().size() > 10) {
 			DialogFactory.createErrorNotification(new Exception("Too much elements to compare!"));
 			return;
 		}
 
-		VBox compareBox = new VBox();
-		HBox compareRowBox = null;
-		int cells = 2;
+		HBox compareBox = new HBox();
 		for (MapTableViewRow row : getSelectedSqlTableView().getSelectionModel().getSelectedItems()) {
-			if (cells == 2) {
-				compareRowBox = new HBox();
-				// compareRowBox.prefWidthProperty().bind(compareBox.widthProperty());
-				compareBox.getChildren().add(compareRowBox);
-			}
 			SqlTableRowEditBox editBox = createEditBox(row, true);
 
 			row.addObserver(editBox);
@@ -941,11 +937,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			editButton.setOnAction(event -> this.updateRecordOfSqlTableView(editBox, row));
 			editBox.setActionButton(editButton);
 			editBox.prefWidthProperty().bind(compareBox.widthProperty().divide(2));
-			compareRowBox.getChildren().add(editBox);
-
-			cells--;
-			if (cells == 0)
-				cells = 2;
+			compareBox.getChildren().add(editBox);
 
 			editBox.setOnClose(() -> row.removeObserver(editBox));
 		}
@@ -956,21 +948,19 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			compareTab.setContent(compareBox);
 			compareTab.setOnCloseRequest(closeEvent -> {
 				for (Node node : compareBox.getChildren()) {
-					HBox hbox = (HBox) node;
-					for (Node editBox : hbox.getChildren())
-						((SqlTableRowEditBox) editBox).close();
+					((SqlTableRowEditBox) node).close();
 				}
 			});
 			getSelectedTableTab().getRecordsTabPane().getTabs().add(compareTab);
 			getSelectedTableTab().getRecordsTabPane().getSelectionModel().select(compareTab);
 		} else {
-			compareBox.setPrefWidth(800);
+			compareBox.setMaxHeight(MAX_ENTRY_POP_OVER_HEIGHT);
+			compareBox.setMaxWidth(1600);
+			compareBox.setPrefWidth(compareBox.getChildren().size() * 400);
 			popOver = new CustomPopOver(compareBox);
 			popOver.setOnHidden(closeEvent -> {
 				for (Node node : compareBox.getChildren()) {
-					HBox hbox = (HBox) node;
-					for (Node editBox : hbox.getChildren())
-						((SqlTableRowEditBox) editBox).close();
+					((SqlTableRowEditBox) node).close();
 				}
 			});
 			popOver.show(editButton, mouseEvent.getScreenX(), mouseEvent.getScreenY());
