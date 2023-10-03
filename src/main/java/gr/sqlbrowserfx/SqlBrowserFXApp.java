@@ -60,6 +60,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
@@ -474,7 +475,7 @@ public class SqlBrowserFXApp extends Application {
 					new DockNode(dockPane, jsonTableView, "JSON table", JavaFXUtils.createIcon("/icons/web.png")));
 		});
 		
-		var filesTreeViewItem = new MenuItem("Open Files Tree View", JavaFXUtils.createIcon("/icons/structure.png"));
+		var filesTreeViewItem = new MenuItem("Open Files Tree View", JavaFXUtils.createIcon("/icons/folder.png"));
 		filesTreeViewItem.setOnAction(event -> {
 			var chooser = new DirectoryChooser();
 			var selectedDir = chooser.showDialog(null);
@@ -484,7 +485,7 @@ public class SqlBrowserFXApp extends Application {
 			var filesTreeView = new FilesTreeView(selectedDir.getAbsolutePath());
 			if (selectedDir != null) {
 				JavaFXUtils.zoomToCurrentFactor(
-						new DockNode(dockPane, filesTreeView, "Files Tree View", JavaFXUtils.createIcon("/icons/structure.png")));
+						new DockNode(dockPane, filesTreeView, "Files Tree View", JavaFXUtils.createIcon("/icons/folder.png")));
 			}
 		});
 		
@@ -492,14 +493,16 @@ public class SqlBrowserFXApp extends Application {
 		var logItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
 		logItem.setOnAction(actionEvent -> JavaFXUtils.zoomToCurrentFactor(new DLogConsolePane(dockPane).asDockNode()));
 
-		var dbDiagramItem = new MenuItem("Open DB Diagram", JavaFXUtils.createIcon("/icons/diagram.png"));
+		var dbDiagramItem = new MenuItem("Open DB Diagram View", JavaFXUtils.createIcon("/icons/diagram.png"));
 		dbDiagramItem.setOnAction(event -> {
 			var dbDiagramPane = new DDbDiagramPane(sqlConnector);
 			dbDiagramPane.asDockNode().setDockPane(dockPane);
 			dbDiagramPane.asDockNode().setFloating(true);
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, dbDiagramItem, filesTreeViewItem, logItem);
+		menu1.getItems().addAll(sqlPaneViewItem, dbDiagramItem, new SeparatorMenuItem(),
+				filesTreeViewItem, jsonTableViewItem, new SeparatorMenuItem(),
+				sqlConsoleViewItem, logItem);
 
 		final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
