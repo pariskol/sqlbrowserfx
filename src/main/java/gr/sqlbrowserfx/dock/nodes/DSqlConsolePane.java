@@ -131,7 +131,6 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 				DockNode dockNode = new DockNode(this.asDockNode().getDockPane(), historyBox, "Query history", JavaFXUtils.createIcon("/icons/monitor.png"));
 				datePicker.prefWidthProperty().unbind();
 				datePicker.prefWidthProperty().bind(historyBox.widthProperty());
-//				dockNode.dock(this.asDockNode().getDockPane(), DockPos.RIGHT, this.asDockNode(),DockWeights.asDoubleArrray(0.7f, 0.3f));
 				dockNode.setOnClose(() -> historyShowing = false);
 			}
 		});

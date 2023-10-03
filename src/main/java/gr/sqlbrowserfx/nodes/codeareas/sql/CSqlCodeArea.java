@@ -18,6 +18,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -78,7 +79,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 			DialogFactory.createErrorNotification(e);
 		}
 
-		Button addButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
+		Button addButton = new Button("Save", JavaFXUtils.createIcon("/icons/save.png"));
 		addButton.setOnAction(event -> {
 			sqlConnector.executeAsync(() -> {
 				try {
@@ -95,7 +96,15 @@ public class CSqlCodeArea extends SqlCodeArea {
 			});
 		});
 
-		VBox vb = new VBox(categoryField, descriptionField, addButton);
+		categoryField.setPromptText("Write a name to create new...");
+		VBox vb = new VBox(
+				new Label("Choose category"), 
+				categoryField, 
+				descriptionField, 
+				addButton);
+		vb.setPrefWidth(300);
+
+		categoryField.prefWidthProperty().bind(vb.widthProperty());
 		saveQueryPopOver  = new PopOver(vb);
 		
 		categoryField.setOnKeyPressed(keyEvent -> {
@@ -110,7 +119,8 @@ public class CSqlCodeArea extends SqlCodeArea {
 		});
 		saveQueryPopOver.setArrowSize(0);
 		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-		saveQueryPopOver.show(this, boundsInScene.getMinX()+saveQueryPopOver.getWidth()/3, boundsInScene.getMinY()-saveQueryPopOver.getHeight()/2);
+		saveQueryPopOver.show(getParent(), boundsInScene.getMinX() + saveQueryPopOver.getWidth() / 3,
+				boundsInScene.getMinY() - saveQueryPopOver.getHeight() / 2);
 	}
 
 }
