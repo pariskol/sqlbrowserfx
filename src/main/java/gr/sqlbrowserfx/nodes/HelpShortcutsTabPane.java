@@ -38,6 +38,8 @@ public class HelpShortcutsTabPane extends TabPane {
 		addShortcut("Show Suggestions", "Ctrl+Space", rows);
 		addShortcut("Show Saved Queries", "Ctrl+Shift+Space", rows);
 		addShortcut("Search And Replace (optional selected text)", "Ctrl+F", rows);
+		addShortcut("Show History", "Ctrl+H", rows);
+		addShortcut("File Quick Access", "Ctrl+O", rows);
 		addShortcut("Run Query (optional selected text)", "Ctrl+Enter", rows);
 		addShortcut("Copy", "Ctrl+C", rows);
 		addShortcut("Paste", "Ctrl+P", rows);
