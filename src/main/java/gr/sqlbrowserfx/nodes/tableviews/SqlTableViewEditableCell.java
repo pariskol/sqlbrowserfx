@@ -41,8 +41,6 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 
 	@Override
 	protected void updateItem(Object item, boolean empty) {
-		// is this needed? in ListView cell causes problems to scrolling not to call super.updateItem()
-//		super.updateItem(item, empty);
 		if (item == null || empty) {
 			setText(null);
 		} else if (!item.equals(getText())) {

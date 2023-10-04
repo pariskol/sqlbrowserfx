@@ -337,9 +337,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 			col.setCellValueFactory(param -> {
 				return param.getValue().getObjectProperty(column);
 			});
-			col.setCellFactory(callback -> {
-				return new SqlTableViewCell();
-			});
+			col.setCellFactory(callback -> new SqlTableViewCell());
 			this.getColumns().add(col);
 		}
 	}
