@@ -3,6 +3,8 @@ package gr.sqlbrowserfx.nodes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
@@ -11,12 +13,17 @@ import org.fxmisc.wellbehaved.event.Nodes;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import javafx.geometry.Bounds;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.ClipboardContent;
@@ -24,22 +31,31 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenuOwner, InputMapOwner {
 
 	private String rootPath;
 	private TreeItem<TreeViewFile> rootItem, selectedRootItem;
 	
+	private SimpleBooleanProperty isFileProperty = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty isLeafMenuProperty = new SimpleBooleanProperty(false);
+
+	
 	private TextField searchField;
+	private Label searResultsLabel;
 	private Integer lastSelectedItemPos = 0;
-	private List<TreeItem<TreeViewFile>> searchResultsList = new ArrayList<>();
+	private List<TreeItem<TreeViewFile>> searchResultsTreeItemsList = new ArrayList<>();
 	private Button nextSearchResultButton;
+	private ListView<TreeViewFile> searchResultsListView;
+	private CustomPopOver popOver;
 
 	public FilesTreeView(String rootPath) {
 		this.rootPath = rootPath;
 		this.refresh();
 		this.setContextMenu(this.createContextMenu());
 
+		searResultsLabel = new Label("No results");
 		searchField = new TextField();
 		searchField.setPromptText("Search...");
 		searchField.setOnKeyPressed(keyEvent -> {
@@ -48,13 +64,14 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 			}
 		});
 		nextSearchResultButton = new Button("", JavaFXUtils.createIcon("/icons/next.png"));
+		nextSearchResultButton.setTooltip(new Tooltip("Go to next tree item"));
 		nextSearchResultButton.setOnAction(event -> {
-			if (searchResultsList.isEmpty())
+			if (searchResultsTreeItemsList.isEmpty())
 				return;
-			lastSelectedItemPos = lastSelectedItemPos == searchResultsList.size() - 1 ? 0 : ++lastSelectedItemPos;
+			lastSelectedItemPos = lastSelectedItemPos == searchResultsTreeItemsList.size() - 1 ? 0 : ++lastSelectedItemPos;
 			this.getSelectionModel().clearSelection();
-			this.getSelectionModel().select(searchResultsList.get(lastSelectedItemPos));
-			int row = this.getRow(searchResultsList.get(lastSelectedItemPos));
+			this.getSelectionModel().select(searchResultsTreeItemsList.get(lastSelectedItemPos));
+			int row = this.getRow(searchResultsTreeItemsList.get(lastSelectedItemPos));
 			this.scrollTo(row);
 		});
 		
@@ -75,6 +92,10 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		});
 		
 		this.setOnMouseClicked(event -> {
+			if (popOver != null && popOver.isShowing()) {
+				popOver.hide();
+			}
+			
 			if (event.getClickCount() == 2) {
 				var file = this.getSelectionModel().getSelectedItem().getValue().asFile();
 				
@@ -87,6 +108,11 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 			event.consume();
 		});
 		
+		this.getSelectionModel().selectedItemProperty().addListener((ob, ov, nv) -> {
+			if (nv == null) return;
+			this.isFileProperty.set(nv.getValue().isFile());
+			this.isLeafMenuProperty.set(!nv.isLeaf());
+		});
 		this.setInputMap();
 	}
 
@@ -98,20 +124,32 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 	
 	private void searchFieldAction() {
 		this.lastSelectedItemPos = -1;
-		this.searchResultsList.clear();
+		this.searchResultsTreeItemsList.clear();
 		this.getSelectionModel().clearSelection();
 
-		searchRootItem(this.getRoot());
+		Executors.newSingleThreadExecutor().execute(() -> {
+			searchRootItem(this.getRoot());
+			Platform.runLater(() -> {
+				this.searResultsLabel.setText(this.searchResultsTreeItemsList.size() + " results");
+				var l = this.searchResultsTreeItemsList.stream().filter(ti -> ti.getValue().isFile()).map(ti -> ti.getValue())
+						.collect(Collectors.toList());
+				l.sort((a, b) -> a.getName().compareTo(b.getName()));
+				this.searchResultsListView.setItems(FXCollections.observableArrayList(l));
+			});
+		});
 	}
 
 	private void searchRootItem(TreeItem<TreeViewFile> rootItem) {
 		if (rootItem == null)
 			return;
 
-		for (var t : rootItem.getChildren()) {
-			if (t.getValue().getName().matches("(?i:.*" + searchField.getText() + ".*)")) {
-				this.getSelectionModel().select(t);
-				searchResultsList.add(t);
+		for (var treeItem : rootItem.getChildren()) {
+			if (treeItem.getValue().isDirectory()) {
+				searchRootItem(treeItem);
+			}
+			
+			if (treeItem.getValue().getName().matches("(?i:.*" + searchField.getText() + ".*)")) {
+				searchResultsTreeItemsList.add(treeItem);
 			}
 		}
 	}
@@ -172,10 +210,41 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		rootItem.setExpanded(true);
 	}
 
+	private void createSearPopOver() {
+		var vb = new VBox(
+				new Label("Type and press enter"),
+				new HBox(searchField, nextSearchResultButton),
+				searResultsLabel,
+				searchResultsListView
+			);
+		
+		popOver = new CustomPopOver(vb);
+	}
+	
 	public void showSearchPopup() {
-		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-		CustomPopOver popOver = new CustomPopOver(new HBox(searchField, nextSearchResultButton));
-		popOver.show(this, boundsInScene.getMaxX() - 300, boundsInScene.getMinY());
+		var boundsInScene = this.localToScreen(this.getBoundsInLocal());
+
+		if (searchResultsListView == null) {
+			searchResultsListView = new ListView<TreeViewFile>();
+			searchResultsListView.setOnMouseClicked(event -> {
+				if (event.getClickCount() == 2) {
+					var file = searchResultsListView.getSelectionModel().getSelectedItem().asFile();
+
+					if (file.isFile()) {
+						var sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
+						sqlConsolePane.openNewFileTab(file);
+					}
+				}
+
+				event.consume();
+			});
+		}
+		
+		if (popOver == null) {
+			createSearPopOver();
+		}
+		
+		popOver.show(getParent(), boundsInScene.getMaxX(), boundsInScene.getMinY());
 	}
 	
 	@Override
@@ -185,6 +254,7 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		var menuItemSearch = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
 		menuItemSearch.setOnAction(event -> this.showSearchPopup());
 		var menuItemCollapseAll = new MenuItem("Collapse All", JavaFXUtils.createIcon("/icons/collapse.png"));
+		menuItemCollapseAll.disableProperty().bind(this.isLeafMenuProperty.not());
 		menuItemCollapseAll.setOnAction(event -> {
 			if (this.getSelectionModel().getSelectedItem() != null)
 				this.collapseAll(this.getSelectionModel().getSelectedItem());
@@ -194,7 +264,11 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		menuItemRefresh.setOnAction(event -> refresh());
 		
 		var menuItemNewRoot = new MenuItem("Select As Root", JavaFXUtils.createIcon("/icons/folder.png"));
+		menuItemNewRoot.disableProperty().bind(this.isFileProperty);
 		menuItemNewRoot.setOnAction(event -> {
+			if (this.getSelectionModel().getSelectedItem() == null)
+				return;
+			
 			this.selectedRootItem = this.getSelectionModel().getSelectedItem();
 			this.setRoot(this.selectedRootItem);
 			this.selectedRootItem.setExpanded(true);
