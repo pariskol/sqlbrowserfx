@@ -30,16 +30,16 @@ import javafx.scene.layout.HBox;
 
 public class ColumnCreationBox extends HBox {
 
-	private Button deleteButton;
-	private ComboBox<String> typeComboBox;
-	private ComboBox<String> columnsComboBox;
-	private ComboBox<String> tablesComboBox;
-	private TextField columnNameField;
-	private CheckBox fkCheckBox;
-	private CheckBox nnCheckBox;
-	private CheckBox pkCheckBox;
-	private CheckBox uCheckBox;
-	private SqlConnector sqlConnector;
+	private final Button deleteButton;
+	private final ComboBox<String> typeComboBox;
+	private final ComboBox<String> columnsComboBox;
+	private final ComboBox<String> tablesComboBox;
+	private final TextField columnNameField;
+	private final CheckBox fkCheckBox;
+	private final CheckBox nnCheckBox;
+	private final CheckBox pkCheckBox;
+	private final CheckBox uCheckBox;
+	private final SqlConnector sqlConnector;
 	
 	public ColumnCreationBox(SqlConnector sqlConnector, ListView<ColumnCreationBox> parent) {
 		this.sqlConnector = sqlConnector;

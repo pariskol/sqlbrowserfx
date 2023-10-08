@@ -26,16 +26,14 @@ import javafx.scene.input.KeyCombination;
 
 public class SimpleFileCodeArea extends AutoCompleteCodeArea<SimpleFileCodeAreaSyntaxProvider> implements FileCodeArea {
 
-	private File file;
+	private final File file;
 	private String lastSavedContent;
 	
 	public SimpleFileCodeArea(File file) {
 		super();
 		this.file = file;
-		try {
-			lastSavedContent = StringUtils.join(
-				Files.lines(Paths.get(file.getAbsolutePath()))
-				 	 .collect(Collectors.toList()), "\n");
+		try(var lines = Files.lines(Paths.get(file.getAbsolutePath()))) {
+			lastSavedContent = StringUtils.join(lines.collect(Collectors.toList()), "\n");
 		} catch (IOException e) {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not load file " + file.getName(), e);
 		}
@@ -51,19 +49,15 @@ public class SimpleFileCodeArea extends AutoCompleteCodeArea<SimpleFileCodeAreaS
     	return file.getPath();
     }
     
-    public String getFileName() {
-    	return file.getName();
-    }
-    
 	public void saveFileAction() {
 		try {
 			Files.write(Paths.get(this.getPath()), this.getText().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
 			this.lastSavedContent = this.getText();
 			getUndoManager().forgetHistory();
 		} catch (IOException e) {
-			e.printStackTrace();
+			DialogFactory.createErrorDialog(e);
 		}
-		DialogFactory.createNotification("File saved", "File saved at " + new Date().toString());
+		DialogFactory.createNotification("File saved", "File saved at " + new Date());
 	}
 	
 	@Override

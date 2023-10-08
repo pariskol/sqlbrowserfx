@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import io.javalin.plugin.bundled.CorsPluginConfig;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -24,7 +25,7 @@ public class RESTfulService {
 	
 	public static void init(SqlConnector sqlConnector) {
 		APP = Javalin.create(config -> {
-			config.plugins.enableCors(cors -> cors.add(corsConfig -> corsConfig.anyHost()));
+			config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
 			config.plugins.enableDevLogging();
 		});
 		APP.exception(Exception.class, (e, ctx) -> {
@@ -52,18 +53,18 @@ public class RESTfulService {
 			JSONObject jsonObject = new JSONObject(ctx.body());
 			
 			String table = ctx.pathParam("table");
-			String columns = "";
-			String values = "";
+			StringBuilder columns = new StringBuilder();
+			StringBuilder values = new StringBuilder();
 			List<Object> params = new ArrayList<>();
 			
 			for (String key : jsonObject.keySet()) {
-				columns += key + ", ";
-				values += "?, ";
+				columns.append(key).append(", ");
+				values.append("?, ");
 				params.add(jsonObject.get(key));
 			}
 			
-			columns = columns.substring(0, columns.length() - ", ".length());
-			values = values.substring(0, values.length() - ", ".length());
+			columns = new StringBuilder(columns.substring(0, columns.length() - ", ".length()));
+			values = new StringBuilder(values.substring(0, values.length() - ", ".length()));
 			
 			String query = "insert into " + table + " (" + columns
 					+ ") values (" + values + ")";
@@ -91,48 +92,41 @@ public class RESTfulService {
 		
 		APP.get("/api/get/{table}", (ctx) -> {
 			String table = ctx.pathParam("table");
-			if (table == null)
-				throw new Exception("param 'table' is invalid");
 
 			StringBuilder whereFilter = new StringBuilder(" where 1=1 ");
 			List<Object> params = new ArrayList<>();
 			
-			ctx.queryParamMap().entrySet().forEach(e -> {
-				String actualParam = e.getKey();
-				String value = e.getValue().get(0);
-				String actualValue = value;
-				String operator = "=";
-				String logic = " and ";
-				
-				if (value.startsWith(">=") || value.startsWith("<=")) {
-					operator = value.substring(0, 2);
-					actualValue = value.substring(2, value.length());
-				} else if (value.startsWith(">") || value.startsWith("<")) {
-					operator = value.substring(0, 1);
-					actualValue = value.substring(1, value.length());
-				}
-				
-				if (actualParam.startsWith("|")) {
-					logic = " or ";
-					actualParam = actualParam.substring(1, actualParam.length());
-				}
-				
-				whereFilter.append(logic + actualParam + operator + "?");
-				params.add(actualValue);
-			});
+			ctx.queryParamMap().forEach((actualParam, value1) -> {
+                String value = value1.get(0);
+                String actualValue = value;
+                String operator = "=";
+                String logic = " and ";
+
+                if (value.startsWith(">=") || value.startsWith("<=")) {
+                    operator = value.substring(0, 2);
+                    actualValue = value.substring(2);
+                } else if (value.startsWith(">") || value.startsWith("<")) {
+                    operator = value.substring(0, 1);
+                    actualValue = value.substring(1);
+                }
+
+                if (actualParam.startsWith("|")) {
+                    logic = " or ";
+                    actualParam = actualParam.substring(1);
+                }
+
+                whereFilter.append(logic).append(actualParam).append(operator).append("?");
+                params.add(actualValue);
+            });
 
 			List<Object> data = new ArrayList<>();
-			try {
-				logger.debug("Executing : select * from " + table + " " + whereFilter.toString()  + " , " + params.toString());
-				sqlConnector.executeQuery("select * from " + table + whereFilter.toString(), params, rset -> {
-					HashMap<String, Object> dto = DTOMapper.mapUnsafely(rset);
-					data.add(dto);
-				});
-			} catch (Exception e) {
-				throw e;
-			}
+            logger.debug("Executing : select * from " + table + " " + whereFilter + " , " + params);
+            sqlConnector.executeQuery("select * from " + table + whereFilter, params, rset -> {
+                HashMap<String, Object> dto = DTOMapper.mapUnsafely(rset);
+                data.add(dto);
+            });
 
-			ctx.result(new JSONArray(data).toString());
+            ctx.result(new JSONArray(data).toString());
 		});
 
 	}

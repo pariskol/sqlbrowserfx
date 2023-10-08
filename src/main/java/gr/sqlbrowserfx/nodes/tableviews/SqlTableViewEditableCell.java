@@ -4,7 +4,6 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.TableCell;
@@ -64,9 +63,7 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 		Platform.runLater(() -> {
 			textField.requestFocus();
 			textField.selectAll();
-			textField.focusedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
-				cancelEdit();
-			});
+			textField.focusedProperty().addListener((observable, oldValue, newValue) -> cancelEdit());
 		});
 
 	}
@@ -99,10 +96,7 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 	protected TextField createTextField() {
 		TableViewCellEditField textField = new TableViewCellEditField(getText(), this);
 
-		if (sqlConnector != null)
-			textField.setEditable(true);
-		else
-			textField.setEditable(false);
+        textField.setEditable(sqlConnector != null);
 
 //		textField.setAlignment(Pos.CENTER);
 		textField.setStyle("-fx-border-width: 0.0 0.0 0.0 0.0; -fx-padding: 0;");

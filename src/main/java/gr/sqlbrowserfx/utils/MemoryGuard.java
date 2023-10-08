@@ -11,7 +11,7 @@ import gr.sqlbrowserfx.factories.DialogFactory;
 
 public class MemoryGuard {
 
-	private static int MEMORY_DIVIDER = 10;
+	private static final int MEMORY_DIVIDER = 10;
 	public static Integer SQL_MEMORY_ERROR_CODE = 1234;
 	/**
 	 * A new thread monitors the execution of a query, in

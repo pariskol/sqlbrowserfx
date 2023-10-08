@@ -13,7 +13,7 @@ import com.squareup.okhttp.ResponseBody;
 
 public class HttpClient {
 
-    private static OkHttpClient client = new OkHttpClient();
+    private static final OkHttpClient client = new OkHttpClient();
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
 

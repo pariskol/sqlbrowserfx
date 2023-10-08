@@ -14,7 +14,6 @@ import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
 import javafx.geometry.Orientation;
@@ -34,16 +33,16 @@ import javafx.scene.paint.Color;
 
 public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<MapTableViewRow> {
 
-	private LinkedHashMap<String, TextArea> fieldsMap;
-	private List<String> columns;
+	private final LinkedHashMap<String, TextArea> fieldsMap;
+	private final List<String> columns;
 	private Runnable closeAction;
 	private MapTableViewRow sqlTableRow;
-	private VBox centerBox;
+	private final VBox centerBox;
 	private FlowPane toolbar;
 	private ScrollPane scrollPane;
-	private Label messageLabel;
+	private final Label messageLabel;
 	private Button actionButton;
-	private TextArea detailsArea;
+	private final TextArea detailsArea;
 	private TextArea lastSelectedTextArea;
 
 	public SqlTableRowEditBox(SqlTableView sqlTableView, MapTableViewRow sqlTableRow, boolean resizeable) {
@@ -71,21 +70,21 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 						this.actionButton.requestFocus();
 				} else if (event.getCode() == KeyCode.TAB) {
 					List<TextArea> l = new ArrayList<>(fieldsMap.values());
-					int i = 0;
+					int i;
 					for (i = 0; i < l.size(); i++) {
 						if (l.get(i).equals(textArea))
 							break;
 					}
 					if (event.isShiftDown() && i > 0)
 						l.get(i - 1).requestFocus();
-					else if (actionButton != null && (i == l.size() - 1 || (event.isShiftDown() && i == 0)))
+					else if (actionButton != null && (i == l.size() - 1 || event.isShiftDown()))
 						this.actionButton.requestFocus();
 					else if (i < l.size() - 1)
 						l.get(i + 1).requestFocus();
 				}
 				else if(event.getCode() == KeyCode.DOWN) {
 					List<TextArea> l = new ArrayList<>(fieldsMap.values());
-					int i = 0;
+					int i;
 					for (i = 0; i < l.size(); i++) {
 						if (l.get(i).equals(textArea))
 							break;
@@ -95,7 +94,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 				}
 				else if(event.getCode() == KeyCode.UP) {
 					List<TextArea> l = new ArrayList<>(fieldsMap.values());
-					int i = 0;
+					int i;
 					for (i = 0; i < l.size(); i++) {
 						if (l.get(i).equals(textArea))
 							break;
@@ -115,9 +114,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			else
 				textArea.setText("");
 			//FIXME binding does not work correctly
-			textArea.textProperty().addListener((obs, o, n) -> {
-				detailsArea.setText(n);
-			});
+			textArea.textProperty().addListener((obs, o, n) -> detailsArea.setText(n));
 			textArea.focusedProperty().addListener((obs, unfocused, focused) -> {
 				if (focused) {
 					lastSelectedTextArea = textArea;
@@ -202,10 +199,6 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 		
 	}
 
-	public List<TextArea> getTextFields() {
-		return new ArrayList<>(fieldsMap.values());
-	}
-
 	public HashMap<String, TextArea> getMap() {
 		return fieldsMap;
 	}
@@ -234,14 +227,11 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 	}
 	
 	public void put(String columnName, String value) {
-		this.fieldsMap.get(columnName).setText(value);;
+		this.fieldsMap.get(columnName).setText(value);
 	}
 
 	public void copy() {
-		StringBuilder content = new StringBuilder();
-		content.append(sqlTableRow.toString());
-
-		StringSelection stringSelection = new StringSelection(content.toString());
+		StringSelection stringSelection = new StringSelection(sqlTableRow.toString());
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
 	}
@@ -270,16 +260,6 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 		return scrollPane;
 	}
 	
-	public void updateMessageLabel(String text) {
-		Platform.runLater(() -> messageLabel.setText(text));
-		
-	}
-
-	
-	public VBox getMainBox() {
-		return centerBox;
-	}
-	
 	public void setActionButton(Button button) {
 		this.actionButton = button;
 		this.actionButton.setOnKeyPressed(event -> {
@@ -296,12 +276,8 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 		this.centerBox.getChildren().add(actionButton);
 	}
 
-	public void setScrollPane(ScrollPane scrollPane) {
-		this.scrollPane = scrollPane;
-	}
-
 	@Override
-	public void onObservaleChange(MapTableViewRow newValue) {
+	public void onObservableChange(MapTableViewRow newValue) {
 		for (String column : columns) {
 			TextArea textField = fieldsMap.get(column);
 			String newText = newValue.get(column) != null ? newValue.get(column).toString() : null;
@@ -311,9 +287,9 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 	
 	@Override
 	public String toString() {
-		StringBuilder sb = new StringBuilder("");
+		StringBuilder sb = new StringBuilder();
 		for (String key : fieldsMap.keySet()) {
-			sb.append(key + " : " + fieldsMap.get(key).getText() + "\n");
+			sb.append(key).append(" : ").append(fieldsMap.get(key).getText()).append("\n");
 		}
 		return sb.toString();
 	}

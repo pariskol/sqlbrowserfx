@@ -28,13 +28,13 @@ public class FileSearchPopOver extends CustomPopOver {
 
 	@FunctionalInterface
 	public interface Action {
-		public void run(File selectedFile);
+		void run(File selectedFile);
 	}
 
-	private Action action;
+	private final Action action;
 	private ScheduledExecutorService executor;
-	private TextField searchField;
-	private ListView<String> filesListView;
+	private final TextField searchField;
+	private final ListView<String> filesListView;
 	private String rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
 			.replaceAll("\"", "");
 
@@ -46,31 +46,31 @@ public class FileSearchPopOver extends CustomPopOver {
 		openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
 		openButton.setTooltip(new Tooltip("Open file"));
 		
-		filesListView = new ListView<String>();
-		filesListView.setCellFactory(param -> new ListCell<String>() {
-			@Override
-			protected void updateItem(String item, boolean empty) {
-				super.updateItem(item, empty);
-				if (empty || item == null) {
-					setGraphic(null);
-					setText(null);
-					// other stuff to do...
+		filesListView = new ListView<>();
+		filesListView.setCellFactory(param -> new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                    setText(null);
+                    // other stuff to do...
 
-				} else {
+                } else {
 
-					// set the width's
-					setMinWidth(param.getWidth());
-					setMaxWidth(param.getWidth());
-					setPrefWidth(param.getWidth());
+                    // set the width's
+                    setMinWidth(param.getWidth());
+                    setMaxWidth(param.getWidth());
+                    setPrefWidth(param.getWidth());
 
-					// allow wrapping
-					setWrapText(true);
+                    // allow wrapping
+                    setWrapText(true);
 
-					setText(item.toString());
+                    setText(item);
 
-				}
-			}
-		});
+                }
+            }
+        });
 		filesListView.setPrefSize(600, 400);
 
 		searchField = new TextField();

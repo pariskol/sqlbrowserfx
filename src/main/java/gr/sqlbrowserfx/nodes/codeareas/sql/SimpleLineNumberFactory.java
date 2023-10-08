@@ -13,7 +13,7 @@ import javafx.scene.control.Label;
 
 public class SimpleLineNumberFactory implements IntFunction<Node>{
 	
-	private CodeArea codeArea;
+	private final CodeArea codeArea;
 
 	public SimpleLineNumberFactory(CodeArea codeArea) {
 		this.codeArea = codeArea;

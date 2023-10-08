@@ -33,12 +33,16 @@ public class HelpTabPane extends TabPane{
 		tab = new Tab("Shortcuts", new HelpShortcutsTabPane());
 		tab.setClosable(false);
 		this.getTabs().add(tab);
-		TextArea restTextArea = new TextArea("SqlBrowserFX provides a simple rest api for fast prototyping\n\n"
-										   + "Available Endpoints:\n\n"
-										   + "/api/tables (get db tables)\n"
-										   + "/api/get/:table?column1=...&column2=... (with parameters matching table columns)\n"
-										   + "/api/save/:table (with json body with keys matching table columns)\n"
-										   + "/api/delete/:table (with json body with keys matching table columns)\n");
+		TextArea restTextArea = new TextArea("""
+                SqlBrowserFX provides a simple rest api for fast prototyping
+
+                Available Endpoints:
+
+                /api/tables (get db tables)
+                /api/get/:table?column1=...&column2=... (with parameters matching table columns)
+                /api/save/:table (with json body with keys matching table columns)
+                /api/delete/:table (with json body with keys matching table columns)
+                """);
 		restTextArea.setEditable(false);
 		tab = new Tab("Rest Api", restTextArea);
 		tab.setClosable(false);
@@ -48,16 +52,18 @@ public class HelpTabPane extends TabPane{
 		this.getTabs().add(tab);
 		
 		TextArea contactTextArea = new TextArea(
-				"GitHub Page: https://github.com/pariskol/sqlbrowserfx\n\n" +
-			    "Email: pariskolovos@live.com");
+                """
+                        GitHub Page: https://github.com/pariskol/sqlbrowserfx
+
+                        Email: pariskolovos@live.com""");
 		contactTextArea.setEditable(false);
 		tab = new Tab("Contact", contactTextArea);
 		tab.setClosable(false);
 		this.getTabs().add(tab);
 		
 		TextArea propsArea;
-		try {
-			String propsStr = StringUtils.join(Files.lines(Paths.get("./sqlbrowserfx.properties")).collect(Collectors.toList()), "\n");
+		try(var lines = Files.lines(Paths.get("./sqlbrowserfx.properties"))) {
+			String propsStr = StringUtils.join(lines.collect(Collectors.toList()), "\n");
 			propsArea = new TextArea(propsStr);
 			propsArea.setEditable(false);
 			tab = new Tab("Properties", propsArea);

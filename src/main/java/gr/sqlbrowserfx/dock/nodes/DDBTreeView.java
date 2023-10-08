@@ -25,9 +25,7 @@ public class DDBTreeView extends DBTreeView implements Dockable {
 			int i = 1;
 			for (SqlPane sqlPane : SqlBrowserFXAppManager.getActiveSqlPanes()) {
 				MenuItem item = new MenuItem("SqlPane " + i++);
-				item.setOnAction(action2 -> {
-					sqlPane.createSqlTableTabWithData(this.getSelectionModel().getSelectedItem().getValue());
-				});
+				item.setOnAction(actionEvent -> sqlPane.createSqlTableTabWithData(this.getSelectionModel().getSelectedItem().getValue()));
 				openInSqlPaneMenu.getItems().add(item);
 			}
 			this.getContextMenu().show(this, menuRequestedEvent.getScreenX(),menuRequestedEvent.getScreenY());

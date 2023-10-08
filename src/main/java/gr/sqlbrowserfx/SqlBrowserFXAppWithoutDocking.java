@@ -273,7 +273,7 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 		final Menu menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		MenuItem restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
 		restServiceStartItem.setOnAction(actionEvent -> {
-			if (restServiceStarted == false) {
+			if (!restServiceStarted) {
 				try {
 					RESTfulService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
 					RESTfulService.init(sqlConnector);

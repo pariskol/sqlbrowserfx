@@ -54,7 +54,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 
 	private Map<String, Set<String>> tableAliases = new HashMap<>();
 	private Set<String> variablesAliases = new HashSet<>();
-	private SqlCodeAreaSyntaxProvider syntaxProvider = new SqlCodeAreaSyntaxProvider();
+	private final SqlCodeAreaSyntaxProvider syntaxProvider = new SqlCodeAreaSyntaxProvider();
 
 	private Popup autoCompletePopup;
 	private ListView<Keyword> suggestionsList;
@@ -155,7 +155,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 				List<Keyword> suggestions = this.getSavedQueries(query);
 				
 				suggestionsList = this.createSuggestionsListView(suggestions);
-				if (suggestionsList.getItems().size() != 0) {
+				if (!suggestionsList.getItems().isEmpty()) {
 					autoCompletePopup.getContent().setAll(suggestionsList);
 					this.showAutoCompletePopup();
 					this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
@@ -192,7 +192,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 			autoCompletePopup = this.createAutoCompletePopup();
 
 			if (!query.isEmpty()) {
-				List<Keyword> suggestions = null;
+				List<Keyword> suggestions;
 				if (event.getCode() == KeyCode.ENTER) {
 					return;
 				}
@@ -206,7 +206,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 				}
 				
 				suggestionsList = this.createSuggestionsListView(suggestions);
-				if (suggestionsList.getItems().size() != 0) {
+				if (!suggestionsList.getItems().isEmpty()) {
 					autoCompletePopup.getContent().setAll(suggestionsList);
 					this.showAutoCompletePopup();
 					this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
@@ -254,19 +254,18 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 
 	@Override
 	protected List<Keyword> getQuerySuggestions(String query) {
-		List<Keyword> suggestions =
+		return
 				Stream.concat(
 					Stream.concat(
 						variablesAliases.stream().map(v -> new Keyword(v, KeywordType.VARIABLE)), 
 						tableAliases.values().stream()
-									.flatMap(s -> s.stream())
+									.flatMap(Collection::stream)
 									.map(t -> new Keyword(t, KeywordType.ALIAS))
 					),
 					syntaxProvider.getKeywords().stream()
 					)
 				.filter(keyword -> keyword != null && keyword.getKeyword().startsWith(query))
 				.collect(Collectors.toList());
-		return suggestions;
 	}
     
     private List<Keyword> getColumnsSuggestions(String query) {
@@ -284,17 +283,16 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
         	    							.collect(Collectors.toList());
         	    	}
         	    	else {
-						return syntaxProvider.getKeywords(KeywordType.COLUMN, knownTable).stream().collect(Collectors.toList());
+						return new ArrayList<>(syntaxProvider.getKeywords(KeywordType.COLUMN, knownTable));
         	    	}
     			}
     		}
     	}
-		return syntaxProvider.getKeywords(KeywordType.COLUMN, tableAlias) != null ? syntaxProvider.getKeywords(KeywordType.COLUMN, tableAlias).stream()
-				.collect(Collectors.toList()) : new ArrayList<>();
+		return syntaxProvider.getKeywords(KeywordType.COLUMN, tableAlias) != null ? new ArrayList<>(syntaxProvider.getKeywords(KeywordType.COLUMN, tableAlias)) : new ArrayList<>();
     }
 
     private boolean syntaxProviderHasTable(String table) {
-    	return syntaxProvider.getKeywords(KeywordType.COLUMN, table).size() > 0;
+    	return !syntaxProvider.getKeywords(KeywordType.COLUMN, table).isEmpty();
     }
     
 	private Map<String, Set<String>> analyzeTextForTables(String text) {
@@ -321,9 +319,9 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		for (int i = 0; i < words.length; i++) {
 			String word = words[i];
 			if (!word.isEmpty() && 
-				(word.toLowerCase().equals("declare") || 
-				 word.toLowerCase().equals("in") || 
-				 word.toLowerCase().equals("out")
+				(word.equalsIgnoreCase("declare") ||
+				 word.equalsIgnoreCase("in") ||
+				 word.equalsIgnoreCase("out")
 				) && 
 				i < words.length - 1) {
 				if (!words[i+1].startsWith("(")) {
@@ -412,7 +410,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 				while (rset.next()) {
 					try {
 						Map<String, Object> map = DTOMapper.map(rset);
-						history.append("\n--  Executed at : " + map.get("timestamp") + " Duration: " + map.get("duration") + "ms --\n");
+						history.append("\n--  Executed at : ").append(map.get("timestamp")).append(" Duration: ").append(map.get("duration")).append("ms --\n");
 						history.append(map.get("query"));
 						history.append("\n");
 					} catch (Exception e) {
@@ -457,10 +455,6 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		schemaPopOver = new CustomPopOver(scrollPane);
 		schemaPopOver.setOnHidden(event -> schemaPopOver = null);
 		schemaPopOver.show(this, this.getContextMenu().getX(), this.getContextMenu().getY());
-	}
-	
-	public Runnable getRunAction() {
-		return runAction;
 	}
 	
 	public void setRunAction(Runnable action) {

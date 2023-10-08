@@ -9,7 +9,7 @@ import javafx.application.Platform;
 
 public class CodeAreaTailerListener implements TailerListener {
 
-	private CodeArea codeArea;
+	private final CodeArea codeArea;
 
 	public CodeAreaTailerListener(CodeArea codeArea) {
 		this.codeArea = codeArea;

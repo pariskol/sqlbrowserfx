@@ -132,7 +132,7 @@ public abstract class TableFilter<T> {
     }
     
     private <S> Stream<TableColumn<T,?>> extractNestedColumns(TableColumn<T,S> tableColumn) {
-        if (tableColumn.getColumns().size() == 0) {
+        if (tableColumn.getColumns().isEmpty()) {
             return Stream.of(tableColumn);
         } else {
             return tableColumn.getColumns().stream().flatMap(this::extractNestedColumns);

@@ -7,7 +7,7 @@ import javafx.scene.control.ListView;
 
 public class SuggestionListCell extends ListCell<Keyword>{
 	
-	private ListView<Keyword> listView;
+	private final ListView<Keyword> listView;
 	
 	public SuggestionListCell(ListView<Keyword>  listView) {
 		this.listView = listView;

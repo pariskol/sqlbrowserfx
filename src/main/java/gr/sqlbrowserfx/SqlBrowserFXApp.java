@@ -34,6 +34,7 @@ import gr.sqlbrowserfx.nodes.FilesTreeView;
 import gr.sqlbrowserfx.nodes.HelpTabPane;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.PostgreSqlConfigBox;
+import gr.sqlbrowserfx.nodes.SimpleTerminal;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
@@ -77,7 +78,7 @@ import javafx.stage.Stage;
 
 public class SqlBrowserFXApp extends Application {
 
-	private static final String CSS_THEME = "/styles/" + (String) PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark") + ".css";
+	private static final String CSS_THEME = "/styles/" + PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark") + ".css";
 	private static final Boolean AUTO_COMMIT_IS_ENABLED = (Boolean) PropertiesLoader.getProperty("sqlconnector.enable.autocommit", Boolean.class, true);
 
 	private static String DB;
@@ -164,7 +165,7 @@ public class SqlBrowserFXApp extends Application {
 		SqlBrowserFXAppManager
 			.getConfigSqlConnector()
 			.executeQueryRawAsync("select database, timestamp, id from connections_history_localtime where database_type = 'sqlite' order by timestamp desc",
-				rset -> recentDBsTableView.setItemsLater(rset)
+					recentDBsTableView::setItemsLater
 		);
 
 		recentDBsTableView.setOnMouseClicked(
@@ -403,9 +404,7 @@ public class SqlBrowserFXApp extends Application {
 		SqlBrowserFXAppManager.registerDDBTreeView(ddbTreePane.getDBTreeView());
 		ddbTreePane.getDBTreeView().asDockNode().setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
 		
-		ddbTreePane.getDBTreeView().addObserver(value -> {
-			SqlCodeAreaSyntaxProvider.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(kw -> new Keyword(kw, KeywordType.TABLE)).collect(Collectors.toList()));
-		});
+		ddbTreePane.getDBTreeView().addObserver(value -> SqlCodeAreaSyntaxProvider.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(kw -> new Keyword(kw, KeywordType.TABLE)).collect(Collectors.toList())));
 		mainSqlPane.getSqlConsolePane().addObserver(ddbTreePane.getDBTreeView());
 		ddbTreePane.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
 		ddbTreePane.asDockNode().setClosable(false);
@@ -430,7 +429,7 @@ public class SqlBrowserFXApp extends Application {
 		STAGE.heightProperty().addListener((obs, oldVal, newVal) -> {
 			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.TRUE);
 			for (SplitPane split : dockPane.getSplitPanes()) {
-			    double[] positions = split.getDividerPositions(); // reccord the current ratio
+			    double[] positions = split.getDividerPositions(); // record the current ratio
 			    Platform.runLater(() -> split.setDividerPositions(positions)); // apply the now former ratio
 			}
 			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
@@ -459,6 +458,12 @@ public class SqlBrowserFXApp extends Application {
 					"Simple SqlConsole", JavaFXUtils.createIcon("/icons/console.png")));
 		});
 		
+		var terminalViewItem = new MenuItem("Open Simple Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
+		terminalViewItem.setOnAction(event -> {
+			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, new SimpleTerminal(),
+					"Simple Terminal", JavaFXUtils.createIcon("/icons/console.png")));
+		});
+		
 		var tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.createIcon("/icons/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
 			var treeView = new DDBTreePane(DB, sqlConnector);
@@ -471,7 +476,7 @@ public class SqlBrowserFXApp extends Application {
 			var jsonTableView = this.createJsonTableView();
 		    JavaFXUtils.applyJMetro(jsonTableView);
 			JavaFXUtils.zoomToCurrentFactor(
-					new DockNode(dockPane, jsonTableView, "JSON table", JavaFXUtils.createIcon("/icons/web.png")));
+					new DockNode(dockPane, jsonTableView, "JSON Data Explorer", JavaFXUtils.createIcon("/icons/web.png")));
 		});
 		
 		var filesTreeViewItem = new MenuItem("Open Files Tree View", JavaFXUtils.createIcon("/icons/folder.png"));
@@ -482,11 +487,9 @@ public class SqlBrowserFXApp extends Application {
 			if (selectedDir == null) return;
 			
 			var filesTreeView = new FilesTreeView(selectedDir.getAbsolutePath());
-			if (selectedDir != null) {
-				JavaFXUtils.zoomToCurrentFactor(
-						new DockNode(dockPane, filesTreeView, "Files Tree View", JavaFXUtils.createIcon("/icons/folder.png")));
-			}
-		});
+            JavaFXUtils.zoomToCurrentFactor(
+                    new DockNode(dockPane, filesTreeView, "File Explorer : " + selectedDir.getName(), JavaFXUtils.createIcon("/icons/folder.png")));
+        });
 		
 		
 		var logItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
@@ -501,12 +504,12 @@ public class SqlBrowserFXApp extends Application {
 
 		menu1.getItems().addAll(sqlPaneViewItem, dbDiagramItem, new SeparatorMenuItem(),
 				filesTreeViewItem, jsonTableViewItem, new SeparatorMenuItem(),
-				sqlConsoleViewItem, logItem);
+				sqlConsoleViewItem, terminalViewItem, logItem);
 
 		final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
 		restServiceStartItem.setOnAction(actionEvent -> {
-			if (restServiceStarted == false) {
+			if (!restServiceStarted) {
 				try {
 					RESTfulService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
 					RESTfulService.init(sqlConnector);
@@ -544,8 +547,6 @@ public class SqlBrowserFXApp extends Application {
 				newSqlPane.asDockNode().setFloating(true);
 				newSqlPane.createSqlTableTabWithDataUnsafe("connections_history");
 				newSqlPane.createSqlTableTabWithDataUnsafe("saved_queries");
-//				newSqlPane.createSqlTableTabWithDataUnsafe("autocomplete");
-//				newSqlPane.createSqlTableTabWithDataUnsafe("queries_history");
 				isInternalDBShowing  = true;
 				newSqlPane.asDockNode().setOnClose(() -> isInternalDBShowing = false);
 			}

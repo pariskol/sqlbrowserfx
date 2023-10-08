@@ -5,7 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import gr.sqlbrowserfx.nodes.codeareas.CodeAreaSyntaxProvider;
 import gr.sqlbrowserfx.nodes.codeareas.FormatterMode;
@@ -27,10 +26,10 @@ public class LogCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider {
 					 "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
 	
 	static {
-		KEYWORDS_lIST.addAll(Arrays.asList(KEYWORDS).stream()
-				.map(kw -> new Keyword(kw, KeywordType.KEYWORD)).collect(Collectors.toList()));
-		KEYWORDS_lIST.addAll(Arrays.asList(FUNCTIONS).stream()
-				.map(kw -> new Keyword(kw, KeywordType.FUNCTION)).collect(Collectors.toList()));
+		KEYWORDS_lIST.addAll(Arrays.stream(KEYWORDS)
+				.map(kw -> new Keyword(kw, KeywordType.KEYWORD)).toList());
+		KEYWORDS_lIST.addAll(Arrays.stream(FUNCTIONS)
+				.map(kw -> new Keyword(kw, KeywordType.FUNCTION)).toList());
 
 	}
 

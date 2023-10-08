@@ -72,9 +72,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 		ComboBox<String> categoryField = new ComboBox<>();
 		categoryField.setEditable(true);
 		try {
-			sqlConnector.executeQuery("select distinct category from saved_queries", rset -> {
-				categoryField.getItems().add(rset.getString(1));
-			});
+			sqlConnector.executeQuery("select distinct category from saved_queries", rset -> categoryField.getItems().add(rset.getString(1)));
 		} catch (SQLException e) {
 			DialogFactory.createErrorNotification(e);
 		}

@@ -34,7 +34,7 @@ import javafx.scene.input.KeyEvent;
 public class JavaCodeArea extends AutoCompleteCodeArea<JavaCodeAreaSyntaxProvider> implements ContextMenuOwner, HighLighter, TextAnalyzer {
 
 	private Set<String> variablesAliases = new HashSet<>();
-	private JavaCodeAreaSyntaxProvider syntaxProvider = new JavaCodeAreaSyntaxProvider();
+	private final JavaCodeAreaSyntaxProvider syntaxProvider = new JavaCodeAreaSyntaxProvider();
 
 	private Thread textAnalyzerDaemon;
 	protected MenuItem menuItemRun;
@@ -111,16 +111,16 @@ public class JavaCodeArea extends AutoCompleteCodeArea<JavaCodeAreaSyntaxProvide
 		String[] words = text.split("\\W+");
 		for (int i = 0; i < words.length; i++) {
 			String word = words[i];
-			if (!word.isEmpty() && word.equals("new")) {
+			if (word.equals("new")) {
 					newVariables.add(words[i - 1]);
 			}
-			else if (!word.isEmpty() && word.equals("var")) {
+			else if (word.equals("var")) {
 				newVariables.add(words[i + 1]);
 			}
 			else if (!word.isEmpty()
 					&& Arrays
 							.asList("int", "byte", "short", "long", "float", "double", "boolean", "char", "String",
-									"Boolean", "Doulbe", "Float", "Integer", "Long", "Short", "Byte", "Character")
+									"Boolean", "Double", "Float", "Integer", "Long", "Short", "Byte", "Character")
 							.contains(word)) {
 				newVariables.add(words[i + 1]);
 			}
@@ -180,13 +180,12 @@ public class JavaCodeArea extends AutoCompleteCodeArea<JavaCodeAreaSyntaxProvide
 	
 	@Override
 	protected List<Keyword> getQuerySuggestions(String query) {
-		List<Keyword> suggestions =
+		return
 				Stream.concat(
 					variablesAliases.stream().map(v -> new Keyword(v, KeywordType.VARIABLE)), 
 					syntaxProvider.getKeywords().stream()
 					)
 				.filter(keyword -> keyword != null && keyword.getKeyword().startsWith(query))
 				.collect(Collectors.toList());
-		return suggestions;
 	}
 }

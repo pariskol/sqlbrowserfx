@@ -10,18 +10,18 @@ import javafx.scene.layout.VBox;
 
 public class LineChartBox extends VBox {
 
-	private ComboBox<String> displayColComboBox;
-	private TextField valueField;
-	private ComboBox<String> plotColxComboBox;
-	private ComboBox<String> plotColyComboBox;
+	private final ComboBox<String> displayColComboBox;
+	private final TextField valueField;
+	private final ComboBox<String> plotColxComboBox;
+	private final ComboBox<String> plotColyComboBox;
 
 	public LineChartBox(List<String> columnNames) {
 		super();
 
-		displayColComboBox = new ComboBox<String>(FXCollections.observableArrayList(columnNames));
+		displayColComboBox = new ComboBox<>(FXCollections.observableArrayList(columnNames));
 		valueField = new TextField();
-		plotColxComboBox = new ComboBox<String>(FXCollections.observableArrayList(columnNames));
-		plotColyComboBox = new ComboBox<String>(FXCollections.observableArrayList(columnNames));
+		plotColxComboBox = new ComboBox<>(FXCollections.observableArrayList(columnNames));
+		plotColyComboBox = new ComboBox<>(FXCollections.observableArrayList(columnNames));
 
 		this.getChildren().addAll(new Label("Select display column"), displayColComboBox, valueField,
 				new Label("Select x column"), plotColxComboBox, new Label("Select y column"), plotColyComboBox);

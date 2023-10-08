@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 
 public class PropertiesLoader {
 
-	private static HashMap<String, Properties> propertiesMap = new HashMap<>();
+	private static final HashMap<String, Properties> propertiesMap = new HashMap<>();
 	private static Logger logger;
 	private static Boolean IS_ENABLED = true;
 	static {
@@ -28,8 +28,8 @@ public class PropertiesLoader {
 	}
 	
 	public static void loadProperties(String rootPath) {
-		try {
-			Files.walk(Paths.get(rootPath))
+		try(var walk = Files.walk(Paths.get(rootPath))) {
+			walk
 	        .filter(Files::isRegularFile)
 	        .filter(path -> path.toString().endsWith(".properties"))
 	        .forEach(path -> {
@@ -56,8 +56,7 @@ public class PropertiesLoader {
 		Object value = propertiesMap.get(fileKey).get(key);
 		try {
 			Constructor<?> cons = clazz.getConstructor(String.class);
-			Object returnedValue = cons.newInstance(value.toString());
-			return returnedValue;
+            return cons.newInstance(value.toString());
 		} catch (Exception e) {
 			if (logger != null)
     			logger.debug("Could not read property from file");
@@ -93,8 +92,7 @@ public class PropertiesLoader {
 		}
 		try {
 			Constructor<?> cons = clazz.getConstructor(String.class);
-			Object returnedValue = cons.newInstance(value.toString());
-			return returnedValue;
+            return cons.newInstance(value.toString());
 		} catch (Throwable e) {
 			if (logger != null)
     			logger.debug("Could not read property from file");

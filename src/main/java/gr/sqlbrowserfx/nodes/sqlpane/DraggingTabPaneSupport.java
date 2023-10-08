@@ -31,14 +31,14 @@ public class DraggingTabPaneSupport {
 	}
 	
 	public void addSupport(TabPane tabPane) {
-        tabPane.getTabs().forEach(tab -> addDragHandlers(tab));
+        tabPane.getTabs().forEach(this::addDragHandlers);
         tabPane.getTabs().addListener((Change<? extends Tab> c) -> {
             while (c.next()) {
                 if (c.wasAdded()) {
-                    c.getAddedSubList().forEach(tab -> addDragHandlers(tab));
+                    c.getAddedSubList().forEach(this::addDragHandlers);
                 }
                 if (c.wasRemoved()) {
-                    c.getRemoved().forEach(tab -> removeDragHandlers(tab));
+                    c.getRemoved().forEach(this::removeDragHandlers);
                 }
             }
         });
@@ -72,7 +72,7 @@ public class DraggingTabPaneSupport {
                     c.getAddedSubList().forEach(tab -> addDragHandlers(tab, sqlPane));
                 }
                 if (c.wasRemoved()) {
-                    c.getRemoved().forEach(tab -> removeDragHandlers(tab));
+                    c.getRemoved().forEach(this::removeDragHandlers);
                 }
             }
         });

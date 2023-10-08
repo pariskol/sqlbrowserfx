@@ -15,8 +15,8 @@ import gr.sqlbrowserfx.utils.SqlFormatter;
 public class JavaCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String> {
 
 
-	private static String[] FUNCTIONS = new String[] {};
-	private static String[] KEYWORDS = new String[] {
+	private static final String[] FUNCTIONS = new String[] {};
+	private static final String[] KEYWORDS = new String[] {
             "abstract", "assert", "boolean", "break", "byte",
             "case", "catch", "char", "class", "const",
             "continue", "default", "do", "double", "else",

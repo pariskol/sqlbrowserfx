@@ -3,6 +3,7 @@ package gr.sqlbrowserfx.factories;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.controlsfx.control.Notifications;
@@ -16,7 +17,6 @@ import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -65,8 +65,6 @@ public class DialogFactory {
 			textArea.setEditable(false);
 			textArea.setWrapText(true);
 
-//			textArea.setMaxWidth(Double.MAX_VALUE);
-//			textArea.setMaxHeight(Double.MAX_VALUE);
 			VBox.setVgrow(textArea, Priority.ALWAYS);
 			VBox expContent = new VBox(label,textArea);
 
@@ -84,15 +82,16 @@ public class DialogFactory {
 		});
 	}
 	
-	public static int createConfirmationDialog(String title, String message) {
+	public static boolean createConfirmationDialog(String title, String message) {
 		return createConfirmationDialog(title, message, null);
 	}
 	
-	public static int createConfirmationDialog(String title, String message, String stylesheet) {
-		AtomicInteger result = new AtomicInteger(0);
+	public static boolean createConfirmationDialog(String title, String message, String stylesheet) {
+		AtomicBoolean result = new AtomicBoolean(false);
 		
 		Alert alert = new Alert(AlertType.CONFIRMATION);
 		alert.setTitle(title);
+		alert.setResizable(true);
 		alert.setHeaderText(null);
 		alert.setContentText(message);
 		if (stylesheet != null)
@@ -103,13 +102,18 @@ public class DialogFactory {
 		JavaFXUtils.applyJMetro(alert.getDialogPane());
 		
 		Optional<ButtonType> res = alert.showAndWait();
-		if (res.get() == ButtonType.OK){
-		    result.set(1);
-		} else {
-		    result.set(0);
-		}
+        result.set(ButtonType.OK == res.get());
 		
 		return result.get();
+	}
+	
+	public static String createTextInputDialog(String title, String message) {
+		TextInputDialog td = new TextInputDialog();
+		td.setTitle(title);
+		td.setHeaderText(message);
+		td.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+		td.showAndWait();
+		return td.getEditor().getText();
 	}
 	
 	public static void createInfoDialog(String title, String message) {
@@ -132,21 +136,6 @@ public class DialogFactory {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).info(message);
 			alert.showAndWait();
 		});
-	}
-	
-	public static String createTextInputDialog(String title, String header, String promt) {
-		TextInputDialog dialog = new TextInputDialog(promt);
-		dialog.setTitle(title);
-		dialog.setHeaderText(header);
-		dialog.setContentText("Please enter :");
-
-		// Traditional way to get the response value.
-		Optional<String> result = dialog.showAndWait();
-		if (result.isPresent()){
-		   return result.get();
-		}
-		
-		return null;
 	}
 	
 	public static int createDeleteDialog(Node owner, ObservableList<MapTableViewRow> rows, String message) {
@@ -172,7 +161,7 @@ public class DialogFactory {
         displayLabel.setFont(Font.font(null, FontWeight.BOLD, 14));
 
         dialog.initModality(Modality.NONE);
-        dialog.initOwner((Stage) owner.getScene().getWindow());
+        dialog.initOwner(owner.getScene().getWindow());
 
         HBox buttonBox = new HBox();
         buttonBox.setAlignment(NOTIFICATION_POS);
@@ -186,20 +175,14 @@ public class DialogFactory {
 
         AtomicInteger result = new AtomicInteger(0);
         yes.addEventHandler(ActionEvent.ACTION,
-                new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent e) {
-                        result.set(1);
-                    	dialog.close();
-                    }
+                e -> {
+                    result.set(1);
+                    dialog.close();
                 });
         no.addEventHandler(ActionEvent.ACTION,
-                new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent e) {
-                        result.set(0);
-                        dialog.close();
-                    }
+                e -> {
+                    result.set(0);
+                    dialog.close();
                 });
 
         JavaFXUtils.applyJMetro(dialogVbox);
@@ -226,9 +209,7 @@ public class DialogFactory {
 					.darkStyle()
 					.hideAfter(Duration.seconds(durationInSecs))
 					.position(NOTIFICATION_POS)
-					.onAction(actionEvent -> {
-						createInfoDialog(title, message);
-					})
+					.onAction(actionEvent -> createInfoDialog(title, message))
 					.owner(SqlBrowserFXApp.STAGE)
 					.showInformation();
 			
@@ -237,23 +218,23 @@ public class DialogFactory {
 	
 	public static void createErrorNotification(String title, String message, Throwable t) {
 		LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(message);
-		String formattedMessage = message;
+		StringBuilder formattedMessage = new StringBuilder(message);
 		int splitSize = 40;
 		if (message.length() > splitSize) {
-			formattedMessage = "";
+			formattedMessage = new StringBuilder();
 			while (message.length() > splitSize) {
 				int spacePos = message.indexOf(" ", splitSize);
 				spacePos = spacePos != -1 ? spacePos : splitSize;
-				formattedMessage += message.substring(0, spacePos) + "\n";
+				formattedMessage.append(message, 0, spacePos).append("\n");
 				message = message.substring(spacePos);
 			}
-			formattedMessage += message;
+			formattedMessage.append(message);
 		}
-		final String fmessage = formattedMessage;
+		final String finalMessage = formattedMessage.toString();
 		Platform.runLater(() -> {
 			Notifications.create()
 					.title(title)
-					.text(fmessage)
+					.text(finalMessage)
 					.darkStyle()
 					.hideAfter(Duration.seconds(2))
 					.position(NOTIFICATION_POS)
@@ -270,10 +251,6 @@ public class DialogFactory {
 		createErrorNotification(t.getClass().getSimpleName(), t.getMessage(), t);
 	}
 	
-	public static String getDialogStyleSheet() {
-		return DEFAULT_STYLESHEET;
-	}
-
 	public static void setDialogStyleSheet(String dialogStyleSheet) {
 		DialogFactory.DEFAULT_STYLESHEET = dialogStyleSheet;
 	}

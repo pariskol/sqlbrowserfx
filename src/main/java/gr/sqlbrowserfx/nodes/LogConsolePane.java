@@ -21,14 +21,14 @@ import javafx.scene.layout.VBox;
 public class LogConsolePane extends BorderPane implements ToolbarOwner {
 	private boolean popOverIsShowing = false;
 
-	private CheckBox wrapTextCheckBox;
-	private CheckBox showLinesCheckBox;
-	private CheckBox followCarretCheckBox;
+	private final CheckBox wrapTextCheckBox;
+	private final CheckBox showLinesCheckBox;
+	private final CheckBox followCarretCheckBox;
 	private Button settingsButton;
-	private LogCodeArea logCodeArea;
+	private final LogCodeArea logCodeArea;
 
-	private Thread tailerDaemon;
-	private Tailer tailer;
+	private final Thread tailerDaemon;
+	private final Tailer tailer;
 
 	public LogConsolePane() {
 		logCodeArea = new LogCodeArea();

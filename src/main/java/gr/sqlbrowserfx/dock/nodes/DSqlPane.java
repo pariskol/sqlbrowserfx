@@ -115,7 +115,7 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	@Override
 	public DockNode asDockNode() {
 		if (thisDockNode == null) {
-			thisDockNode = new DockNode(this, "Data explorer", JavaFXUtils.createIcon("/icons/table.png"));
+			thisDockNode = new DockNode(this, "Data Explorer", JavaFXUtils.createIcon("/icons/table.png"));
 
 			thisDockNode.setOnClose(() -> {
 				SqlBrowserFXAppManager.unregisterDSqlPane(this);
@@ -132,14 +132,14 @@ public class DSqlPane extends SqlPane implements Dockable, SimpleObserver<String
 	}
 	
 	@Override
-	public void onObservaleChange(String tableName) {
+	public void onObservableChange(String tableName) {
 		if (tablesBox.getSelectionModel().getSelectedItem().equals(tableName))
 			tablesBox.getOnAction().handle(new ActionEvent());
 	}
 
 	@Override
 	public void changed() {
-		listeners.forEach(listener -> listener.onObservaleChange(getTablesBox().getValue()));
+		listeners.forEach(listener -> listener.onObservableChange(getTablesBox().getValue()));
 	}
 
 	@Override

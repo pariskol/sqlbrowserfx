@@ -73,7 +73,7 @@ public abstract class SqlConnector {
 					i++;
 					try {
 						Thread.sleep(2000);
-					} catch (InterruptedException e1) {
+					} catch (InterruptedException ignored) {
 					}
 					SqlConnector.this.initDatasource();
 				} catch (Exception e) {
@@ -89,7 +89,7 @@ public abstract class SqlConnector {
 		PreparedStatement statement = conn.prepareStatement(query);
 		int i = 1;
 		for (Object param : params) {
-			if (param == null || param.toString().equals(""))
+			if (param == null || param.toString().isEmpty())
 				statement.setNull(i++, Types.VARCHAR);
 			else if (param instanceof byte[]) {
 				statement.setBytes(i++, (byte[]) param);
@@ -101,7 +101,7 @@ public abstract class SqlConnector {
 	}
 
 	public void checkConnection() throws SQLException {
-		try (Connection conn = dataSource.getConnection();) {
+		try (Connection conn = dataSource.getConnection()) {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Successful try to get connection , pool is ok.");
 		}
 	}
@@ -117,7 +117,7 @@ public abstract class SqlConnector {
 
 		try (Connection conn = dataSource.getConnection();
 				Statement statement = conn.createStatement();
-				ResultSet rset = statement.executeQuery(query);) {
+				ResultSet rset = statement.executeQuery(query)) {
 			action.onResultSet(rset);
 		}
 	}
@@ -134,7 +134,7 @@ public abstract class SqlConnector {
 
 		try (Connection conn = dataSource.getConnection();
 				PreparedStatement statement = prepareStatementWithParams(conn, query, params);
-				ResultSet rset = statement.executeQuery(query);) {
+				ResultSet rset = statement.executeQuery(query)) {
 			action.onResultSet(rset);
 			System.gc();
 		}
@@ -153,13 +153,13 @@ public abstract class SqlConnector {
 
 		ResultSet rset = null;
 		try (Connection conn = dataSource.getConnection();
-			 Statement statement = conn.createStatement();) {
+			 Statement statement = conn.createStatement()) {
 			MemoryGuard.protect(statement);
 			rset = statement.executeQuery(query);
 			action.onResultSet(rset);
 			System.gc();
 		} finally {
-			this.closeQuitely(rset);
+			this.closeQuietly(rset);
 		}
 	}
 
@@ -174,7 +174,7 @@ public abstract class SqlConnector {
 
 		try (Connection conn = dataSource.getConnection();
 				Statement statement = conn.createStatement();
-				ResultSet rset = statement.executeQuery(query);) {
+				ResultSet rset = statement.executeQuery(query)) {
 			while (rset.next()) {
 				action.onResultSet(rset);
 			}
@@ -192,7 +192,7 @@ public abstract class SqlConnector {
 	public void executeQuery(String query, List<Object> params, ResultSetAction action) throws SQLException {
 		try (Connection conn = dataSource.getConnection();
 				PreparedStatement statement = prepareStatementWithParams(conn, query, params);
-				ResultSet rset = statement.executeQuery();) {
+				ResultSet rset = statement.executeQuery()) {
 			while (rset.next()) {
 				action.onResultSet(rset);
 			}
@@ -211,13 +211,13 @@ public abstract class SqlConnector {
 	public void executeCancelableQuery(String query, ResultSetAction action, StatementAction statementAction) throws SQLException {
 		ResultSet rset = null;
 		try (Connection conn = dataSource.getConnection();
-				Statement statement = conn.createStatement();) {
+				Statement statement = conn.createStatement()) {
 			statementAction.onStatement(statement);
 			MemoryGuard.protect(statement);
 			rset = statement.executeQuery(query);
 			action.onResultSet(rset);
 		} finally {
-			this.closeQuitely(rset);
+			this.closeQuietly(rset);
 		}
 	}
 
@@ -247,9 +247,8 @@ public abstract class SqlConnector {
 	 * 
 	 * @param query
 	 * @param action
-	 * @throws SQLException
 	 */
-	public void executeQueryAsync(String query, ResultSetAction action) throws SQLException {
+	public void executeQueryAsync(String query, ResultSetAction action) {
 		executorService.execute(() -> {
 			try {
 				this.executeQuery(query, action);
@@ -270,15 +269,15 @@ public abstract class SqlConnector {
 	}
 
 	public int executeUpdate(String query) throws SQLException {
-		int result = 0;
-		try (Connection conn = dataSource.getConnection(); Statement statement = conn.createStatement();) {
+		int result;
+		try (Connection conn = dataSource.getConnection(); Statement statement = conn.createStatement()) {
 			result = statement.executeUpdate(query);
 		}
 
 		return result;
 	}
 	
-	public void executeUpdateAsync(String query) throws SQLException {
+	public void executeUpdateAsync(String query) {
 		this.executeAsync(() -> {
 			try {
 				this.executeUpdate(query);
@@ -298,9 +297,9 @@ public abstract class SqlConnector {
 		});
 	}
 	public int executeUpdate(String query, List<Object> params) throws SQLException {
-		int result = 0;
+		int result;
 		try (Connection conn = dataSource.getConnection();
-				PreparedStatement statement = prepareStatementWithParams(conn, query, params);) {
+				PreparedStatement statement = prepareStatementWithParams(conn, query, params)) {
 			result = statement.executeUpdate();
 		}
 
@@ -308,8 +307,8 @@ public abstract class SqlConnector {
 	}
 
 	public int executeUpdate(Connection conn, String query, List<Object> params) throws SQLException {
-		int result = 0;
-		try (PreparedStatement statement = prepareStatementWithParams(conn, query, params);) {
+		int result;
+		try (PreparedStatement statement = prepareStatementWithParams(conn, query, params)) {
 			result = statement.executeUpdate();
 		}
 
@@ -317,7 +316,7 @@ public abstract class SqlConnector {
 	}
 
 	/**
-	 * Pass runnable to be executed by {@link gr.sqlfx.conn.sqlConnector} executor
+	 * Pass runnable to be executed by connector's executor
 	 * service.
 	 * 
 	 * @param runnable
@@ -339,21 +338,21 @@ public abstract class SqlConnector {
 	}
 
 	public String findPrimaryKey(String tableName) throws SQLException {
-		String primaryKey = "";
+		StringBuilder primaryKey = new StringBuilder();
 
-		try (Connection conn = dataSource.getConnection();) {
+		try (Connection conn = dataSource.getConnection()) {
 			DatabaseMetaData meta = conn.getMetaData();
 			ResultSet rset = meta.getPrimaryKeys(null, getDbSchema(), tableName);
 			while (rset.next())
-				primaryKey += rset.getString("COLUMN_NAME") + ",";
+				primaryKey.append(rset.getString("COLUMN_NAME")).append(",");
 		}
 		if (!primaryKey.isEmpty())
-			primaryKey = primaryKey.substring(0, primaryKey.length() - 1);
+			primaryKey = new StringBuilder(primaryKey.substring(0, primaryKey.length() - 1));
 
-		return primaryKey.isEmpty() ? null : primaryKey;
+		return (primaryKey.isEmpty()) ? null : primaryKey.toString();
 	}
 
-	public void rollbackQuitely(Connection conn) {
+	public void rollbackQuietly(Connection conn) {
 		try {
 			conn.rollback();
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Successful rollback");
@@ -362,7 +361,7 @@ public abstract class SqlConnector {
 		}
 	}
 	
-	protected void closeQuitely(AutoCloseable closeable) {
+	protected void closeQuietly(AutoCloseable closeable) {
 		try {
 			if (closeable != null)
 				closeable.close();
@@ -371,14 +370,14 @@ public abstract class SqlConnector {
 	}
 
 	public List<String> findForeignKeys(String tableName) throws SQLException {
-		return findFoireignKeyReferences(tableName).stream().map(x -> x.get(FOREIGN_KEY)).collect(Collectors.toList());
+		return findForeignKeyReferences(tableName).stream().map(x -> x.get(FOREIGN_KEY)).collect(Collectors.toList());
 	}
 
-	public List<Map<String, String>> findFoireignKeyReferences(String tableName) throws SQLException {
+	public List<Map<String, String>> findForeignKeyReferences(String tableName) throws SQLException {
 		List<Map<String, String>> foreignKeys = new ArrayList<>();
-		try (Connection conn = dataSource.getConnection();) {
+		try (Connection conn = dataSource.getConnection()) {
 			DatabaseMetaData meta = conn.getMetaData();
-			try (ResultSet rset = meta.getImportedKeys(null, getDbSchema(), tableName);) {
+			try (ResultSet rset = meta.getImportedKeys(null, getDbSchema(), tableName)) {
 				while (rset.next()) {
 					Map<String, String> map = new HashMap<>();
 					map.put(REFERENCED_KEY, rset.getString(REFERENCED_KEY));
@@ -401,9 +400,9 @@ public abstract class SqlConnector {
 	public List<String> getTVTypes(String[] types) throws SQLException {
 		List<String> tables = new ArrayList<>();
 
-		try (Connection conn = dataSource.getConnection();) {
+		try (Connection conn = dataSource.getConnection()) {
 			DatabaseMetaData dbmd = conn.getMetaData();
-			try (ResultSet rs = dbmd.getTables(null, null, "%", types);) {
+			try (ResultSet rs = dbmd.getTables(null, null, "%", types)) {
 				while (rs.next()) {
 					tables.add(rs.getString("TABLE_NAME"));
 				}
@@ -452,10 +451,6 @@ public abstract class SqlConnector {
 
 	public String getDriver() {
 		return driver;
-	}
-
-	public void setDriver(String driver) {
-		this.driver = driver;
 	}
 
 	public String getUrl() {

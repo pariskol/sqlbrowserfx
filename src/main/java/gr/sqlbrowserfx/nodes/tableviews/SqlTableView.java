@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,11 +62,11 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 	protected boolean areCellsEditableByClick;
 	private boolean areColumnsFilterable = false;
 
-	private Map<String, Long> columnCounts;
+	private final Map<String, Long> columnCounts;
 
 	protected final static int NOT_SET = 0;
 
-	private Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
+	private final Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 	private SqlTableTab parent;
 
 	public SqlTableView() {
@@ -158,12 +157,8 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 		List<TableColumn<MapTableViewRow, Object>> tableColumns = new ArrayList<>();
 		for (String column : sqlTable.getColumns()) {
 			TableColumn<MapTableViewRow, Object> col = new TableColumn<>(column);
-			col.setCellValueFactory(param -> {
-				return param.getValue().getObjectProperty(column);
-			});
-			col.setCellFactory(callback -> {
-				return new SqlTableViewEditableCell(this, sqlConnector);
-			});
+			col.setCellValueFactory(param -> param.getValue().getObjectProperty(column));
+			col.setCellFactory(callback -> new SqlTableViewEditableCell(this, sqlConnector));
 
 			if (sqlTable.isForeignKey(column))
 				col.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
@@ -190,14 +185,14 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 				tablesSet.add(rsmd.getTableName(i));
 		}
 		
-		String actualName = "";
+		StringBuilder actualName = new StringBuilder();
 		for (String table : tablesSet) {
-			actualName += table + ", ";
+			actualName.append(table).append(", ");
 		}
 		if (!actualName.isEmpty()) {
-			actualName = actualName.substring(0, actualName.length() - ", ".length());
+			actualName = new StringBuilder(actualName.substring(0, actualName.length() - ", ".length()));
 		}
-		sqlTable = new SqlTable(actualName, rsmd);
+		sqlTable = new SqlTable(actualName.toString(), rsmd);
 		columns = new ArrayList<>(sqlTable.getColumns());
 
 		// this exception handling is needed in case a raw sql query
@@ -241,7 +236,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 
 		} catch (Throwable e) {
 			// exception must be handled here to set an indicator that
-			// something went wrong in case user hasn't saw the notification
+			// something went wrong in case user hasn't sawed the notification
 			Platform.runLater(() -> {
 				this.titleProperty.set("error");
 				parent.load();
@@ -257,12 +252,8 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 
 			for (String column : sqlTable.getColumns()) {
 				TableColumn<MapTableViewRow, Object> col = new TableColumn<>(column);
-				col.setCellValueFactory(param -> {
-					return param.getValue().getObjectProperty(column);
-				});
-				col.setCellFactory(callback -> {
-					return new SqlTableViewEditableCell(this, sqlConnector);
-				});
+				col.setCellValueFactory(param -> param.getValue().getObjectProperty(column));
+				col.setCellFactory(callback -> new SqlTableViewEditableCell(this, sqlConnector));
 
 				if (sqlTable.isForeignKey(column)) {
 					col.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
@@ -320,7 +311,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 		this.setColumnWidth(minWidth, prefWidth, maxWidth);
 	}
 
-	public void bindColumsVisibility(Collection<CheckBox> columCheckBoxes) {
+	public void bindColumnsVisibility(Collection<CheckBox> columCheckBoxes) {
 		for (TableColumn<MapTableViewRow, ?> tableColumn : this.getColumns()) {
 			for (CheckBox checkBox : columCheckBoxes) {
 				if (tableColumn.getText().equals(checkBox.getText())) {
@@ -331,12 +322,10 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 		}
 	}
 
-	public void createColumns(List<String> colums) {
-		for (String column : colums) {
+	public void createColumns(List<String> columns) {
+		for (String column : columns) {
 			TableColumn<MapTableViewRow, Object> col = new TableColumn<>(column);
-			col.setCellValueFactory(param -> {
-				return param.getValue().getObjectProperty(column);
-			});
+			col.setCellValueFactory(param -> param.getValue().getObjectProperty(column));
 			col.setCellFactory(callback -> new SqlTableViewCell());
 			this.getColumns().add(col);
 		}
@@ -345,7 +334,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 	public void updateSelectedRow() throws Exception {
 		MapTableViewRow sqlTableRow = this.getSelectionModel().getSelectedItem();
 		Set<String> columns = this.getSqlTable().getColumns();
-		String query = "update " + this.getTableName() + " set ";
+		StringBuilder query = new StringBuilder("update " + this.getTableName() + " set ");
 		List<Object> params = new ArrayList<>();
 
 		for (String column : columns) {
@@ -358,21 +347,21 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 				if (elm != null && !elm.isEmpty())
 					actualValue = sqlConnector.castToDBType(this.getSqlTable(), column, elm);
 				params.add(actualValue);
-				query += column + "= ? ,";
+				query.append(column).append("= ? ,");
 			}
 		}
-		query = query.substring(0, query.length() - 1);
-		query += " where ";
+		query = new StringBuilder(query.substring(0, query.length() - 1));
+		query.append(" where ");
 		String[] keys = this.getPrimaryKey().split(",");
 		for (String key : keys) {
-			query += key + " = ? and ";
+			query.append(key).append(" = ? and ");
 			params.add(sqlTableRow.get(key));
 		}
-		query = query.substring(0, query.length() - "and ".length());
+		query = new StringBuilder(query.substring(0, query.length() - "and ".length()));
 
-		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
+		String message = "Executing : " + query + " [ values : " + params + " ]";
 		LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug(message);
-		sqlConnector.executeUpdate(query, params);
+		sqlConnector.executeUpdate(query.toString(), params);
 
 		for (String column : columns) {
 			String elm = null;
@@ -389,29 +378,29 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 	}
 
 	public int deleteRecord(MapTableViewRow sqlTableRow) {
-		String query = "delete from " + this.getTableName() + " where ";
+		StringBuilder query = new StringBuilder("delete from " + this.getTableName() + " where ");
 		List<Object> params = new ArrayList<>();
 		Set<String> columns = this.getSqlTable().getColumns();
 		if (this.getPrimaryKey() != null) {
 			String[] keys = this.getPrimaryKey().split(",");
 			for (String key : keys) {
-				query += key + " = ? and ";
+				query.append(key).append(" = ? and ");
 				params.add(sqlTableRow.get(key));
 			}
-			query = query.substring(0, query.length() - "and ".length());
+			query = new StringBuilder(query.substring(0, query.length() - "and ".length()));
 		} else {
 			for (String column : columns) {
 				params.add(sqlTableRow.get(column));
-				query += column + "= ? and ";
+				query.append(column).append("= ? and ");
 			}
-			query = query.substring(0, query.length() - 5);
+			query = new StringBuilder(query.substring(0, query.length() - 5));
 		}
 
-		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
+		String message = "Executing : " + query + " [ values : " + params + " ]";
 		logger.debug(message);
 
 		try {
-			sqlConnector.executeUpdate(query, params);
+			sqlConnector.executeUpdate(query.toString(), params);
 			this.getSqlTableRows().remove(sqlTableRow);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
@@ -424,16 +413,16 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 	public void insertRecord(SqlTableRowEditBox editBox) throws SQLException {
 		Set<String> columns = this.getSqlTable().getColumns();
 		List<Object> params = new ArrayList<>();
-		String notEmptyColumns = "";
-		String values = "";
+		StringBuilder notEmptyColumns = new StringBuilder();
+		StringBuilder values = new StringBuilder();
 		Map<String, TextArea> map = editBox.getMap();
 		Map<String, Object> entry = new HashMap<>();
 
 		for (String column : columns) {
 			Object elm = map.get(column).getText();
-			if (elm != null && !elm.toString().equals("")) {
-				notEmptyColumns += column + ", ";
-				Object actualValue = null;
+			if (elm != null && !elm.toString().isEmpty()) {
+				notEmptyColumns.append(column).append(", ");
+				Object actualValue;
 				try {
 					actualValue = sqlConnector.castToDBType(this.getSqlTable(), column,
 							editBox.getMap().get(column).getText());
@@ -446,26 +435,25 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 				}
 				params.add(actualValue);
 				entry.put(column, actualValue);
-				values += "?, ";
+				values.append("?, ");
 			}
 		}
-		notEmptyColumns = notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length());
-		values = values.substring(0, values.length() - ", ".length());
+		notEmptyColumns = new StringBuilder(notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length()));
+		values = new StringBuilder(values.substring(0, values.length() - ", ".length()));
 
 		String sqlQuery = "insert into " + this.getTableName() + "(" + notEmptyColumns + ")" + " values (" + values
 				+ ")";
 
-		String message = "Executing : " + sqlQuery + " [ values : " + params.toString() + " ]";
+		String message = "Executing : " + sqlQuery + " [ values : " + params + " ]";
 		logger.debug(message);
-		final String query = sqlQuery;
-		sqlConnector.executeUpdate(query, params);
+        sqlConnector.executeUpdate(sqlQuery, params);
 		try {
 			Integer lastId = sqlConnector.getLastGeneratedId();
 			if (lastId == -1)
 				throw new Exception("Could not retrieve last inserted id");
 
 			sqlConnector.executeQuery("select " + StringUtils.join(columns, ", ") + " from " + this.getTableName()
-					+ " where " + this.getSqlTable().getPrimaryKey() + " = ? ", Arrays.asList(lastId), rset -> {
+					+ " where " + this.getSqlTable().getPrimaryKey() + " = ? ", List.of(lastId), rset -> {
 						try {
 							this.getSqlTableRows().add(new MapTableViewRow(DTOMapper.map(rset)));
 						} catch (Exception e) {
@@ -481,38 +469,38 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 	public void insertRecord(Map<String, Object> map) throws SQLException {
 		Set<String> columns = this.getSqlTable().getColumns();
 		List<Object> params = new ArrayList<>();
-		String notEmptyColumns = "";
-		String values = "";
+		StringBuilder notEmptyColumns = new StringBuilder();
+		StringBuilder values = new StringBuilder();
 
 		for (String column : columns) {
 			Object elm = map.get(column);
-			if (elm != null && !elm.toString().equals("")) {
-				notEmptyColumns += column + ", ";
+			if (elm != null && !elm.toString().isEmpty()) {
+				notEmptyColumns.append(column).append(", ");
 				params.add(map.get(column));
-				values += "?, ";
+				values.append("?, ");
 			}
 		}
-		notEmptyColumns = notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length());
-		values = values.substring(0, values.length() - ", ".length());
+		notEmptyColumns = new StringBuilder(notEmptyColumns.substring(0, notEmptyColumns.length() - ", ".length()));
+		values = new StringBuilder(values.substring(0, values.length() - ", ".length()));
 
 		String sqlQuery = "insert into " + this.getTableName() + "(" + notEmptyColumns + ")" + " values (" + values
 				+ ")";
 
-		String message = "Executing : " + sqlQuery + " [ values : " + params.toString() + " ]";
+		String message = "Executing : " + sqlQuery + " [ values : " + params + " ]";
 		logger.debug(message);
 		sqlConnector.executeUpdate(sqlQuery, params);
 	}
 
 	public void updateRecord(final SqlTableRowEditBox editBox, final MapTableViewRow sqlTableRow) throws SQLException {
 		Set<String> columns = this.getSqlTable().getColumns();
-		String query = "update " + this.getTableName() + " set ";
+		StringBuilder query = new StringBuilder("update " + this.getTableName() + " set ");
 		List<Object> params = new ArrayList<>();
 
 		for (String column : columns) {
 			if (this.getPrimaryKey() != null && !this.getPrimaryKey().contains(column)) {
 				TextArea elm = editBox.getMap().get(column);
 				Object actualValue = null;
-				if (elm != null && elm.getText() != null && !elm.getText().equals("")) {
+				if (elm != null && elm.getText() != null && !elm.getText().isEmpty()) {
 					// type checking
 					try {
 						actualValue = sqlConnector.castToDBType(this.getSqlTable(), column,
@@ -525,22 +513,22 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 					}
 				}
 				params.add(actualValue);
-				query += column + "= ? ,";
+				query.append(column).append("= ? ,");
 			}
 		}
-		query = query.substring(0, query.length() - 1);
-		query += " where ";
+		query = new StringBuilder(query.substring(0, query.length() - 1));
+		query.append(" where ");
 		String[] keys = this.getPrimaryKey().split(",");
 		for (String key : keys) {
-			query += key + " = ? and ";
+			query.append(key).append(" = ? and ");
 			params.add(sqlTableRow.get(key));
 		}
-		query = query.substring(0, query.length() - "and ".length());
+		query = new StringBuilder(query.substring(0, query.length() - "and ".length()));
 
-		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
+		String message = "Executing : " + query + " [ values : " + params + " ]";
 		logger.debug(message);
 
-		if (sqlConnector.executeUpdate(query, params) > 0) {
+		if (sqlConnector.executeUpdate(query.toString(), params) > 0) {
 			if (sqlConnector.isAutoCommitModeEnabled())
 				updateRowFromDb(sqlTableRow, columns);
 			else
@@ -554,16 +542,16 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 	private void updateRowFromDb(final MapTableViewRow sqlTableRow, Set<String> columns) throws SQLException {
 		List<Object> params = new ArrayList<>();
 		String[] keys;
-		String selectQuery = "select " + StringUtils.join(columns, ",") + " from " + this.getSqlTable().getName()
-				+ " where ";
+		StringBuilder selectQuery = new StringBuilder("select " + StringUtils.join(columns, ",") + " from " + this.getSqlTable().getName()
+                + " where ");
 		keys = this.getPrimaryKey().split(",");
 		for (String key : keys) {
-			selectQuery += key + " = ? and ";
+			selectQuery.append(key).append(" = ? and ");
 			params.add(sqlTableRow.get(key));
 		}
-		selectQuery = selectQuery.substring(0, selectQuery.length() - "and ".length());
+		selectQuery = new StringBuilder(selectQuery.substring(0, selectQuery.length() - "and ".length()));
 
-		sqlConnector.executeQuery(selectQuery, params, rset -> {
+		sqlConnector.executeQuery(selectQuery.toString(), params, rset -> {
 			LinkedHashMap<String, Object> entry = new LinkedHashMap<>();
 			for (String columnLabel : sqlTable.getColumns()) {
 				entry.put(columnLabel, rset.getObject(columnLabel));
@@ -589,7 +577,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 	}
 
 	/*
-	 * Returns tables's primary key , IMPORTANT in case of a composite key it
+	 * Returns table's primary key , IMPORTANT in case of a composite key it
 	 * returns a comma separated string with the keys
 	 * 
 	 */
@@ -599,10 +587,6 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 
 	public SqlTable getSqlTable() {
 		return sqlTable;
-	}
-
-	public void setSqlTable(SqlTable sqlTable) {
-		this.sqlTable = sqlTable;
 	}
 
 	public SqlTableViewEditableCell getSelectedCell() {

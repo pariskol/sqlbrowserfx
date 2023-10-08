@@ -98,7 +98,7 @@ public class MapTableViewRow implements SimpleObservable<MapTableViewRow> {
 
 	@Override
 	public void changed() {
-		listeners.forEach(listener -> listener.onObservaleChange(this));
+		listeners.forEach(listener -> listener.onObservableChange(this));
 	}
 
 	@Override

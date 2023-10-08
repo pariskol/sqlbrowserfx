@@ -25,8 +25,8 @@ import javafx.scene.control.MenuItem;
 
 public class QueriesMenu extends Menu implements SimpleObserver<String> {
 
-	private HashMap<String, Menu> menuItemsMap;
-	private HashMap<String, String> queriesMap;
+	private final HashMap<String, Menu> menuItemsMap;
+	private final HashMap<String, String> queriesMap;
 	private long codeAreasAvailable = 0;
 	private DSqlConsolePane sqlConsolePane;
 	
@@ -148,7 +148,7 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 	}
 
 	@Override
-	public void onObservaleChange(String newValue) {
+	public void onObservableChange(String newValue) {
 		this.loadQueries();	
 	}
 }

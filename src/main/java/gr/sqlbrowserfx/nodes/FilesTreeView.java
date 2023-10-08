@@ -1,7 +1,13 @@
 package gr.sqlbrowserfx.nodes;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -11,6 +17,7 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
+import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
@@ -35,20 +42,23 @@ import javafx.scene.layout.VBox;
 
 public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenuOwner, InputMapOwner {
 
-	private String rootPath;
+	private final String rootPath;
 	private TreeItem<TreeViewFile> rootItem, selectedRootItem;
-	
-	private SimpleBooleanProperty isFileProperty = new SimpleBooleanProperty(false);
-	private SimpleBooleanProperty isLeafMenuProperty = new SimpleBooleanProperty(false);
 
-	
-	private TextField searchField;
-	private Label searResultsLabel;
+	private final SimpleBooleanProperty isFileProperty = new SimpleBooleanProperty(false);
+	private final SimpleBooleanProperty hasFilesToCopyProperty = new SimpleBooleanProperty(false);
+	private final SimpleBooleanProperty isLeafMenuProperty = new SimpleBooleanProperty(false);
+
+
+	private final TextField searchField;
+	private final Label searResultsLabel;
 	private Integer lastSelectedItemPos = 0;
-	private List<TreeItem<TreeViewFile>> searchResultsTreeItemsList = new ArrayList<>();
-	private Button nextSearchResultButton;
+	private final List<TreeItem<TreeViewFile>> searchResultsTreeItemsList = new ArrayList<>();
+	private final Button nextSearchResultButton;
 	private ListView<TreeViewFile> searchResultsListView;
 	private CustomPopOver popOver;
+
+	private List<File> filesToCopy = new ArrayList<>();
 
 	public FilesTreeView(String rootPath) {
 		this.rootPath = rootPath;
@@ -74,40 +84,35 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 			int row = this.getRow(searchResultsTreeItemsList.get(lastSelectedItemPos));
 			this.scrollTo(row);
 		});
-		
+
 		this.setOnDragDetected(event -> {
 			var selectedItem = this.getSelectionModel().getSelectedItem();
 			if (selectedItem != null) {
 				var selectedFile = selectedItem.getValue().asFile();
-				
+
 				if (selectedFile.isDirectory()) return;
-				
+
 				var dragboard = this.startDragAndDrop(TransferMode.COPY_OR_MOVE);
 				ClipboardContent content = new ClipboardContent();
-		        content.putFiles(Arrays.asList(selectedFile));
+		        content.putFiles(List.of(selectedFile));
 		        dragboard.setContent(content);
 				dragboard.setDragView(selectedItem.getGraphic().snapshot(null, null));
 			}
 			event.consume();
 		});
-		
+
 		this.setOnMouseClicked(event -> {
 			if (popOver != null && popOver.isShowing()) {
 				popOver.hide();
 			}
-			
+
 			if (event.getClickCount() == 2) {
-				var file = this.getSelectionModel().getSelectedItem().getValue().asFile();
-				
-				if (file.isFile()) {
-					var sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
-					sqlConsolePane.openNewFileTab(file);
-				}
+				openSelectedFile();
 			}
-			
+
 			event.consume();
 		});
-		
+
 		this.getSelectionModel().selectedItemProperty().addListener((ob, ov, nv) -> {
 			if (nv == null) return;
 			this.isFileProperty.set(nv.getValue().isFile());
@@ -116,12 +121,109 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		this.setInputMap();
 	}
 
+	private void openSelectedFile() {
+		var file = this.getSelectionModel().getSelectedItem().getValue().asFile();
+
+		if (file.isFile()) {
+			var sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
+			sqlConsolePane.openNewFileTab(file);
+		}
+	}
+
+	private void copyFiles() {
+		filesToCopy = this.getSelectionModel().getSelectedItems().stream().map(ti -> ti.getValue().asFile()).toList();
+		if (!filesToCopy.isEmpty()) {
+			this.hasFilesToCopyProperty.set(true);
+		}
+	}
+
+	private void pasteFiles() {
+		var treeItem = getSelectionModel().getSelectedItem();
+		var selectedFile = treeItem.getValue().asFile();
+		if (!selectedFile.isDirectory()) return;
+
+		Executors.newSingleThreadExecutor().execute(() -> {
+			filesToCopy.forEach(file -> {
+				try {
+					var path = Paths.get(file.getAbsolutePath());
+					var newPath = Paths.get(selectedFile.getAbsolutePath(), file.getName());
+					newPath = !Files.exists(newPath) ? newPath : Paths.get(selectedFile.getAbsolutePath(), "copy_" + file.getName());
+					Files.copy(path, newPath, StandardCopyOption.REPLACE_EXISTING);
+					Platform.runLater(() -> refresh(treeItem));
+				} catch (IOException e) {
+					DialogFactory.createErrorNotification(e);
+				}
+			});
+			// clear pending files to copy
+			filesToCopy = null;
+			this.hasFilesToCopyProperty.set(false);
+		});
+	}
+
+	private void deleteSelectedFile() {
+		var treeItem = this.getSelectionModel().getSelectedItem();
+		var file = treeItem.getValue().asFile();
+
+
+		var doDelete = DialogFactory.createConfirmationDialog("Delete file", "Are you sure you want to delete the following file: \n" + file.getName());
+		if (doDelete) {
+			Executors.newSingleThreadExecutor().execute(() -> {
+				try {
+					Files.delete(Paths.get(file.getAbsolutePath()));
+					// since is a file we need to refresh its parent node
+					// which will be a directory
+					Platform.runLater(() -> refresh(treeItem.getParent()));
+				} catch (IOException e) {
+					DialogFactory.createErrorDialog(e);
+				}
+			});
+		}
+	}
+
+	private void createNewFile() {
+		var treeItem = this.getSelectionModel().getSelectedItem();
+		var file = treeItem.getValue().asFile();
+		if (!file.isDirectory()) return;
+
+		String newFileName = DialogFactory.createTextInputDialog("New file", "Enter new file name");
+		Executors.newSingleThreadExecutor().execute(() -> {
+			try {
+				var newPath = Paths.get(file.getAbsolutePath(), newFileName);
+				Files.createFile(newPath);
+				Platform.runLater(() -> refresh(treeItem));
+			} catch (IOException e) {
+				DialogFactory.createErrorDialog(e);
+			}
+		});
+	}
+
+	private void renameFile() {
+		var treeItem = this.getSelectionModel().getSelectedItem();
+		var file = treeItem.getValue().asFile();
+		if (file.isDirectory()) return;
+
+		String newFileName = DialogFactory.createTextInputDialog("Rename file", "Enter new file name");
+		Executors.newSingleThreadExecutor().execute(() -> {
+			try {
+				var path = Paths.get(file.getAbsolutePath());
+				Files.move(path, path.resolveSibling(newFileName));
+				// since is a file we need to refresh its parent node
+				// which will be a directory
+				Platform.runLater(() -> refresh(treeItem.getParent()));
+			} catch (IOException e) {
+				DialogFactory.createErrorDialog(e);
+			}
+		});
+	}
+
+
+
 	@Override
 	public void setInputMap() {
 		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
 				action -> this.showSearchPopup()));
 	}
-	
+
 	private void searchFieldAction() {
 		this.lastSelectedItemPos = -1;
 		this.searchResultsTreeItemsList.clear();
@@ -131,10 +233,8 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 			searchRootItem(this.getRoot());
 			Platform.runLater(() -> {
 				this.searResultsLabel.setText(this.searchResultsTreeItemsList.size() + " results");
-				var l = this.searchResultsTreeItemsList.stream().filter(ti -> ti.getValue().isFile()).map(ti -> ti.getValue())
-						.collect(Collectors.toList());
-				l.sort((a, b) -> a.getName().compareTo(b.getName()));
-				this.searchResultsListView.setItems(FXCollections.observableArrayList(l));
+				var l = this.searchResultsTreeItemsList.stream().filter(ti -> ti.getValue().isFile()).map(TreeItem::getValue).sorted(Comparator.comparing(File::getName)).collect(Collectors.toList());
+                this.searchResultsListView.setItems(FXCollections.observableArrayList(l));
 			});
 		});
 	}
@@ -147,13 +247,13 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 			if (treeItem.getValue().isDirectory()) {
 				searchRootItem(treeItem);
 			}
-			
+
 			if (treeItem.getValue().getName().matches("(?i:.*" + searchField.getText() + ".*)")) {
 				searchResultsTreeItemsList.add(treeItem);
 			}
 		}
 	}
-	
+
 	private String determineIcon(String fileName) {
 		var url = "/icons/";
 		if (fileName.endsWith(".java")) {
@@ -165,23 +265,23 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		else {
 			url += "red.png";
 		}
-		
+
 		return url;
 	}
-	
+
 	private TreeItem<TreeViewFile> createTreeView(String path) {
 		var file = new TreeViewFile(path);
-		var rootItem = new TreeItem<>(file);
+		var rootItem = new TreeItem<>(file, JavaFXUtils.createIcon("/icons/folder.png"));
 
 		var files = Arrays.asList(file.listFiles(f -> !f.isHidden() && !f.getName().startsWith(".")));
 		files.sort((a,b) -> {
 			if (a.isDirectory() && b.isFile()) return - 1;
-			if (a.isDirectory() && b.isDirectory()) a.getName().compareTo(b.getName());
+			if (a.isDirectory() && b.isDirectory()) return a.getName().compareTo(b.getName());
 			if (a.isFile() && b.isFile()) return a.getName().compareTo(b.getName());
 			return 1;
 		});
-		
-		if (files != null) {
+
+		if (!files.isEmpty()) {
 			for (var newFile : files) {
 				if (newFile.isDirectory()) {
 					var childItem = createTreeView(newFile.getAbsolutePath());
@@ -204,10 +304,19 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		treeItem.setExpanded(false);
 	}
 
+	@Override
 	public void refresh() {
 		this.setRoot(this.createTreeView(rootPath));
 		rootItem = this.getRoot();
 		rootItem.setExpanded(true);
+	}
+
+	private void refresh(TreeItem<TreeViewFile> treeItem) {
+		var targetPath = treeItem.getValue().asFile().getAbsolutePath();
+		treeItem.getChildren().clear();
+		treeItem.getChildren().addAll(this.createTreeView(targetPath).getChildren());
+		treeItem.setExpanded(true);
+		this.getSelectionModel().select(treeItem);
 	}
 
 	private void createSearPopOver() {
@@ -217,67 +326,108 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 				searResultsLabel,
 				searchResultsListView
 			);
-		
+
 		popOver = new CustomPopOver(vb);
 	}
-	
+
+	private void openSearchResultsListViewFile() {
+		var file = searchResultsListView.getSelectionModel().getSelectedItem().asFile();
+
+		if (file.isFile()) {
+			var sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
+			sqlConsolePane.openNewFileTab(file);
+		}
+	}
+
+	private void createSearchResultsListView() {
+		searchResultsListView = new ListView<>();
+		searchResultsListView.setOnKeyPressed(event -> {
+			if (event.getCode() == KeyCode.ENTER) {
+				openSearchResultsListViewFile();
+			}
+		});
+		searchResultsListView.setOnMouseClicked(event -> {
+			if (event.getClickCount() == 2) {
+				openSearchResultsListViewFile();
+			}
+
+			event.consume();
+		});
+	}
+
 	public void showSearchPopup() {
 		var boundsInScene = this.localToScreen(this.getBoundsInLocal());
 
 		if (searchResultsListView == null) {
-			searchResultsListView = new ListView<TreeViewFile>();
-			searchResultsListView.setOnMouseClicked(event -> {
-				if (event.getClickCount() == 2) {
-					var file = searchResultsListView.getSelectionModel().getSelectedItem().asFile();
-
-					if (file.isFile()) {
-						var sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
-						sqlConsolePane.openNewFileTab(file);
-					}
-				}
-
-				event.consume();
-			});
+			createSearchResultsListView();
 		}
-		
+
 		if (popOver == null) {
 			createSearPopOver();
 		}
-		
+
+		// show to parent node to resolve font rendering issue
 		popOver.show(getParent(), boundsInScene.getMaxX(), boundsInScene.getMinY());
 	}
-	
+
 	@Override
 	public ContextMenu createContextMenu() {
 		var contextMenu = new ContextMenu();
 
-		var menuItemSearch = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
-		menuItemSearch.setOnAction(event -> this.showSearchPopup());
-		var menuItemCollapseAll = new MenuItem("Collapse All", JavaFXUtils.createIcon("/icons/collapse.png"));
-		menuItemCollapseAll.disableProperty().bind(this.isLeafMenuProperty.not());
-		menuItemCollapseAll.setOnAction(event -> {
+		var openFile = new MenuItem("Open", JavaFXUtils.createIcon("/icons/code-file.png"));
+		openFile.disableProperty().bind(this.isFileProperty.not());
+		openFile.setOnAction(event -> this.openSelectedFile());
+
+		var newFile = new MenuItem("New", JavaFXUtils.createIcon("/icons/add.png"));
+		newFile.disableProperty().bind(this.isFileProperty);
+		newFile.setOnAction(event -> this.createNewFile());
+
+		var copyFiles = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
+		copyFiles.setOnAction(event -> this.copyFiles());
+
+		var pasteFiles = new MenuItem("Paste", JavaFXUtils.createIcon("/icons/paste.png"));
+		pasteFiles.setOnAction(event -> this.pasteFiles());
+		pasteFiles.disableProperty().bind(this.isFileProperty.or(this.hasFilesToCopyProperty.not()));
+
+		var deleteFile = new MenuItem("Delete", JavaFXUtils.createIcon("/icons/minus.png"));
+		deleteFile.setOnAction(event -> this.deleteSelectedFile());
+
+		var renameFile = new MenuItem("Rename", JavaFXUtils.createIcon("/icons/edit.png"));
+		renameFile.disableProperty().bind(this.isFileProperty.not());
+		renameFile.setOnAction(event -> this.renameFile());
+
+		var search = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
+		search.setOnAction(event -> this.showSearchPopup());
+
+		var collapseAll = new MenuItem("Collapse All", JavaFXUtils.createIcon("/icons/collapse.png"));
+		collapseAll.disableProperty().bind(this.isLeafMenuProperty.not());
+		collapseAll.setOnAction(event -> {
 			if (this.getSelectionModel().getSelectedItem() != null)
 				this.collapseAll(this.getSelectionModel().getSelectedItem());
 		});
 
-		var menuItemRefresh = new MenuItem("Refresh", JavaFXUtils.createIcon("/icons/refresh.png"));
-		menuItemRefresh.setOnAction(event -> refresh());
-		
-		var menuItemNewRoot = new MenuItem("Select As Root", JavaFXUtils.createIcon("/icons/folder.png"));
-		menuItemNewRoot.disableProperty().bind(this.isFileProperty);
-		menuItemNewRoot.setOnAction(event -> {
+		var refresh = new MenuItem("Refresh Folder", JavaFXUtils.createIcon("/icons/refresh.png"));
+		refresh.setOnAction(event -> refresh(this.getSelectionModel().getSelectedItem()));
+		refresh.disableProperty().bind(this.isFileProperty);
+
+		var setAsRoot = new MenuItem("Select As Root", JavaFXUtils.createIcon("/icons/folder.png"));
+		setAsRoot.disableProperty().bind(this.isFileProperty);
+		setAsRoot.setOnAction(event -> {
 			if (this.getSelectionModel().getSelectedItem() == null)
 				return;
-			
+
 			this.selectedRootItem = this.getSelectionModel().getSelectedItem();
 			this.setRoot(this.selectedRootItem);
 			this.selectedRootItem.setExpanded(true);
 		});
-		
-		var menuItemRestoreRoot = new MenuItem("Restore Project Root", JavaFXUtils.createIcon("/icons/refresh.png"));
-		menuItemRestoreRoot.setOnAction(event -> this.setRoot(this.rootItem));
 
-		contextMenu.getItems().addAll(menuItemSearch, menuItemCollapseAll, new SeparatorMenuItem(), menuItemNewRoot, menuItemRestoreRoot, new SeparatorMenuItem(), menuItemRefresh);
+		var restoreRoot = new MenuItem("Restore Project Root", JavaFXUtils.createIcon("/icons/refresh.png"));
+		restoreRoot.setOnAction(event -> this.setRoot(this.rootItem));
+
+		contextMenu.getItems().addAll(openFile, new SeparatorMenuItem(),
+				newFile, renameFile, copyFiles, pasteFiles, deleteFile, new SeparatorMenuItem(),
+				search, collapseAll, new SeparatorMenuItem(), setAsRoot, refresh, new SeparatorMenuItem(),
+				restoreRoot);
 
 		return contextMenu;
 	}

@@ -18,11 +18,11 @@ import gr.sqlbrowserfx.LoggerConf;
 
 public class MysqlConnector extends SqlConnector {
 
-	private String SCHEMA_VIEW_QUERY;
-	private String SCHEMA_TABLE_QUERY;
-	private String SCHEMA_INDEX_QUERY;
+	private final String SCHEMA_VIEW_QUERY;
+	private final String SCHEMA_TABLE_QUERY;
+	private final String SCHEMA_INDEX_QUERY;
 
-	private String database;
+	private final String database;
 
 	public MysqlConnector(String database, String user, String password) {
 		super("com.mysql.cj.jdbc.Driver",
@@ -73,8 +73,7 @@ public class MysqlConnector extends SqlConnector {
 	@Override
 	public void setAutoCommitModeEnabled(boolean isAutoCommitModeEnabled) {
 		super.setAutoCommitModeEnabled(isAutoCommitModeEnabled);
-		if (!isAutoCommitModeEnabled && this.getDataSource() instanceof BasicDataSource) {
-			BasicDataSource basicDataSource = (BasicDataSource) this.getDataSource();
+		if (!isAutoCommitModeEnabled && this.getDataSource() instanceof BasicDataSource basicDataSource) {
 			basicDataSource.setAutoCommitOnReturn(false);
 			basicDataSource.setDefaultAutoCommit(false);
 			basicDataSource.setRollbackOnReturn(false);
@@ -98,10 +97,10 @@ public class MysqlConnector extends SqlConnector {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug(activeConnections + " connections commited");
 		} catch (SQLException e) {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
-			this.rollbackQuitely(conn);
+			this.rollbackQuietly(conn);
 		}
 		for (Connection conn2 : connections)
-			this.closeQuitely(conn2);
+			this.closeQuietly(conn2);
 	}
 
 	@Override
@@ -120,7 +119,7 @@ public class MysqlConnector extends SqlConnector {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to rollback changes", e);
 		}
 		for (Connection conn2 : connections)
-			this.closeQuitely(conn2);
+			this.closeQuietly(conn2);
 	}
 	
 	@Override
@@ -143,7 +142,7 @@ public class MysqlConnector extends SqlConnector {
 
 	@Override
 	public String findPrimaryKey(String tableName) throws SQLException {
-		StringBuilder primaryKeyBuilder = new StringBuilder("");
+		StringBuilder primaryKeyBuilder = new StringBuilder();
 
 		String query = "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME "
 				+ "	FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?";
@@ -160,7 +159,7 @@ public class MysqlConnector extends SqlConnector {
 	}
 	
 	@Override
-	public List<Map<String, String>> findFoireignKeyReferences(String tableName) throws SQLException {
+	public List<Map<String, String>> findForeignKeyReferences(String tableName) throws SQLException {
 		List<Map<String, String>> foreignKeys = new ArrayList<>();
 		String query = "SELECT TABLE_NAME,COLUMN_NAME,CONSTRAINT_NAME, REFERENCED_TABLE_NAME,REFERENCED_COLUMN_NAME "
 				+ "	FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_NAME != ?";
@@ -232,9 +231,7 @@ public class MysqlConnector extends SqlConnector {
 	@Override
 	public Integer getLastGeneratedId() throws SQLException {
 		AtomicInteger lastId = new AtomicInteger();
-		this.executeQuery("select last_insert_id()", rset -> {
-			lastId.set(rset.getInt(1));
-		});
+		this.executeQuery("select last_insert_id()", rset -> lastId.set(rset.getInt(1)));
 		return lastId.get();
 	}
 }

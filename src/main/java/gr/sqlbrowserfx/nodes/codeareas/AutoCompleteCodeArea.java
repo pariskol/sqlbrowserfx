@@ -56,14 +56,14 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 	private static final int Y_OFFSET = (int) (Math.round(JavaFXUtils.getZoomFactorApplied() * 35 + 5));
 	private boolean autoCompletePopupShowing = false;
 	private boolean insertMode = false;
-	private T syntaxProvider;
+	private final T syntaxProvider;
 
 	private ListView<Keyword> suggestionsList;
 	private Popup autoCompletePopup;
 	protected SearchAndReplacePopOver searchAndReplacePopOver;
-	private SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
-	private SimpleBooleanProperty autoCompleteProperty = new SimpleBooleanProperty(true);
-	private SimpleBooleanProperty isTextSelectedProperty = new SimpleBooleanProperty(false);;
+	private final SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
+	private final SimpleBooleanProperty autoCompleteProperty = new SimpleBooleanProperty(true);
+	private final SimpleBooleanProperty isTextSelectedProperty = new SimpleBooleanProperty(false);
 
 	protected PopOver goToLinePopOver = null;
 
@@ -85,13 +85,11 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		autoCompletePopup = new Popup();
 		searchAndReplacePopOver = new SearchAndReplacePopOver(this);
 
-		this.setOnKeyTyped(keyEvent -> this.autoCompleteAction(keyEvent));
+		this.setOnKeyTyped(this::autoCompleteAction);
 		this.setContextMenu(this.createContextMenu());
 		this.setKeys();
 
-		this.setOnMouseClicked(mouseEvent -> {
-			this.onMouseClicked();
-		});
+		this.setOnMouseClicked(mouseEvent -> this.onMouseClicked());
 
 		this.showLinesProperty.addListener((ob, ov, nv) -> enableShowLineNumbers(nv));
 		this.enableShowLineNumbers(this.showLinesProperty.get());
@@ -428,9 +426,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 			suggestionsList.getItems().addAll(FXCollections.observableList(suggestions));
 			suggestionsList.setPrefHeight(200);
 		}
-		suggestionsList.setCellFactory(callback -> {
-			return new SuggestionListCell(suggestionsList);
-		});
+		suggestionsList.setCellFactory(callback -> new SuggestionListCell(suggestionsList));
 		return suggestionsList;
 	}
 
@@ -451,7 +447,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		} catch (IOException e) {
 			DialogFactory.createErrorDialog(e);
 		}
-		DialogFactory.createNotification("File saved", "File saved at " + new Date().toString());
+		DialogFactory.createNotification("File saved", "File saved at " + new Date());
 	}
 
 	protected void autoCompleteAction(KeyEvent event) {
@@ -470,7 +466,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 				List<Keyword> suggestions = this.getQuerySuggestions(query);
 
 				suggestionsList = this.createSuggestionsListView(suggestions);
-				if (suggestionsList.getItems().size() != 0) {
+				if (!suggestionsList.getItems().isEmpty()) {
 					autoCompletePopup.getContent().setAll(suggestionsList);
 					this.showAutoCompletePopup();
 					this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
@@ -491,14 +487,14 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 			autoCompletePopup = this.createAutoCompletePopup();
 
 			if (!query.isEmpty()) {
-				List<Keyword> suggestions = null;
+				List<Keyword> suggestions;
 				if (event.getCode() == KeyCode.ENTER) {
 					return;
 				} else {
 					suggestions = this.getQuerySuggestions(query);
 				}
 				suggestionsList = this.createSuggestionsListView(suggestions);
-				if (suggestionsList.getItems().size() != 0) {
+				if (!suggestionsList.getItems().isEmpty()) {
 					autoCompletePopup.getContent().setAll(suggestionsList);
 					this.showAutoCompletePopup();
 					this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
@@ -616,7 +612,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		if (this.getText().charAt(position - 1) == '\n')
 			return "";
 
-		int limit = (position > WORD_LENGTH_LIMIT) ? WORD_LENGTH_LIMIT : position;
+		int limit = Math.min(position, WORD_LENGTH_LIMIT);
 		String query = this.getText().substring(position - limit, position);
 		int last = query.lastIndexOf(" ");
 		String[] split = query.substring(last + 1).trim().split("\n");
@@ -626,10 +622,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
 	@SuppressWarnings({ "unchecked" })
 	protected List<Keyword> getQuerySuggestions(String query) {
-		List<Keyword> suggestions = (List<Keyword>) syntaxProvider.getKeywords().stream()
+        return (List<Keyword>) syntaxProvider.getKeywords().stream()
 				.filter(keyword -> keyword != null && ((Keyword) keyword).getKeyword().startsWith(query))
 				.collect(Collectors.toList());
-		return suggestions;
 	}
 
 	@Override

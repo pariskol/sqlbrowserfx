@@ -20,12 +20,12 @@ import javafx.scene.layout.VBox;
 
 public class TableCreationPane extends BorderPane implements ToolbarOwner, SimpleObservable<String> {
 	
-	private FlowPane toolbar;
-	private ListView<ColumnCreationBox> columnBoxesListView;
-	private TextField tableNameField;
-	private SqlConnector sqlConnector;
-	private SqlCodeArea sqlCodeArea;
-	private DSqlConsolePane sqlConsolePane;
+	private final FlowPane toolbar;
+	private final ListView<ColumnCreationBox> columnBoxesListView;
+	private final TextField tableNameField;
+	private final SqlConnector sqlConnector;
+	private final SqlCodeArea sqlCodeArea;
+	private final DSqlConsolePane sqlConsolePane;
 
 	public TableCreationPane(SqlConnector sqlConnector) {
 		toolbar = this.createToolbar();
@@ -68,9 +68,7 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner, Simpl
 		});
 		createQueryButton.setTooltip(new Tooltip("Generate sql create statement"));
 		Button createTableButton = new Button("", JavaFXUtils.createIcon("/icons/play.png"));
-		createTableButton.setOnAction(actionEvent -> {
-			sqlConsolePane.executeButonAction();
-		});
+		createTableButton.setOnAction(actionEvent -> sqlConsolePane.executeButtonAction());
 		createTableButton.setTooltip(new Tooltip("Run generated sql create statement"));
 		FlowPane toolbar = new FlowPane(addButton, deleteButton, createQueryButton, createTableButton);
 		toolbar.setPrefWidth(addButton.getWidth());
@@ -78,49 +76,49 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner, Simpl
 	}
 	
 	public String createCreateQuery() {
-		String query = "CREATE TABLE " + tableNameField.getText() + "\n(\n";
-		String foreignKeys = "";
-		String primaryKey = "    PRIMARY KEY(";
+		StringBuilder query = new StringBuilder("CREATE TABLE " + tableNameField.getText() + "\n(\n");
+		StringBuilder foreignKeys = new StringBuilder();
+		StringBuilder primaryKey = new StringBuilder("    PRIMARY KEY(");
 		for (ColumnCreationBox cb : columnBoxesListView.getItems()) {
-			query += "    " + cb.getColumnName() + " " + cb.getColumnType();
+			query.append("    ").append(cb.getColumnName()).append(" ").append(cb.getColumnType());
 			
 			if (cb.isNotNull())
-				query += " NOT NULL";
+				query.append(" NOT NULL");
 			if (cb.isUnique())
-				query += " UNIQUE";
+				query.append(" UNIQUE");
 			if (cb.isColumnPrimaryKey())
-				primaryKey += cb.getColumnName() + ",";
+				primaryKey.append(cb.getColumnName()).append(",");
 			if (cb.isColumnForeignKey())
-				foreignKeys += "    FOREIGN KEY(" + cb.getColumnName() + ") REFERENCES " + cb.getReferencedTable() + "(" + cb.getReferencedColumn() + "),\n";
+				foreignKeys.append("    FOREIGN KEY(").append(cb.getColumnName()).append(") REFERENCES ").append(cb.getReferencedTable()).append("(").append(cb.getReferencedColumn()).append("),\n");
 			
-			query += ",\n";
+			query.append(",\n");
 		}
-		if (!primaryKey.equals("    PRIMARY KEY(")) {
-			primaryKey = primaryKey.substring(0, primaryKey.length() - 1);
-			primaryKey += ")";
+		if (!primaryKey.toString().equals("    PRIMARY KEY(")) {
+			primaryKey = new StringBuilder(primaryKey.substring(0, primaryKey.length() - 1));
+			primaryKey.append(")");
 			if (!foreignKeys.isEmpty())
-				primaryKey += ",";
-			primaryKey += "\n";
-			query += primaryKey;
+				primaryKey.append(",");
+			primaryKey.append("\n");
+			query.append(primaryKey);
 		}
 		if (!foreignKeys.isEmpty()) {
-			foreignKeys = foreignKeys.substring(0, foreignKeys.length() - ",\n".length());
-			foreignKeys += "\n";
-			query += foreignKeys;
+			foreignKeys = new StringBuilder(foreignKeys.substring(0, foreignKeys.length() - ",\n".length()));
+			foreignKeys.append("\n");
+			query.append(foreignKeys);
 		}
-		query += ")";
+		query.append(")");
 
-		return query;
+		return query.toString();
 	}
 
 	@Override
 	public void changed() {
-		sqlConsolePane.getListeners().forEach(listener -> listener.onObservaleChange(null));
+		sqlConsolePane.getListeners().forEach(listener -> listener.onObservableChange(null));
 	}
 
 	@Override
 	public void changed(String data) {
-		sqlConsolePane.getListeners().forEach(listener -> listener.onObservaleChange(data));
+		sqlConsolePane.getListeners().forEach(listener -> listener.onObservableChange(data));
 	}
 
 	@Override

@@ -27,15 +27,15 @@ public abstract class DbConfigBox extends VBox {
 	private PasswordField passwordField;
 	private TextField databaseField;
 	private Button connectButton;
-	private ProgressIndicator loader;
-	private HistorySqlTableView sqlTableView;
+	private final ProgressIndicator loader;
+	private final HistorySqlTableView sqlTableView;
 	
 
 	public DbConfigBox() {
 		this.setPadding(new Insets(5));
 		this.setSpacing(5);
 		
-		this.getChildren().add(new Label("Databse url"));
+		this.getChildren().add(new Label("Database url"));
 		databaseField = new TextField();
 		urlField = new TextField();
 		urlField.setPromptText("Enter jdbc url ...");
@@ -84,9 +84,7 @@ public abstract class DbConfigBox extends VBox {
 		SqlBrowserFXAppManager.getConfigSqlConnector()
 							  .executeQueryRawAsync(
 			this.getHistoryQuery(),
-			rset -> {
-				sqlTableView.setItemsLater(rset);
-			}
+			rset -> sqlTableView.setItemsLater(rset)
 		);
 
 		this.setOnKeyPressed(keyEvent -> {

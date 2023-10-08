@@ -56,26 +56,26 @@ public class DBTreeView extends TreeView<String>
 
 	private static final String ACTION_STATEMENT = "ACTION_STATEMENT";
 	private static final String TRIGGER_NAME = "TRIGGER_NAME";
-	private Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
-	private SqlConnector sqlConnector;
+	private final Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
+	private final SqlConnector sqlConnector;
 
-	private TreeItem<String> rootItem;
+	private final TreeItem<String> rootItem;
 	protected TreeItem<String> tablesRootItem;
 	protected TreeItem<String> viewsRootItem;
-	private TreeItem<String> indexesRootItem;
+	private final TreeItem<String> indexesRootItem;
 	private TreeItem<String> proceduresRootItem;
 	private TreeItem<String> functionsRootItem;
 
-	private List<String> allItems;
-	private List<SimpleObserver<String>> listeners;
+	private final List<String> allItems;
+	private final List<SimpleObserver<String>> listeners;
 
-	private TextField searchField;
+	private final TextField searchField;
 	private DDBTreePane parent = null;
 	private Integer lastSelectedItemPos = 0;
-	private List<TreeItem<String>> searchResultsList = new ArrayList<>();
-	private Button nextSearchResultButton;
-	private SimpleBooleanProperty hasSelectedSchemaProperty = new SimpleBooleanProperty(false);
-	private SimpleBooleanProperty canSelectedOpenProperty = new SimpleBooleanProperty(false);
+	private final List<TreeItem<String>> searchResultsList = new ArrayList<>();
+	private final Button nextSearchResultButton;
+	private final SimpleBooleanProperty hasSelectedSchemaProperty = new SimpleBooleanProperty(false);
+	private final SimpleBooleanProperty canSelectedOpenProperty = new SimpleBooleanProperty(false);
 
 	
 
@@ -146,37 +146,36 @@ public class DBTreeView extends TreeView<String>
 			canSelectedOpenProperty.set(false);
 			hasSelectedSchemaProperty.set(false);
 			
-			List<String> tables = tablesRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
+			List<String> tables = tablesRootItem.getChildren().stream().map(TreeItem::getValue).toList();
 			if (tables.contains(selected)) {
 				hasSelectedSchemaProperty.set(true);
 				canSelectedOpenProperty.set(true);
 				return;
 			}
-			List<String> views = viewsRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
+			List<String> views = viewsRootItem.getChildren().stream().map(TreeItem::getValue).toList();
 			if (views.contains(selected)) {
 				hasSelectedSchemaProperty.set(true);
 				canSelectedOpenProperty.set(true);
 				return;
 			}
-			List<String> indexes = indexesRootItem.getChildren().stream().map(ti -> ti.getValue()).collect(Collectors.toList());
+			List<String> indexes = indexesRootItem.getChildren().stream().map(TreeItem::getValue).toList();
 			if (indexes.contains(selected)) {
 				hasSelectedSchemaProperty.set(true);
 				return;
 			}
 			
 			if (isUsingMysql()) {
-				List<String> procedures = proceduresRootItem.getChildren().stream().map(ti -> ti.getValue())
-						.collect(Collectors.toList());
+				List<String> procedures = proceduresRootItem.getChildren().stream().map(TreeItem::getValue)
+						.toList();
 				if (procedures.contains(selected)) {
 					hasSelectedSchemaProperty.set(true);
 					return;
 				}
-				List<String> functions = functionsRootItem.getChildren().stream().map(ti -> ti.getValue())
-						.collect(Collectors.toList());
+				List<String> functions = functionsRootItem.getChildren().stream().map(TreeItem::getValue)
+						.toList();
 				if (functions.contains(selected)) {
 					hasSelectedSchemaProperty.set(true);
-					return;
-				}
+                }
 			}
 			
 		});
@@ -284,7 +283,7 @@ public class DBTreeView extends TreeView<String>
 				newItems.add(name);
 				if (!allItems.contains(name)) {
 					allItems.add(name);
-					TreeItem<String> treeItem = new TreeItem<String>(name);
+					TreeItem<String> treeItem = new TreeItem<>(name);
 					if (type.toLowerCase().contains("table")) {
 						this.fillTableTreeItem(treeItem);
 						tablesRootItem.getChildren().add(treeItem);
@@ -315,11 +314,11 @@ public class DBTreeView extends TreeView<String>
 			// triggers tree item is the 2nd child
 			treeItem.getChildren().get(2).getChildren().clear();
 			sqlConnector.getTriggers(treeItem.getValue(), rset -> {
-				TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString(TRIGGER_NAME),
-						JavaFXUtils.createIcon("/icons/trigger.png"));
+				TreeItem<String> triggerTreeItem = new TreeItem<>(rset.getString(TRIGGER_NAME),
+                        JavaFXUtils.createIcon("/icons/trigger.png"));
 				String schema = rset.getString(ACTION_STATEMENT);
 				triggerTreeItem.getChildren()
-						.add(new TreeItem<String>(schema, JavaFXUtils.createIcon("/icons/script.png")));
+						.add(new TreeItem<>(schema, JavaFXUtils.createIcon("/icons/script.png")));
 				ObservableList<TreeItem<String>> triggerItems = treeItem.getChildren().get(2).getChildren();
 				triggerItems.add(triggerTreeItem);
 			});
@@ -333,7 +332,7 @@ public class DBTreeView extends TreeView<String>
 		allItems.clear();
 	}
 
-	private void removeMissingtreeItems(List<String> newItems) {
+	private void removeMissingTreeItems(List<String> newItems) {
 		List<TreeItem<String>> found = new ArrayList<>();
 		List<String> sfound = new ArrayList<>();
 		
@@ -371,7 +370,7 @@ public class DBTreeView extends TreeView<String>
 				long timeCounter = System.currentTimeMillis();
 	
 				List<String> newItems = this.setupTreeItems();
-				this.removeMissingtreeItems(newItems);
+				this.removeMissingTreeItems(newItems);
 	
 				Platform.runLater(() -> {
 					this.setRoot(rootItem);
@@ -418,7 +417,7 @@ public class DBTreeView extends TreeView<String>
 		sqlConnector.executeQueryRaw("select * from " + treeItem.getValue() + " where 1 = 2", rset -> {
 			SqlTable sqlTable = new SqlTable(rset.getMetaData());
 			sqlTable.setPrimaryKey(sqlConnector.findPrimaryKey(treeItem.getValue()));
-			List<Map<String, String>> fkeys = sqlConnector.findFoireignKeyReferences(treeItem.getValue());
+			List<Map<String, String>> fkeys = sqlConnector.findForeignKeyReferences(treeItem.getValue());
 			sqlTable.setForeignKeys(
 					fkeys.stream().map(x -> x.get(SqlConnector.FOREIGN_KEY)).collect(Collectors.toList()));
 			sqlTable.getColumns();
@@ -430,8 +429,8 @@ public class DBTreeView extends TreeView<String>
 				else if (sqlTable.isForeignKey(column)) {
 					columnTreeItem.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
 					List<Map<String, String>> l = fkeys.stream()
-							.filter(x -> x.get(SqlConnector.FOREIGN_KEY).equals(column)).collect(Collectors.toList());
-					Map<String, String> map = l.size() > 0 ? l.get(0) : null;
+							.filter(x -> x.get(SqlConnector.FOREIGN_KEY).equals(column)).toList();
+					Map<String, String> map = !l.isEmpty() ? l.get(0) : null;
 					if (map != null) {
 						String refColumn = map.get(SqlConnector.REFERENCED_TABLE) + ": "
 								+ map.get(SqlConnector.REFERENCED_KEY);
@@ -449,14 +448,14 @@ public class DBTreeView extends TreeView<String>
 
 	private void fillTableTreeItem(TreeItem<String> treeItem) throws SQLException {
 		this.fillTVTreeItem(treeItem, sqlConnector.getTableSchemaColumn());
-		TreeItem<String> triggersTreeItem = new TreeItem<String>("triggers",
-				JavaFXUtils.createIcon("/icons/trigger.png"));
+		TreeItem<String> triggersTreeItem = new TreeItem<>("triggers",
+                JavaFXUtils.createIcon("/icons/trigger.png"));
 		sqlConnector.getTriggers(treeItem.getValue(), rset -> {
-			TreeItem<String> triggerTreeItem = new TreeItem<String>(rset.getString(TRIGGER_NAME),
-					JavaFXUtils.createIcon("/icons/trigger.png"));
+			TreeItem<String> triggerTreeItem = new TreeItem<>(rset.getString(TRIGGER_NAME),
+                    JavaFXUtils.createIcon("/icons/trigger.png"));
 			String schema = rset.getString(ACTION_STATEMENT);
 			triggerTreeItem.getChildren()
-					.add(new TreeItem<String>(schema, JavaFXUtils.createIcon("/icons/script.png")));
+					.add(new TreeItem<>(schema, JavaFXUtils.createIcon("/icons/script.png")));
 			triggersTreeItem.getChildren().add(triggerTreeItem);
 		});
 
@@ -473,7 +472,7 @@ public class DBTreeView extends TreeView<String>
 
 		sqlConnector.getSchema(treeItem.getValue(), rset -> {
 			String schema = rset.getString(sqlConnector.getIndexSchemaColumn());
-			schemaTree.getChildren().add(new TreeItem<String>(schema));
+			schemaTree.getChildren().add(new TreeItem<>(schema));
 		});
 	}
 
@@ -485,9 +484,9 @@ public class DBTreeView extends TreeView<String>
 	 * @throws SQLException
 	 */
 	private void fillFPTreeItem(TreeItem<String> treeItem, Map<String, Object> map) throws SQLException {
-		TreeItem<String> bodyTreeItem = new TreeItem<String>("body",
-				JavaFXUtils.createIcon("/icons/script.png"));
-		bodyTreeItem.getChildren().add(new TreeItem<String>(getULN(map, "ROUTINE_DEFINITION")));
+		TreeItem<String> bodyTreeItem = new TreeItem<>("body",
+                JavaFXUtils.createIcon("/icons/script.png"));
+		bodyTreeItem.getChildren().add(new TreeItem<>(getULN(map, "ROUTINE_DEFINITION")));
 		treeItem.getChildren().add(bodyTreeItem);
 	
 		TreeItem<String> paramsTreeItem = new TreeItem<>("parameters",
@@ -508,7 +507,7 @@ public class DBTreeView extends TreeView<String>
 						if (getULN(map2, "DATA_TYPE") != null)
 							param += getULN(map2, "DATA_TYPE");
 	
-						paramsTreeItem.getChildren().add(new TreeItem<String>(param));
+						paramsTreeItem.getChildren().add(new TreeItem<>(param));
 					} else {
 						treeItem.setValue(treeItem.getValue() + " returns " + getULN(map2, "DATA_TYPE"));
 					}
@@ -518,24 +517,24 @@ public class DBTreeView extends TreeView<String>
 	public void showSearchPopup() {
 		PopOver popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
 		popOver.setArrowSize(0);
-		popOver.show(this);;
-	}
+		popOver.show(this);
+    }
 
 	public void showSearchPopup(Node owner) {
 		CustomPopOver popOver = new CustomPopOver(new HBox(searchField, nextSearchResultButton));
-		popOver.show(owner);;
-	}
+		popOver.show(owner);
+    }
 
 	@Override
 	public ContextMenu createContextMenu() {
 		ContextMenu contextMenu = new ContextMenu();
 
-		MenuItem menuItemCopy = new MenuItem("Copy text", JavaFXUtils.createIcon("/icons/copy.png"));
+		MenuItem menuItemCopy = new MenuItem("Copy Text", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copyAction());
 
-		MenuItem menuItemCopyScema = new MenuItem("Copy schema", JavaFXUtils.createIcon("/icons/script.png"));
-		menuItemCopyScema.setOnAction(event -> this.copyScemaAction());
-		menuItemCopyScema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
+		MenuItem menuItemCopySchema = new MenuItem("Copy Schema", JavaFXUtils.createIcon("/icons/script.png"));
+		menuItemCopySchema.setOnAction(event -> this.copyScemaAction());
+		menuItemCopySchema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
 		
 		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.createIcon("/icons/minus.png"));
 		menuItemDrop.setOnAction(event -> dropAction());
@@ -547,7 +546,7 @@ public class DBTreeView extends TreeView<String>
 				this.collapseAll(this.getSelectionModel().getSelectedItem());
 		});
 
-		MenuItem menuItemOpenSchema = new MenuItem("Show schema", JavaFXUtils.createIcon("/icons/details.png"));
+		MenuItem menuItemOpenSchema = new MenuItem("Show Schema", JavaFXUtils.createIcon("/icons/details.png"));
 		menuItemOpenSchema.setOnAction(action -> {
 			SqlCodeArea codeArea = new SqlCodeArea(this.copyScemaAction(), false, false, isUsingMysql());
 			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
@@ -560,7 +559,7 @@ public class DBTreeView extends TreeView<String>
 		});
 		menuItemOpenSchema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
 
-		contextMenu.getItems().addAll(menuItemCopy, menuItemCopyScema, new SeparatorMenuItem(), menuItemCollapseAll, menuItemOpenSchema, new SeparatorMenuItem(), menuItemDrop);
+		contextMenu.getItems().addAll(menuItemCopy, menuItemCopySchema, new SeparatorMenuItem(), menuItemCollapseAll, menuItemOpenSchema, new SeparatorMenuItem(), menuItemDrop);
 
 		return contextMenu;
 	}
@@ -581,8 +580,8 @@ public class DBTreeView extends TreeView<String>
 		if (tablesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
 			String table = this.getSelectionModel().getSelectedItem().getValue();
 			String message = "Do you want to delete " + table;
-			int result = DialogFactory.createConfirmationDialog("Drop Table", message);
-			if (result == 1) {
+			boolean result = DialogFactory.createConfirmationDialog("Drop Table", message);
+			if (result) {
 				try {
 					// TODO maybe execute async?
 					sqlConnector.dropTable(table);
@@ -594,8 +593,8 @@ public class DBTreeView extends TreeView<String>
 		} else if (viewsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
 			String view = this.getSelectionModel().getSelectedItem().getValue();
 			String message = "Do you want to delete " + view;
-			int result = DialogFactory.createConfirmationDialog("Drop View", message);
-			if (result == 1) {
+			boolean result = DialogFactory.createConfirmationDialog("Drop View", message);
+			if (result) {
 				try {
 					// TODO maybe execute async?
 					sqlConnector.dropView(view);
@@ -607,8 +606,8 @@ public class DBTreeView extends TreeView<String>
 		} else if (indexesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
 			String index = this.getSelectionModel().getSelectedItem().getValue();
 			String message = "Do you want to delete " + index;
-			int result = DialogFactory.createConfirmationDialog("Drop Index", message);
-			if (result == 1) {
+			boolean result = DialogFactory.createConfirmationDialog("Drop Index", message);
+			if (result) {
 				try {
 					// TODO maybe execute async?
 					sqlConnector.dropIndex(index);
@@ -620,8 +619,8 @@ public class DBTreeView extends TreeView<String>
 		} else if (proceduresRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
 			String procedure = this.getSelectionModel().getSelectedItem().getValue();
 			String message = "Do you want to delete " + procedure;
-			int result = DialogFactory.createConfirmationDialog("Drop Procedure", message);
-			if (result == 1) {
+			boolean result = DialogFactory.createConfirmationDialog("Drop Procedure", message);
+			if (result) {
 				try {
 					sqlConnector.executeUpdate("drop procedure " + procedure);
 					this.refreshFunctionAndProcedures();
@@ -633,8 +632,8 @@ public class DBTreeView extends TreeView<String>
 			String function = this.getSelectionModel().getSelectedItem().getValue();
 			function = function.replaceAll(" returns.*", "");
 			String message = "Do you want to delete " + function;
-			int result = DialogFactory.createConfirmationDialog("Drop Function", message);
-			if (result == 1) {
+			boolean result = DialogFactory.createConfirmationDialog("Drop Function", message);
+			if (result) {
 				try {
 					sqlConnector.executeUpdate("drop function " + function);
 					this.refreshFunctionAndProcedures();
@@ -667,13 +666,13 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	private void copyAction() {
-		String text = "";
+		StringBuilder text = new StringBuilder();
 		for (TreeItem<String> treeItem : this.getSelectionModel().getSelectedItems()) {
-			text += treeItem.getValue() + ", ";
+			text.append(treeItem.getValue()).append(", ");
 		}
-		text = text.substring(0, text.length() - ", ".length());
+		text = new StringBuilder(text.substring(0, text.length() - ", ".length()));
 
-		StringSelection stringSelection = new StringSelection(text);
+		StringSelection stringSelection = new StringSelection(text.toString());
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
 	}
@@ -708,20 +707,17 @@ public class DBTreeView extends TreeView<String>
 
 	@SuppressWarnings("unchecked")
 	public List<String> getColumnsFor(String table) {
-		List<String> colums = new ArrayList<>();
+		List<String> columns = new ArrayList<>();
 		for (TreeItem<String> ti : FXCollections.concat(tablesRootItem.getChildren(), viewsRootItem.getChildren())) {
 			if (ti.getValue().equals(table)) {
 				ti.getChildren().forEach(c -> {
 					if (c.getValue().contentEquals("columns")) {
-						c.getChildren().forEach(cc -> {
-							colums.add(cc.getValue());
-						});
-						return;
-					}
+						c.getChildren().forEach(cc -> columns.add(cc.getValue()));
+                    }
 				});
 			}
 		}
-		return colums;
+		return columns;
 	}
 
 	public void refreshFunctionAndProcedures() {
@@ -731,7 +727,7 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	@Override
-	public void onObservaleChange(String newValue) {
+	public void onObservableChange(String newValue) {
 		try {
 			this.fillTreeView();
 			if (newValue != null && (newValue.toLowerCase().contains("trigger")))
@@ -746,7 +742,7 @@ public class DBTreeView extends TreeView<String>
 
 	@Override
 	public void changed() {
-		listeners.forEach(listener -> listener.onObservaleChange(null));
+		listeners.forEach(listener -> listener.onObservableChange(null));
 	}
 
 	@Override

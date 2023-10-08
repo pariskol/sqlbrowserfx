@@ -31,11 +31,11 @@ import javafx.scene.input.KeyCombination;
 
 public class LogCodeArea extends CodeArea implements ContextMenuOwner, InputMapOwner, HighLighter {
 
-	private SearchAndReplacePopOver searchAndReplacePopOver;
-	private SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
-	private SimpleBooleanProperty followCarretProperty = new SimpleBooleanProperty(true);
+	private final SearchAndReplacePopOver searchAndReplacePopOver;
+	private final SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
+	private final SimpleBooleanProperty followCarretProperty = new SimpleBooleanProperty(true);
 	private PopOver goToLinePopOver = null;
-	private LogCodeAreaSyntaxProvider syntaxProvider = new LogCodeAreaSyntaxProvider();
+	private final LogCodeAreaSyntaxProvider syntaxProvider = new LogCodeAreaSyntaxProvider();
 
 
 
@@ -62,7 +62,7 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, InputMapO
 	@Override
 	public void appendText(String text) {
 		super.appendText(text);
-		if (true) {
+		if (this.followCarretProperty.get()) {
 			this.moveTo(this.getLength());
 			this.requestFollowCaret();
 		}

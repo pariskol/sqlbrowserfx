@@ -18,12 +18,12 @@ import com.github.vertical_blank.sqlformatter.languages.Dialect;
  */
 public class SqlFormatter {
 
-	private static final Set<String> BEGIN_CLAUSES = new HashSet<String>();
-	private static final Set<String> END_CLAUSES = new HashSet<String>();
-	private static final Set<String> LOGICAL = new HashSet<String>();
-	private static final Set<String> QUANTIFIERS = new HashSet<String>();
-	private static final Set<String> DML = new HashSet<String>();
-	private static final Set<String> MISC = new HashSet<String>();
+	private static final Set<String> BEGIN_CLAUSES = new HashSet<>();
+	private static final Set<String> END_CLAUSES = new HashSet<>();
+	private static final Set<String> LOGICAL = new HashSet<>();
+	private static final Set<String> QUANTIFIERS = new HashSet<>();
+	private static final Set<String> DML = new HashSet<>();
+	private static final Set<String> MISC = new HashSet<>();
 
 	static {
 		BEGIN_CLAUSES.add( "left" );
@@ -39,7 +39,6 @@ public class SqlFormatter {
 		END_CLAUSES.add( "join" );
 		END_CLAUSES.add( "from" );
 		END_CLAUSES.add( "by" );
-		END_CLAUSES.add( "join" );
 		END_CLAUSES.add( "into" );
 		END_CLAUSES.add( "union" );
 
@@ -101,8 +100,8 @@ public class SqlFormatter {
 		boolean afterInsert;
 		int inFunction;
 		int parensSinceSelect;
-		private LinkedList<Integer> parenCounts = new LinkedList<Integer>();
-		private LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<Boolean>();
+		private final LinkedList<Integer> parenCounts = new LinkedList<>();
+		private final LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<>();
 
 		int indent = 1;
 

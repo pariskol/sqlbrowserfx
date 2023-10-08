@@ -1,5 +1,8 @@
 package gr.sqlbrowserfx.conn;
 
+import gr.sqlbrowserfx.LoggerConf;
+import org.slf4j.LoggerFactory;
+
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -27,7 +30,7 @@ public class SqlTable {
 			}
 
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 		}
 	}
 
@@ -95,9 +98,9 @@ public class SqlTable {
 	}
 
 	public String columnsToString() {
-		String result = new String();
+		StringBuilder result = new StringBuilder();
 		for (String column : columnsMap.keySet()) {
-			result += column + ",";
+			result.append(column).append(",");
 		}
 		return result.substring(0, result.length() - 1);
 	}

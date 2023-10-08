@@ -31,10 +31,10 @@ import javafx.scene.layout.FlowPane;
 
 public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner, InputMapOwner {
 
-	private FlowPane toolBar;
-	private DDBTreeView dbTreeView;
+	private final FlowPane toolBar;
+	private final DDBTreeView dbTreeView;
 	private DockNode thisDockNode = null;
-	private SqlConnector sqlConnector;
+	private final SqlConnector sqlConnector;
 	private Button searchButton;
 
 	public DDBTreePane(String dbPath, SqlConnector sqlConnector) {
@@ -43,9 +43,7 @@ public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner, I
 		this.toolBar = this.createToolbar();
 		// when dbTreeView is ready fires a simple event 
 		this.dbTreeView = new DDBTreeView(dbPath, sqlConnector, this);
-		this.dbTreeView.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> {
-			Platform.runLater(() -> this.setCenter(this.dbTreeView));
-		});
+		this.dbTreeView.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> Platform.runLater(() -> this.setCenter(this.dbTreeView)));
 		this.setInputMap();
 
 		this.setLeft(toolBar);

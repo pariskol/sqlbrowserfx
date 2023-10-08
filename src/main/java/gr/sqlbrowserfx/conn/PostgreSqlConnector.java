@@ -37,25 +37,20 @@ public class PostgreSqlConnector extends SqlConnector {
 
 	@Override
 	public Object castToDBType(SqlTable table, String label, String value) {
-		Object actualValue = null;
+		Object actualValue;
 		if (table.getColumnsMap().get(label).contains("int") && value != null && !value.isEmpty()) {
-			Integer integerValue = Integer.parseInt(value);
-			actualValue = integerValue.intValue();
+            actualValue = Integer.parseInt(value);
 		} else if (table.getColumnsMap().get(label).equals("numeric")  && value != null && !value.isEmpty()) {
-			Double doubleValue = Double.parseDouble(value);
-			actualValue = doubleValue.doubleValue();
+            actualValue = Double.parseDouble(value);
 		} 
 		else if (table.getColumnsMap().get(label).contains("bool") && value != null && !value.isEmpty()) {
-			Boolean booleanValue = Boolean.parseBoolean(value);
-			actualValue = booleanValue.booleanValue();
+            actualValue = Boolean.parseBoolean(value);
 		}
 		else if (table.getColumnsMap().get(label).contains("date") && value != null && !value.isEmpty()) {
-			Date dateValue = Date.valueOf((String) value);
-			actualValue = dateValue;
+            actualValue = Date.valueOf(value);
 		}
 		else if (table.getColumnsMap().get(label).contains("stamp") && value != null && !value.isEmpty()) {
-			Timestamp dateValue = Timestamp.valueOf((String) value);
-			actualValue = dateValue;
+            actualValue = Timestamp.valueOf(value);
 		}
 		else {
 			actualValue = value;
@@ -134,10 +129,10 @@ public class PostgreSqlConnector extends SqlConnector {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug(activeConnections + " connections commited");
 		} catch (SQLException e) {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
-			this.rollbackQuitely(conn);
+			this.rollbackQuietly(conn);
 		}
 		for (Connection conn2 : connections)
-			this.closeQuitely(conn2);
+			this.closeQuietly(conn2);
 	}
 
 	@Override
@@ -156,7 +151,7 @@ public class PostgreSqlConnector extends SqlConnector {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to rollback changes", e);
 		}
 		for (Connection conn2 : connections)
-			this.closeQuitely(conn2);
+			this.closeQuietly(conn2);
 	}
 
 }

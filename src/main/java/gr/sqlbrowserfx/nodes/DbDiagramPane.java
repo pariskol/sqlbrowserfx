@@ -17,10 +17,10 @@ public class DbDiagramPane extends ScrollPane {
 	private int counter = 0;
 	private int rows = 0;
 	private int[][] grid;
-	private static int COLS_NUM = 7;
+	private static final int COLS_NUM = 7;
 
 	private final Pane diagramPane = new Pane();
-	private List<SqlTableNode> diagramNodes = new ArrayList<>();
+	private final List<SqlTableNode> diagramNodes = new ArrayList<>();
 
 	public DbDiagramPane() {
 	}
@@ -69,7 +69,7 @@ public class DbDiagramPane extends ScrollPane {
 			counter++;
 		});
 		
-		JavaFXUtils.timer(500, () -> connectAllTableNodes());
+		JavaFXUtils.timer(500, this::connectAllTableNodes);
 	}
 	
 	// check length of cells above current cell
@@ -91,7 +91,7 @@ public class DbDiagramPane extends ScrollPane {
 		tableDiagramNode.highlight();
 		diagramNodes.stream()
 			.filter(node -> tableDiagramNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
-			.forEach(node -> node.highlight());
+			.forEach(SqlTableNode::highlight);
 		
 		tableDiagramNode.getLines().forEach(line -> {
 			line.setStyle(
@@ -108,7 +108,7 @@ public class DbDiagramPane extends ScrollPane {
 		tableDiagramNode.getLines().forEach(line -> line.setStyle("-fx-stroke: " + tableDiagramNode.getColor() + ";" + "-fx-stroke-width: 1;"));
 		diagramNodes.stream()
 			.filter(node -> tableDiagramNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
-			.forEach(node -> node.unhighlight());
+			.forEach(SqlTableNode::unhighlight);
 	}
 	
 	private void connectAllTableNodes() {

@@ -6,8 +6,8 @@ import org.fxmisc.richtext.model.StyleSpans;
 
 public interface HighLighter {
 	
-	public StyleSpans<Collection<String>> computeHighlighting(String text);
+	StyleSpans<Collection<String>> computeHighlighting(String text);
 	
-	public void enableHighlighting();
-	public void enableShowLineNumbers(boolean enable);
+	void enableHighlighting();
+	void enableShowLineNumbers(boolean enable);
 }

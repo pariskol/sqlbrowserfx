@@ -10,12 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -53,7 +48,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SeparatorMenuItem;
@@ -90,29 +84,28 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	protected TextField searchField;
 	protected CheckBox resizeModeCheckBox;
 	protected CheckBox fullModeCheckBox;
-	private CheckBox limitModeCheckBox;
+	private final CheckBox limitModeCheckBox;
 	protected ComboBox<String> tablesBox;
 	protected ComboBox<String> viewsBox;
-	private TextField pathField;
-	protected ListView<String> logListView;
+	private final TextField pathField;
 	private Button exportCsvButton;
-	private LinkedHashMap<String, CheckBox> columnCheckBoxesMap;
+	private final LinkedHashMap<String, CheckBox> columnCheckBoxesMap;
 	protected PopOver popOver;
 	private Tab addRecordTab;
-	private Tab addTableTab;
-	private Label rowsCountLabel;
+	private final Tab addTableTab;
+	private final Label rowsCountLabel;
 	protected TabPane tablesTabPane;
 
 	protected SqlConnector sqlConnector;
 	protected Boolean sqlQueryRunning;
 	private Boolean isSearchApplied = false;
-	private String columnsFilter = "*";
+	private final String columnsFilter = "*";
 	private Button importCsvButton;
 	protected Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
-	private String EMPTY = "empty";
-	private String whereFilter = "";
-	private int linesLimit = 5000;
+	private final String EMPTY = "empty";
+	private final String whereFilter = "";
+	private final int linesLimit = 5000;
 	private boolean isColumnFilteringEnabled = true;
 
 	public SqlPane() {
@@ -162,21 +155,20 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		this.setCenter(tablesTabPane);
 		this.setBottom(rowsCountLabel);
 
-		DraggingTabPaneSupport dragingSupport = new DraggingTabPaneSupport("/icons/table.png");
-		dragingSupport.addSupport(this);
+		DraggingTabPaneSupport draggingSupport = new DraggingTabPaneSupport("/icons/table.png");
+		draggingSupport.addSupport(this);
 
 		this.setInputMap();
 
 		this.addEventHandler(TableColumnFilteringEvent.EVENT_TYPE, event -> {
 			SqlTableView sqlTableView = getSelectedSqlTableView();
-			int diff = sqlTableView.getSqlTableRows().size() - sqlTableView.getItems().size();
+            assert sqlTableView != null;
+            int diff = sqlTableView.getSqlTableRows().size() - sqlTableView.getItems().size();
 			setSearchApplied(diff > 0);
 			this.updateRowsCountLabel();
 		});
 
-		this.addEventHandler(TableSearchFilteringEvent.EVENT_TYPE, event -> {
-			Platform.runLater(() -> SqlTableFilter.apply(getSelectedSqlTableView()));
-		});
+		this.addEventHandler(TableSearchFilteringEvent.EVENT_TYPE, event -> Platform.runLater(() -> SqlTableFilter.apply(getSelectedSqlTableView())));
 	}
 
 	@Override
@@ -192,7 +184,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		deleteButton.setTooltip(new Tooltip("Delete selected records"));
 
 		editButton = new Button("", JavaFXUtils.createIcon("/icons/edit.png"));
-		editButton.setOnMouseClicked(mouseEvent -> editButtonAction(mouseEvent));
+		editButton.setOnMouseClicked(this::editButtonAction);
 		editButton.setOnAction(mouseEvent -> editButtonAction(this.simulateClickEvent(editButton)));
 		editButton.setTooltip(new Tooltip("Edit selected record"));
 
@@ -272,7 +264,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		}
 		ObservableList<String> options = FXCollections.observableArrayList(tablesList);
 
-		if (tablesBox == null || !tablesList.equals(tablesBox.getItems())) {
+		if (tablesBox == null || !Objects.equals(tablesList, tablesBox.getItems())) {
 			String lastSelected = null;
 			if (tablesBox != null)
 				lastSelected = tablesBox.getSelectionModel().getSelectedItem();
@@ -294,7 +286,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		}
 		ObservableList<String> options = FXCollections.observableArrayList(tablesList);
 
-		if (viewsBox == null || !tablesList.equals(viewsBox.getItems())) {
+		if (viewsBox == null || !Objects.equals(tablesList, viewsBox.getItems())) {
 			String lastSelected = null;
 			if (viewsBox != null)
 				lastSelected = viewsBox.getSelectionModel().getSelectedItem();
@@ -446,14 +438,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		return tab;
 	}
 
-	public void showAddTableTab(boolean show) {
-		if (!show)
-			this.tablesTabPane.getTabs().remove(this.addTableTab);
-		else
-			this.tablesTabPane.getTabs().add(0, this.addTableTab);
-
-	}
-
 	// TODO no need?
 	public void createSqlTableTabWithData(String table) {
 		if (!sqlQueryRunning) {
@@ -487,7 +471,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			}
 		});
 
-		MenuItem menuItemCellEdit = new MenuItem("Edit cell", JavaFXUtils.createIcon("/icons/edit.png"));
+		MenuItem menuItemCellEdit = new MenuItem("Edit Cell", JavaFXUtils.createIcon("/icons/edit.png"));
 
 		menuItemCellEdit.setOnAction(event -> {
 			SqlTableView sqlTableView = getSelectedSqlTableView();
@@ -495,7 +479,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				sqlTableView.getSelectedCell().startEdit();
 		});
 
-		MenuItem menuItemCopyCell = new MenuItem("Copy cell", JavaFXUtils.createIcon("/icons/copy.png"));
+		MenuItem menuItemCopyCell = new MenuItem("Copy Cell", JavaFXUtils.createIcon("/icons/copy.png"));
 
 		menuItemCopyCell.setOnAction(event -> {
 			if (getSelectedSqlTableView().getSelectedCell() != null) {
@@ -509,7 +493,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		MenuItem menuItemDelete = new MenuItem("Delete", JavaFXUtils.createIcon("/icons/minus.png"));
 		menuItemDelete.setOnAction(event -> this.deleteButtonAction());
 
-		MenuItem menuItemCopy = new MenuItem("Copy row", JavaFXUtils.createIcon("/icons/copy.png"));
+		MenuItem menuItemCopy = new MenuItem("Copy Row", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(actionEvent -> this.copyAction());
 
 		MenuItem menuItemSearch = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
@@ -554,9 +538,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		Button refreshButton = new Button("", JavaFXUtils.createIcon("/icons/refresh.png"));
 		refreshButton.setTooltip(new Tooltip("Refresh"));
-		refreshButton.setOnAction(event -> {
-			editBox.refresh();
-		});
+		refreshButton.setOnAction(event -> editBox.refresh());
 		refreshButton.setFocusTraversable(false);
 
 		FlowPane sideBar = new FlowPane(Orientation.VERTICAL, copyButton, pasteButton, refreshButton);
@@ -703,7 +685,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		for (TableColumn<MapTableViewRow, ?> column : sqlTableView.getVisibleLeafColumns()) {
 			columnCheckBoxesMap.get(column.getText()).setSelected(true);
 		}
-		sqlTableView.bindColumsVisibility(columnCheckBoxesMap.values());
+		sqlTableView.bindColumnsVisibility(columnCheckBoxesMap.values());
 //		});
 	}
 
@@ -831,7 +813,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		addButton.requestFocus();
 
-		if (getSelectedSqlTableView().getColumns().size() == 0)
+		if (getSelectedSqlTableView().getColumns().isEmpty())
 			return;
 
 		SqlTableRowEditBox editBox = this.createEditBox(null, false);
@@ -897,7 +879,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		final SqlTableView sqlTableView = tab.getSqlTableView();
 		ObservableList<MapTableViewRow> sqlTableRows = sqlTableView.getSelectionModel().getSelectedItems();
 
-		if (sqlTableRows.size() == 0)
+		if (sqlTableRows.isEmpty())
 			return;
 
 		if (DialogFactory.createDeleteDialog(sqlTableView, sqlTableRows, "Do you want to delete records?") == 0)
@@ -973,7 +955,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		tableSelectButton.requestFocus();
 		// invoke createTableBox(), createViewsBox every time button clicked to has the
-		// latset updates from db
+		// latest updates from db
 		ComboBox<String> tablesBox = this.createTablesBox();
 		ComboBox<String> viewsBox = this.createViewsBox();
 		viewsBox.prefWidthProperty().bind(tablesBox.widthProperty());
@@ -1050,7 +1032,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			Executors.newSingleThreadExecutor().execute(() -> {
 				try {
 					String filePath = selectedFile.getAbsolutePath();
-					Platform.runLater(() -> tab.startLoading());
+					Platform.runLater(tab::startLoading);
 					
 					String[] columns = null;
 					ObservableList<MapTableViewRow> rows = FXCollections.observableArrayList();
@@ -1087,7 +1069,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				} catch (IOException e) {
 					DialogFactory.createErrorDialog(e);
 				} finally {
-					Platform.runLater(() -> tab.load());
+					Platform.runLater(tab::load);
 				}
 			});
 		}
@@ -1119,7 +1101,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 						(sqlTableView.getSqlTable().columnsToString() + "\n").getBytes(), StandardOpenOption.CREATE,
 						StandardOpenOption.APPEND);
 
-				List<String> data = sqlTableView.getItems().stream().map(row -> row.toString()).toList();
+				List<String> data = sqlTableView.getItems().stream().map(MapTableViewRow::toString).toList();
 				String dataStr = StringUtils.join(data, "\n");
 				Files.write(Paths.get(selectedFile.getAbsolutePath()), dataStr.getBytes(),
 						StandardOpenOption.APPEND);
@@ -1136,8 +1118,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		StringBuilder content = new StringBuilder();
 
 		getSelectedSqlTableView().getSelectionModel().getSelectedItems()
-				.forEach(row -> content.append(row.toString() + "\n"));
-		if (content.length() > 0)
+				.forEach(row -> content.append(row.toString()).append("\n"));
+		if (!content.isEmpty())
 			content.delete(content.length() - 1, content.length());
 
 		StringSelection stringSelection = new StringSelection(content.toString());
@@ -1160,35 +1142,31 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		}
 	}
 
-	public int deleteRecord(final MapTableViewRow sqlTableRow) {
-		return deleteRecord(sqlTableRow, getSelectedSqlTableView());
-	}
-
 	// TODO replace with method deleteRecord of SqlTableView
 	public int deleteRecord(final MapTableViewRow sqlTableRow, final SqlTableView sqlTableView) {
-		String query = "delete from " + sqlTableView.getTableName() + " where ";
+		StringBuilder query = new StringBuilder("delete from " + sqlTableView.getTableName() + " where ");
 		List<Object> params = new ArrayList<>();
 		Set<String> columns = sqlTableView.getSqlTable().getColumns();
 		if (sqlTableView.getPrimaryKey() != null) {
 			String[] keys = sqlTableView.getPrimaryKey().split(",");
 			for (String key : keys) {
-				query += key + " = ? and ";
+				query.append(key).append(" = ? and ");
 				params.add(sqlTableRow.get(key));
 			}
-			query = query.substring(0, query.length() - "and ".length());
+			query = new StringBuilder(query.substring(0, query.length() - "and ".length()));
 		} else {
 			for (String column : columns) {
 				params.add(sqlTableRow.get(column));
-				query += column + "= ? and ";
+				query.append(column).append("= ? and ");
 			}
-			query = query.substring(0, query.length() - 5);
+			query = new StringBuilder(query.substring(0, query.length() - 5));
 		}
 
-		String message = "Executing : " + query + " [ values : " + params.toString() + " ]";
+		String message = "Executing : " + query + " [ values : " + params + " ]";
 		logger.debug(message);
 
 		try {
-			sqlConnector.executeUpdate(query, params);
+			sqlConnector.executeUpdate(query.toString(), params);
 		} catch (Exception e) {
 			DialogFactory.createErrorNotification(e);
 			return 0;
@@ -1242,20 +1220,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				true, true, true, true, true, true, null);
 	}
 
-	@SuppressWarnings("unused")
-	private void sortSqlTableView(SqlTableView sqlTableView) {
-		sqlTableView.getSqlTableRows().sort((o1, o2) -> {
-			if (o1.get(sqlTableView.getPrimaryKey()) != null && o2.get(sqlTableView.getPrimaryKey()) != null) {
-				if (o1.get(sqlTableView.getPrimaryKey()).toString()
-						.compareTo(o2.get(sqlTableView.getPrimaryKey()).toString()) > 0) {
-
-					return 1;
-				}
-			}
-			return 0;
-		});
-	}
-
 	public final SqlTableView getSelectedSqlTableView() {
 		Tab tab = tablesTabPane != null ? tablesTabPane.getSelectionModel().getSelectedItem() : null;
 		return tab != null && tab instanceof SqlTableTab ? ((SqlTableTab) tab).getSqlTableView() : null;
@@ -1263,14 +1227,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	public final TabPane getSelectedRecordsTabPane() {
 		return getSelectedTableTab().getRecordsTabPane();
-	}
-
-	public FlowPane getToolBar() {
-		return toolBar;
-	}
-
-	public void setToolBar(FlowPane toolBar) {
-		this.toolBar = toolBar;
 	}
 
 	public void setToolBarTop() {
@@ -1292,14 +1248,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	public SqlConnector getSqlConnector() {
 		return sqlConnector;
-	}
-
-	public PopOver getPopOver() {
-		return popOver;
-	}
-
-	public void setPopOver(PopOver popOver) {
-		this.popOver = popOver;
 	}
 
 	public ComboBox<String> getTablesBox() {

@@ -1,22 +1,5 @@
 package gr.sqlbrowserfx.nodes;
 
-import java.io.File;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.wellbehaved.event.EventPattern;
-import org.fxmisc.wellbehaved.event.InputMap;
-import org.fxmisc.wellbehaved.event.Nodes;
-import org.slf4j.LoggerFactory;
-
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -31,22 +14,13 @@ import gr.sqlbrowserfx.nodes.codeareas.TextAnalyzer;
 import gr.sqlbrowserfx.nodes.codeareas.java.FileJavaCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.CSqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.FileSqlCodeArea;
-import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.SplitPane;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
@@ -56,23 +30,37 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObservable<String>{
 
-	private TextArea historyArea;
-	private TabPane queryTabPane;
-	private ProgressIndicator progressIndicator;
-	private Tab newConsoleTab;
+	private final TextArea historyArea;
+	private final TabPane queryTabPane;
+	private final ProgressIndicator progressIndicator;
+	private final Tab newConsoleTab;
 	private Button executeButton;
 	private CSqlCodeArea codeAreaRef;
-	private CheckBox autoCompleteOnTypeCheckBox;
-	private CheckBox openInNewTableViewCheckBox;
-	private CheckBox wrapTextCheckBox;
-	private CheckBox showLinesCheckBox; 
-	private FlowPane toolbar;
-	private FlowPane bottomBar;
-	
-	private SqlConnector sqlConnector;
+	private final CheckBox autoCompleteOnTypeCheckBox;
+	private final CheckBox openInNewTableViewCheckBox;
+	private final CheckBox wrapTextCheckBox;
+	private final CheckBox showLinesCheckBox;
+	private final FlowPane toolbar;
+	private final SqlConnector sqlConnector;
 	protected AtomicBoolean sqlQueryRunning;
 	protected List<SimpleObserver<String>> listeners;
 	private Button stopExecutionButton;
@@ -128,21 +116,21 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		openInNewTableViewCheckBox.setSelected(false);
 		
 		queryTabPane.getSelectionModel().selectedItemProperty().addListener(
-			    (ChangeListener<Tab>) (ov, oldTab, newTab) -> {
-			    	if ((VirtualizedScrollPane<SqlCodeArea>)newTab.getContent() != null) {
-			    		CodeArea codeArea = ((VirtualizedScrollPane<CodeArea>)oldTab.getContent() != null) ?((VirtualizedScrollPane<CodeArea>)oldTab.getContent()).getContent()
-			    				: null;
-			    		
-			    		if (codeArea != null && codeArea instanceof TextAnalyzer) {
-				    		((TextAnalyzer) codeArea).stopTextAnalyzerDaemon();
-				    	}
-			    		
-			    		codeArea = ((VirtualizedScrollPane<CodeArea>)newTab.getContent()).getContent();
-				    	if (codeArea != null && codeArea instanceof TextAnalyzer) {
-				    		((TextAnalyzer) codeArea).startTextAnalyzerDaemon();
-				    	}
-			    	}
-			    });
+                (ov, oldTab, newTab) -> {
+                    if (newTab.getContent() != null) {
+                        CodeArea codeArea = (oldTab.getContent() != null) ?((VirtualizedScrollPane<CodeArea>)oldTab.getContent()).getContent()
+                                : null;
+
+                        if (codeArea instanceof TextAnalyzer) {
+                            ((TextAnalyzer) codeArea).stopTextAnalyzerDaemon();
+                        }
+
+                        codeArea = ((VirtualizedScrollPane<CodeArea>)newTab.getContent()).getContent();
+                        if (codeArea instanceof TextAnalyzer) {
+                            ((TextAnalyzer) codeArea).startTextAnalyzerDaemon();
+                        }
+                    }
+                });
 		
 		wrapTextCheckBox = new CheckBox("Wrap text");
 		showLinesCheckBox = new CheckBox("Show line number");
@@ -202,7 +190,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	private void createFileSearchPopover() {
 		if(this.fileSearchPopOver != null) return;
 		
-		this.fileSearchPopOver = new FileSearchPopOver(file -> openNewFileTab(file));
+		this.fileSearchPopOver = new FileSearchPopOver(this::openNewFileTab);
 	}
 	
 	private void showFileSearchPopOver() {
@@ -221,7 +209,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		sqlCodeArea.showLinesProperty().bind(this.showLinesCheckBox.selectedProperty());
 		sqlCodeArea.autoCompleteProperty().bind(this.autoCompleteOnTypeCheckBox.selectedProperty());
 
-		sqlCodeArea.setRunAction(() -> this.executeButonAction());
+		sqlCodeArea.setRunAction(this::executeButtonAction);
 		sqlCodeArea.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> SqlConsolePane.this.changed());
 		
 		VirtualizedScrollPane<CodeArea> scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
@@ -235,7 +223,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	}
 	
 	public void openNewFileTab(File selectedFile) {
-		AutoCompleteCodeArea codeArea = null;
+		AutoCompleteCodeArea<?> codeArea;
 		if (selectedFile.getName().endsWith(".java")) {
 			codeArea = new FileJavaCodeArea(selectedFile);
 		}
@@ -250,7 +238,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		codeArea.showLinesProperty().bind(this.showLinesCheckBox.selectedProperty());
 		codeArea.autoCompleteProperty().bind(this.autoCompleteOnTypeCheckBox.selectedProperty());
 		
-		VirtualizedScrollPane<CodeArea> vsp = new VirtualizedScrollPane<CodeArea>(codeArea);
+		VirtualizedScrollPane<CodeArea> vsp = new VirtualizedScrollPane<>(codeArea);
 	
 		FileCodeArea fileCodeArea = (FileCodeArea) codeArea;
 		
@@ -262,7 +250,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 				if (DialogFactory.createConfirmationDialog(
 						"Unsaved work", 
-						"Do you want to discard changes ?") == 1
+						"Do you want to discard changes ?")
 				) {
 					queryTabPane.getTabs().remove(tab);
 				}
@@ -272,11 +260,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		queryTabPane.getTabs().add(tab);
 		queryTabPane.getSelectionModel().select(tab);
 		
-		if (codeArea instanceof CSqlCodeArea) {
-			CSqlCodeArea casted = (CSqlCodeArea) codeArea;
+		if (codeArea instanceof CSqlCodeArea casted) {
 			codeAreaRef = casted;
 			codeArea.requestFocus();
-			casted.setRunAction(() -> this.executeButonAction());
+			casted.setRunAction(this::executeButtonAction);
 		}
 	}
 
@@ -290,7 +277,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	public FlowPane createToolbar() {
 		executeButton = new Button("", JavaFXUtils.createIcon("/icons/play.png"));
 		executeButton.setTooltip(new Tooltip("Execute"));
-		executeButton.setOnAction(actionEvent -> executeButonAction());
+		executeButton.setOnAction(actionEvent -> executeButtonAction());
 		
 		stopExecutionButton = new Button("", JavaFXUtils.createIcon("/icons/stop.png"));
 		stopExecutionButton.setTooltip(new Tooltip("Stop execution"));
@@ -325,7 +312,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	}
 	
 	// TODO: needs polishing
-	public String executeButonAction() {
+	public String executeButtonAction() {
 		CodeArea sqlConsoleArea = this.getSelectedSqlCodeArea();
 		String query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
 		final String fixedQuery = this.fixQuery(query);
@@ -348,15 +335,13 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("\n" + fixedQuery + "\n execution took  " + queryDuration.get() + "ms"); 
 						DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration.get() + "ms", 1);
 						handleSelectResult(fixedQuery, rset);
-					}, stmt -> {
-						stopExecutionButton.setOnAction(action -> {
-							try {
-								stmt.cancel();
-							} catch (SQLException e) {
-								LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
-							}
-						});
-					});
+					}, stmt -> stopExecutionButton.setOnAction(action -> {
+						try {
+							stmt.cancel();
+						} catch (SQLException e) {
+							LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+						}
+					}));
 
 				} catch (SQLException e) {
 					hanldeException(e);
@@ -450,7 +435,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 				break;
 			}
 		}
-		query = query.substring(spacesNum, query.length());
+		query = query.substring(spacesNum);
 		//FIXME find right pattern to ignore comments 
 		query = query.replaceAll("--.*\n", "");
 		return query;
@@ -461,19 +446,19 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 	}
 
 	protected void handleSelectResult(String query, ResultSet rset) throws SQLException {
-		String lines = "";
+		StringBuilder lines = new StringBuilder();
 		while (rset.next()) {
-			String line = "";
+			StringBuilder line = new StringBuilder();
 			ResultSetMetaData rsmd = rset.getMetaData();
 			for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-				line += rsmd.getColumnLabel(i) + " : ";
+				line.append(rsmd.getColumnLabel(i)).append(" : ");
 				if (rset.getObject(rsmd.getColumnLabel(i)) != null)
-					line += rset.getObject(rsmd.getColumnLabel(i)).toString() + ", ";
+					line.append(rset.getObject(rsmd.getColumnLabel(i)).toString()).append(", ");
 			}
-			line = line.substring(0, line.length() - ", ".length());
-			lines += line + "\n";
+			line = new StringBuilder(line.substring(0, line.length() - ", ".length()));
+			lines.append(line).append("\n");
 		}
-		historyArea.setText(lines);
+		historyArea.setText(lines.toString());
 	}
 
 	public void hanldeException(SQLException e) {
@@ -482,12 +467,12 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 
 	@Override
 	public void changed() {
-		listeners.forEach(listener -> listener.onObservaleChange(null));
+		listeners.forEach(listener -> listener.onObservableChange(null));
 	}
 
 	@Override
 	public void changed(String data) {
-		listeners.forEach(listener -> listener.onObservaleChange(data));
+		listeners.forEach(listener -> listener.onObservableChange(data));
 		
 	}
 
@@ -513,32 +498,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner,SimpleObs
 		return queryTabPane;
 	}
 
-	public void setQueryTabPane(TabPane queryTabPane) {
-		this.queryTabPane = queryTabPane;
-	}
-
-	public Button getExecutebutton() {
-		return executeButton;
-	}
-
-	public void setExecutebutton(Button executebutton) {
-		this.executeButton = executebutton;
-	}
-
 	public FlowPane getToolbar() {
 		return toolbar;
-	}
-
-	public void setToolbar(FlowPane toolbar) {
-		this.toolbar = toolbar;
-	}
-
-	public FlowPane getBottomBar() {
-		return bottomBar;
-	}
-
-	public void setBottomBar(FlowPane bottomBar) {
-		this.bottomBar = bottomBar;
 	}
 
 	public List<SimpleObserver<String>> getListeners() {

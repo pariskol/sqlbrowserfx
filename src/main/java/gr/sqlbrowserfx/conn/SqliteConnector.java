@@ -20,18 +20,18 @@ public class SqliteConnector extends SqlConnector {
 	private final String SCHEMA_COLUMN = "sql";
 	private final String SCHEMA_QUERY = "select sql from sqlite_master where name = ?";
 	
-	private LinkedBlockingQueue<UpdateQuery> updateQueriesQueue;
+	private final LinkedBlockingQueue<UpdateQuery> updateQueriesQueue;
 	private Connection updateConnection;
 	
 	public SqliteConnector(String database) {
 		super("org.sqlite.JDBC", "jdbc:sqlite:" + database, null, null);
-		this.updateQueriesQueue = new LinkedBlockingQueue<UpdateQuery>();
+		this.updateQueriesQueue = new LinkedBlockingQueue<>();
 		this.startUpdateExecutor();
 	}
 
 	private void startUpdateExecutor() {
 		Thread updatesExecutorThread = new Thread(() -> {
-			try (Connection conn = this.getConnection();) {
+			try (Connection conn = this.getConnection()) {
 				while(!Thread.currentThread().isInterrupted()) {
 					UpdateQuery updateQuery;
 					try {
@@ -79,13 +79,13 @@ public class SqliteConnector extends SqlConnector {
 	
 	@Override
 	public int executeUpdate(String query) throws SQLException {
-		int result = 0;
+		int result;
 		if (isAutoCommitModeEnabled()) {
 			result = super.executeUpdate(query);
 		}
 		else {
 			Connection conn = getConnection();
-			try (Statement statement = conn.createStatement();) {
+			try (Statement statement = conn.createStatement()) {
 				result = statement.executeUpdate(query);
 			}
 		}
@@ -95,13 +95,13 @@ public class SqliteConnector extends SqlConnector {
 
 	@Override
 	public int executeUpdate(String query, List<Object> params) throws SQLException {
-		int result = 0;
+		int result;
 		if (isAutoCommitModeEnabled()) {
 			result = super.executeUpdate(query,params);
 		}
 		else {
 			Connection conn = getConnection();
-			try (PreparedStatement statement = prepareStatementWithParams(conn, query, params);) {
+			try (PreparedStatement statement = prepareStatementWithParams(conn, query, params)) {
 				result = statement.executeUpdate();
 			}
 		}
@@ -110,12 +110,12 @@ public class SqliteConnector extends SqlConnector {
 
 	@Override
 	public int executeUpdate(Connection conn, String query, List<Object> params) throws SQLException {
-		int result = 0;
+		int result;
 		if (isAutoCommitModeEnabled()) {
 			result = super.executeUpdate(conn, query, params);
 		}
 		else {
-			try (PreparedStatement statement = prepareStatementWithParams(conn, query, params);) {
+			try (PreparedStatement statement = prepareStatementWithParams(conn, query, params)) {
 				result = statement.executeUpdate();
 			}
 		}
@@ -138,11 +138,11 @@ public class SqliteConnector extends SqlConnector {
 			this.updateConnection.commit();
 		} catch (SQLException e) {
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
-			this.rollbackQuitely(this.updateConnection);
+			this.rollbackQuietly(this.updateConnection);
 		}
 	}
 	
-	public int executeUpdateSerially(String query, List<Object> params) throws SQLException {
+	public int executeUpdateSerially(String query, List<Object> params) {
 		try {
 			this.updateQueriesQueue.put(new UpdateQuery(query, params));
 		} catch (InterruptedException e) {
@@ -153,14 +153,12 @@ public class SqliteConnector extends SqlConnector {
 	
 	@Override
 	public Object castToDBType(SqlTable table, String label, String value) {
-		Object actualValue = null;
+		Object actualValue;
 
 		if (table.getColumnsMap().get(label).equals("INTEGER") && value != null && !value.isEmpty()) {
-			Integer integerValue = Integer.parseInt(value);
-			actualValue = integerValue.intValue();
+            actualValue = Integer.parseInt(value);
 		} else if (table.getColumnsMap().get(label).equals("REAL")  && value != null && !value.isEmpty()) {
-			Double doubleValue = Double.parseDouble(value);
-			actualValue = doubleValue.doubleValue();
+            actualValue = Double.parseDouble(value);
 		} else {
 			actualValue = value;
 		}

@@ -25,7 +25,7 @@ import javafx.scene.layout.VBox;
 
 public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObservable<String> {
 
-	private CodeArea codeArea;
+	private final CodeArea codeArea;
 	private volatile int lastPos;
 
 	protected TextField findField;
@@ -33,14 +33,14 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 	protected Button findButton;
 	protected Button replaceButton;
 	private List<SimpleObserver<String>> listeners;
-	private Button replaceAllButton;
-	private CheckBox wholeWordCheckBox;
-	private CheckBox caseInsensitiveCheckBox;
-	private Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
+	private final Button replaceAllButton;
+	private final CheckBox wholeWordCheckBox;
+	private final CheckBox caseInsensitiveCheckBox;
+	private final Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
 	private volatile boolean javafxThreadRunning = false;
-	private Object javafxThreadRunningLock = new Object();
-	private ExecutorService executor = Executors.newSingleThreadExecutor();
+	private final Object javafxThreadRunningLock = new Object();
+	private final ExecutorService executor = Executors.newSingleThreadExecutor();
 	private long terminationTime;
 	
 	public SearchAndReplacePopOver(CodeArea codeArea) {
@@ -150,8 +150,8 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
 					}
 				}
-			};
-			
+			}
+
 //				recursionRound = 0;
 			Platform.runLater(() -> this.disableButtons(false));
 			return 1;
@@ -179,9 +179,7 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 			//recursion
 			try {
 				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} catch (InterruptedException ignored) {
 			}
 			this.findButtonActionImpl();
 		}
@@ -293,7 +291,7 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 	public void changed(String data) {
 		if (listeners != null) {
 			Executors.newSingleThreadExecutor()
-				 .execute(() -> listeners.forEach(l -> l.onObservaleChange(data)));
+				 .execute(() -> listeners.forEach(l -> l.onObservableChange(data)));
 		}
 		
 	}

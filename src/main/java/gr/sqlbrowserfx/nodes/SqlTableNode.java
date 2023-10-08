@@ -19,9 +19,9 @@ import javafx.scene.shape.Line;
 
 public class SqlTableNode extends VBox {
 
-	private SqlTable table;
-	private String color;
-	private List<Line> lines = new ArrayList<>();
+	private final SqlTable table;
+	private final String color;
+	private final List<Line> lines = new ArrayList<>();
 
 	public SqlTableNode(SqlTable table) {
 		// restore this line to have colorful lines

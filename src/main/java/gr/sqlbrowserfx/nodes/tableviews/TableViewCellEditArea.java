@@ -26,11 +26,11 @@ public class TableViewCellEditArea extends TextArea {
 				else if (keyEvent.getCode() == KeyCode.X && keyEvent.isControlDown()) {
 					this.cut();
 				}
-				else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isControlDown()) {
-					this.undo();
-				}
 				else if (keyEvent.getCode() == KeyCode.Z  && keyEvent.isShiftDown() && keyEvent.isControlDown()) {
 					this.redo();
+				}
+				else if (keyEvent.getCode() == KeyCode.Z && keyEvent.isControlDown()) {
+					this.undo();
 				}
 				else if (keyEvent.getCode() == KeyCode.LEFT && keyEvent.isShiftDown() && keyEvent.isControlDown()) {
 					this.selectPreviousWord();

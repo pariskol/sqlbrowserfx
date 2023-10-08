@@ -2,7 +2,6 @@ package gr.sqlbrowserfx.nodes.tableviews;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.TableCell;
@@ -59,9 +58,7 @@ public class EditableCell extends TableCell<MapTableViewRow, Object> {
 		Platform.runLater(() -> {
 			textField.requestFocus();
 			textField.selectAll();
-			textField.focusedProperty().addListener((ChangeListener<Boolean>) (observable, oldValue, newValue) -> {
-				cancelEdit();
-			});
+			textField.focusedProperty().addListener((observable, oldValue, newValue) -> cancelEdit());
 		});
 		
 	}

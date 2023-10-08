@@ -2,6 +2,7 @@ package gr.sqlbrowserfx;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -13,10 +14,10 @@ import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 
 public class SqlBrowserFXAppManager {
 
-	private static SqlConnector SQL_CONNECTOR = new SqliteConnector("./sqlbrowser.db");
-	private static List<DSqlPane> DSQL_PANES = new ArrayList<>();
-	private static List<SqlPane> SQL_PANES = new ArrayList<>();
-	private static List<DDBTreeView> DB_TREE_VIEWS = new ArrayList<>();
+	private static final SqlConnector SQL_CONNECTOR = new SqliteConnector("./sqlbrowser.db");
+	private static final List<DSqlPane> DSQL_PANES = new ArrayList<>();
+	private static final List<SqlPane> SQL_PANES = new ArrayList<>();
+	private static final List<DDBTreeView> DB_TREE_VIEWS = new ArrayList<>();
 	private static String DB_TYPE = "sqlite";
 	
 	public static SqlConnector getConfigSqlConnector() {
@@ -25,18 +26,18 @@ public class SqlBrowserFXAppManager {
 	
 	public static void registerDSqlPane(DSqlPane sqlPane) {
 		DSQL_PANES.add(sqlPane);
-		DB_TREE_VIEWS.forEach(tv -> tv.populateSqlPanesMenu());
+		DB_TREE_VIEWS.forEach(DDBTreeView::populateSqlPanesMenu);
 	}
 	
 	public static void registerSqlPane(SqlPane sqlPane) {
 		SQL_PANES.add(sqlPane);
-		DB_TREE_VIEWS.forEach(tv -> tv.populateSqlPanesMenu());
+		DB_TREE_VIEWS.forEach(DDBTreeView::populateSqlPanesMenu);
 	}
 	
 	public static List<SqlPane> getActiveSqlPanes() {
 		List<SqlPane> sqlPanes = DSQL_PANES.stream().map(sp -> (SqlPane) sp).collect(Collectors.toList());
 		sqlPanes.addAll(SQL_PANES);
-		return sqlPanes.stream().filter(sp -> sp != null).collect(Collectors.toList());
+		return sqlPanes.stream().filter(Objects::nonNull).collect(Collectors.toList());
 	}
 	
 	public static long getActiveSqlCodeAreasNum() {
@@ -58,7 +59,7 @@ public class SqlBrowserFXAppManager {
 	
 	public static void unregisterDSqlPane(DSqlPane sqlPane) {
 		DSQL_PANES.remove(sqlPane);
-		DB_TREE_VIEWS.forEach(tv -> tv.populateSqlPanesMenu());
+		DB_TREE_VIEWS.forEach(DDBTreeView::populateSqlPanesMenu);
 	}
 
 	public static String getDBtype() {

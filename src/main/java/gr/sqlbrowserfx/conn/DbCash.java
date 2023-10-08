@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class DbCash {
-	private static Map<String, String> SCHEMAS_MAP = new HashMap<>();
-	private static Map<String, SqlTable> TABLES_MAP = new HashMap<>();
+	private static final Map<String, String> SCHEMAS_MAP = new HashMap<>();
+	private static final Map<String, SqlTable> TABLES_MAP = new HashMap<>();
 
 
 	

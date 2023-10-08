@@ -1,9 +1,11 @@
 package gr.sqlbrowserfx.nodes;
 
 import java.io.File;
+import java.io.Serial;
 
 public class TreeViewFile extends File {
 
+	@Serial
 	private static final long serialVersionUID = 1L;
 
 	public TreeViewFile(String pathname) {

@@ -27,7 +27,7 @@ import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 
 public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String> {
 
-	private static Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
+	private static final Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
 	private static String DB_TYPE = "";
 	private static String[] FUNCTIONS;
@@ -67,12 +67,12 @@ public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String>
 				+ "|(?<STRING2>" + STRING_PATTERN_2 + ")" + "|(?<COMMENT>" + COMMENT_PATTERN + ")" + "|(?<METHOD>" + METHOD_PATTERN + ")"
 				+ "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
 
-		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntaxProvider.KEYWORDS).stream()
-				.map(kw -> new Keyword(kw, KeywordType.KEYWORD)).collect(Collectors.toList()));
-		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntaxProvider.TYPES).stream()
-				.map(kw -> new Keyword(kw, KeywordType.TYPE)).collect(Collectors.toList()));
-		KEYWORDS_lIST.addAll(Arrays.asList(SqlCodeAreaSyntaxProvider.FUNCTIONS).stream()
-				.map(kw -> new Keyword(kw, KeywordType.FUNCTION)).collect(Collectors.toList()));
+		KEYWORDS_lIST.addAll(Arrays.stream(SqlCodeAreaSyntaxProvider.KEYWORDS)
+				.map(kw -> new Keyword(kw, KeywordType.KEYWORD)).toList());
+		KEYWORDS_lIST.addAll(Arrays.stream(SqlCodeAreaSyntaxProvider.TYPES)
+				.map(kw -> new Keyword(kw, KeywordType.TYPE)).toList());
+		KEYWORDS_lIST.addAll(Arrays.stream(SqlCodeAreaSyntaxProvider.FUNCTIONS)
+				.map(kw -> new Keyword(kw, KeywordType.FUNCTION)).toList());
 	}
 
 	private static String[] getAutocomplteWords(String category) {
@@ -101,7 +101,7 @@ public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String>
 	}
 
 	public static void bind(String table, List<String> columns) {
-		COLUMNS_MAP.put(table, new HashSet<String>(columns));
+		COLUMNS_MAP.put(table, new HashSet<>(columns));
 	}
 	
 	@Override

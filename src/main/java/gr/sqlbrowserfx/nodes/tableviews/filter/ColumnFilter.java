@@ -186,7 +186,7 @@ public final class ColumnFilter<T,R> {
         return lastFilter;
     }
     boolean hasUnselections() {
-        return unselectedValues.size() != 0;
+        return !unselectedValues.isEmpty();
     }
 
     /**
@@ -207,7 +207,7 @@ public final class ColumnFilter<T,R> {
      * Indicates whether a filter is active on this ColumnFilter
      */
     public boolean isFiltered() {
-        return isDirty || unselectedValues.size() > 0;
+        return isDirty || !unselectedValues.isEmpty();
     }
 
     /**
@@ -265,7 +265,7 @@ public final class ColumnFilter<T,R> {
     boolean evaluate(T item) {
         ObservableValue<R> value = tableColumn.getCellObservableValue(item);
 
-        return unselectedValues.size() == 0
+        return unselectedValues.isEmpty()
                 || !unselectedValues.contains(value.getValue());
     }
 
@@ -325,10 +325,10 @@ public final class ColumnFilter<T,R> {
     }
     private void initializeListeners() {
         //listen to backing list and update distinct values accordingly
-        tableFilter.getBackingList().addListener(new WeakListChangeListener<T>(backingListListener));
+        tableFilter.getBackingList().addListener(new WeakListChangeListener<>(backingListListener));
 
         //listen to visible items and update visible values accordingly
-        tableFilter.getTableView().getItems().addListener(new WeakListChangeListener<T>(itemsListener));
+        tableFilter.getTableView().getItems().addListener(new WeakListChangeListener<>(itemsListener));
 
         //listen to selections on filterValues
         filterValues.addListener(new WeakListChangeListener<>(filterValueListChangeListener));

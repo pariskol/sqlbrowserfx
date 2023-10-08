@@ -23,7 +23,7 @@ public class HistorySqlTableView extends SqlTableView implements ContextMenuOwne
 		MenuItem menuItemDelete = new MenuItem("Delete", JavaFXUtils.createIcon("/icons/minus.png"));
 		menuItemDelete.setOnAction(event -> {
 			sqlConnector.executeAsync(() ->
-				this.getSelectionModel().getSelectedItems().forEach(row -> this.deleteRecord(row))
+				this.getSelectionModel().getSelectedItems().forEach(this::deleteRecord)
 			);
 		});
 
@@ -31,7 +31,7 @@ public class HistorySqlTableView extends SqlTableView implements ContextMenuOwne
 		menuItemCopy.setOnAction(actionEvent -> {
 			StringBuilder content = new StringBuilder();
 
-			this.getSelectionModel().getSelectedItems().forEach(row -> content.append(row.toString() + "\n"));
+			this.getSelectionModel().getSelectedItems().forEach(row -> content.append(row.toString()).append("\n"));
 
 			StringSelection stringSelection = new StringSelection(content.toString());
 			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();

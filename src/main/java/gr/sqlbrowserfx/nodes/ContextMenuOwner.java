@@ -4,5 +4,5 @@ import javafx.scene.control.ContextMenu;
 
 public interface ContextMenuOwner {
 
-	public ContextMenu createContextMenu();
+	ContextMenu createContextMenu();
 }

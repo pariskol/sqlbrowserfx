@@ -93,12 +93,8 @@ public class JSONTableView extends TableView<MapTableViewRow> implements InputMa
 
 			for (String column : columns) {
 				TableColumn<MapTableViewRow, Object> col = new TableColumn<>(column);
-				col.setCellValueFactory(param -> {
-					return param.getValue().getObjectProperty(column);
-				});
-				col.setCellFactory(callback -> {
-					return new EditableCell(this);
-				});
+				col.setCellValueFactory(param -> param.getValue().getObjectProperty(column));
+				col.setCellFactory(callback -> new EditableCell(this));
 				this.getColumns().add(col);
 			}
 

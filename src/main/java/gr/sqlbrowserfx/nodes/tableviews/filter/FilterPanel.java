@@ -226,12 +226,12 @@ public final class FilterPanel<T,R> extends VBox {
             //unselect items out of scope
             columnFilter.getFilterValues().stream()
                     .filter(s -> !columnFilter.getSearchStrategy().test(searchBox.getText(), Optional.ofNullable(s.getValue()).map(Object::toString).orElse("")))
-                    .collect(Collectors.toList()).forEach(s -> s.selectedProperty().set(false));
+                    .toList().forEach(s -> s.selectedProperty().set(false));
 
             //select items in scope
             columnFilter.getFilterValues().stream()
                     .filter(s -> columnFilter.getSearchStrategy().test(searchBox.getText(), Optional.ofNullable(s.getValue()).map(Object::toString).orElse("")))
-                    .collect(Collectors.toList()).forEach(s -> s.selectedProperty().set(true));
+                    .toList().forEach(s -> s.selectedProperty().set(true));
         });
     }
 

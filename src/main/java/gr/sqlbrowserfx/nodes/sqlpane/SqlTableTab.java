@@ -13,10 +13,10 @@ import javafx.scene.layout.StackPane;
 
 public class SqlTableTab extends Tab {
 
-	SqlTableView sqlTableView;
-	SplitPane splitPane;
-	TabPane recordsTabPane;
-	Label label;
+	private SqlTableView sqlTableView;
+	private SplitPane splitPane;
+	private TabPane recordsTabPane;
+	private Label label;
 //	TODO store columns box
 
 	public SqlTableTab() {
@@ -42,18 +42,6 @@ public class SqlTableTab extends Tab {
 		return sqlTableView;
 	}
 
-	public void setSqlTableView(final SqlTableView sqlTableView) {
-		this.sqlTableView = sqlTableView;
-	}
-
-	public SplitPane getSplitPane() {
-		return splitPane;
-	}
-
-	public void setSplitPane(final SplitPane splitPane) {
-		this.splitPane = splitPane;
-	}
-
 	public TabPane getRecordsTabPane() {
 		return recordsTabPane;
 	}
@@ -64,10 +52,6 @@ public class SqlTableTab extends Tab {
 	
 	public StringProperty customTextProperty() {
 		return label.textProperty();
-	}
-	
-	public Node getCustomGraphic() {
-		return label;
 	}
 	
 	public String getCustomText() {

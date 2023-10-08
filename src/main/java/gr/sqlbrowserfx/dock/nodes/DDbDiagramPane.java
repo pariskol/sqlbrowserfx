@@ -34,7 +34,7 @@ public class DDbDiagramPane extends DbDiagramPane implements Dockable {
 						sqlConnector.executeQueryRaw("select * from " + name + " where 1 = 2", rset2 -> {
 							SqlTable sqlTable = new SqlTable(rset2.getMetaData());
 							sqlTable.setPrimaryKey(sqlConnector.findPrimaryKey(name));
-							List<Map<String, String>> fkeys = sqlConnector.findFoireignKeyReferences(name);
+							List<Map<String, String>> fkeys = sqlConnector.findForeignKeyReferences(name);
 							sqlTable.setForeignKeys(
 									fkeys.stream().map(x -> x.get(SqlConnector.FOREIGN_KEY)).collect(Collectors.toList()));
 							sqlTable.setRelatedTables(fkeys.stream().map(x -> x.get(SqlConnector.REFERENCED_TABLE)).collect(Collectors.toList()));
