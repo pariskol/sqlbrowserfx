@@ -39,6 +39,7 @@ public class ColumnCreationBox extends HBox {
 	private final CheckBox nnCheckBox;
 	private final CheckBox pkCheckBox;
 	private final CheckBox uCheckBox;
+	private final CheckBox aiCheckBox;
 	private final SqlConnector sqlConnector;
 	
 	public ColumnCreationBox(SqlConnector sqlConnector, ListView<ColumnCreationBox> parent) {
@@ -79,12 +80,13 @@ public class ColumnCreationBox extends HBox {
 		pkCheckBox = new CheckBox("PK");
 		nnCheckBox = new CheckBox("NN");
 		uCheckBox = new CheckBox("U");
+		aiCheckBox = new CheckBox("AI");
 		
 		deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
 		deleteButton.setOnAction(event -> parent.getItems().remove(this));
 		
 		this.getChildren().addAll(deleteButton, columnNameField, typeComboBox, 
-				pkCheckBox, fkCheckBox, tablesComboBox, columnsComboBox,  nnCheckBox, uCheckBox);
+				pkCheckBox, fkCheckBox, tablesComboBox, columnsComboBox,  nnCheckBox, uCheckBox, aiCheckBox);
 		this.setSpacing(10);
 		this.setAlignment(Pos.BASELINE_LEFT);
 	}
@@ -151,5 +153,9 @@ public class ColumnCreationBox extends HBox {
 	
 	public Boolean isUnique() {
 		return uCheckBox.isSelected();
+	}
+
+	public Boolean isAutoIncrement() {
+		return aiCheckBox.isSelected();
 	}
 }

@@ -2,6 +2,7 @@ package gr.sqlbrowserfx.nodes;
 
 
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
 import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
@@ -81,9 +82,13 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner, Simpl
 		StringBuilder primaryKey = new StringBuilder("    PRIMARY KEY(");
 		for (ColumnCreationBox cb : columnBoxesListView.getItems()) {
 			query.append("    ").append(cb.getColumnName()).append(" ").append(cb.getColumnType());
-			
+
 			if (cb.isNotNull())
 				query.append(" NOT NULL");
+			if (cb.isAutoIncrement() && sqlConnector instanceof SqliteConnector)
+				query.append(" AUTOINCREMENT");
+			if (cb.isAutoIncrement() && !(sqlConnector instanceof SqliteConnector))
+				query.append(" AUTO_INCREMENT");
 			if (cb.isUnique())
 				query.append(" UNIQUE");
 			if (cb.isColumnPrimaryKey())
