@@ -76,8 +76,6 @@ public class DialogFactory {
 			else if (DEFAULT_STYLESHEET != null)
 				alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
 			
-			JavaFXUtils.applyJMetro(alert.getDialogPane());
-			
 			alert.showAndWait();
 		});
 	}
@@ -98,8 +96,6 @@ public class DialogFactory {
 			alert.getDialogPane().getStylesheets().add(stylesheet);
 		else if (DEFAULT_STYLESHEET != null)
 			alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
-		
-		JavaFXUtils.applyJMetro(alert.getDialogPane());
 		
 		Optional<ButtonType> res = alert.showAndWait();
         result.set(ButtonType.OK == res.get());
@@ -131,8 +127,6 @@ public class DialogFactory {
 			else if (DEFAULT_STYLESHEET != null)
 				alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
 			
-			JavaFXUtils.applyJMetro(alert.getDialogPane());
-
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).info(message);
 			alert.showAndWait();
 		});
@@ -185,8 +179,6 @@ public class DialogFactory {
                     dialog.close();
                 });
 
-        JavaFXUtils.applyJMetro(dialogVbox);
-		
         Scene dialogScene = new Scene(dialogVbox, 400, 200);
         if (stylesheet != null)
         	dialogScene.getStylesheets().add(stylesheet);

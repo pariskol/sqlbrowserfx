@@ -72,7 +72,6 @@ public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner, I
 		addButton.setOnAction(actionEvent -> {
 			TableCreationPane tableCreationPane = new TableCreationPane(this.sqlConnector);
 			tableCreationPane.addObserver(this.dbTreeView);
-			JavaFXUtils.applyJMetro(tableCreationPane);
 			new DockNode(asDockNode().getDockPane(), tableCreationPane, "Create New Table", JavaFXUtils.createIcon("/icons/add.png"), 1050.0, 600.0);
 		});
 		addButton.setTooltip(new Tooltip("Open table creator"));

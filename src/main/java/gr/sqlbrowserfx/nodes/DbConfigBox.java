@@ -102,7 +102,7 @@ public abstract class DbConfigBox extends VBox {
 			try {
 				String query = "insert into connections_history (url, user, database, database_type) values (?, ?, ?, ?)";
 				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
-						Arrays.asList(getUrlField().getText(), getUserField().getText(), getDatabaseField().getText(), this.getSaveType()));
+						Arrays.asList(getUrlField().getText(), getUserField().getText(), getDatabaseField().getText(), this.getSqlConnectorType()));
 			} catch (SQLException e) {
 				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 			}
@@ -160,5 +160,5 @@ public abstract class DbConfigBox extends VBox {
 
 	abstract public String getHistoryQuery();
 	
-	abstract public String getSaveType();
+	abstract public String getSqlConnectorType();
 }

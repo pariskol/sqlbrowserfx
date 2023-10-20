@@ -5,11 +5,11 @@ public class PostgreSqlConfigBox extends DbConfigBox {
 	@Override
 	public String getHistoryQuery() {
 		return "select url, user, database, timestamp, id from connections_history_localtime"
-				+ " where database_type = 'postgresql' order by timestamp desc";
+				+ " where database_type = '" + getSqlConnectorType() + "' order by timestamp desc";
 	}
 
 	@Override
-	public String getSaveType() {
-		return "postgresql";
+	public String getSqlConnectorType() {
+		return SqlConnectorType.POSTGRESQL.toString().toLowerCase();
 	}
 }

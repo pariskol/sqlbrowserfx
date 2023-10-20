@@ -188,8 +188,6 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 		mysqlTab.setClosable(false);
 		var dbTabPane = new TabPane(sqliteTab, mysqlTab);
 
-		JavaFXUtils.applyJMetro(dbTabPane);
-
 		primaryScene = new Scene(dbTabPane, 800, 500);
 		leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
 		leftBox.prefWidthProperty().bind(primaryScene.widthProperty().divide(2));
@@ -318,7 +316,6 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 		Button saveButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
 
 		VBox vBox = new VBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
-		JavaFXUtils.applyJMetro(vBox);
 		vBox.setPadding(new Insets(15));
 
 		Stage stage = new Stage();
@@ -377,7 +374,6 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 		vbox.getChildren().addAll(menuBar, mainSp);
 		VBox.setVgrow(mainSp, Priority.ALWAYS);
 
-		JavaFXUtils.applyJMetro(vbox);
 		JavaFXUtils.addZoomInOutSupport(vbox);
 
 		if (primaryScene == null) {

@@ -81,9 +81,6 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 	 */
 	private DockPane dockPane;
 	
-	private static final boolean ENABLE_JMETRO = System.getProperty("jmetro") != null;
-	private static final String JMETRO = System.getProperty("jmetro");
-
 	/**
 	 * CSS pseudo class selector representing whether this node is currently
 	 * floating.
@@ -320,15 +317,7 @@ public class DockNode extends VBox implements EventHandler<MouseEvent> {
 			borderPane.getStyleClass().add("dock-node-border");
 			borderPane.setCenter(this);
 			
-			try {
-				JavaFXUtils.applyJMetro(borderPane);
-			} catch (Exception e) {
-				System.err.println("Not supported");
-			}
-			
 			Scene scene = new Scene(borderPane, width, height);
-			
-			JavaFXUtils.applyJMetro(borderPane);
 			
 			if (dockPane != null) {
 				for (String styleSheet : dockPane.getStylesheets())

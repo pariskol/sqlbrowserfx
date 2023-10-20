@@ -21,8 +21,6 @@ public class JavaFXUtils {
 
 	private static  String CSS_THEME = "/styles/" + (String) PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark");
 	private static double ZOOM = 1.0;
-	private static final boolean ENABLE_JMETRO =  PropertiesLoader.getProperty("sqlbrowserfx.jmetro.theme", String.class) != null;
-	private static final String JMETRO = (String) PropertiesLoader.getProperty("sqlbrowserfx.jmetro.theme", String.class);
 
 	static {
 		try {
@@ -94,15 +92,6 @@ public class JavaFXUtils {
         
 	}
 	
-	public static void applyJMetro(Node node) {
-		// FIXME: Jmetro is broken after update
-//		Parent parent = (Parent) node;
-//		if (ENABLE_JMETRO && JMETRO.equals("dark"))
-//			JMetro(Style.).setParent(parent);	
-//		else if (ENABLE_JMETRO && JMETRO.equals("light"))
-//			new JMetro(Style.LIGHT).setParent(parent);
-	}
-
 	public static void timer(int delay, Runnable action) {
 		Timer timer = new Timer(delay, event -> Platform.runLater(action));
 		timer.setRepeats(false);
