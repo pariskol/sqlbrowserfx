@@ -24,18 +24,22 @@ import org.slf4j.LoggerFactory;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.PostgreSqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
+import gr.sqlbrowserfx.conn.SqlServerConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
 import gr.sqlbrowserfx.dock.nodes.DDbDiagramPane;
 import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.DbConfigBox;
 import gr.sqlbrowserfx.nodes.FilesTreeView;
 import gr.sqlbrowserfx.nodes.HelpTabPane;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.PostgreSqlConfigBox;
 import gr.sqlbrowserfx.nodes.SimpleTerminal;
+import gr.sqlbrowserfx.nodes.SqlConnectorType;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
+import gr.sqlbrowserfx.nodes.SqlServerConfigBox;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
@@ -218,9 +222,16 @@ public class SqlBrowserFXApp extends Application {
 		postgresqlTab.setGraphic(JavaFXUtils.createImageView("/icons/postgre.png", 28.0, 28.0));
 		postgresqlTab.setClosable(false);
 		
-		var dbTabPane = new TabPane(sqliteTab, mysqlTab, mariadbTab, postgresqlTab);
+		var sqlServerConfigBox = new SqlServerConfigBox();
+		sqlServerConfigBox.getConnectButton().setOnAction(actionEvent -> {
+			sqlServerConfigBox.showLoader(true);
+			dbSelectionAction(postgreSqlConfigBox);
+		});
+		var sqlServerTab = new Tab("SQL Server", sqlServerConfigBox);
+		sqlServerTab.setGraphic(JavaFXUtils.createImageView("/icons/sqlserver.png", 28.0, 28.0));
+		sqlServerTab.setClosable(false);
 		
-		JavaFXUtils.applyJMetro(dbTabPane);
+		var dbTabPane = new TabPane(sqliteTab, mysqlTab, postgresqlTab, sqlServerTab);
 		
 		primaryScene = new Scene(dbTabPane, 800, 500);
 		leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
@@ -262,18 +273,27 @@ public class SqlBrowserFXApp extends Application {
 
 	}
 
-	private void dbSelectionAction(MySqlConfigBox configBox) {
+	private void dbSelectionAction(DbConfigBox configBox) {
 		configBox.getConnectButton().setDisable(true);
 		DB = configBox.getDatabaseField().getText();
 		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
-			var mysqlConnector = new MysqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
-					configBox.getUserField().getText(), configBox.getPasswordField().getText());
-			this.sqlConnector = mysqlConnector;
+			if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.MYSQL.toString())) {
+				this.sqlConnector = new MysqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
+						configBox.getUserField().getText(), configBox.getPasswordField().getText());
+			}
+			else if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.POSTGRESQL.toString())) {
+				this.sqlConnector = new PostgreSqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
+						configBox.getUserField().getText(), configBox.getPasswordField().getText());
+			}
+			else if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.SQLSERVER.toString())) {
+				this.sqlConnector = new SqlServerConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
+						configBox.getUserField().getText(), configBox.getPasswordField().getText());
+			}
 			
 			Executors.newSingleThreadExecutor().execute(() -> {
 				try {
-					mysqlConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
-					mysqlConnector.checkConnection();
+					sqlConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
+					sqlConnector.checkConnection();
 				} catch (SQLException e) {
 					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 					configBox.showLoader(false);
@@ -286,46 +306,12 @@ public class SqlBrowserFXApp extends Application {
 				Platform.runLater(() -> {
 					if (System.getProperty("mode", "normal").equals("simple")) {
 						SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
-						primaryScene.setRoot(new SqlConsolePane(mysqlConnector));
-						JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
-						STAGE.setScene(primaryScene);
-					}
-					else
-						createAppView(mysqlConnector);
-				});
-			});
-	}
-	
-	private void dbSelectionAction(PostgreSqlConfigBox configBox) {
-		configBox.getConnectButton().setDisable(true);
-		DB = configBox.getDatabaseField().getText();
-		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
-			var mysqlConnector = new PostgreSqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
-					configBox.getUserField().getText(), configBox.getPasswordField().getText());
-			this.sqlConnector = mysqlConnector;
-			
-			Executors.newSingleThreadExecutor().execute(() -> {
-				try {
-					mysqlConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
-					mysqlConnector.checkConnection();
-				} catch (SQLException e) {
-					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
-					configBox.showLoader(false);
-					DialogFactory.createErrorDialog(e);
-					configBox.getConnectButton().setDisable(false);
-					return;
-				}
-				
-				configBox.saveToHistory();
-				Platform.runLater(() -> {
-					if (System.getProperty("mode", "normal").equals("simple")) {
-						SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
-						primaryScene.setRoot(new SqlConsolePane(mysqlConnector));
+						primaryScene.setRoot(new SqlConsolePane(sqlConnector));
 						JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
 						STAGE.setScene(primaryScene);
 					}
 					else {
-						createAppView(mysqlConnector);
+						createAppView(sqlConnector);
 					}
 				});
 			});
@@ -416,7 +402,6 @@ public class SqlBrowserFXApp extends Application {
 		vbox.getChildren().addAll(menuBar, dockPane);
 		VBox.setVgrow(dockPane, Priority.ALWAYS);
 		
-		JavaFXUtils.applyJMetro(vbox);
 		JavaFXUtils.addZoomInOutSupport(vbox);
 
 		if (primaryScene == null) {
@@ -474,7 +459,6 @@ public class SqlBrowserFXApp extends Application {
 		var jsonTableViewItem = new MenuItem("Open JSON Table View", JavaFXUtils.createIcon("/icons/web.png"));
 		jsonTableViewItem.setOnAction(event -> {
 			var jsonTableView = this.createJsonTableView();
-		    JavaFXUtils.applyJMetro(jsonTableView);
 			JavaFXUtils.zoomToCurrentFactor(
 					new DockNode(dockPane, jsonTableView, "JSON Data Explorer", JavaFXUtils.createIcon("/icons/web.png")));
 		});
@@ -594,7 +578,6 @@ public class SqlBrowserFXApp extends Application {
 		var saveButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
 
 		var vBox = new VBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
-		JavaFXUtils.applyJMetro(vBox);
 		vBox.setPadding(new Insets(15));
 
 		var stage = new Stage();
