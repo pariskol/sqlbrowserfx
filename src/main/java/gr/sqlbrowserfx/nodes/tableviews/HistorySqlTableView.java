@@ -7,6 +7,7 @@ import java.awt.datatransfer.StringSelection;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import javafx.application.Platform;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 
@@ -22,9 +23,11 @@ public class HistorySqlTableView extends SqlTableView implements ContextMenuOwne
 	public ContextMenu createContextMenu() {
 		MenuItem menuItemDelete = new MenuItem("Delete", JavaFXUtils.createIcon("/icons/minus.png"));
 		menuItemDelete.setOnAction(event -> {
-			sqlConnector.executeAsync(() ->
-				this.getSelectionModel().getSelectedItems().forEach(this::deleteRecord)
-			);
+            sqlConnector.executeAsync(() -> {
+                var selectedRows = this.getSelectionModel().getSelectedItems();
+                selectedRows.forEach(this::deleteRecord);
+                Platform.runLater(() -> this.getSqlTableRows().removeAll(selectedRows));
+            });
 		});
 
 		MenuItem menuItemCopy = new MenuItem("Copy row", JavaFXUtils.createIcon("/icons/copy.png"));

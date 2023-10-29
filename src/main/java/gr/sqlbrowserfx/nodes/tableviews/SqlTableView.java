@@ -377,7 +377,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 		sqlTableRow.changed();
 	}
 
-	public int deleteRecord(MapTableViewRow sqlTableRow) {
+	public void deleteRecord(MapTableViewRow sqlTableRow) {
 		StringBuilder query = new StringBuilder("delete from " + this.getTableName() + " where ");
 		List<Object> params = new ArrayList<>();
 		Set<String> columns = this.getSqlTable().getColumns();
@@ -401,13 +401,11 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 
 		try {
 			sqlConnector.executeUpdate(query.toString(), params);
-			this.getSqlTableRows().remove(sqlTableRow);
+			// TODO: may enable the following row with param
+//			this.getSqlTableRows().remove(sqlTableRow);
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
-			return 0;
 		}
-
-		return 1;
 	}
 
 	public void insertRecord(SqlTableRowEditBox editBox) throws SQLException {
