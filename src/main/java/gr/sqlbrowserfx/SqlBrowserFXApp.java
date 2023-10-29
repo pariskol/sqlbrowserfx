@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import gr.sqlbrowserfx.nodes.*;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
@@ -31,15 +32,7 @@ import gr.sqlbrowserfx.dock.nodes.DDbDiagramPane;
 import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.nodes.DbConfigBox;
-import gr.sqlbrowserfx.nodes.FilesTreeView;
-import gr.sqlbrowserfx.nodes.HelpTabPane;
-import gr.sqlbrowserfx.nodes.MySqlConfigBox;
-import gr.sqlbrowserfx.nodes.PostgreSqlConfigBox;
-import gr.sqlbrowserfx.nodes.SimpleTerminal;
-import gr.sqlbrowserfx.nodes.SqlConnectorType;
-import gr.sqlbrowserfx.nodes.SqlConsolePane;
-import gr.sqlbrowserfx.nodes.SqlServerConfigBox;
+import gr.sqlbrowserfx.nodes.SimpleTerminalPane;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
@@ -445,7 +438,7 @@ public class SqlBrowserFXApp extends Application {
 		
 		var terminalViewItem = new MenuItem("Open Simple Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
 		terminalViewItem.setOnAction(event -> {
-			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, new SimpleTerminal(),
+			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, new SimpleTerminalPane(),
 					"Simple Terminal", JavaFXUtils.createIcon("/icons/console.png")));
 		});
 		
