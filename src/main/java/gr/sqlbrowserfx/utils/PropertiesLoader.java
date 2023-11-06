@@ -52,11 +52,12 @@ public class PropertiesLoader {
 		}
 	}
 	
-	public static Object getProperty(String fileKey, String key, Class<?> clazz) {
-		Object value = propertiesMap.get(fileKey).get(key);
+	@SuppressWarnings("unchecked")
+	public static <T> T getProperty(String fileKey, String key, Class<?> clazz) {
+		T value = (T) propertiesMap.get(fileKey).get(key);
 		try {
 			Constructor<?> cons = clazz.getConstructor(String.class);
-            return cons.newInstance(value.toString());
+            return (T) cons.newInstance(value.toString());
 		} catch (Exception e) {
 			if (logger != null)
     			logger.debug("Could not read property from file");
@@ -65,10 +66,11 @@ public class PropertiesLoader {
 		}
 		return null;
 	}
-	
-	public static Object getProperty(String fileKey, String key, Class<?> clazz, Object defaultValue) {
-		Object value = getProperty(fileKey, key, clazz);
-		return value != null ? value : defaultValue;
+
+	@SuppressWarnings("unchecked")
+	public static <T> T getProperty(String fileKey, String key, Class<?> clazz, Object defaultValue) {
+		T value = getProperty(fileKey, key, clazz);
+		return value != null ? value : (T) defaultValue;
 	}
 	
 	/**
@@ -78,7 +80,8 @@ public class PropertiesLoader {
 	 * @param clazz
 	 * @return
 	 */
-	public static Object getProperty(String key, Class<?> clazz) {
+	@SuppressWarnings("unchecked")
+	public static <T> T getProperty(String key, Class<?> clazz) {
 		Object value = null;
 		if (IS_ENABLED) {
 			for (Properties props : propertiesMap.values()) {
@@ -92,7 +95,7 @@ public class PropertiesLoader {
 		}
 		try {
 			Constructor<?> cons = clazz.getConstructor(String.class);
-            return cons.newInstance(value.toString());
+            return (T) cons.newInstance(value.toString());
 		} catch (Throwable e) {
 			if (logger != null)
     			logger.debug("Could not read property from file");
@@ -109,9 +112,10 @@ public class PropertiesLoader {
 	 * @param clazz
 	 * @return
 	 */
-	public static Object getProperty(String key, Class<?> clazz, Object defaultValue) {
-		Object value = getProperty(key, clazz);
-		return value != null ? value : defaultValue;
+	@SuppressWarnings("unchecked")
+	public static <T> T getProperty(String key, Class<?> clazz, Object defaultValue) {
+		T value = getProperty(key, clazz);
+		return value != null ? value : (T) defaultValue;
 	}
 	
 	public static Properties getPropertiesFromFile(String fileNamePart) {

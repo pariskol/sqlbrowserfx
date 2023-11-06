@@ -19,7 +19,7 @@ import javafx.scene.input.ScrollEvent;
 
 public class JavaFXUtils {
 
-	private static  String CSS_THEME = "/styles/" + (String) PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark");
+	private static  String CSS_THEME = "/styles/" + PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark");
 	private static double ZOOM = 1.0;
 
 	static {

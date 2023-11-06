@@ -63,8 +63,8 @@ import javafx.stage.Stage;
 public class SqlBrowserFXAppWithoutDocking extends Application {
 
 	private static final String CSS_THEME = "/styles/"
-			+ (String) PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark") + ".css";
-	private static final Boolean AUTO_COMMIT_IS_ENABLED = (Boolean) PropertiesLoader
+			+ PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark") + ".css";
+	private static final Boolean AUTO_COMMIT_IS_ENABLED = PropertiesLoader
 			.getProperty("sqlconnector.enable.autocommit", Boolean.class, true);
 
 	private static String DB;

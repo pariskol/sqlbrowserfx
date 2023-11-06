@@ -310,8 +310,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			if (mouseEvent.getClickCount() == 2) {
 				SqlTableView tableView = getSelectedSqlTableView();
 				if (tableView.getSelectionModel().getSelectedItem() != null) {
-					if (((Boolean) PropertiesLoader.getProperty("sqlbrowserfx.default.editmode.cell", Boolean.class,
-							false)))
+					if (PropertiesLoader.getProperty("sqlbrowserfx.default.editmode.cell", Boolean.class,
+							false))
 						tableView.getSelectedCell().startEdit();
 					else {
 						if (isInFullMode()) {

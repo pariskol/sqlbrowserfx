@@ -76,7 +76,7 @@ import javafx.stage.Stage;
 public class SqlBrowserFXApp extends Application {
 
 	private static final String CSS_THEME = "/styles/" + PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark") + ".css";
-	private static final Boolean AUTO_COMMIT_IS_ENABLED = (Boolean) PropertiesLoader.getProperty("sqlconnector.enable.autocommit", Boolean.class, true);
+	private static final Boolean AUTO_COMMIT_IS_ENABLED = PropertiesLoader.getProperty("sqlconnector.enable.autocommit", Boolean.class, true);
 
 	private static String DB;
 	private static RESTfulServiceConfig restServiceConfig;
