@@ -420,9 +420,11 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 			this.setRoot(this.selectedRootItem);
 			this.selectedRootItem.setExpanded(true);
 		});
+		setAsRoot.disableProperty().bind(this.getSelectionModel().selectedItemProperty().isNull().or(this.isFileProperty));
 
 		var restoreRoot = new MenuItem("Restore Project Root", JavaFXUtils.createIcon("/icons/refresh.png"));
 		restoreRoot.setOnAction(event -> this.setRoot(this.rootItem));
+		restoreRoot.disableProperty().bind(this.getSelectionModel().selectedItemProperty().isEqualTo(this.rootItem));
 
 		contextMenu.getItems().addAll(openFile, new SeparatorMenuItem(),
 				newFile, renameFile, copyFiles, pasteFiles, deleteFile, new SeparatorMenuItem(),
