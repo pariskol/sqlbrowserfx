@@ -1,7 +1,6 @@
 package gr.sqlbrowserfx.nodes;
 
 import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -37,7 +36,6 @@ import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
@@ -60,6 +58,7 @@ public class DBTreeView extends TreeView<String>
 	private final SqlConnector sqlConnector;
 
 	private final TreeItem<String> rootItem;
+	private TreeItem<String> selectedRootItem;
 	protected TreeItem<String> tablesRootItem;
 	protected TreeItem<String> viewsRootItem;
 	private final TreeItem<String> indexesRootItem;
@@ -142,36 +141,36 @@ public class DBTreeView extends TreeView<String>
 		this.getSelectionModel().selectedItemProperty().addListener((ob, ov, nv) -> {
 			if (nv == null) return;
 			
-			String selected = nv.getValue();			
+			var selected = nv.getValue();
 			canSelectedOpenProperty.set(false);
 			hasSelectedSchemaProperty.set(false);
 			
-			List<String> tables = tablesRootItem.getChildren().stream().map(TreeItem::getValue).toList();
+			var tables = tablesRootItem.getChildren().stream().map(TreeItem::getValue).toList();
 			if (tables.contains(selected)) {
 				hasSelectedSchemaProperty.set(true);
 				canSelectedOpenProperty.set(true);
 				return;
 			}
-			List<String> views = viewsRootItem.getChildren().stream().map(TreeItem::getValue).toList();
+			var views = viewsRootItem.getChildren().stream().map(TreeItem::getValue).toList();
 			if (views.contains(selected)) {
 				hasSelectedSchemaProperty.set(true);
 				canSelectedOpenProperty.set(true);
 				return;
 			}
-			List<String> indexes = indexesRootItem.getChildren().stream().map(TreeItem::getValue).toList();
+			var indexes = indexesRootItem.getChildren().stream().map(TreeItem::getValue).toList();
 			if (indexes.contains(selected)) {
 				hasSelectedSchemaProperty.set(true);
 				return;
 			}
 			
 			if (isUsingMysql()) {
-				List<String> procedures = proceduresRootItem.getChildren().stream().map(TreeItem::getValue)
+				var procedures = proceduresRootItem.getChildren().stream().map(TreeItem::getValue)
 						.toList();
 				if (procedures.contains(selected)) {
 					hasSelectedSchemaProperty.set(true);
 					return;
 				}
-				List<String> functions = functionsRootItem.getChildren().stream().map(TreeItem::getValue)
+				var functions = functionsRootItem.getChildren().stream().map(TreeItem::getValue)
 						.toList();
 				if (functions.contains(selected)) {
 					hasSelectedSchemaProperty.set(true);
@@ -195,16 +194,12 @@ public class DBTreeView extends TreeView<String>
 	private void setKeys() {
 		this.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
-				switch (keyEvent.getCode()) {
-				case C:
-					this.copyAction();
-					break;
-				case F:
-					this.showSearchPopup();
-					break;
-				default:
-					break;
-				}
+                switch (keyEvent.getCode()) {
+                    case C -> this.copyAction();
+                    case F -> this.showSearchPopup();
+                    default -> {
+                    }
+                }
 			}
 		});
 	}
@@ -244,16 +239,16 @@ public class DBTreeView extends TreeView<String>
 		try {
 			sqlConnector.executeQueryAsync("select * from INFORMATION_SCHEMA.ROUTINES where ROUTINE_SCHEMA = ? ",
 					Arrays.asList(sqlConnector.getDbSchema()), rset -> {
-						Map<String, Object> map = DTOMapper.mapUnsafely(rset);
-						TreeItem<String> ti = new TreeItem<>();
+						var map = DTOMapper.mapUnsafely(rset);
+						var ti = new TreeItem<String>();
 						ti.setValue(String.valueOf(getULN(map, "ROUTINE_NAME")));
-						String routineType = getULN(map, "ROUTINE_TYPE");
+						var routineType = getULN(map, "ROUTINE_TYPE");
 						
-						String url = "/icons/" + (routineType.equals("PROCEDURE") ? "procedure" : "function") + ".png";
+						var url = "/icons/" + ("PROCEDURE".equals(routineType) ? "procedure" : "function") + ".png";
 						ti.setGraphic(JavaFXUtils.createIcon(url));
 						this.fillFPTreeItem(ti, map);
 
-						if (routineType.equals("PROCEDURE")) {
+						if ("PROCEDURE".equals(routineType)) {
 							proceduresRootItem.getChildren().add(ti);
 						}
 						else {
@@ -268,12 +263,12 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	private List<String> setupTreeItems() throws SQLException {
-		List<String> newItems = new ArrayList<>();
+		var newItems = new ArrayList<String>();
 		sqlConnector.getContents(rset -> {
 			try {
 				// In every sql connector implementation columns must be ordered as 'name','type' in contents query
-				String name = rset.getString(1);
-				String type = rset.getString(2);
+				var name = rset.getString(1);
+				var type = rset.getString(2);
 				
 				if (name == null || type == null) {
 					logger.error("Could not map table name or type, type: " + type + " ,name: " + name);
@@ -283,7 +278,7 @@ public class DBTreeView extends TreeView<String>
 				newItems.add(name);
 				if (!allItems.contains(name)) {
 					allItems.add(name);
-					TreeItem<String> treeItem = new TreeItem<>(name);
+					var treeItem = new TreeItem<>(name);
 					if (type.toLowerCase().contains("table")) {
 						this.fillTableTreeItem(treeItem);
 						tablesRootItem.getChildren().add(treeItem);
@@ -310,16 +305,16 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	private void updateTriggers() throws SQLException {
-		for (TreeItem<String> treeItem : tablesRootItem.getChildren()) {
+		for (var treeItem : tablesRootItem.getChildren()) {
 			// triggers tree item is the 2nd child
 			treeItem.getChildren().get(2).getChildren().clear();
 			sqlConnector.getTriggers(treeItem.getValue(), rset -> {
-				TreeItem<String> triggerTreeItem = new TreeItem<>(rset.getString(TRIGGER_NAME),
+				var triggerTreeItem = new TreeItem<>(rset.getString(TRIGGER_NAME),
                         JavaFXUtils.createIcon("/icons/trigger.png"));
-				String schema = rset.getString(ACTION_STATEMENT);
+				var schema = rset.getString(ACTION_STATEMENT);
 				triggerTreeItem.getChildren()
 						.add(new TreeItem<>(schema, JavaFXUtils.createIcon("/icons/script.png")));
-				ObservableList<TreeItem<String>> triggerItems = treeItem.getChildren().get(2).getChildren();
+				var triggerItems = treeItem.getChildren().get(2).getChildren();
 				triggerItems.add(triggerTreeItem);
 			});
 		}
@@ -333,8 +328,8 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	private void removeMissingTreeItems(List<String> newItems) {
-		List<TreeItem<String>> found = new ArrayList<>();
-		List<String> sfound = new ArrayList<>();
+		var found = new ArrayList<TreeItem<String>>();
+		var sfound = new ArrayList<String>();
 		
 		tablesRootItem.getChildren().forEach(treeItem -> {
 			if (!newItems.contains(treeItem.getValue())) {
@@ -365,11 +360,11 @@ public class DBTreeView extends TreeView<String>
 	}
 	
 	private void fillTreeView() throws SQLException {
-		Thread thread = new Thread(() -> {
+		var thread = new Thread(() -> {
 			try {
-				long timeCounter = System.currentTimeMillis();
+				var timeCounter = System.currentTimeMillis();
 	
-				List<String> newItems = this.setupTreeItems();
+				var newItems = this.setupTreeItems();
 				this.removeMissingTreeItems(newItems);
 	
 				Platform.runLater(() -> {
@@ -398,43 +393,42 @@ public class DBTreeView extends TreeView<String>
 	 * @throws SQLException
 	 */
 	private void fillTVTreeItem(TreeItem<String> treeItem, String schemaColumn) throws SQLException {
-		TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.createIcon("/icons/script.png"));
+		var schemaTree = new TreeItem<>("schema", JavaFXUtils.createIcon("/icons/script.png"));
 		treeItem.getChildren().add(schemaTree);
 	
 		sqlConnector.getSchema(treeItem.getValue(), rset -> {
-			String schema = rset.getString(schemaColumn);
+			var schema = rset.getString(schemaColumn);
 			// FIXME: find a more abstract way
 			DbCash.addSchemaFor(treeItem.getValue(), schema);
-			TreeItem<String> schemaItem = new TreeItem<>(schema); // , new SqlCodeArea(schema, false, false,
-																	// isUsingMysql()));
+			var schemaItem = new TreeItem<>(schema);
 			schemaTree.getChildren().add(schemaItem);
 		});
 	
-		TreeItem<String> columnsTree = new TreeItem<>("columns", JavaFXUtils.createIcon("/icons/columns.png"));
+		var columnsTree = new TreeItem<>("columns", JavaFXUtils.createIcon("/icons/columns.png"));
 		treeItem.getChildren().add(columnsTree);
 	
 		// executing a query that will return zero results just to resolve columns
 		sqlConnector.executeQueryRaw("select * from " + treeItem.getValue() + " where 1 = 2", rset -> {
-			SqlTable sqlTable = new SqlTable(rset.getMetaData());
+			var sqlTable = new SqlTable(rset.getMetaData());
 			sqlTable.setPrimaryKey(sqlConnector.findPrimaryKey(treeItem.getValue()));
-			List<Map<String, String>> fkeys = sqlConnector.findForeignKeyReferences(treeItem.getValue());
+			var fkeys = sqlConnector.findForeignKeyReferences(treeItem.getValue());
 			sqlTable.setForeignKeys(
 					fkeys.stream().map(x -> x.get(SqlConnector.FOREIGN_KEY)).collect(Collectors.toList()));
 			sqlTable.getColumns();
-			for (String column : sqlTable.getColumns()) {
-				TreeItem<String> columnTreeItem = new TreeItem<>(column);
+			for (var column : sqlTable.getColumns()) {
+				var columnTreeItem = new TreeItem<>(column);
 				columnTreeItem.setGraphic(JavaFXUtils.createIcon("/icons/blue.png"));
 				if (sqlTable.getPrimaryKey() != null && sqlTable.getPrimaryKey().contains(column))
 					columnTreeItem.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
 				else if (sqlTable.isForeignKey(column)) {
 					columnTreeItem.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
-					List<Map<String, String>> l = fkeys.stream()
+					var l = fkeys.stream()
 							.filter(x -> x.get(SqlConnector.FOREIGN_KEY).equals(column)).toList();
-					Map<String, String> map = !l.isEmpty() ? l.get(0) : null;
+					var map = !l.isEmpty() ? l.get(0) : null;
 					if (map != null) {
-						String refColumn = map.get(SqlConnector.REFERENCED_TABLE) + ": "
+						var refColumn = map.get(SqlConnector.REFERENCED_TABLE) + ": "
 								+ map.get(SqlConnector.REFERENCED_KEY);
-						TreeItem<String> referenceItem = new TreeItem<>(refColumn);
+						var referenceItem = new TreeItem<>(refColumn);
 						referenceItem.setGraphic(JavaFXUtils.createIcon("/icons/blue.png"));
 						columnTreeItem.getChildren().add(referenceItem);
 					}
@@ -448,12 +442,12 @@ public class DBTreeView extends TreeView<String>
 
 	private void fillTableTreeItem(TreeItem<String> treeItem) throws SQLException {
 		this.fillTVTreeItem(treeItem, sqlConnector.getTableSchemaColumn());
-		TreeItem<String> triggersTreeItem = new TreeItem<>("triggers",
+		var triggersTreeItem = new TreeItem<>("triggers",
                 JavaFXUtils.createIcon("/icons/trigger.png"));
 		sqlConnector.getTriggers(treeItem.getValue(), rset -> {
-			TreeItem<String> triggerTreeItem = new TreeItem<>(rset.getString(TRIGGER_NAME),
+			var triggerTreeItem = new TreeItem<>(rset.getString(TRIGGER_NAME),
                     JavaFXUtils.createIcon("/icons/trigger.png"));
-			String schema = rset.getString(ACTION_STATEMENT);
+			var schema = rset.getString(ACTION_STATEMENT);
 			triggerTreeItem.getChildren()
 					.add(new TreeItem<>(schema, JavaFXUtils.createIcon("/icons/script.png")));
 			triggersTreeItem.getChildren().add(triggerTreeItem);
@@ -467,11 +461,11 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	private void fillIndexTreeItem(TreeItem<String> treeItem) throws SQLException {
-		TreeItem<String> schemaTree = new TreeItem<>("schema", JavaFXUtils.createIcon("/icons/script.png"));
+		var schemaTree = new TreeItem<>("schema", JavaFXUtils.createIcon("/icons/script.png"));
 		treeItem.getChildren().add(schemaTree);
 
 		sqlConnector.getSchema(treeItem.getValue(), rset -> {
-			String schema = rset.getString(sqlConnector.getIndexSchemaColumn());
+			var schema = rset.getString(sqlConnector.getIndexSchemaColumn());
 			schemaTree.getChildren().add(new TreeItem<>(schema));
 		});
 	}
@@ -484,22 +478,22 @@ public class DBTreeView extends TreeView<String>
 	 * @throws SQLException
 	 */
 	private void fillFPTreeItem(TreeItem<String> treeItem, Map<String, Object> map) throws SQLException {
-		TreeItem<String> bodyTreeItem = new TreeItem<>("body",
+		var bodyTreeItem = new TreeItem<>("body",
                 JavaFXUtils.createIcon("/icons/script.png"));
 		bodyTreeItem.getChildren().add(new TreeItem<>(getULN(map, "ROUTINE_DEFINITION")));
 		treeItem.getChildren().add(bodyTreeItem);
 	
-		TreeItem<String> paramsTreeItem = new TreeItem<>("parameters",
+		var paramsTreeItem = new TreeItem<>("parameters",
 				JavaFXUtils.createIcon("/icons/var.png"));
 		treeItem.getChildren().add(paramsTreeItem);
 	
 		sqlConnector.executeQuery(
 				"select * from INFORMATION_SCHEMA.PARAMETERS where SPECIFIC_NAME = ? ",
 				Arrays.asList(getULN(map, "SPECIFIC_NAME")), rset2 -> {
-					Map<String, Object> map2 = DTOMapper.mapUnsafely(rset2);
+					var map2 = DTOMapper.mapUnsafely(rset2);
 	
 					if (getULN(map2, "PARAMETER_MODE") != null) {
-						String param = "";
+						var param = "";
 						if (getULN(map2, "PARAMETER_NAME") != null)
 							param += getULN(map2, "PARAMETER_NAME") + " ";
 						if (getULN(map2, "PARAMETER_MODE") != null)
@@ -515,51 +509,66 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	public void showSearchPopup() {
-		PopOver popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
+		var popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
 		popOver.setArrowSize(0);
 		popOver.show(this);
     }
 
 	public void showSearchPopup(Node owner) {
-		CustomPopOver popOver = new CustomPopOver(new HBox(searchField, nextSearchResultButton));
+		var popOver = new CustomPopOver(new HBox(searchField, nextSearchResultButton));
 		popOver.show(owner);
     }
 
 	@Override
 	public ContextMenu createContextMenu() {
-		ContextMenu contextMenu = new ContextMenu();
+		var contextMenu = new ContextMenu();
 
-		MenuItem menuItemCopy = new MenuItem("Copy Text", JavaFXUtils.createIcon("/icons/copy.png"));
-		menuItemCopy.setOnAction(event -> this.copyAction());
+		var copy = new MenuItem("Copy Text", JavaFXUtils.createIcon("/icons/copy.png"));
+		copy.setOnAction(event -> this.copyAction());
 
-		MenuItem menuItemCopySchema = new MenuItem("Copy Schema", JavaFXUtils.createIcon("/icons/script.png"));
-		menuItemCopySchema.setOnAction(event -> this.copyScemaAction());
-		menuItemCopySchema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
-		
-		MenuItem menuItemDrop = new MenuItem("Drop", JavaFXUtils.createIcon("/icons/minus.png"));
-		menuItemDrop.setOnAction(event -> dropAction());
-		menuItemDrop.disableProperty().bind(this.hasSelectedSchemaProperty.not());
+		var copySchema = new MenuItem("Copy Schema", JavaFXUtils.createIcon("/icons/script.png"));
+		copySchema.setOnAction(event -> this.copyScemaAction());
+		copySchema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
 
-		MenuItem menuItemCollapseAll = new MenuItem("Collapse All", JavaFXUtils.createIcon("/icons/collapse.png"));
-		menuItemCollapseAll.setOnAction(event -> {
+		var drop = new MenuItem("Drop", JavaFXUtils.createIcon("/icons/minus.png"));
+		drop.setOnAction(event -> dropAction());
+		drop.disableProperty().bind(this.hasSelectedSchemaProperty.not());
+
+		var collapseAll = new MenuItem("Collapse All", JavaFXUtils.createIcon("/icons/collapse.png"));
+		collapseAll.setOnAction(event -> {
 			if (this.getSelectionModel().getSelectedItem() != null)
 				this.collapseAll(this.getSelectionModel().getSelectedItem());
 		});
 
-		MenuItem menuItemOpenSchema = new MenuItem("Show Schema", JavaFXUtils.createIcon("/icons/details.png"));
-		menuItemOpenSchema.setOnAction(action -> {
-			SqlCodeArea codeArea = new SqlCodeArea(this.copyScemaAction(), false, false, isUsingMysql());
-			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
+		var showSchema = new MenuItem("Show Schema", JavaFXUtils.createIcon("/icons/details.png"));
+		showSchema.setOnAction(action -> {
+			var codeArea = new SqlCodeArea(this.copyScemaAction(), false, false, isUsingMysql());
+			var scrollPane = new VirtualizedScrollPane<>(codeArea);
 			scrollPane.setPrefSize(600, 400);
 
-			PopOver popOver = new PopOver(scrollPane);
+			var popOver = new PopOver(scrollPane);
 			popOver.setArrowSize(0);
 			popOver.setDetachable(false);
 			popOver.show(this.getSelectionModel().getSelectedItem().getGraphic());
 		});
-		menuItemOpenSchema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
+		showSchema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
 
-		contextMenu.getItems().addAll(menuItemCopy, menuItemCopySchema, new SeparatorMenuItem(), menuItemCollapseAll, menuItemOpenSchema, new SeparatorMenuItem(), menuItemDrop);
+		var setAsRoot = new MenuItem("Select As Root", JavaFXUtils.createIcon("/icons/database.png"));
+		setAsRoot.setOnAction(action -> {
+			if (this.getSelectionModel().getSelectedItem() == null)
+				return;
+
+			this.selectedRootItem = this.getSelectionModel().getSelectedItem();
+			this.setRoot(this.selectedRootItem);
+			this.selectedRootItem.setExpanded(true);
+		});
+		setAsRoot.disableProperty().bind(this.getSelectionModel().selectedItemProperty().isNull());
+
+		var restoreRoot = new MenuItem("Restore Db Root", JavaFXUtils.createIcon("/icons/refresh.png"));
+		restoreRoot.setOnAction(event -> this.setRoot(this.rootItem));
+		restoreRoot.disableProperty().bind(this.getSelectionModel().selectedItemProperty().isEqualTo(this.rootItem));
+
+		contextMenu.getItems().addAll(copy, copySchema, new SeparatorMenuItem(), collapseAll, showSchema, new SeparatorMenuItem(), setAsRoot, restoreRoot, new SeparatorMenuItem(), drop);
 
 		return contextMenu;
 	}
@@ -578,9 +587,9 @@ public class DBTreeView extends TreeView<String>
 
 	public void dropAction() {
 		if (tablesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
-			String table = this.getSelectionModel().getSelectedItem().getValue();
-			String message = "Do you want to delete " + table;
-			boolean result = DialogFactory.createConfirmationDialog("Drop Table", message);
+			var table = this.getSelectionModel().getSelectedItem().getValue();
+			var message = "Do you want to delete " + table;
+			var result = DialogFactory.createConfirmationDialog("Drop Table", message);
 			if (result) {
 				try {
 					// TODO maybe execute async?
@@ -591,9 +600,9 @@ public class DBTreeView extends TreeView<String>
 				}
 			}
 		} else if (viewsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
-			String view = this.getSelectionModel().getSelectedItem().getValue();
-			String message = "Do you want to delete " + view;
-			boolean result = DialogFactory.createConfirmationDialog("Drop View", message);
+			var view = this.getSelectionModel().getSelectedItem().getValue();
+			var message = "Do you want to delete " + view;
+			var result = DialogFactory.createConfirmationDialog("Drop View", message);
 			if (result) {
 				try {
 					// TODO maybe execute async?
@@ -604,9 +613,9 @@ public class DBTreeView extends TreeView<String>
 				}
 			}
 		} else if (indexesRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
-			String index = this.getSelectionModel().getSelectedItem().getValue();
-			String message = "Do you want to delete " + index;
-			boolean result = DialogFactory.createConfirmationDialog("Drop Index", message);
+			var index = this.getSelectionModel().getSelectedItem().getValue();
+			var message = "Do you want to delete " + index;
+			var result = DialogFactory.createConfirmationDialog("Drop Index", message);
 			if (result) {
 				try {
 					// TODO maybe execute async?
@@ -617,9 +626,9 @@ public class DBTreeView extends TreeView<String>
 				}
 			}
 		} else if (proceduresRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
-			String procedure = this.getSelectionModel().getSelectedItem().getValue();
-			String message = "Do you want to delete " + procedure;
-			boolean result = DialogFactory.createConfirmationDialog("Drop Procedure", message);
+			var procedure = this.getSelectionModel().getSelectedItem().getValue();
+			var message = "Do you want to delete " + procedure;
+			var result = DialogFactory.createConfirmationDialog("Drop Procedure", message);
 			if (result) {
 				try {
 					sqlConnector.executeUpdate("drop procedure " + procedure);
@@ -629,10 +638,10 @@ public class DBTreeView extends TreeView<String>
 				}
 			}
 		} else if (functionsRootItem.getChildren().contains(this.getSelectionModel().getSelectedItem())) {
-			String function = this.getSelectionModel().getSelectedItem().getValue();
+			var function = this.getSelectionModel().getSelectedItem().getValue();
 			function = function.replaceAll(" returns.*", "");
-			String message = "Do you want to delete " + function;
-			boolean result = DialogFactory.createConfirmationDialog("Drop Function", message);
+			var message = "Do you want to delete " + function;
+			var result = DialogFactory.createConfirmationDialog("Drop Function", message);
 			if (result) {
 				try {
 					sqlConnector.executeUpdate("drop function " + function);
@@ -645,9 +654,9 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	public String copyScemaAction() {
-		String text = "";
+		var text = "";
 		try {
-			TreeItem<String> startItem = this.getSelectionModel().getSelectedItems().get(0);
+			var startItem = this.getSelectionModel().getSelectedItems().get(0);
 
 			if (tablesRootItem.getChildren().contains(startItem) || viewsRootItem.getChildren().contains(startItem)
 					|| indexesRootItem.getChildren().contains(startItem)
@@ -656,8 +665,8 @@ public class DBTreeView extends TreeView<String>
 				text = startItem.getChildren().get(0).getChildren().get(0).getValue();
 			}
 
-			StringSelection stringSelection = new StringSelection(text);
-			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+			var stringSelection = new StringSelection(text);
+			var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 			clipboard.setContents(stringSelection, null);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -666,14 +675,14 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	private void copyAction() {
-		StringBuilder text = new StringBuilder();
-		for (TreeItem<String> treeItem : this.getSelectionModel().getSelectedItems()) {
+		var text = new StringBuilder();
+		for (var treeItem : this.getSelectionModel().getSelectedItems()) {
 			text.append(treeItem.getValue()).append(", ");
 		}
 		text = new StringBuilder(text.substring(0, text.length() - ", ".length()));
 
-		StringSelection stringSelection = new StringSelection(text.toString());
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		var stringSelection = new StringSelection(text.toString());
+		var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
 	}
 
@@ -693,7 +702,7 @@ public class DBTreeView extends TreeView<String>
 		if (rootItem == null)
 			return;
 
-		for (TreeItem<String> t : rootItem.getChildren()) {
+		for (var t : rootItem.getChildren()) {
 			if (t.getValue().matches("(?i:.*" + searchField.getText() + ".*)")) {
 				this.getSelectionModel().select(t);
 				searchResultsList.add(t);
@@ -707,8 +716,8 @@ public class DBTreeView extends TreeView<String>
 
 	@SuppressWarnings("unchecked")
 	public List<String> getColumnsFor(String table) {
-		List<String> columns = new ArrayList<>();
-		for (TreeItem<String> ti : FXCollections.concat(tablesRootItem.getChildren(), viewsRootItem.getChildren())) {
+		var columns = new ArrayList<String>();
+		for (var ti : FXCollections.concat(tablesRootItem.getChildren(), viewsRootItem.getChildren())) {
 			if (ti.getValue().equals(table)) {
 				ti.getChildren().forEach(c -> {
 					if (c.getValue().contentEquals("columns")) {
