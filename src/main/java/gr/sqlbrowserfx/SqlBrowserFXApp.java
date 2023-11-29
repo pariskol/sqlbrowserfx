@@ -218,7 +218,7 @@ public class SqlBrowserFXApp extends Application {
 		var sqlServerConfigBox = new SqlServerConfigBox();
 		sqlServerConfigBox.getConnectButton().setOnAction(actionEvent -> {
 			sqlServerConfigBox.showLoader(true);
-			dbSelectionAction(postgreSqlConfigBox);
+			dbSelectionAction(sqlServerConfigBox);
 		});
 		var sqlServerTab = new Tab("SQL Server", sqlServerConfigBox);
 		sqlServerTab.setGraphic(JavaFXUtils.createImageView("/icons/sqlserver.png", 28.0, 28.0));
