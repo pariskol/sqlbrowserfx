@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Executors;
 
+import gr.sqlbrowserfx.conn.DbCash;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -257,11 +258,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	protected ComboBox<String> createTablesBox() {
 		List<String> tablesList = null;
-		try {
-			tablesList = sqlConnector.getTables();
-		} catch (SQLException e) {
-			DialogFactory.createErrorDialog(e);
-		}
+		tablesList = DbCash.getAllTableNames();
 		ObservableList<String> options = FXCollections.observableArrayList(tablesList);
 
 		if (tablesBox == null || !Objects.equals(tablesList, tablesBox.getItems())) {
@@ -421,7 +418,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		}
 	}
 
-	public SqlTableTab addSqlTableTab() {
+	public final SqlTableTab addSqlTableTab() {
 		SqlTableTab tab = this.createSqlTableTab();
 		tablesTabPane.getTabs().add(tab);
 		tablesTabPane.getSelectionModel().select(tab);
@@ -1194,7 +1191,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				getSelectedSqlTableView().updateRecord(editBox, sqlTableRow);
 //				if (this.isInFullMode())
 				DialogFactory.createNotification("Record update", "Successfully updated!");
-			} catch (SQLException e) {
+			} catch (Exception e) {
 				DialogFactory.createErrorNotification(e);
 			}
 		});

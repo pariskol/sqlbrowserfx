@@ -15,10 +15,6 @@ import gr.sqlbrowserfx.LoggerConf;
 
 public class SqlServerConnector extends SqlConnector {
 
-	private final String SCHEMA_VIEW_QUERY;
-	private final String SCHEMA_TABLE_QUERY;
-	private final String SCHEMA_INDEX_QUERY;
-
 	private final String database;
 
 	public SqlServerConnector(String database, String user, String password) {
@@ -26,33 +22,11 @@ public class SqlServerConnector extends SqlConnector {
 				"jdbc:sqlserver://localhost:1433;encrypt=false;databaseName=" + database ,
 				user, password);
 		this.database = database;
-		SCHEMA_VIEW_QUERY = """
-				SELECT table_name, table_type
-				FROM information_schema.tables
-				WHERE table_name = ? AND table_type = 'VIEW'
-				""";
-		SCHEMA_TABLE_QUERY = """
-				SELECT table_name, table_type
-				FROM information_schema.tables
-				WHERE table_name = ? AND table_type = 'BASE TABLE'
-				""";
-		SCHEMA_INDEX_QUERY = "";
 	}
 	
 	public SqlServerConnector(String url, String database, String user, String password) {
 		super("com.microsoft.sqlserver.jdbc.SQLServerDriver", url, user, password);
 		this.database = database;
-		SCHEMA_VIEW_QUERY = """
-				SELECT table_name, table_type
-				FROM information_schema.tables
-				WHERE table_name = ? AND table_type = 'VIEW'
-				""";
-		SCHEMA_TABLE_QUERY = """
-				SELECT table_name, table_type
-				FROM information_schema.tables
-				WHERE table_name = ? AND table_type = 'BASE TABLE'
-				""";
-		SCHEMA_INDEX_QUERY = "";
 	}
 
 	
@@ -193,26 +167,40 @@ public class SqlServerConnector extends SqlConnector {
 	@Override
 	public List<String> getTables() throws SQLException {
 		List<String> tables = new ArrayList<>();
-		this.executeQuery("show full tables where TABLE_TYPE = 'BASE TABLE'", rset -> {
-			try {
-				tables.add(rset.getString(1));
-			} catch (Exception e) {
-				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+		this.executeQuery(
+    """
+				SELECT table_name, table_type
+				FROM information_schema.tables
+				WHERE table_type = 'BASE TABLE'
+			""",
+			rset -> {
+				try {
+					tables.add(rset.getString(1));
+				} catch (Exception e) {
+					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+				}
 			}
-		});
+		);
 		return tables;
 	}
 	
 	@Override
 	public List<String> getViews() throws SQLException {
 		List<String> tables = new ArrayList<>();
-		this.executeQuery("show full tables where TABLE_TYPE = 'VIEW'", rset -> {
-			try {
-				tables.add(rset.getString(1));
-			} catch (Exception e) {
-				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+		this.executeQuery(
+    	"""
+				SELECT table_name, table_type
+				FROM information_schema.tables
+				WHERE table_type = 'VIEW'
+			""",
+			rset -> {
+				try {
+					tables.add(rset.getString(1));
+				} catch (Exception e) {
+					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+				}
 			}
-		});
+		);
 		return tables;
 	}
 }

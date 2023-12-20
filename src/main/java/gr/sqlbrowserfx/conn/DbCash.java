@@ -1,6 +1,7 @@
 package gr.sqlbrowserfx.conn;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class DbCash {
@@ -23,5 +24,9 @@ public class DbCash {
 	
 	public static synchronized SqlTable getTable(String table) {
 		return TABLES_MAP.get(table);
+	}
+
+	public static List<String> getAllTableNames() {
+		return TABLES_MAP.values().stream().map(SqlTable::getName).toList();
 	}
 }
