@@ -257,8 +257,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	protected ComboBox<String> createTablesBox() {
-		List<String> tablesList = null;
-		tablesList = DbCash.getAllTableNames();
+		List<String> tablesList = DbCash.getAllTableNames();
 		ObservableList<String> options = FXCollections.observableArrayList(tablesList);
 
 		if (tablesBox == null || !Objects.equals(tablesList, tablesBox.getItems())) {
@@ -307,15 +306,14 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			if (mouseEvent.getClickCount() == 2) {
 				SqlTableView tableView = getSelectedSqlTableView();
 				if (tableView.getSelectionModel().getSelectedItem() != null) {
-					if (PropertiesLoader.getProperty("sqlbrowserfx.default.editmode.cell", Boolean.class,
-							false))
+					Boolean areCellEditable = PropertiesLoader.getProperty("sqlbrowserfx.default.editmode.cell", Boolean.class,
+							false);
+					if (areCellEditable) {
 						tableView.getSelectedCell().startEdit();
-					else {
-						if (isInFullMode()) {
-							this.editButtonActionFullMode();
-						} else {
-							this.editButtonAction(mouseEvent);
-						}
+					} else if (isInFullMode()) {
+						this.editButtonActionFullMode();
+					} else {
+						this.editButtonAction(mouseEvent);
 					}
 					tableView.requestFocus();
 				}
@@ -371,37 +369,35 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	private void setSqlTableViewKeys(SqlTableView sqlTableView) {
 		sqlTableView.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.isControlDown()) {
-				switch (keyEvent.getCode()) {
-				case F:
-					this.searchButtonAction();
-					break;
-				case C:
-					this.copyAction();
-					sqlTableView.requestFocus();
-					break;
-				case D:
-					this.deleteButtonAction();
-					sqlTableView.requestFocus();
-					break;
-				case E:
-					this.editButtonAction(simulateClickEvent(editButton));
-					sqlTableView.requestFocus();
-					break;
-				case Q:
-					this.addButtonAction();
-					sqlTableView.requestFocus();
-					break;
-				case I:
-					this.importCsvAction();
-					sqlTableView.requestFocus();
-					break;
-				case R:
-					this.refreshButtonAction();
-					sqlTableView.requestFocus();
-					break;
-				default:
-					break;
-				}
+                switch (keyEvent.getCode()) {
+                    case F -> this.searchButtonAction();
+                    case C -> {
+                        this.copyAction();
+                        sqlTableView.requestFocus();
+                    }
+                    case D -> {
+                        this.deleteButtonAction();
+                        sqlTableView.requestFocus();
+                    }
+                    case E -> {
+                        this.editButtonAction(simulateClickEvent(editButton));
+                        sqlTableView.requestFocus();
+                    }
+                    case Q -> {
+                        this.addButtonAction();
+                        sqlTableView.requestFocus();
+                    }
+                    case I -> {
+                        this.importCsvAction();
+                        sqlTableView.requestFocus();
+                    }
+                    case R -> {
+                        this.refreshButtonAction();
+                        sqlTableView.requestFocus();
+                    }
+                    default -> {
+                    }
+                }
 			}
 			sqlTableView.requestFocus();
 		});
@@ -495,7 +491,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		MenuItem menuItemSearch = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
 		menuItemSearch.setOnAction(actionEvent -> searchButtonAction());
-		
+
 		MenuItem menuItemCompare = new MenuItem("Compare", JavaFXUtils.createIcon("/icons/compare.png"));
 		menuItemCompare.setOnAction(actionEvent -> compareAction(simulateClickEvent()));
 
@@ -540,17 +536,12 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		FlowPane sideBar = new FlowPane(Orientation.VERTICAL, copyButton, pasteButton, refreshButton);
 
-		switch (toolBarOrientation) {
-		case VERTICAL:
-			editBox.setBarBottom(sideBar);
-			break;
-		case HORIZONTAL:
-			editBox.setBarLeft(sideBar);
-			break;
-
-		default:
-			break;
-		}
+        switch (toolBarOrientation) {
+            case VERTICAL -> editBox.setBarBottom(sideBar);
+            case HORIZONTAL -> editBox.setBarLeft(sideBar);
+            default -> {
+            }
+        }
 
 		if (isResizable) {
 			for (Node node : editBox.getChildren()) {
@@ -606,6 +597,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		sqlQueryRunning = true;
 		String query = "select " + columnsFilter + " from " + table + whereFilter;
 
+		// TODO: a more abstract implementation is needed for different connectors
 		if (this.isLimitSet()) {
 			query += " limit " + linesLimit;
 		}
@@ -857,7 +849,6 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				this.updateRecordOfSqlTableView(editBox, sqlTableRow);
 //				popOver.hide();
 			});
-
 			editBox.setActionButton(editBtn);
 		}
 
@@ -1030,7 +1021,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				try {
 					String filePath = selectedFile.getAbsolutePath();
 					Platform.runLater(tab::startLoading);
-					
+
 					String[] columns = null;
 					ObservableList<MapTableViewRow> rows = FXCollections.observableArrayList();
 
@@ -1219,7 +1210,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 	public final SqlTableView getSelectedSqlTableView() {
 		Tab tab = tablesTabPane != null ? tablesTabPane.getSelectionModel().getSelectedItem() : null;
-		return tab != null && tab instanceof SqlTableTab ? ((SqlTableTab) tab).getSqlTableView() : null;
+		return tab instanceof SqlTableTab ? ((SqlTableTab) tab).getSqlTableView() : null;
 	}
 
 	public final TabPane getSelectedRecordsTabPane() {
@@ -1268,7 +1259,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		this.isSearchApplied = isSearchApplied;
 	}
 
-	public void enableColumnFiltering(boolean b) {
-		this.isColumnFilteringEnabled = b;
+	public void enableColumnFiltering(boolean enable) {
+		this.isColumnFilteringEnabled = enable;
 	}
 }
