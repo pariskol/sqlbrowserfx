@@ -111,7 +111,6 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 		
 		if (System.currentTimeMillis() >= terminationTime) {
 			logger.debug("Find action for '" + pattern + "' timed out");
-			Platform.runLater(() -> this.disableButtons(false));
 			return 0;
 		}
 		
@@ -153,7 +152,6 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 			}
 
 //				recursionRound = 0;
-			Platform.runLater(() -> this.disableButtons(false));
 			return 1;
 		}
 		else if (lastPos == -1) { // && recursionRound == 1) {
@@ -201,6 +199,8 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 				SearchAndReplacePopOver.this.findButtonActionImpl();
 			} catch (Exception e) {
 				logger.error(e.getMessage());
+			} finally {
+				Platform.runLater(() -> this.disableButtons(false));
 			}
 		});
 		
@@ -224,6 +224,8 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 				SearchAndReplacePopOver.this.replaceButtonActionImpl();
 			} catch (Exception e) {
 				logger.error(e.getMessage());
+			} finally {
+				Platform.runLater(() -> this.disableButtons(false));
 			}
 		});
 	}
@@ -231,7 +233,6 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 	private void replaceButtonActionImpl() {
 		if (terminationTime <= System.currentTimeMillis()) {
 			logger.debug("Replace action timed out");
-			Platform.runLater(() -> this.disableButtons(false));
 			return;
 		}
 		
