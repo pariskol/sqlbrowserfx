@@ -5,7 +5,6 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Paths;
@@ -14,7 +13,6 @@ import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import gr.sqlbrowserfx.nodes.*;
 import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
@@ -32,7 +30,15 @@ import gr.sqlbrowserfx.dock.nodes.DDbDiagramPane;
 import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.DbConfigBox;
+import gr.sqlbrowserfx.nodes.FilesTreeView;
+import gr.sqlbrowserfx.nodes.HelpTabPane;
+import gr.sqlbrowserfx.nodes.MySqlConfigBox;
+import gr.sqlbrowserfx.nodes.PostgreSqlConfigBox;
 import gr.sqlbrowserfx.nodes.SimpleTerminalPane;
+import gr.sqlbrowserfx.nodes.SqlConnectorType;
+import gr.sqlbrowserfx.nodes.SqlConsolePane;
+import gr.sqlbrowserfx.nodes.SqlServerConfigBox;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
@@ -547,7 +553,7 @@ public class SqlBrowserFXApp extends Application {
 		menu5.getGraphic().setOnMouseClicked(mouseEvent -> {
 			try {
 				new DockNode(dockPane, new HelpTabPane(), "Help", null);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				DialogFactory.createErrorDialog(e);
 			}
 		});

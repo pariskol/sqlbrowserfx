@@ -1,6 +1,7 @@
 package gr.sqlbrowserfx.nodes;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.stream.Collectors;
@@ -16,7 +17,7 @@ import javafx.scene.control.TextArea;
 
 public class HelpTabPane extends TabPane{
 
-	public HelpTabPane() throws IOException {
+	public HelpTabPane() throws IOException, InterruptedException, URISyntaxException {
 		super();
 		String desc = HttpClient.GET("https://raw.githubusercontent.com/pariskol/sqlbrowserfx/master/README.md");
 		String license = HttpClient.GET("https://raw.githubusercontent.com/pariskol/sqlbrowserfx/master/LICENSE");
