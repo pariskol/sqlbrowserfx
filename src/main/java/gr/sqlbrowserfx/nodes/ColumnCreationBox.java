@@ -99,7 +99,7 @@ public class ColumnCreationBox extends HBox {
 			final String dbType = determineDBType();
 			SqlBrowserFXAppManager.getConfigSqlConnector()
 								  .executeQuery("select name from autocomplete where category= ? and type = ? order by name", 
-										  Arrays.asList(new String[]{category, dbType}), rset -> {
+										  Arrays.asList(category, dbType), rset -> {
 											try {
 												HashMap<String, Object> dto = DTOMapper.map(rset);
 												list.add((String)dto.get("name"));

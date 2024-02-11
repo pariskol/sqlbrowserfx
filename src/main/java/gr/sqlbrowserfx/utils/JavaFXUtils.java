@@ -1,7 +1,5 @@
 package gr.sqlbrowserfx.utils;
 
-import java.util.Random;
-
 import javax.swing.Timer;
 
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -97,32 +95,5 @@ public class JavaFXUtils {
 		timer.setRepeats(false);
 		timer.start();
 	}
-	
-	public static String getRandomColor() {
-		Random random = new Random();
 
-		// Generate random RGB values
-		int red = random.nextInt(256);
-		int green = random.nextInt(256);
-		int blue = random.nextInt(256);
-
-		// Convert RGB values to hexadecimal format
-		String hexRed = Integer.toHexString(red);
-		String hexGreen = Integer.toHexString(green);
-		String hexBlue = Integer.toHexString(blue);
-
-		// Ensure two-digit hexadecimal representation
-		hexRed = padZero(hexRed);
-		hexGreen = padZero(hexGreen);
-		hexBlue = padZero(hexBlue);
-
-		// Concatenate RGB values to create the color string
-		String color = "#" + hexRed + hexGreen + hexBlue;
-
-		return color;
-	}
-
-	private static String padZero(String hexValue) {
-		return hexValue.length() == 1 ? "0" + hexValue : hexValue;
-	}
 }

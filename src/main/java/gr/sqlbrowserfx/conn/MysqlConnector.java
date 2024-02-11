@@ -152,8 +152,9 @@ public class MysqlConnector extends SqlConnector {
 		});
 		
 		String primaryKey = primaryKeyBuilder.toString();
-		if (!primaryKey.isEmpty())
+		if (!primaryKey.isEmpty()) {
 			primaryKey = primaryKey.substring(0, primaryKey.length() - 1);
+		}
 
 		return primaryKey.isEmpty() ? null : primaryKey;
 	}

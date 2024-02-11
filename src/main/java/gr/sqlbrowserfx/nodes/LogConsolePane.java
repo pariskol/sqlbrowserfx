@@ -27,8 +27,8 @@ public class LogConsolePane extends BorderPane implements ToolbarOwner {
 	private Button settingsButton;
 	private final LogCodeArea logCodeArea;
 
-	private final Thread tailerDaemon;
-	private final Tailer tailer;
+	private Thread tailerDaemon;
+	private Tailer tailer;
 
 	public LogConsolePane() {
 		logCodeArea = new LogCodeArea();
@@ -47,6 +47,10 @@ public class LogConsolePane extends BorderPane implements ToolbarOwner {
 		this.setLeft(this.createToolbar());
 		this.setCenter(new VirtualizedScrollPane<>(logCodeArea));
 		
+		this.startTailing();
+	}
+	
+	protected void startTailing() {
 		TailerListener listener = new CodeAreaTailerListener(logCodeArea);
 	    tailer = new Tailer(new File("./logs/sqlbrowserfx.log"), listener, 1000);
 	    tailerDaemon = new Thread(tailer, "Logfile Tailer Daemon");
