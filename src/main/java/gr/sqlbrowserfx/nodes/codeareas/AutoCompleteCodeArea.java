@@ -23,7 +23,6 @@ import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
-import org.reactfx.Subscription;
 
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
@@ -37,10 +36,13 @@ import javafx.collections.FXCollections;
 import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.IndexRange;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextField;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
@@ -98,8 +100,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
         this.syntaxProvider = this.initSyntaxProvider();
 
-        if (!withMenu)
+        if (!withMenu) {
             this.setContextMenu(null);
+        }
 
         if (text != null) {
             this.replaceText(text);
@@ -271,9 +274,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
     @Override
     public void enableHighlighting() {
-
-        @SuppressWarnings("unused")
-        Subscription subscription = this.multiPlainChanges().successionEnds(Duration.ofMillis(100))
+        this.multiPlainChanges().successionEnds(Duration.ofMillis(100))
                 .subscribe(ignore -> this.setStyleSpans(0, computeHighlighting(this.getText())));
     }
 
@@ -286,6 +287,17 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         searchAndReplacePopOver.show(getParent(), boundsInScene.getMaxX() - 400, boundsInScene.getMinY());
     }
 
+    // FIXME: we override copy method as it the default method seems broken for strings containing '{' or '}'
+    @Override
+    public void copy() {
+        IndexRange selection = getSelection();
+        if(selection.getLength() > 0) {
+            ClipboardContent content = new ClipboardContent();
+            content.putString(getSelectedText());
+            Clipboard.getSystemClipboard().setContent(content);
+        }
+    }
+    
     @Override
     public ContextMenu createContextMenu() {
         ContextMenu menu = new ContextMenu();
