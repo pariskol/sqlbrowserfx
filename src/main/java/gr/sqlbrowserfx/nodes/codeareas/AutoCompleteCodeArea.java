@@ -284,6 +284,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
             searchAndReplacePopOver.getFindField().selectAll();
         }
         Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+        searchAndReplacePopOver.getFindField().requestFocus();
         searchAndReplacePopOver.show(getParent(), boundsInScene.getMaxX() - 400, boundsInScene.getMinY());
     }
 
