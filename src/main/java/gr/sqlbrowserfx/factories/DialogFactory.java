@@ -107,7 +107,9 @@ public class DialogFactory {
 		TextInputDialog td = new TextInputDialog();
 		td.setTitle(title);
 		td.setHeaderText(message);
-		td.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+		if (DEFAULT_STYLESHEET != null) {
+			td.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+		}
 		td.showAndWait();
 		return td.getEditor().getText();
 	}

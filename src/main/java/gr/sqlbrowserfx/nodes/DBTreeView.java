@@ -59,20 +59,23 @@ public class DBTreeView extends TreeView<String>
 
 	private final TreeItem<String> rootItem;
 	private TreeItem<String> selectedRootItem;
+	
 	protected TreeItem<String> tablesRootItem;
 	protected TreeItem<String> viewsRootItem;
-	private final TreeItem<String> indexesRootItem;
+	private TreeItem<String> indexesRootItem;
 	private TreeItem<String> proceduresRootItem;
 	private TreeItem<String> functionsRootItem;
 
 	private final List<String> allItems;
 	private final List<SimpleObserver<String>> listeners;
 
+	private Integer lastSelectedItemPos = 0;
+
 	private final TextField searchField;
 	private DDBTreePane parent = null;
-	private Integer lastSelectedItemPos = 0;
 	private final List<TreeItem<String>> searchResultsList = new ArrayList<>();
 	private final Button nextSearchResultButton;
+	
 	private final SimpleBooleanProperty hasSelectedSchemaProperty = new SimpleBooleanProperty(false);
 	private final SimpleBooleanProperty canSelectedOpenProperty = new SimpleBooleanProperty(false);
 
@@ -289,6 +292,7 @@ public class DBTreeView extends TreeView<String>
 						this.fillViewTreeItem(treeItem);
 						viewsRootItem.getChildren().add(treeItem);
 						treeItem.setGraphic(JavaFXUtils.createIcon("/icons/view.png"));
+						// TODO find another way with no calls to static class SqlCodeAreaSyntax
 						SqlCodeAreaSyntaxProvider.bind(name, this.getColumnsFor(name));
 					} else if (type.toLowerCase().contains("index")) {
 						this.fillIndexTreeItem(treeItem);

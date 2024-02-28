@@ -324,10 +324,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
                 || fixedQuery.toLowerCase().startsWith("show")) {
             sqlConnector.executeAsync(() -> {
                 sqlQueryRunning.set(true);
-                Platform.runLater(() -> {
-                    executeButton.setDisable(true);
-//					this.setCenter(new StackPane(progressIndicator));
-                });
+                Platform.runLater(() -> executeButton.setDisable(true));
                 try {
                     sqlConnector.executeCancelableQuery(fixedQuery, rset -> {
                         queryDuration.set(System.currentTimeMillis() - queryDuration.get());
@@ -348,10 +345,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
                     SqlConsolePane.this.saveHistory(fixedQuery, queryDuration.get());
                     Platform.runLater(() -> {
                         executeButton.setDisable(false);
-//						if (splitPane != null)
-//							this.setCenter(splitPane);
-//						else
-//							this.setCenter(queryTabPane);
                         getSelectedSqlCodeArea().requestFocus();
                     });
                     sqlQueryRunning.set(false);
