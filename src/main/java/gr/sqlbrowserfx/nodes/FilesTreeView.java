@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
@@ -28,6 +29,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -61,6 +63,8 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 	private List<File> filesToCopy = new ArrayList<>();
 
 	public FilesTreeView(String rootPath) {
+        getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
 		this.rootPath = rootPath;
 		this.refresh();
 		this.setContextMenu(this.createContextMenu());
@@ -160,24 +164,47 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		});
 	}
 
-	private void deleteSelectedFile() {
-		var treeItem = this.getSelectionModel().getSelectedItem();
+	private void deleteSelectedFiles() {
+		var treeItems = this.getSelectionModel().getSelectedItems();
+		var fileNames = treeItems.stream().map(ti -> ti.getValue().getName()).toList();
+		var doDelete = DialogFactory.createConfirmationDialog("Delete file", "Are you sure you want to delete the following files: \n" + StringUtils.join(fileNames, "\n"));
+		if (doDelete) {
+			treeItems.forEach(this::deleteFileTreeItem);
+		}
+	}
+	
+	private void deleteFileTreeItem(TreeItem<TreeViewFile> treeItem) {
 		var file = treeItem.getValue().asFile();
 
+		Executors.newSingleThreadExecutor().execute(() -> {
+			try {
+				deleteFilesRecursively(file);
+				// refresh its parent node
+				Platform.runLater(() -> refresh(treeItem.getParent()));
+			} catch (IOException e) {
+				DialogFactory.createErrorDialog(e);
+			}
+		});
+	}
+	
+	private void deleteFilesRecursively(File file) throws IOException {
+		var files = file.isDirectory()
+				? Arrays.asList(file.listFiles(f -> !f.isHidden() && !f.getName().startsWith(".")))
+				: Arrays.asList(file);
 
-		var doDelete = DialogFactory.createConfirmationDialog("Delete file", "Are you sure you want to delete the following file: \n" + file.getName());
-		if (doDelete) {
-			Executors.newSingleThreadExecutor().execute(() -> {
-				try {
-					Files.delete(Paths.get(file.getAbsolutePath()));
-					// since is a file we need to refresh its parent node
-					// which will be a directory
-					Platform.runLater(() -> refresh(treeItem.getParent()));
-				} catch (IOException e) {
-					DialogFactory.createErrorDialog(e);
-				}
-			});
+		for (var newFile : files) {
+			if (newFile.isDirectory()) {
+				deleteFilesRecursively(newFile);
+			} else {
+				Files.delete(Paths.get(newFile.getAbsolutePath()));
+			}
 		}
+		
+		// after deletion of files also delete parent directory
+		if (file.isDirectory()) {
+			Files.delete(Paths.get(file.getAbsolutePath()));
+		}
+
 	}
 
 	private void createNewFile() {
@@ -196,11 +223,27 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 			}
 		});
 	}
+	
+	private void createNewDirectory() {
+		var treeItem = this.getSelectionModel().getSelectedItem();
+		var file = treeItem.getValue().asFile();
+		if (!file.isDirectory()) return;
+
+		String newFileName = DialogFactory.createTextInputDialog("New Folder", "Enter new folder name");
+		Executors.newSingleThreadExecutor().execute(() -> {
+			try {
+				var newPath = Paths.get(file.getAbsolutePath(), newFileName);
+				Files.createDirectory(newPath);
+				Platform.runLater(() -> refresh(treeItem));
+			} catch (IOException e) {
+				DialogFactory.createErrorDialog(e);
+			}
+		});
+	}
 
 	private void renameFile() {
 		var treeItem = this.getSelectionModel().getSelectedItem();
 		var file = treeItem.getValue().asFile();
-		if (file.isDirectory()) return;
 
 		String newFileName = DialogFactory.createTextInputDialog("Rename file", "Enter new file name");
 		Executors.newSingleThreadExecutor().execute(() -> {
@@ -269,7 +312,8 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		return url;
 	}
 
-	private TreeItem<TreeViewFile> createTreeView(String path) {
+	
+	private TreeItem<TreeViewFile> fillTreeView(String path) {
 		var file = new TreeViewFile(path);
 		var rootItem = new TreeItem<>(file, JavaFXUtils.createIcon("/icons/folder.png"));
 
@@ -284,7 +328,7 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		if (!files.isEmpty()) {
 			for (var newFile : files) {
 				if (newFile.isDirectory()) {
-					var childItem = createTreeView(newFile.getAbsolutePath());
+					var childItem = fillTreeView(newFile.getAbsolutePath());
 					childItem.setGraphic(JavaFXUtils.createIcon("/icons/folder.png"));
 					rootItem.getChildren().add(childItem);
 				}
@@ -306,7 +350,7 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 
 	@Override
 	public void refresh() {
-		this.setRoot(this.createTreeView(rootPath));
+		this.setRoot(this.fillTreeView(rootPath));
 		rootItem = this.getRoot();
 		rootItem.setExpanded(true);
 	}
@@ -314,7 +358,7 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 	private void refresh(TreeItem<TreeViewFile> treeItem) {
 		var targetPath = treeItem.getValue().asFile().getAbsolutePath();
 		treeItem.getChildren().clear();
-		treeItem.getChildren().addAll(this.createTreeView(targetPath).getChildren());
+		treeItem.getChildren().addAll(this.fillTreeView(targetPath).getChildren());
 		treeItem.setExpanded(true);
 		this.getSelectionModel().select(treeItem);
 	}
@@ -378,9 +422,12 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		openFile.disableProperty().bind(this.isFileProperty.not());
 		openFile.setOnAction(event -> this.openSelectedFile());
 
-		var newFile = new MenuItem("New", JavaFXUtils.createIcon("/icons/add.png"));
+		var newFile = new MenuItem("New File", JavaFXUtils.createIcon("/icons/add.png"));
 		newFile.disableProperty().bind(this.isFileProperty);
 		newFile.setOnAction(event -> this.createNewFile());
+		var newDir = new MenuItem("New Folder", JavaFXUtils.createIcon("/icons/add.png"));
+		newDir.disableProperty().bind(this.isFileProperty);
+		newDir.setOnAction(event -> this.createNewDirectory());
 
 		var copyFiles = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
 		copyFiles.setOnAction(event -> this.copyFiles());
@@ -390,10 +437,9 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		pasteFiles.disableProperty().bind(this.isFileProperty.or(this.hasFilesToCopyProperty.not()));
 
 		var deleteFile = new MenuItem("Delete", JavaFXUtils.createIcon("/icons/minus.png"));
-		deleteFile.setOnAction(event -> this.deleteSelectedFile());
+		deleteFile.setOnAction(event -> this.deleteSelectedFiles());
 
 		var renameFile = new MenuItem("Rename", JavaFXUtils.createIcon("/icons/edit.png"));
-		renameFile.disableProperty().bind(this.isFileProperty.not());
 		renameFile.setOnAction(event -> this.renameFile());
 
 		var search = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
@@ -427,7 +473,7 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		restoreRoot.disableProperty().bind(this.getSelectionModel().selectedItemProperty().isEqualTo(this.rootItem));
 
 		contextMenu.getItems().addAll(openFile, new SeparatorMenuItem(),
-				newFile, renameFile, copyFiles, pasteFiles, deleteFile, new SeparatorMenuItem(),
+				newFile, newDir, renameFile, copyFiles, pasteFiles, deleteFile, new SeparatorMenuItem(),
 				search, collapseAll, new SeparatorMenuItem(), setAsRoot, refresh, new SeparatorMenuItem(),
 				restoreRoot);
 
