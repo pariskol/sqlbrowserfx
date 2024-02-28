@@ -168,7 +168,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	public String executeButtonAction() {
 		String query = super.executeButtonAction();
-		if (datePicker.getValue().equals(LocalDate.now())) {
+		if (query != null && datePicker.getValue().equals(LocalDate.now())) {
 			historyCodeArea.appendText("\n -- Executed at : " + new Timestamp(System.currentTimeMillis()) + " --\n");
 			historyCodeArea.appendText(query);
 			historyCodeArea.appendText("\n");
@@ -186,8 +186,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 	@Override
 	public void hanldeException(SQLException e) {
 		if (e.getErrorCode() == 9 || e.getErrorCode() == MemoryGuard.SQL_MEMORY_ERROR_CODE) {
-			String message = "Not enough memory , try again to run query.\n"+
-					"If you are trying to run a select query try to use limit";
+			String message = "Not enough memory. Try to limit the result set";
 			e = new SQLException(message, e);
 		}
 		DialogFactory.createErrorNotification(e);
