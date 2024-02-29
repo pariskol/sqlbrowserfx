@@ -84,8 +84,8 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
         this.selectedTextProperty().addListener((ob, ov, nv) -> this.isTextSelectedProperty.set(!nv.isEmpty()));
 
-        autoCompletePopup = new Popup();
         searchAndReplacePopOver = new SearchAndReplacePopOver(this);
+		autoCompletePopup = this.createAutoCompletePopup();
 
         this.setOnKeyTyped(this::autoCompleteAction);
         this.setContextMenu(this.createContextMenu());
@@ -252,6 +252,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
             if (keyEvent.isControlDown() && (keyEvent.getCode() == KeyCode.MINUS || keyEvent.getCode() == KeyCode.EQUALS)) {
                 // do not consume event to enable global zoom in/out (if applied)
                 return;
+            }
+            if (keyEvent.getCode() == KeyCode.LEFT || keyEvent.getCode() == KeyCode.RIGHT) {
+            	this.hideAutocompletePopup();
             }
             if (keyEvent.getCode() == KeyCode.BACK_SPACE) {
                 this.hideAutocompletePopup();
@@ -463,72 +466,52 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         DialogFactory.createNotification("File saved", "File saved at " + new Date());
     }
 
+    protected List<Keyword> calcualtAutocompleteSuggestions(KeyEvent event, int caretPosition, String query) {
+		String ch = event.getCharacter();
+		List<Keyword> suggestions = null;
+
+		if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
+				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
+				|| ch.equals(".") || ch.equals(",") || ch.equals("_")
+				|| event.getCode() == KeyCode.ENTER
+				|| event.getCode() == KeyCode.BACK_SPACE) {
+			suggestions = this.getQuerySuggestions(query);
+		}
+		
+		return suggestions;
+    }
+    
     protected void autoCompleteAction(KeyEvent event) {
-
-        String ch = event.getCharacter();
-        if (event.isShiftDown() && event.isControlDown() && event.getCode() == KeyCode.SPACE) {
-            autoCompletePopup = this.createAutoCompletePopup();
-
-            int caretPosition = this.getCaretPosition();
-            String query = this.calculateQuery(caretPosition);
-
-            if (!query.isEmpty()) {
-                if (event.getCode() == KeyCode.ENTER)
-                    return;
-
-                List<Keyword> suggestions = this.getQuerySuggestions(query);
-
-                suggestionsList = this.createSuggestionsListView(suggestions);
-                if (!suggestionsList.getItems().isEmpty()) {
-                    autoCompletePopup.getContent().setAll(suggestionsList);
-                    this.showAutoCompletePopup();
-                    this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
-                } else {
-                    this.hideAutocompletePopup();
-                }
-
-            } else {
-                this.hideAutocompletePopup();
-            }
-        } else if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
-                || (event.isControlDown() && event.getCode() == KeyCode.SPACE)
-                || ch.equals(".")
-                || ch.equals(",")
-                || ch.equals("_")
-                || event.getCode() == KeyCode.ENTER
-                || event.getCode() == KeyCode.BACK_SPACE) {
-
-            int caretPosition = this.getCaretPosition();
-            String query = this.calculateQuery(caretPosition);
-
-            autoCompletePopup = this.createAutoCompletePopup();
-
-            if (!query.isEmpty()) {
-                List<Keyword> suggestions;
-                if (event.getCode() == KeyCode.ENTER) {
-                    return;
-                } else {
-                    suggestions = this.getQuerySuggestions(query);
-                }
-                suggestionsList = this.createSuggestionsListView(suggestions);
-                if (!suggestionsList.getItems().isEmpty()) {
-                    autoCompletePopup.getContent().setAll(suggestionsList);
-                    this.showAutoCompletePopup();
-                    this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
-                } else {
-                    this.hideAutocompletePopup();
-                }
-
-            } else {
-                this.hideAutocompletePopup();
-            }
-        } else if (!event.isControlDown()) {
-            this.hideAutocompletePopup();
-        }
-
-        event.consume();
+		int caretPosition = this.getCaretPosition();
+		String query = this.calculateQuery(caretPosition);
+		
+		if (query.isEmpty()) {
+			this.hideAutocompletePopup();
+			return;
+		}
+		
+		List<Keyword> suggestions = this.calcualtAutocompleteSuggestions(event, caretPosition, query);
+		
+		this.showSuggestionsList(suggestions, query, caretPosition);
+		event.consume();
     }
 
+	protected void showSuggestionsList(List<Keyword> suggestions, String query, int caretPosition) {
+		if (suggestions == null || suggestions.isEmpty()) {
+			return;
+		}
+		
+		suggestionsList = this.createSuggestionsListView(suggestions);
+		
+		if (suggestionsList.getItems().isEmpty()) {
+			return;
+		}
+		
+		autoCompletePopup.getContent().setAll(suggestionsList);
+		this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
+		this.showAutoCompletePopup();
+	}
+	
     protected void hideAutocompletePopup() {
         if (autoCompletePopup != null && autoCompletePopupShowing) {
             autoCompletePopup.hide();
@@ -575,7 +558,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         });
 
         AutoCompleteCodeArea.this.hideAutocompletePopup();
-        AutoCompleteCodeArea.this.autoCompleteAction(keyEvent);
     }
 
     protected void showAutoCompletePopup() {
@@ -627,7 +609,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     private static final int WORD_LENGTH_LIMIT = 45;
 
     protected String calculateQuery(int position) {
-        if (this.getText().charAt(position - 1) == '\n')
+        if (!this.getText().isEmpty() && this.getText().charAt(position - 1) == '\n')
             return "";
 
         int limit = Math.min(position, WORD_LENGTH_LIMIT);
@@ -640,6 +622,10 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
     @SuppressWarnings({"unchecked"})
     protected List<Keyword> getQuerySuggestions(String query) {
+		if (query.isEmpty()) {
+			return null;
+		}
+		
         return (List<Keyword>) syntaxProvider.getKeywords().stream()
                 .filter(keyword -> keyword != null && ((Keyword) keyword).getKeyword().startsWith(query))
                 .collect(Collectors.toList());

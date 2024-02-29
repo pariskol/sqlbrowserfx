@@ -40,7 +40,6 @@ import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.KeyCode;
@@ -48,7 +47,6 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.stage.Popup;
 
 public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider> implements ContextMenuOwner, HighLighter, TextAnalyzer {
 
@@ -56,8 +54,6 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	private Set<String> variablesAliases = new HashSet<>();
 	private final SqlCodeAreaSyntaxProvider syntaxProvider = new SqlCodeAreaSyntaxProvider();
 
-	private Popup autoCompletePopup;
-	private ListView<Keyword> suggestionsList;
 	private Thread textAnalyzerDaemon;
 	protected MenuItem menuItemRun;
 	
@@ -139,91 +135,35 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	}
 	
 	@Override
-	protected void autoCompleteAction(KeyEvent event) {
-		
+	protected List<Keyword> calcualtAutocompleteSuggestions(KeyEvent event, int caretPosition, String query) {
 		String ch = event.getCharacter();
+		List<Keyword> suggestions = null;
+		
 		if (event.isShiftDown() && event.isControlDown() && event.getCode() == KeyCode.SPACE) {
-			autoCompletePopup = this.createAutoCompletePopup();
-			
-			int caretPosition = this.getCaretPosition();
-			String query = this.calculateQuery(caretPosition);
-			
-			if (!query.isEmpty()) {
-				if (event.getCode() == KeyCode.ENTER)
-					return;
-
-				List<Keyword> suggestions = this.getSavedQueries(query);
-				
-				suggestionsList = this.createSuggestionsListView(suggestions);
-				if (!suggestionsList.getItems().isEmpty()) {
-					autoCompletePopup.getContent().setAll(suggestionsList);
-					this.showAutoCompletePopup();
-					this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
-				} else {
-					this.hideAutocompletePopup();
-				}
-				
-			}
-			else {
-				this.hideAutocompletePopup();
-			}
+			suggestions = this.getSavedQueries(query);
 		}
-		// FIXME: this may be removed as a new key combination Ctrl + ' stringifies selected text
-//		else if(ch.equals("'")) {
-//			this.insertText(this.getCaretPosition(), "'");
-//			this.moveTo(this.getCaretPosition() - 1);
-//			
-//			return;
-//		}
 		else if(ch.equals("(")) {
 			this.insertText(this.getCaretPosition(), ")");
 			this.moveTo(this.getCaretPosition() - 1);
-			return;
+			return null;
 		}
 		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
 				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
 				|| ch.equals(".") || ch.equals(",") || ch.equals("_")
 				|| event.getCode() == KeyCode.ENTER
 				|| event.getCode() == KeyCode.BACK_SPACE) {
-
-			int caretPosition = this.getCaretPosition();
-			String query = this.calculateQuery(caretPosition);
-			
-			autoCompletePopup = this.createAutoCompletePopup();
-
-			if (!query.isEmpty()) {
-				List<Keyword> suggestions;
-				if (event.getCode() == KeyCode.ENTER) {
-					return;
-				}
-				else if (query.contains(".")) {
-					enableInsertMode(true);
-					suggestions = this.getColumnsSuggestions(query);
-				}
-				else {
-					enableInsertMode(false);
-					suggestions = this.getQuerySuggestions(query);
-				}
-				
-				suggestionsList = this.createSuggestionsListView(suggestions);
-				if (!suggestionsList.getItems().isEmpty()) {
-					autoCompletePopup.getContent().setAll(suggestionsList);
-					this.showAutoCompletePopup();
-					this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
-				} else {
-					this.hideAutocompletePopup();
-				}
-				
-			} else {
-				this.hideAutocompletePopup();
-			}
-		} else if (!event.isControlDown()) {
-				this.hideAutocompletePopup();
+			boolean isColumnSuggestion = query.contains(".");
+			enableInsertMode(isColumnSuggestion);
+			suggestions = isColumnSuggestion ? this.getColumnsSuggestions(query) : this.getQuerySuggestions(query);
+		}
+		else {
+			suggestions = super.calcualtAutocompleteSuggestions(event, caretPosition, query);
 		}
 		
-		event.consume();
+		return suggestions;
 	}
-
+	
+	
 	@Override
 	protected void onMouseClicked() {
 		super.onMouseClicked();
@@ -242,6 +182,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	}
 	
 	private List<Keyword> getSavedQueries(String query) {
+		if (query.isEmpty()) {
+			return null;
+		}
+		
 		List<String> suggestions = new ArrayList<>();
 		String sql = "select query from saved_queries where description like '%" + query + "%' ";
 		try {
@@ -254,6 +198,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 
 	@Override
 	protected List<Keyword> getQuerySuggestions(String query) {
+		if (query.isEmpty()) {
+			return null;
+		}
+		
 		return
 				Stream.concat(
 					Stream.concat(
@@ -269,6 +217,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	}
     
     private List<Keyword> getColumnsSuggestions(String query) {
+		if (query.isEmpty()) {
+			return null;
+		}
+		
     	String[] split = query.split("\\.");
     	String tableAlias = split[0];
     	String columnPattern = split.length > 1 ? split[1] : null;
