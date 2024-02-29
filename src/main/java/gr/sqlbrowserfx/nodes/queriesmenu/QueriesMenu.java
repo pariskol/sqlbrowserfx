@@ -97,8 +97,6 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 					try {
 						QueryDTO qd = (QueryDTO) DTOMapper.map(rset2, QueryDTO.class);
 						Menu queryMenuItem = new Menu(qd.getDescription());
-//						Label label = new Label(qd.getDescription());
-//						queryMenuItem.setGraphic(label);
 						queriesMap.put(qd.getDescription(), qd.getSql());
 						queryMenuItem.setOnAction(action -> {
 							StringSelection stringSelection = new StringSelection(queriesMap.get(qd.getDescription()));
@@ -107,11 +105,6 @@ public class QueriesMenu extends Menu implements SimpleObserver<String> {
 						});
 						categorySubMenu.getItems().add(queryMenuItem);
 						populateSqlCodeAreasAvailable(queryMenuItem);
-//						label.setOnKeyPressed(keyEvent -> {
-//							if (keyEvent.getCode() == KeyCode.RIGHT)
-//								populateSqlCodeAreasAvailable(qd, queryMenuItem);
-//						});
-//						label.setOnMouseEntered(mouseEvent -> populateSqlCodeAreasAvailable(qd, queryMenuItem));
 					} catch (Throwable e) {
 						logger.error(e.getMessage(), e);
 					}

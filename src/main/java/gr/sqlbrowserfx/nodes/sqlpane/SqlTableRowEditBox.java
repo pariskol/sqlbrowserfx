@@ -174,7 +174,6 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			if (resizeable) {
 				label.prefWidthProperty().bind(node.widthProperty().multiply(0.4));
 				textArea.prefWidthProperty().bind(node.widthProperty().multiply(0.6));
-//				infoButton.prefWidthProperty().bind(node.widthProperty().multiply(0.1));
 			}
 
 			node.setAlignment(Pos.CENTER_RIGHT);

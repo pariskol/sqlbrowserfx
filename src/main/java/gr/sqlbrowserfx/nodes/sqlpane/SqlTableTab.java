@@ -6,7 +6,6 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.layout.StackPane;
@@ -14,7 +13,6 @@ import javafx.scene.layout.StackPane;
 public class SqlTableTab extends Tab {
 
 	private SqlTableView sqlTableView;
-	private SplitPane splitPane;
 	private TabPane recordsTabPane;
 	private Label label;
 //	TODO store columns box

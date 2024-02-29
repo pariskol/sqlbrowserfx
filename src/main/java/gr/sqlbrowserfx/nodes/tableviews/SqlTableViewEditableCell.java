@@ -95,10 +95,7 @@ public class SqlTableViewEditableCell extends TableCell<MapTableViewRow, Object>
 
 	protected TextField createTextField() {
 		TableViewCellEditField textField = new TableViewCellEditField(getText(), this);
-
         textField.setEditable(sqlConnector != null);
-
-//		textField.setAlignment(Pos.CENTER);
 		textField.setStyle("-fx-border-width: 0.0 0.0 0.0 0.0; -fx-padding: 0;");
 		return textField;
 	}

@@ -145,11 +145,6 @@ public class DraggingTabPaneSupport {
         // move text to label graphic:
         if (tab.getText() != null && ! tab.getText().isEmpty() && !tab.getText().equals("Add")) {
         	Node graphic = tab.getGraphic() != null ? tab.getGraphic() : JavaFXUtils.createIcon(dragIconUrl);
-//            Label label = new Label(tab.getText(), graphic);
-//            label.textProperty().bind(sqlPane.getSqlTableView().titleProperty());
-//            tab.textProperty().unbind();
-//            tab.setText(null);
-//            tab.setGraphic(label);
         	tab.setGraphic(graphic);
         }
 
@@ -158,7 +153,7 @@ public class DraggingTabPaneSupport {
             Dragboard dragboard = graphic.startDragAndDrop(TransferMode.MOVE);
             ClipboardContent content = new ClipboardContent();
             // dragboard must have some content, but we need it to be a Tab, which isn't supported
-            // So we store it in a local variable and just put arbitrary content in the dragbaord:
+            // So we store it in a local variable and just put arbitrary content in the dragboard:
             content.putString(draggingID);
             dragboard.setContent(content);
             dragboard.setDragView(graphic.snapshot(null, null));

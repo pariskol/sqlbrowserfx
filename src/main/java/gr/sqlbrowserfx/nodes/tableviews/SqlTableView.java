@@ -126,19 +126,20 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 	}
 
 	protected void createColumnFilters() {
-		// very poor performance of controlsfx tablefilter
+		// FIXME very poor performance of controlsfx tablefilter, it may be removed
 		if (areColumnsFilterable)
 			SqlTableFilter.apply(this);
 	}
 
 	public void resetColumnGraphic(TableColumn<?, ?> col) {
 		String column = col.getText();
-		if (sqlTable.isForeignKey(column))
+		if (sqlTable.isForeignKey(column)) {
 			col.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
-		else if (sqlTable.isPrimaryKey(column))
+		} else if (sqlTable.isPrimaryKey(column)) {
 			col.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
-		else
+		} else {
 			col.setGraphic(null);
+		}
 	}
 
 	public synchronized void setItems(ResultSet rs) throws Exception {
@@ -160,10 +161,11 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 			col.setCellValueFactory(param -> param.getValue().getObjectProperty(column));
 			col.setCellFactory(callback -> new SqlTableViewEditableCell(this, sqlConnector));
 
-			if (sqlTable.isForeignKey(column))
+			if (sqlTable.isForeignKey(column)) {
 				col.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
-			else if (sqlTable.isPrimaryKey(column))
+			} else if (sqlTable.isPrimaryKey(column)) {
 				col.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
+			}
 
 			tableColumns.add(col);
 		}
@@ -236,7 +238,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 
 		} catch (Throwable e) {
 			// exception must be handled here to set an indicator that
-			// something went wrong in case user hasn't sawed the notification
+			// something went wrong in case user hasn't seen the notification
 			Platform.runLater(() -> {
 				this.titleProperty.set("error");
 				parent.load();
@@ -280,7 +282,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 		return columns;
 	}
 
-	// 0 for no set
+	// 0 for not set
 	public void setColumnWidth(double min, double pref, double max) {
 		this.minWidth = min;
 		this.prefWidth = pref;
