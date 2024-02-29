@@ -1,9 +1,9 @@
 package sqlbrowserfx;
 
-public class GUITestStarter {
+public class GuiTestStarter {
 
 	public static void main(String[] args) {
-		Gui4.main(args);
+		SqlPaneTestGui.main(args);
 	}
 
 }

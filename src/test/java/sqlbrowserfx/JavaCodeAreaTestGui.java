@@ -7,7 +7,7 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class Gui4 extends Application {
+public class JavaCodeAreaTestGui extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws IOException {

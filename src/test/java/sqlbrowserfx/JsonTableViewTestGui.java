@@ -10,10 +10,9 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class GuiJsonTableView extends Application{
+public class JsonTableViewTestGui extends Application{
 
 	public static void main(String[] args) {
-//		BasicConfigurator.configure();
 		launch(args);
 	}
 
