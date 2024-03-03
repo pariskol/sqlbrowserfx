@@ -492,15 +492,16 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 		
 		List<Keyword> suggestions = this.calcualtAutocompleteSuggestions(event, caretPosition, query);
 		
+		if (suggestions == null || suggestions.isEmpty()) {
+			this.hideAutocompletePopup();
+			return;
+		}
+		
 		this.showSuggestionsList(suggestions, query, caretPosition);
 		event.consume();
     }
 
 	protected void showSuggestionsList(List<Keyword> suggestions, String query, int caretPosition) {
-		if (suggestions == null || suggestions.isEmpty()) {
-			return;
-		}
-		
 		suggestionsList = this.createSuggestionsListView(suggestions);
 		
 		if (suggestionsList.getItems().isEmpty()) {
