@@ -25,8 +25,7 @@ public class SqlTableNode extends VBox {
 
 	public SqlTableNode(SqlTable table) {
 		// restore this line to have colorful lines
-//		this.color = table.getPrimaryKey() != null ? JavaFXUtils.getRandomColor() : "-fx-control-inner-background-alt";
-		this.color = "-fx-control-inner-background-alt";
+		this.color = "-fx-diagram-color";
 
 		this.table = table;
 		this.setMinWidth(150);
@@ -91,7 +90,7 @@ public class SqlTableNode extends VBox {
 		region.setStyle(
 //		"-fx-border-color: " + color + ";" + 
 		"""
-			-fx-background-color: -fx-control-inner-background-alt;
+			-fx-background-color: -fx-diagram-color;
 			-fx-background-radius: 6;
 			-fx-border-width: 1;
 			-fx-border-radius: 6;
@@ -102,7 +101,7 @@ public class SqlTableNode extends VBox {
 	private void configureSelectedBorder(final Region region) {
 		region.setStyle("""
 					-fx-border-color: -fx-accent;
-					-fx-background-color: -fx-control-inner-background-alt;
+					-fx-background-color: -fx-diagram-color;
 					-fx-background-radius: 6;
 					-fx-border-width: 3;
 					-fx-border-radius: 6;
@@ -112,7 +111,7 @@ public class SqlTableNode extends VBox {
 
 	private void configureTitleBorder(final Region region) {
 		region.setStyle("""
-					-fx-border-color: black;
+					-fx-border-color: -fx-base;
 					-fx-border-width: 0 0 1 0;
 				""");
 	}

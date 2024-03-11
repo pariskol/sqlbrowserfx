@@ -1,7 +1,7 @@
 .root {
 	-fx-accent: #1a6ee4;
 	-fx-focus-color: -fx-accent;
-	-fx-base: #111;
+	-fx-base: #272727;
 	-fx-primary-color: derive(-fx-base, 12%);
 	-fx-secondary-color: derive(-fx-base, 20%);
 	-fx-hover-color: derive(-fx-base, 30%);

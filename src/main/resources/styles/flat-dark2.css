@@ -391,12 +391,9 @@
 	-fx-border-width: 2px;
 }
 
-.list-view .list-cell:even {
-	-fx-control-inner-background: -fx-primary-color;
-}
-
+.list-view .list-cell:even,
 .list-view .list-cell:odd {
-	-fx-control-inner-background: -fx-secondary-color;
+	-fx-control-inner-background: -fx-primary-color;
 }
 
 .table-view {
@@ -426,13 +423,11 @@
 }
 
 
-.table-row-cell:even {
+.table-row-cell:even,
+.table-row-cell:odd {
 	-fx-control-inner-background: -fx-primary-color;
 }
 
-.table-row-cell:odd {
-	-fx-control-inner-background: -fx-secondary-color;
-}
 
 .table-row-cell:empty {
 	-fx-background-color: transparent;
