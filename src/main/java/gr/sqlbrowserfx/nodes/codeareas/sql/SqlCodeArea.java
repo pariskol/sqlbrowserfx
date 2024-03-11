@@ -149,7 +149,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		}
 		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
 				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
-				|| ch.equals(".") || ch.equals(",") || ch.equals("_")
+				|| ch.equals(".") || ch.equals(",") || ch.equals("_") || ch.equals(" ")
 				|| event.getCode() == KeyCode.ENTER
 				|| event.getCode() == KeyCode.BACK_SPACE) {
 			boolean isColumnSuggestion = query.contains(".");
