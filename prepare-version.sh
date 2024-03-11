@@ -23,6 +23,10 @@ sed -i "0,/<version>.*<\/version>/s//<version>$newVersion-SNAPSHOT<\/version>/" 
 git add pom.xml
 git commit -m "restore pom after release"
 git push origin development
+git checkout master
+git merge $version
+git push origin master
+git checkout development
 
 
 
