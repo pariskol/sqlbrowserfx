@@ -13,7 +13,7 @@
 	-fx-font-size: 13.0pt;
 	/*-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
 	-fx-selection-bar-non-focused: derive(-fx-base, 90.0%);
-	-fx-background: -fx-primary-color;
+	-fx-background: derive(-fx-base, 10%);
 }
 
 .menu-bar {
