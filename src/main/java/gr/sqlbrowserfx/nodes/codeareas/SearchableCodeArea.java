@@ -1,15 +1,14 @@
 package gr.sqlbrowserfx.nodes.codeareas;
 
-import gr.sqlbrowserfx.nodes.InputMapOwner;
-import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
-import javafx.event.Event;
-import javafx.geometry.Bounds;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCombination;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
+
+import gr.sqlbrowserfx.nodes.InputMapOwner;
+import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 
 public class SearchableCodeArea extends CodeArea implements InputMapOwner {
 
@@ -26,7 +25,7 @@ public class SearchableCodeArea extends CodeArea implements InputMapOwner {
             searchAndReplacePopOver.getFindField().setText(this.getSelectedText());
             searchAndReplacePopOver.getFindField().selectAll();
         }
-        Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+        var boundsInScene = this.localToScreen(this.getBoundsInLocal());
         searchAndReplacePopOver.show(getParent(), boundsInScene.getMaxX() - 400, boundsInScene.getMinY());
     }
 

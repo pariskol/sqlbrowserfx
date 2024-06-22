@@ -9,12 +9,9 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
-import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import javafx.event.Event;
-import javafx.geometry.Bounds;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
@@ -35,8 +32,8 @@ public class CSqlCodeArea extends SqlCodeArea {
 
 	@Override
 	public ContextMenu createContextMenu() {
-		ContextMenu menu = super.createContextMenu();
-		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/thunder.png"));
+		var menu = super.createContextMenu();
+		var menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/thunder.png"));
 		menuItemSave.setOnAction(action -> this.saveQueryAction());
 		menuItemSave.disableProperty().bind(this.isTextSelectedProperty().not());
 		menu.getItems().addAll(menuItemSave);
@@ -46,17 +43,19 @@ public class CSqlCodeArea extends SqlCodeArea {
 	@Override
 	protected void onMouseClicked() {
 		super.onMouseClicked();
-		if (saveQueryPopOver != null)
+		if (saveQueryPopOver != null) {
 			saveQueryPopOver.hide();
+		}
 	}
 	
 	@Override
 	public void setInputMap() {
-		if (!isEditable())
+		if (!isEditable()) {
 			return;
+		}
 		
 		super.setInputMap();
-		InputMap<Event> saveQuery = InputMap.consume(
+		var saveQuery = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.S, KeyCombination.CONTROL_DOWN),
 				action -> this.saveQueryAction()
         );
@@ -65,11 +64,11 @@ public class CSqlCodeArea extends SqlCodeArea {
 	}
 	
 	protected void saveQueryAction() {
-		final SqlConnector sqlConnector = SqlBrowserFXAppManager.getConfigSqlConnector();
-		TextField descriptionField = new TextField();
+		final var sqlConnector = SqlBrowserFXAppManager.getConfigSqlConnector();
+		var descriptionField = new TextField();
 		descriptionField.setPromptText("Description");
 
-		ComboBox<String> categoryField = new ComboBox<>();
+		var categoryField = new ComboBox<String>();
 		categoryField.setEditable(true);
 		try {
 			sqlConnector.executeQuery("select distinct category from saved_queries", rset -> categoryField.getItems().add(rset.getString(1)));
@@ -77,11 +76,11 @@ public class CSqlCodeArea extends SqlCodeArea {
 			DialogFactory.createErrorNotification(e);
 		}
 
-		Button addButton = new Button("Save", JavaFXUtils.createIcon("/icons/save.png"));
+		var addButton = new Button("Save", JavaFXUtils.createIcon("/icons/save.png"));
 		addButton.setOnAction(event -> {
 			sqlConnector.executeAsync(() -> {
 				try {
-					String query = !this.getSelectedText().isEmpty() ? this.getSelectedText() : this.getText();
+					var query = !this.getSelectedText().isEmpty() ? this.getSelectedText() : this.getText();
 					sqlConnector.executeUpdate("insert into saved_queries (query,category,description) values (?,?,?)",
 							Arrays.asList(query,
 									categoryField.getSelectionModel().getSelectedItem(),
@@ -95,7 +94,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 		});
 
 		categoryField.setPromptText("Write a name to create new...");
-		VBox vb = new VBox(
+		var vb = new VBox(
 				new Label("Choose category"), 
 				categoryField, 
 				descriptionField, 
@@ -116,7 +115,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 			}
 		});
 		saveQueryPopOver.setArrowSize(0);
-		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		var boundsInScene = this.localToScreen(this.getBoundsInLocal());
 		saveQueryPopOver.show(getParent(), boundsInScene.getMinX() + saveQueryPopOver.getWidth() / 3,
 				boundsInScene.getMinY() - saveQueryPopOver.getHeight() / 2);
 	}

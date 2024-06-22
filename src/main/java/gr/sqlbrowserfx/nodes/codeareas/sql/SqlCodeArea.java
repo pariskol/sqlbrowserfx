@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -35,8 +36,6 @@ import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
-import javafx.event.Event;
-import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -79,9 +78,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		this.textAnalyzerDaemon = new Thread(() -> {
 			while (!textAnalyzerDaemon.isInterrupted()) {
 				try {
-					Map<String, Set<String>> newTableAliases = this.analyzeTextForTables(this.getText());
-					if (!this.areMapsEqual(this.tableAliases, newTableAliases))
+					var newTableAliases = this.analyzeTextForTables(this.getText());
+					if (!this.areMapsEqual(this.tableAliases, newTableAliases)) {
 						this.tableAliases = newTableAliases;
+					}
 					this.variablesAliases = this.analyzeTextForVariables(this.getText());
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -113,10 +113,12 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 			return false;
 		
 		for (String key : map1.keySet()) {
-			if (!map2.containsKey(key))
+			if (!map2.containsKey(key)) {
 				return false;
-			if (!map1.get(key).equals(map2.get(key)))
+			}
+			if (!map1.get(key).equals(map2.get(key))) {
 				return false;
+			}
 		}
 		return true;
 	}
@@ -136,7 +138,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	
 	@Override
 	protected List<Keyword> calcualtAutocompleteSuggestions(KeyEvent event, int caretPosition, String query) {
-		String ch = event.getCharacter();
+		var ch = event.getCharacter();
 		List<Keyword> suggestions = null;
 		
 		if (event.isShiftDown() && event.isControlDown() && event.getCode() == KeyCode.SPACE) {
@@ -152,7 +154,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 				|| ch.equals(".") || ch.equals(",") || ch.equals("_") || ch.equals(" ")
 				|| event.getCode() == KeyCode.ENTER
 				|| event.getCode() == KeyCode.BACK_SPACE) {
-			boolean isColumnSuggestion = query.contains(".");
+			var isColumnSuggestion = query.contains(".");
 			enableInsertMode(isColumnSuggestion);
 			suggestions = isColumnSuggestion ? this.getColumnsSuggestions(query) : this.getQuerySuggestions(query);
 		}
@@ -167,10 +169,12 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	@Override
 	protected void onMouseClicked() {
 		super.onMouseClicked();
-		if(isHistoryPopOverShowing())
+		if(isHistoryPopOverShowing()) {
 			historyPopOver.hide();
-		if (schemaPopOver != null)
+		}
+		if (schemaPopOver != null) {
 			schemaPopOver.hide();
+		}
 	}
 	
 	private boolean isHistoryPopOverShowing() {
@@ -186,8 +190,8 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 			return null;
 		}
 		
-		List<String> suggestions = new ArrayList<>();
-		String sql = "select query from saved_queries where description like '%" + query + "%' ";
+		var suggestions = new ArrayList<String>();
+		var sql = "select query from saved_queries where description like '%" + query + "%' ";
 		try {
 			SqlBrowserFXAppManager.getConfigSqlConnector().executeQuery(sql, rset -> suggestions.add(rset.getString(1)));
 		} catch (SQLException e) {
@@ -213,45 +217,46 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 					syntaxProvider.getKeywords().stream()
 					)
 				.filter(keyword -> keyword != null && keyword.getKeyword().startsWith(query))
-				.collect(Collectors.toList());
+				.toList();
 	}
     
-    private List<Keyword> getColumnsSuggestions(String query) {
-		if (query.isEmpty()) {
-			return null;
-		}
-		
-    	String[] split = query.split("\\.");
-    	String tableAlias = split[0];
-    	String columnPattern = split.length > 1 ? split[1] : null;
+	private List<Keyword> getColumnsSuggestions(String query) {
+	    if (query.isEmpty()) {
+	        return null;
+	    }
+	    
+	    var split = query.split("\\.");
+	    var tableAlias = split[0];
+	    var columnPattern = split.length > 1 ? split[1] : null;
 
-    	for (String knownTable : tableAliases.keySet()) {
-    		Collection<String> shortcuts = tableAliases.get(knownTable);
-    		for (String s : shortcuts) {
-    			if (s.equals(tableAlias)) {
-        	    	if (columnPattern != null) {
-        	    		return syntaxProvider.getKeywords(KeywordType.COLUMN, knownTable)
-        	    							.stream().filter(col -> col.getKeyword().toLowerCase().contains(columnPattern.toLowerCase()))
-        	    							.collect(Collectors.toList());
-        	    	}
-        	    	else {
-						return new ArrayList<>(syntaxProvider.getKeywords(KeywordType.COLUMN, knownTable));
-        	    	}
-    			}
-    		}
-    	}
-		return syntaxProvider.getKeywords(KeywordType.COLUMN, tableAlias) != null ? new ArrayList<>(syntaxProvider.getKeywords(KeywordType.COLUMN, tableAlias)) : new ArrayList<>();
-    }
+	    for (var entry : tableAliases.entrySet()) {
+	        if (entry.getValue().contains(tableAlias)) {
+	            var knownTable = entry.getKey();
+	            var keywords = syntaxProvider.getKeywords(KeywordType.COLUMN, knownTable);
+	            if (columnPattern != null) {
+	                return keywords.stream()
+	                               .filter(col -> StringUtils.containsIgnoreCase(col.getKeyword(), columnPattern))
+	                               .toList();
+	            }
 
+	            return new ArrayList<>(keywords);
+	        }
+	    }
+
+	    // If no alias match was found, try using the tableAlias directly as the table name
+	    var keywords = syntaxProvider.getKeywords(KeywordType.COLUMN, tableAlias);
+	    return keywords != null ? new ArrayList<>(keywords) : new ArrayList<>();
+	}
+	
     private boolean syntaxProviderHasTable(String table) {
     	return !syntaxProvider.getKeywords(KeywordType.COLUMN, table).isEmpty();
     }
     
 	private Map<String, Set<String>> analyzeTextForTables(String text) {
-		Map<String, Set<String>> newTableAliases = new HashMap<>();
-		String[] words = text.split("\\W+");
+		var newTableAliases = new HashMap<String, Set<String>>();
+		var words = text.split("\\W+");
 		String saveTableShortcut = null;
-		for (String word : words) {
+		for (var word : words) {
 			if (!word.isEmpty() && saveTableShortcut != null && !word.equals(saveTableShortcut.trim())
 					&& !word.equalsIgnoreCase("as")) {
 				newTableAliases.get(saveTableShortcut).add(word);
@@ -266,10 +271,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	}
 	
 	private Set<String> analyzeTextForVariables(String text) {
-		Set<String> newVariables = new HashSet<>();
-		String[] words = text.split("\\W+");
-		for (int i = 0; i < words.length; i++) {
-			String word = words[i];
+		var newVariables = new HashSet<String>();
+		var words = text.split("\\W+");
+		for (var i = 0; i < words.length; i++) {
+			var word = words[i];
 			if (!word.isEmpty() && 
 				(word.equalsIgnoreCase("declare") ||
 				 word.equalsIgnoreCase("in") ||
@@ -295,7 +300,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 			return;
 		
 		super.setInputMap();
-		InputMap<Event> run = InputMap.consume(
+		var run = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.ENTER, KeyCombination.CONTROL_DOWN),
 				action -> { 
 					if(runAction != null) {
@@ -304,11 +309,11 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 					}
 				}
         );
-		InputMap<Event> autocomplete = InputMap.consume(
+		var autocomplete = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
 				action -> this.autoCompleteAction(new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, true, true, false, false))
         );
-		InputMap<Event> history = InputMap.consume(
+		var history = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.H, KeyCombination.CONTROL_DOWN),
 				action -> {
 					if (isHistoryPopOverShowing()) {
@@ -328,27 +333,27 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	}
 
 	private void showHistoryPopOver() {
-		PHistorySqlCodeArea codeArea = new PHistorySqlCodeArea();
-		DatePicker datePicker = new DatePicker(LocalDate.now());
+		var codeArea = new PHistorySqlCodeArea();
+		var datePicker = new DatePicker(LocalDate.now());
 
 		datePicker.setOnAction(actionEvent -> {
-		    LocalDate date = datePicker.getValue();
-		    String dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		    var date = datePicker.getValue();
+		    var dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 		    this.getQueriesHistory(codeArea,dateStr);
 
 		});
-		VirtualizedScrollPane<CodeArea> pane = new VirtualizedScrollPane<>(codeArea);
+		var pane = new VirtualizedScrollPane<CodeArea>(codeArea);
 		pane.setPrefSize(600, 400);
-		HBox hbox = new HBox(codeArea.getSearchAndReplacePopOver(), codeArea.createGoToLinePopOver().getContentNode(), datePicker);
+		var hbox = new HBox(codeArea.getSearchAndReplacePopOver(), codeArea.createGoToLinePopOver().getContentNode(), datePicker);
 		hbox.setSpacing(20);
 		
-		VBox vbox = new VBox(new Label("Query History", JavaFXUtils.createIcon("/icons/monitor.png")), hbox, pane);
+		var vbox = new VBox(new Label("Query History", JavaFXUtils.createIcon("/icons/monitor.png")), hbox, pane);
 		vbox.setPrefSize(600, 500);
 
 		historyPopOver = new CustomPopOver(vbox);
 		
 		historyPopOver.setOnHidden(event -> SqlCodeArea.this.historyPopOver = null);
-		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		var boundsInScene = this.localToScreen(this.getBoundsInLocal());
 		historyPopOver.show(getParent(), boundsInScene.getMaxX() - 620,
 				boundsInScene.getMinY());
 		this.getQueriesHistory(codeArea, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
@@ -358,10 +363,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		SqlBrowserFXAppManager.getConfigSqlConnector().executeQueryRawAsync("select query, duration, datetime(timestamp,'localtime') timestamp from queries_history "
 				+ "where date(datetime(timestamp,'localtime')) = '" + dateStr + "' order by id",
 			rset -> {
-				StringBuilder history = new StringBuilder();
+				var history = new StringBuilder();
 				while (rset.next()) {
 					try {
-						Map<String, Object> map = DTOMapper.map(rset);
+						var map = DTOMapper.map(rset);
 						history.append("\n--  Executed at : ").append(map.get("timestamp")).append(" Duration: ").append(map.get("duration")).append("ms --\n");
 						history.append(map.get("query"));
 						history.append("\n");
@@ -376,15 +381,15 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	
 	@Override
 	public ContextMenu createContextMenu() {
-		ContextMenu menu = super.createContextMenu();
+		var menu = super.createContextMenu();
 		menuItemRun = new MenuItem("Run", JavaFXUtils.createIcon("/icons/play.png"));
 		menuItemRun.setOnAction(event -> runAction.run());
 		menu.getItems().add(0, new SeparatorMenuItem());
 		menu.getItems().add(0, menuItemRun);
-		MenuItem menuItemHistory = new MenuItem("History", JavaFXUtils.createIcon("/icons/monitor.png"));
+		var menuItemHistory = new MenuItem("History", JavaFXUtils.createIcon("/icons/monitor.png"));
 		menuItemHistory.setOnAction(event -> SqlCodeArea.this.showHistoryPopOver());
 		
-		MenuItem menuItemShowSchema = new MenuItem("Show Schema", JavaFXUtils.createIcon("/icons/script.png"));
+		var menuItemShowSchema = new MenuItem("Show Schema", JavaFXUtils.createIcon("/icons/script.png"));
 		menuItemShowSchema.setOnAction(action -> SqlCodeArea.this.showSchemaPopOver());
 		menuItemShowSchema.disableProperty().bind(this.isTextSelectedProperty().not());
 		
@@ -394,14 +399,15 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	}
 
 	private void showSchemaPopOver() {
-		String table = this.getSelectedText();
-		String schema = DbCash.getSchemaFor(table);
+		var table = this.getSelectedText();
+		var schema = DbCash.getSchemaFor(table);
 		
-		if (schema == null)
+		if (schema == null) {
 			return;
+		}
 		
-		SqlCodeArea codeArea = new SqlCodeArea(schema, false, false, true);
-		VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
+		var codeArea = new SqlCodeArea(schema, false, false, true);
+		var scrollPane = new VirtualizedScrollPane<SqlCodeArea>(codeArea);
 		scrollPane.setPrefSize(600, 400);
 
 		schemaPopOver = new CustomPopOver(scrollPane);

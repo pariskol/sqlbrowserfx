@@ -6,8 +6,6 @@ import org.fxmisc.wellbehaved.event.Nodes;
 
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import javafx.event.Event;
-import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
@@ -36,11 +34,11 @@ public class HistorySqlCodeArea extends CSqlCodeArea {
 	
 	@Override
 	public void setInputMap() {
-		InputMap<Event> searchAndReplace = InputMap.consume(
+		var searchAndReplace = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
 				action -> this.showSearchAndReplacePopup()
         );
-		InputMap<Event> goToLine = InputMap.consume(
+		var goToLine = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.L, KeyCombination.CONTROL_DOWN),
 				action -> this.showGoToLinePopOver()
         );
@@ -56,22 +54,22 @@ public class HistorySqlCodeArea extends CSqlCodeArea {
 			searchAndReplacePopOver.getFindField().setText(this.getSelectedText());
 			searchAndReplacePopOver.getFindField().selectAll();
 		}
-		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		var boundsInScene = this.localToScreen(this.getBoundsInLocal());
 		searchAndReplacePopOver.show(getParent(), boundsInScene.getMaxX() - searchAndReplacePopOver.getWidth(),
 				boundsInScene.getMinY());
 	}
 	
 	@Override
 	public ContextMenu createContextMenu() {
-		ContextMenu menu = new ContextMenu();
+		var menu = new ContextMenu();
 
-		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
+		var menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copy());
 		
-		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
+		var menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
 		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
-		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/save.png"));
+		var menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSave.setOnAction(action -> this.saveQueryAction());
 		
 		menu.getItems().addAll(menuItemCopy, menuItemSearchAndReplace, menuItemSave);

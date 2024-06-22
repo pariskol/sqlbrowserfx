@@ -13,12 +13,12 @@ public class PHistorySqlCodeArea extends HistorySqlCodeArea {
 	
 	@Override
 	public ContextMenu createContextMenu() {
-		ContextMenu menu = new ContextMenu();
+		var menu = new ContextMenu();
 
-		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
+		var menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copy());
 		
-		MenuItem menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/save.png"));
+		var menuItemSave = new MenuItem("Save Query", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSave.setOnAction(action -> this.saveQueryAction());
 		
 		menu.getItems().addAll(menuItemCopy, menuItemSave);

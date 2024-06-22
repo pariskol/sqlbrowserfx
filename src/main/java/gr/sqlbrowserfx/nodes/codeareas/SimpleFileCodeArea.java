@@ -62,8 +62,8 @@ public class SimpleFileCodeArea extends AutoCompleteCodeArea<SimpleFileCodeAreaS
 	
 	@Override
 	public ContextMenu createContextMenu() {
-		ContextMenu menu = super.createContextMenu();
-		MenuItem menuItemSave = new MenuItem("Save File", JavaFXUtils.createIcon("/icons/save.png"));
+		var menu = super.createContextMenu();
+		var menuItemSave = new MenuItem("Save File", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSave.setOnAction(action -> this.saveFileAction());
 
 		menu.getItems().addAll(new SeparatorMenuItem(), menuItemSave);

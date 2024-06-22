@@ -4,7 +4,6 @@ package gr.sqlbrowserfx.nodes.codeareas.log;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.regex.Matcher;
 
 import org.controlsfx.control.PopOver;
 import org.fxmisc.richtext.CodeArea;
@@ -13,7 +12,6 @@ import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
-import org.reactfx.Subscription;
 
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.InputMapOwner;
@@ -22,7 +20,6 @@ import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SimpleLineNumberFactory;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.geometry.Bounds;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
@@ -53,10 +50,12 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, InputMapO
 	
 	@Override
 	public void enableShowLineNumbers(boolean enable) {
-		if (enable)
+		if (enable) {
 			this.setParagraphGraphicFactory(new SimpleLineNumberFactory(this));
-		else
+		}
+		else {
 			this.setParagraphGraphicFactory(null);
+		}
 	}
 	
 	@Override
@@ -82,8 +81,9 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, InputMapO
 	}
 	
 	protected void onMouseClicked() {
-		if (goToLinePopOver != null)
+		if (goToLinePopOver != null) {
 			goToLinePopOver.hide();
+		}
 	}
 	
 	@SuppressWarnings("unused")
@@ -98,18 +98,17 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, InputMapO
 	
 	@Override
 	public void enableHighlighting() {
-		@SuppressWarnings("unused")
-		Subscription subscription = this.multiPlainChanges().successionEnds(Duration.ofMillis(100))
+		this.multiPlainChanges().successionEnds(Duration.ofMillis(100))
 				.subscribe(ignore -> this.setStyleSpans(0, computeHighlighting(this.getText())));
 	}
 	
 	@Override
 	public StyleSpans<Collection<String>> computeHighlighting(String text) {
-		Matcher matcher = syntaxProvider.getPatternMatcher(text);
-		int lastKwEnd = 0;
-		StyleSpansBuilder<Collection<String>> spansBuilder = new StyleSpansBuilder<>();
+		var matcher = syntaxProvider.getPatternMatcher(text);
+		var lastKwEnd = 0;
+		var spansBuilder = new StyleSpansBuilder<Collection<String>>();
 		while (matcher.find()) {
-			String styleClass = matcher.group("KEYWORD") != null ? "keyword"
+			var styleClass = matcher.group("KEYWORD") != null ? "keyword"
 					: matcher.group("FUNCTION") != null ? "function"
 							: matcher.group("METHOD") != null ? "method" : matcher.group("PAREN") != null ? "paren"
 									: matcher.group("SEMICOLON") != null ? "semicolon"
@@ -127,15 +126,15 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, InputMapO
 	
 	@Override
 	public ContextMenu createContextMenu() {
-		ContextMenu menu = new ContextMenu();
+		var menu = new ContextMenu();
 
-		MenuItem menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
+		var menuItemCopy = new MenuItem("Copy", JavaFXUtils.createIcon("/icons/copy.png"));
 		menuItemCopy.setOnAction(event -> this.copy());
 
-		MenuItem menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
+		var menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
 		menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
-		MenuItem menuItemGoToLine = new MenuItem("Go to line...", JavaFXUtils.createIcon("/icons/next.png"));
+		var menuItemGoToLine = new MenuItem("Go to line...", JavaFXUtils.createIcon("/icons/next.png"));
 		menuItemGoToLine.setOnAction(action -> this.goToLineAction());
 		
 		menu.getItems().addAll(menuItemCopy,menuItemSearchAndReplace, menuItemGoToLine);
@@ -143,17 +142,19 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, InputMapO
 	}
 	
 	private void goToLineAction() {
-		if (goToLinePopOver != null)
+		if (goToLinePopOver != null) {
 			return;
+		}
 		
-		TextField textField = new TextField();
+		var textField = new TextField();
 		textField.setPromptText("Go to line ...");
 		textField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
-				if (textField.getText().isEmpty())
+				if (textField.getText().isEmpty()) {
 					return;
+				}
 				
-				int targetParagraph = Integer.parseInt(textField.getText()) - 1;
+				var targetParagraph = Integer.parseInt(textField.getText()) - 1;
 				if (targetParagraph > 0 && targetParagraph < this.getParagraphs().size()) {
 					this.moveTo(targetParagraph, 0);
 					this.requestFollowCaret();
@@ -165,7 +166,7 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, InputMapO
 		goToLinePopOver = new PopOver(textField);
 		goToLinePopOver.setOnHidden(event -> goToLinePopOver = null);
 		goToLinePopOver.setArrowSize(0);
-		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		var boundsInScene = this.localToScreen(this.getBoundsInLocal());
 		goToLinePopOver.show(this, boundsInScene.getMaxX() - goToLinePopOver.getWidth() - 200, boundsInScene.getMinY());
 	}
 	
@@ -174,7 +175,7 @@ public class LogCodeArea extends CodeArea implements ContextMenuOwner, InputMapO
 			searchAndReplacePopOver.getFindField().setText(this.getSelectedText());
 			searchAndReplacePopOver.getFindField().selectAll();
 		}
-		Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+		var boundsInScene = this.localToScreen(this.getBoundsInLocal());
 		searchAndReplacePopOver.show(this, boundsInScene.getMaxX() - searchAndReplacePopOver.getWidth(),
 				boundsInScene.getMinY());
 	}

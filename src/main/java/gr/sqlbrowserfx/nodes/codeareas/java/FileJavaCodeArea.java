@@ -18,7 +18,6 @@ import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.codeareas.FileCodeArea;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import javafx.event.Event;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
@@ -63,8 +62,8 @@ public class FileJavaCodeArea extends JavaCodeArea implements FileCodeArea {
 	
 	@Override
 	public ContextMenu createContextMenu() {
-		ContextMenu menu = super.createContextMenu();
-		MenuItem menuItemSave = new MenuItem("Save File", JavaFXUtils.createIcon("/icons/save.png"));
+		var menu = super.createContextMenu();
+		var menuItemSave = new MenuItem("Save File", JavaFXUtils.createIcon("/icons/save.png"));
 		menuItemSave.setOnAction(action -> this.saveFileAction());
 
 		menu.getItems().addAll(new SeparatorMenuItem(), menuItemSave);
@@ -74,7 +73,7 @@ public class FileJavaCodeArea extends JavaCodeArea implements FileCodeArea {
 	@Override
 	public void setInputMap() {
 		super.setInputMap();
-		InputMap<Event> save = InputMap.consume(
+		var save = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.S, KeyCombination.CONTROL_DOWN),
 				action -> this.saveFileAction()
         );

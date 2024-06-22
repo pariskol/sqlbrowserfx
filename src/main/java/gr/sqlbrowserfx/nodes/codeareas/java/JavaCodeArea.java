@@ -23,7 +23,6 @@ import gr.sqlbrowserfx.nodes.codeareas.TextAnalyzer;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import javafx.event.Event;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
@@ -92,8 +91,9 @@ public class JavaCodeArea extends AutoCompleteCodeArea<JavaCodeAreaSyntaxProvide
 	@Override
 	protected void onMouseClicked() {
 		super.onMouseClicked();
-		if(isSqlQueryPopOverShowing())
+		if(isSqlQueryPopOverShowing()) {
 			sqlQueryPopOver.hide();
+		}
 	}
 	
 	@Override
@@ -107,10 +107,10 @@ public class JavaCodeArea extends AutoCompleteCodeArea<JavaCodeAreaSyntaxProvide
 	}
 	
 	private Set<String> analyzeTextForVariables(String text) {
-		Set<String> newVariables = new HashSet<>();
-		String[] words = text.split("\\W+");
-		for (int i = 0; i < words.length; i++) {
-			String word = words[i];
+		var newVariables = new HashSet<String>();
+		var words = text.split("\\W+");
+		for (var i = 0; i < words.length; i++) {
+			var word = words[i];
 			if (word.equals("new")) {
 					newVariables.add(words[i - 1]);
 			}
@@ -135,35 +135,33 @@ public class JavaCodeArea extends AutoCompleteCodeArea<JavaCodeAreaSyntaxProvide
 	
 	@Override
 	public void setInputMap() {
-		if (!isEditable())
+		if (!isEditable()) {
 			return;
+		}
 		
 		super.setInputMap();
-		InputMap<Event> autocomplete = InputMap.consume(
+		var autocomplete = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
 				action -> this.autoCompleteAction(new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, true, true, false, false))
         );
-		
-
-		
         Nodes.addInputMap(this, autocomplete);
 	}
 
 	@Override
 	public ContextMenu createContextMenu() {
-		ContextMenu menu = super.createContextMenu();
+		var menu = super.createContextMenu();
 		
-		MenuItem menuItemEditSqlQuery = new MenuItem("Edit as sql query", JavaFXUtils.createIcon("/icons/thunder.png"));
+		var menuItemEditSqlQuery = new MenuItem("Edit as sql query", JavaFXUtils.createIcon("/icons/thunder.png"));
 		menuItemEditSqlQuery.setOnAction(event -> {
 			sqlQueryPopOver = new CustomPopOver();
-			SqlCodeArea sqlCodeArea = new SqlCodeArea(this.getSelectedText());
+			var sqlCodeArea = new SqlCodeArea(this.getSelectedText());
 			sqlCodeArea.setWrapText(true);
 			sqlCodeArea.startTextAnalyzerDaemon();
-			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
+			var scrollPane = new VirtualizedScrollPane<SqlCodeArea>(sqlCodeArea);
 			scrollPane.setPrefSize(600, 400);
 			sqlQueryPopOver.setContentNode(scrollPane);
 			sqlQueryPopOver.setOnHidden(hiddenEvent -> {
-				String newQuery = sqlCodeArea.getText();
+				var newQuery = sqlCodeArea.getText();
 				if (!newQuery.equals(this.getSelectedText())) {
 					this.replaceSelection(newQuery);
 				}
