@@ -10,10 +10,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.Executors;
 
-import gr.sqlbrowserfx.conn.DbCash;
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.PopOver;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -254,7 +259,12 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	protected ComboBox<String> createTablesBox() {
-		List<String> tablesList = DbCash.getAllTableNames();
+		List<String> tablesList = null;
+		try {
+			tablesList = sqlConnector.getTables();
+		} catch (SQLException e) {
+			DialogFactory.createErrorDialog(e);
+		}
 		ObservableList<String> options = FXCollections.observableArrayList(tablesList);
 
 		if (tablesBox == null || !Objects.equals(tablesList, tablesBox.getItems())) {
