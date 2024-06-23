@@ -32,6 +32,9 @@ public class HelpShortcutsTabPane extends TabPane {
 		addShortcut("Switch Tabs", "Ctrl+Page Down", rows);
 		addShortcut("To Upper Case (selected text)", "Ctrl+U", rows);
 		addShortcut("To Lower Case (selected text)", "Ctrl+I", rows);
+		addShortcut("Comment/Uncomment Selected Text", "Ctrl+/", rows);
+		addShortcut("Wrap Selected Text in ()", "Ctrl+9", rows);
+		addShortcut("Wrap Selected Text in ''", "Ctrl+'", rows);
 		addShortcut("Add Tabs (to selected text)", "Ctrl+Tab", rows);
 		addShortcut("Remove Tabs (from selected text)", "Ctrl+Shift+Tab", rows);
 		addShortcut("Autocomplete", "Ctrl+Space", rows);
@@ -58,6 +61,7 @@ public class HelpShortcutsTabPane extends TabPane {
 		addShortcut("Skip Rows", "Page Up/Page Down", rows);
 		addShortcut("Navigation", "Arrows", rows);
 		addShortcut("Context Menu", "Right Click", rows);
+
 		tableView.setItemsLater(new JSONArray(rows));
 		
 		Tab tab = new Tab("SqlCodeArea", tableView);
