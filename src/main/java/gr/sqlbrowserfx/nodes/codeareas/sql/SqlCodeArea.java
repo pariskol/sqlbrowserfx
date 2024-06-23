@@ -301,28 +301,52 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		
 		super.setInputMap();
 		var run = InputMap.consume(
-				EventPattern.keyPressed(KeyCode.ENTER, KeyCombination.CONTROL_DOWN),
-				action -> { 
-					if(runAction != null) {
-						runAction.run();
-						action.consume();
-					}
+			EventPattern.keyPressed(KeyCode.ENTER, KeyCombination.CONTROL_DOWN),
+			action -> { 
+				if(runAction != null) {
+					runAction.run();
+					action.consume();
 				}
+			}
         );
 		var autocomplete = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
 				action -> this.autoCompleteAction(new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, true, true, false, false))
         );
 		var history = InputMap.consume(
-				EventPattern.keyPressed(KeyCode.H, KeyCombination.CONTROL_DOWN),
-				action -> {
-					if (isHistoryPopOverShowing()) {
-						historyPopOver.requestFocus();
-						return;
-					}
-					
-					showHistoryPopOver();
+			EventPattern.keyPressed(KeyCode.H, KeyCombination.CONTROL_DOWN),
+			action -> {
+				if (isHistoryPopOverShowing()) {
+					historyPopOver.requestFocus();
+					return;
 				}
+				
+				showHistoryPopOver();
+			}
+        );
+		var comment = InputMap.consume(
+			EventPattern.keyPressed(KeyCode.SLASH, KeyCombination.CONTROL_DOWN),
+			action -> {
+				var commentPrefix = "-- ";
+                if (!this.getSelectedText().isEmpty()) {
+                    String[] lines = this.getSelectedText().split("\r\n|\r|\n");
+                    List<String> newLines = new ArrayList<>();
+                    for (String line : lines) {
+                    	if (line.startsWith(commentPrefix)) {
+                    		line = line.substring(commentPrefix.length());
+                    	}
+                    	else {
+                    		line = "-- " + line;
+                    	}
+                        newLines.add(line);
+                    }
+                    String replacement = StringUtils.join(newLines, "\n");
+                    if (!replacement.equals(this.getSelectedText())) {
+                        this.replaceSelection(replacement);
+                        this.selectRange(this.getCaretPosition() - replacement.length(), this.getCaretPosition());
+                    }
+                }
+			}
         );
 		
 
@@ -330,6 +354,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
         Nodes.addInputMap(this, run);
         Nodes.addInputMap(this, autocomplete);
         Nodes.addInputMap(this, history);
+        Nodes.addInputMap(this, comment);
 	}
 
 	private void showHistoryPopOver() {
