@@ -3,13 +3,18 @@ package gr.sqlbrowserfx.nodes.codeareas;
 public class Keyword {
 
 	private String keyword;
+	private String description;
 	private KeywordType type;
 
-	
 	public Keyword(String keyword, KeywordType type) {
 		super();
 		this.keyword = keyword;
 		this.type = type;
+	}
+	
+	public Keyword(String keyword, String description, KeywordType type) {
+		this(keyword, type);
+		this.description = description;
 	}
 
 	public Keyword() {
@@ -31,14 +36,23 @@ public class Keyword {
 		this.type = type;
 	}
 
+	public String getDescription() {
+		return description;
+	}
+	
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
 	public boolean isFunction() {
 		return this.type == KeywordType.FUNCTION;
 	}
-	
+
 	public boolean isKeyword() {
 		return this.type == KeywordType.KEYWORD;
 	}
-	
+
 	public boolean isType() {
 		return this.type == KeywordType.TYPE;
 	}
@@ -55,31 +69,29 @@ public class Keyword {
 		return this.type == KeywordType.COLUMN;
 
 	}
-	
+
 	public boolean isVariable() {
 		return this.type == KeywordType.VARIABLE;
 	}
-	
+
 	public boolean isAlias() {
 		return this.type == KeywordType.ALIAS;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		// return always 0 to always invoke equals in sets
 		return 0;
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Keyword) {
 			Keyword keyword = (Keyword) obj;
 			return this.getKeyword().equals(keyword.getKeyword()) && this.getType() == keyword.getType();
-		}
-		else {
+		} else {
 			return super.equals(obj);
 		}
 	}
-	
 
 }

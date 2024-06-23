@@ -26,13 +26,13 @@ import gr.sqlbrowserfx.utils.SqlFormatter;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 
 public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String> {
-
+	
 	private static final Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
 	private static String DB_TYPE = "";
-	private static String[] FUNCTIONS;
-	private static String[] TYPES;
-	private static String[] KEYWORDS;
+	private static List<String> FUNCTIONS;
+	private static List<String> TYPES;
+	private static List<String> KEYWORDS;
 
 	private static final Set<Keyword> KEYWORDS_lIST = new LinkedHashSet<>();
 	private static final Map<String, Set<String>> COLUMNS_MAP = new HashMap<>();
@@ -56,9 +56,10 @@ public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String>
 	}
 
 	private static void init() {
-		FUNCTIONS = getAutocomplteWords("funcs");
-		TYPES = getAutocomplteWords("types");
-		KEYWORDS = getAutocomplteWords("sql");
+		var funcs = getAutocomplteWords("funcs");
+		FUNCTIONS = funcs.stream().map(dto -> (String) dto.get("name")).toList();
+		TYPES = getAutocomplteWords("types").stream().map(dto -> (String) dto.get("name")).toList();
+		KEYWORDS = getAutocomplteWords("sql").stream().map(dto -> (String) dto.get("name")).toList();
 
 		KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
 		FUNCTIONS_PATTERN = "\\b(" + String.join("|", FUNCTIONS) + ")\\b";
@@ -67,23 +68,20 @@ public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String>
 				+ "|(?<STRING2>" + STRING_PATTERN_2 + ")" + "|(?<COMMENT>" + COMMENT_PATTERN + ")" + "|(?<METHOD>" + METHOD_PATTERN + ")"
 				+ "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
 
-		KEYWORDS_lIST.addAll(Arrays.stream(SqlCodeAreaSyntaxProvider.KEYWORDS)
-				.map(kw -> new Keyword(kw, KeywordType.KEYWORD)).toList());
-		KEYWORDS_lIST.addAll(Arrays.stream(SqlCodeAreaSyntaxProvider.TYPES)
-				.map(kw -> new Keyword(kw, KeywordType.TYPE)).toList());
-		KEYWORDS_lIST.addAll(Arrays.stream(SqlCodeAreaSyntaxProvider.FUNCTIONS)
-				.map(kw -> new Keyword(kw, KeywordType.FUNCTION)).toList());
+		KEYWORDS_lIST.addAll(SqlCodeAreaSyntaxProvider.KEYWORDS.stream().map(kw -> new Keyword(kw, KeywordType.KEYWORD)).toList());
+		KEYWORDS_lIST.addAll(SqlCodeAreaSyntaxProvider.TYPES.stream().map(kw -> new Keyword(kw, KeywordType.TYPE)).toList());
+		KEYWORDS_lIST.addAll(funcs.stream().map(dto -> new Keyword((String) dto.get("name"), (String) dto.get("description"), KeywordType.FUNCTION)).toList());
 	}
 
-	private static String[] getAutocomplteWords(String category) {
-		List<String> list = new ArrayList<>();
+	private static List<HashMap<String, Object>> getAutocomplteWords(String category) {
+		var list = new ArrayList<HashMap<String, Object>>();
 		try {
 			SqlBrowserFXAppManager.getConfigSqlConnector().executeQuery(
-					"select name from autocomplete where category= ? and type in (?,'sql') order by name",
+					"select name, description from autocomplete where category= ? and type in (?,'sql') order by name",
 					Arrays.asList(new Object[] { category, DB_TYPE }), rset -> {
 						try {
-							HashMap<String, Object> dto = DTOMapper.map(rset);
-							list.add((String) dto.get("name"));
+							var dto = DTOMapper.map(rset);
+							list.add(dto);
 						} catch (Exception e) {
 							logger.error(e.getMessage(), e);
 						}
@@ -92,8 +90,7 @@ public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String>
 			logger.error(e.getMessage(), e);
 		}
 
-		String[] array = new String[list.size()];
-		return list.toArray(array);
+		return list;
 	}
 
 	public static void bind(List<Keyword> list) {

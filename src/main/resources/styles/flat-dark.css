@@ -4,6 +4,7 @@
 	-fx-base: #111;
 	-fx-primary-color: derive(-fx-base, 12%);
 	-fx-secondary-color: derive(-fx-base, 20%);
+	-fx-secondary-light-color: derive(-fx-base, 90%);
 	-fx-hover-color: derive(-fx-base, 30%);
 	-fx-dark-color: derive(-fx-base, 6%);
 	-fx-diagram-color: -fx-hover-color;
