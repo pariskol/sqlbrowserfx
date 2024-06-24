@@ -834,12 +834,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		sp.setFitToWidth(true);
 		popOver = new CustomPopOver(sp);
 
-		if (sqlTableView.getPrimaryKey() != null) {
-			Button editBtn = new Button("Edit", JavaFXUtils.createIcon("/icons/check.png"));
-			editBtn.setTooltip(new Tooltip("Edit"));
-			editBtn.setOnAction(submitEvent -> this.updateRecordOfSqlTableView(editBox, sqlTableRow));
-			editBox.setActionButton(editBtn);
-		}
+		Button editBtn = new Button("Edit", JavaFXUtils.createIcon("/icons/check.png"));
+		editBtn.setTooltip(new Tooltip("Edit"));
+		editBtn.setOnAction(submitEvent -> this.updateRecordOfSqlTableView(editBox, sqlTableRow));
+		editBox.setActionButton(editBtn);
 
 		// remove listener on close
 		popOver.setOnHidden(windowEvent -> sqlTableRow.removeObserver(editBox));
