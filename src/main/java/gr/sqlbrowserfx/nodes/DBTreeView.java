@@ -528,6 +528,10 @@ public class DBTreeView extends TreeView<String>
 		return searchBox;
 	}
 
+	public CustomTextField getSearchField() {
+		return this.searchField;
+	}
+	
 	public void showSearchPopup(Node owner) {
 		var popOver = new CustomPopOver(new HBox(searchField, nextSearchResultButton));
 		popOver.show(owner);

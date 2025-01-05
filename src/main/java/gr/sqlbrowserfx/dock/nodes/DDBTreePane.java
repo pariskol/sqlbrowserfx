@@ -115,7 +115,7 @@ public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner, I
 	@Override
 	public void setInputMap() {
 		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
-				action -> dbTreeView.showSearchPopup(searchButton)));
+				action -> dbTreeView.getSearchField().requestFocus()));
 	}
 	
 	@Override

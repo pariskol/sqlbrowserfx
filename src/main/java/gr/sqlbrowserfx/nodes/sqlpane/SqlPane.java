@@ -348,7 +348,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	@Override
 	public void setInputMap() {
 		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
-				action -> this.searchButtonAction()));
+				action -> this.searchField.requestFocus()));
 		Nodes.addInputMap(this,
 				InputMap.consume(EventPattern.keyPressed(KeyCode.C, KeyCombination.CONTROL_DOWN), action -> {
 					this.copyAction();
