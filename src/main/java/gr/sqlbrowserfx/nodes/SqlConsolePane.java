@@ -198,7 +198,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         createFileSearchPopover();
 
         Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
-        fileSearchPopOver.show(searchButton, boundsInScene.getMaxX() - 620,
+        fileSearchPopOver.show(toolbar, boundsInScene.getMaxX() - 620,
                 boundsInScene.getMinY());
     }
 
