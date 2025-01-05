@@ -7,12 +7,15 @@ import gr.sqlbrowserfx.conn.SqlTable;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
 import javafx.scene.Group;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 
-public class DbDiagramPane extends ScrollPane {
+public class DbDiagramPane extends ScrollPane implements ContextMenuOwner {
 
 	private int counter = 0;
 	private int rows = 0;
@@ -21,11 +24,22 @@ public class DbDiagramPane extends ScrollPane {
 
 	private final Pane diagramPane = new Pane();
 	private final List<SqlTableNode> diagramNodes = new ArrayList<>();
+	private SqlTableNode selectedDiagramNode = null;
+	private ContextMenu contextMenu = createContextMenu();
 
 	public DbDiagramPane() {
+		setOnMouseClicked(mouseEvent -> {
+			// mouse event handler is used instead of setContextMenu() because setContextMenu() seems to stop event propagation to cells
+			contextMenu.hide();
+			if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+		        contextMenu.show(this, mouseEvent.getScreenX(), mouseEvent.getScreenY());
+		        return;
+		    }
+		});
 	}
 	
 	public DbDiagramPane(List<SqlTable> tables) {
+		this();
 		init(tables);
 	}
 	
@@ -42,35 +56,90 @@ public class DbDiagramPane extends ScrollPane {
 	}
 	
 	public void init(List<SqlTable> tables) {
-		this.grid = new int[(int) Math.ceil(tables.size() / COLS_NUM) + 1][COLS_NUM];
-		
-		this.setContent(diagramPane);
+	    this.grid = new int[(int) Math.ceil(tables.size() / COLS_NUM) + 1][COLS_NUM];
+	    this.setContent(diagramPane);
 
-		tables.forEach(table -> {
-			final var tableDiagramNode = new SqlTableNode(table);
-			var node = new Group(tableDiagramNode);
+	    tables.forEach(table -> {
+	        final var tableDiagramNode = new SqlTableNode(table);
+	        var node = new Group(tableDiagramNode);
 
-			if (counter == COLS_NUM) {
-				rows++;
-				counter = 0;
-			}
-			
-			var sizeOfCellAbove = getSizeOfCellsAbove();
-			var extraSpace = sizeOfCellAbove * 15;
+	        if (counter == COLS_NUM) {
+	            rows++;
+	            counter = 0;
+	        }
 
-			node.relocate(20 + counter * 240, 20 + rows * 300 + extraSpace);
-			this.grid[rows][counter] = table.getColumns().size();
-			tableDiagramNode.setOnMouseEntered(event -> highlightRelatedTableNodes(tableDiagramNode));
-			tableDiagramNode.setOnMouseExited(event -> clearHighlight(tableDiagramNode));
+	        var sizeOfCellAbove = getSizeOfCellsAbove();
+	        var extraSpace = sizeOfCellAbove * 15;
 
-			diagramNodes.add(tableDiagramNode);
-			diagramPane.getChildren().add(node);
-			
-			counter++;
-		});
-		
-		JavaFXUtils.timer(500, this::connectAllTableNodes);
+	        // Initial position
+	        double x = 20 + counter * 240;
+	        double y = 20 + rows * 300 + extraSpace;
+
+	        // Adjust position to avoid overlap
+	        var adjustedPosition = adjustPositionToAvoidOverlap(x, y, tableDiagramNode);
+	        x = adjustedPosition[0];
+	        y = adjustedPosition[1];
+
+	        node.relocate(x, y);
+	        this.grid[rows][counter] = table.getColumns().size();
+
+	        tableDiagramNode.setOnMouseClicked(event -> {
+	        	highlightRelatedTableNodes(tableDiagramNode);
+	        	selectedDiagramNode = tableDiagramNode;
+	        });
+
+	        diagramNodes.add(tableDiagramNode);
+	        diagramPane.getChildren().add(node);
+
+	        counter++;
+	    });
+
+	    JavaFXUtils.timer(500, this::connectAllTableNodes);
 	}
+
+	// Method to adjust node positions to avoid overlap
+	private double[] adjustPositionToAvoidOverlap(double x, double y, SqlTableNode newNode) {
+	    double newX = x;
+	    double newY = y;
+	    boolean overlaps;
+
+	    do {
+	        overlaps = false;
+
+	        for (SqlTableNode existingNode : diagramNodes) {
+	            if (nodesOverlap(newX, newY, newNode, existingNode)) {
+	                // If overlap detected, shift the new node's position
+	                overlaps = true;
+	                newX += 50; // Shift by 50px horizontally
+	                if (newX > diagramPane.getWidth() - 200) {
+	                    // Wrap to a new row if reaching diagram pane boundary
+	                    newX = 20;
+	                    newY += 300;
+	                }
+	                break;
+	            }
+	        }
+	    } while (overlaps);
+
+	    return new double[]{newX, newY};
+	}
+
+	// Method to check if two nodes overlap
+	private boolean nodesOverlap(double x, double y, SqlTableNode newNode, SqlTableNode existingNode) {
+	    double newWidth = newNode.getWidth();
+	    double newHeight = newNode.getHeight();
+
+	    double existingX = existingNode.getLayoutX();
+	    double existingY = existingNode.getLayoutY();
+	    double existingWidth = existingNode.getWidth();
+	    double existingHeight = existingNode.getHeight();
+
+	    return x < existingX + existingWidth &&
+	           x + newWidth > existingX &&
+	           y < existingY + existingHeight &&
+	           y + newHeight > existingY;
+	}
+
 	
 	// check length of cells above current cell
 	private int getSizeOfCellsAbove() {
@@ -88,6 +157,8 @@ public class DbDiagramPane extends ScrollPane {
 	}
 
 	private void highlightRelatedTableNodes(SqlTableNode tableDiagramNode) {
+		clearAllHighligts();
+		
 		tableDiagramNode.highlight();
 		diagramNodes.stream()
 			.filter(node -> tableDiagramNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
@@ -101,6 +172,10 @@ public class DbDiagramPane extends ScrollPane {
 	        	"""
 			);
 		});
+	}
+	
+	private void clearAllHighligts() {
+		diagramNodes.forEach(diagramNode -> clearHighlight(diagramNode));
 	}
 	
 	private void clearHighlight(SqlTableNode tableDiagramNode) {
@@ -145,6 +220,17 @@ public class DbDiagramPane extends ScrollPane {
         });
         
         return lines;
+	}
+
+	@Override
+	public ContextMenu createContextMenu() {
+		var showSchema = new MenuItem("Show schema");
+		showSchema.setOnAction(event -> {
+			if (selectedDiagramNode != null) {
+				selectedDiagramNode.showSchemaPopup();
+			}
+		});
+		return new ContextMenu(showSchema);
 	}
 
 }
