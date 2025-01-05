@@ -14,7 +14,9 @@ import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 
 public class SqlBrowserFXAppManager {
 
-	private static final SqlConnector SQL_CONNECTOR = new SqliteConnector("./sqlbrowser.db");
+	public final static String INTERNAL_DB_PATH = "./sqlbrowser.db";
+
+	private static final SqlConnector SQL_CONNECTOR = new SqliteConnector(INTERNAL_DB_PATH);
 	private static final List<DSqlPane> DSQL_PANES = new ArrayList<>();
 	private static final List<SqlPane> SQL_PANES = new ArrayList<>();
 	private static final List<DDBTreeView> DB_TREE_VIEWS = new ArrayList<>();

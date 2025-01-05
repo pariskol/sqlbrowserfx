@@ -15,9 +15,7 @@ import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.geometry.Insets;
-import javafx.geometry.NodeOrientation;
 import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -28,6 +26,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
@@ -55,9 +54,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 		columns = sqlTableView.getColumnsNames();
 		for (String columnName : columns) {
 			Label label = new Label(columnName);
-			label.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
 			label.setTooltip(new Tooltip(columnName));
-			label.setAlignment(Pos.CENTER_RIGHT);
 			TextArea textArea = new TextArea();
 			textArea.setPrefRowCount(1);
 			textArea.setPrefColumnCount(10);
@@ -163,7 +160,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 
 			if (sqlTableRow != null && sqlTableView.getPrimaryKey() != null && sqlTableView.getPrimaryKey().contains(columnName)) {
 				textArea.setEditable(false);
-				textArea.setTooltip(new Tooltip("Primary key can't be edit"));
+				textArea.setTooltip(new Tooltip("Primary key can't be edited"));
 				label.setGraphic(JavaFXUtils.createIcon("/icons/primary-key.png"));
 			} else if (sqlTableRow != null && sqlTableView.getSqlTable().isForeignKey(columnName)) {
 				textArea.setTooltip(new Tooltip("Foreign key"));
@@ -175,8 +172,11 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 				label.prefWidthProperty().bind(node.widthProperty().multiply(0.4));
 				textArea.prefWidthProperty().bind(node.widthProperty().multiply(0.6));
 			}
+			else {
+				label.setMaxWidth(Double.MAX_VALUE);
+				HBox.setHgrow(label, Priority.ALWAYS);
+			}
 
-			node.setAlignment(Pos.CENTER_RIGHT);
 			centerBox.getChildren().add(node);
 		}
 		
@@ -239,20 +239,11 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 		return toolbar;
 	}
 
-	public void setBarLeft(FlowPane bar) {
-		this.toolbar = bar;
-		this.toolbar.setOrientation(Orientation.VERTICAL);
-		this.toolbar.prefHeightProperty().bind(centerBox.heightProperty());
-		this.setBottom(null);
-		this.setLeft(bar);
-	}
-	
-	public void setBarBottom(FlowPane bar) {
+	public void setToolbar(FlowPane bar) {
 		this.toolbar = bar;
 		this.toolbar.setOrientation(Orientation.HORIZONTAL);
 		this.toolbar.prefWidthProperty().bind(centerBox.widthProperty());
-		this.setLeft(null);
-		this.setBottom(bar);
+		this.setTop(this.toolbar);
 	}
 
 	public ScrollPane getScrollPane() {

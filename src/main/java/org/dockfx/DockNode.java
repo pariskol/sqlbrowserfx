@@ -20,7 +20,6 @@
 
 package org.dockfx;
 
-import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;

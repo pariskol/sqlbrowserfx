@@ -1,27 +1,6 @@
 package gr.sqlbrowserfx.nodes;
 
-import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.nodes.codeareas.SearchableCodeArea;
-import gr.sqlbrowserfx.utils.JavaFXUtils;
-import javafx.application.Platform;
-import javafx.geometry.Orientation;
-import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.FlowPane;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
-import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.wellbehaved.event.EventPattern;
-import org.fxmisc.wellbehaved.event.InputMap;
-import org.fxmisc.wellbehaved.event.Nodes;
-
-import java.awt.*;
+import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.File;
@@ -33,6 +12,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
+
+import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.codeareas.SearchableCodeArea;
+import gr.sqlbrowserfx.utils.JavaFXUtils;
+import javafx.application.Platform;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
 
 public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, InputMapOwner {
 
@@ -51,7 +51,7 @@ public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, Inpu
         historyArea.setFocusTraversable(false);
         historyArea.prefWidthProperty().bind(this.widthProperty());
 
-        setLeft(createToolbar());
+        setTop(createToolbar());
         setCenter(new VirtualizedScrollPane<>(historyArea));
         setBottom(commandLineField);
 
@@ -187,7 +187,6 @@ public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, Inpu
                 clearHistoryButton,
                 toggleHistoryListButton
         );
-        toolbar.setOrientation(Orientation.VERTICAL);
         return toolbar;
     }
 }

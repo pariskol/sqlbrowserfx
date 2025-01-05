@@ -40,13 +40,14 @@ public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner, I
 	public DDBTreePane(String dbPath, SqlConnector sqlConnector) {
 		super();
 		this.sqlConnector = sqlConnector;
-		this.toolBar = this.createToolbar();
 		// when dbTreeView is ready fires a simple event 
 		this.dbTreeView = new DDBTreeView(dbPath, sqlConnector, this);
 		this.dbTreeView.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> Platform.runLater(() -> this.setCenter(this.dbTreeView)));
+		this.toolBar = this.createToolbar();
+
 		this.setInputMap();
 
-		this.setLeft(toolBar);
+		this.setTop(toolBar);
 		this.setLoading(true);
 	}
 	
@@ -72,7 +73,8 @@ public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner, I
 		addButton.setOnAction(actionEvent -> {
 			TableCreationPane tableCreationPane = new TableCreationPane(this.sqlConnector);
 			tableCreationPane.addObserver(this.dbTreeView);
-			new DockNode(asDockNode().getDockPane(), tableCreationPane, "Create New Table", JavaFXUtils.createIcon("/icons/add.png"), 1050.0, 600.0);
+			new DockNode(asDockNode().getDockPane(), tableCreationPane, "Create New Table", JavaFXUtils.createIcon("/icons/add.png"), 1200.0, 600.0);
+			
 		});
 		addButton.setTooltip(new Tooltip("Open table creator"));
 
@@ -104,7 +106,8 @@ public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner, I
 			}
 		});
 		refreshButton.setTooltip(new Tooltip("Refresh"));
-		FlowPane toolbar =  new FlowPane(searchButton, addButton, deleteButton, scemaDetailsButton, refreshButton);
+		
+		FlowPane toolbar =  new FlowPane(dbTreeView.getSearchBox(), addButton, refreshButton);
 		toolbar.setPrefWidth(addButton.getWidth());
 		return toolbar;
 	}

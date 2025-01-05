@@ -210,7 +210,11 @@ public class DialogFactory {
 		});
 	}
 	
-	public static void createErrorNotification(String title, String message, Throwable t) {
+	public static void createErrorNotification(String title, String message) {
+		createErrorNotification(title, message, null);
+	}
+	
+	public static void createErrorNotification(String title, String message, Throwable throwable) {
 		LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(message);
 		StringBuilder formattedMessage = new StringBuilder(message);
 		int splitSize = 40;
@@ -233,7 +237,9 @@ public class DialogFactory {
 					.hideAfter(Duration.seconds(2))
 					.position(NOTIFICATION_POS)
 					.onAction(actionEvent -> {
-						createErrorDialog(t, null);
+						if (throwable != null ) {
+							createErrorDialog(throwable, null);
+						}
 					})
 					.owner(SqlBrowserFXApp.STAGE)
 					.showError();

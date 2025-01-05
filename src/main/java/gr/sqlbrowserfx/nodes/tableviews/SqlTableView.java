@@ -49,6 +49,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 
 	protected SimpleStringProperty titleProperty;
 	protected SimpleBooleanProperty autoResizeProperty = new SimpleBooleanProperty(false);
+	private SimpleBooleanProperty areCellsEditableProperty = new SimpleBooleanProperty(true);
 
 	private SqlTableViewEditableCell selectedCell;
 
@@ -199,15 +200,14 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 
 		// this exception handling is needed in case a raw sql query
 		// was performed and joins many tables
-		if (!this.isFilledByQuery()) {
-			try {
-				String primaryKey = sqlConnector.findPrimaryKey(sqlTable.getName());
-				sqlTable.setPrimaryKey(primaryKey);
-				List<String> foreignKeys = sqlConnector.findForeignKeys(sqlTable.getName());
-				sqlTable.setForeignKeys(foreignKeys);
-			} catch(SQLException e) {
-				logger.info(e.getMessage());
-			}
+		try {
+			String primaryKey = sqlConnector.findPrimaryKey(sqlTable.getName());
+			sqlTable.setPrimaryKey(primaryKey);
+			areCellsEditableProperty.set(primaryKey != null);
+			List<String> foreignKeys = sqlConnector.findForeignKeys(sqlTable.getName());
+			sqlTable.setForeignKeys(foreignKeys);
+		} catch(SQLException e) {
+			DialogFactory.createErrorNotification(e);
 		}
 	}
 	
@@ -278,6 +278,10 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 		});
 	}
 
+	public SimpleBooleanProperty areCellsEditableProperty() {
+		return this.areCellsEditableProperty;
+	}
+	
 	public List<String> getColumnsNames() {
 		return columns;
 	}
@@ -518,7 +522,9 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 		}
 		query = new StringBuilder(query.substring(0, query.length() - 1));
 		query.append(" where ");
-		String[] keys = this.getPrimaryKey().split(",");
+		
+		String primaryKey = this.getPrimaryKey();
+		String[] keys = primaryKey.split(",");
 		for (String key : keys) {
 			query.append(key).append(" = ? and ");
 			params.add(sqlTableRow.get(key));

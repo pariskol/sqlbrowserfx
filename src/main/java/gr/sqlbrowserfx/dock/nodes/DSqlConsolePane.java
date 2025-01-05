@@ -72,8 +72,8 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 		this.sqlPane = sqlPane;
 		this.destroySplitPane();
 		this.getChildren().clear();
+		this.setTop(getToolbar());
 		this.setCenter(getQueryTabPane());
-		this.setLeft(getToolbar());
 	}
 
 	//Async function , runs into another thread

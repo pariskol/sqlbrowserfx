@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.controlsfx.control.PopOver;
+import org.controlsfx.control.textfield.CustomTextField;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
@@ -42,7 +43,6 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.KeyCode;
@@ -71,13 +71,15 @@ public class DBTreeView extends TreeView<String>
 
 	private Integer lastSelectedItemPos = 0;
 
-	private final TextField searchField;
+	private final CustomTextField searchField;
 	private DDBTreePane parent = null;
 	private final List<TreeItem<String>> searchResultsList = new ArrayList<>();
 	private final Button nextSearchResultButton;
 	
 	private final SimpleBooleanProperty hasSelectedSchemaProperty = new SimpleBooleanProperty(false);
 	private final SimpleBooleanProperty canSelectedOpenProperty = new SimpleBooleanProperty(false);
+	private HBox searchBox;
+	private String currentSearchPattern;
 
 	
 
@@ -119,17 +121,20 @@ public class DBTreeView extends TreeView<String>
 //		this.setRoot(rootItem);
 		this.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-		searchField = new TextField();
+		searchField = new CustomTextField();
 		searchField.setPromptText("Search...");
+		searchField.setRight(JavaFXUtils.createIcon("/icons/magnify.png"));
 		searchField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
-				this.searchFieldAction();
+				this.searchFieldAction(true);
 			}
 		});
 		nextSearchResultButton = new Button("", JavaFXUtils.createIcon("/icons/next.png"));
 		nextSearchResultButton.setOnAction(event -> {
-			if (searchResultsList.isEmpty())
-				return;
+			if (!searchField.getText().equals(currentSearchPattern)) {
+				this.searchFieldAction(false);
+			}
+
 			lastSelectedItemPos = lastSelectedItemPos == searchResultsList.size() - 1 ? 0 : ++lastSelectedItemPos;
 			this.getSelectionModel().clearSelection();
 			this.getSelectionModel().select(searchResultsList.get(lastSelectedItemPos));
@@ -137,6 +142,7 @@ public class DBTreeView extends TreeView<String>
 			this.scrollTo(row);
 		});
 
+		searchBox = new HBox(searchField, nextSearchResultButton);
 		this.setInputMap();
 	}
 
@@ -513,10 +519,14 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	public void showSearchPopup() {
-		var popOver = new PopOver(new HBox(searchField, nextSearchResultButton));
+		var popOver = new PopOver();
 		popOver.setArrowSize(0);
 		popOver.show(this);
     }
+	
+	public HBox getSearchBox() {
+		return searchBox;
+	}
 
 	public void showSearchPopup(Node owner) {
 		var popOver = new CustomPopOver(new HBox(searchField, nextSearchResultButton));
@@ -690,7 +700,12 @@ public class DBTreeView extends TreeView<String>
 		clipboard.setContents(stringSelection, null);
 	}
 
-	private void searchFieldAction() {
+	private void searchFieldAction(boolean doSelectItems) {
+		if (searchField.getText().isEmpty()) {
+			return;
+		}
+		
+		currentSearchPattern = searchField.getText();
 		this.lastSelectedItemPos = -1;
 		this.searchResultsList.clear();
 		this.getSelectionModel().clearSelection();
@@ -700,6 +715,10 @@ public class DBTreeView extends TreeView<String>
 		searchRootItem(indexesRootItem);
 		searchRootItem(proceduresRootItem);
 		searchRootItem(functionsRootItem);
+		
+		if (doSelectItems) {
+			searchResultsList.forEach(treeItem -> this.getSelectionModel().select(treeItem));
+		}
 	}
 
 	private void searchRootItem(TreeItem<String> rootItem) {
@@ -708,7 +727,6 @@ public class DBTreeView extends TreeView<String>
 
 		for (var t : rootItem.getChildren()) {
 			if (t.getValue().matches("(?i:.*" + searchField.getText() + ".*)")) {
-				this.getSelectionModel().select(t);
 				searchResultsList.add(t);
 			}
 		}

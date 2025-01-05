@@ -228,7 +228,7 @@
 	/* Reset the selected tab background to the default */
 	-fx-border-color: -fx-accent transparent transparent transparent;
 	/* Border color */
-	-fx-border-radius: 5.0px 5.0px 0.0 0.0;
+	-fx-border-radius: 0.0 0.0 0.0 0.0;
 	/* Border radius (top-left, top-right, bottom-right, bottom-left) */
 	/* Border color */
 	-fx-border-width: 2.0px;

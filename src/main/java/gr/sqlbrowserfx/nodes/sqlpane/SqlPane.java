@@ -21,6 +21,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.PopOver;
+import org.controlsfx.control.textfield.CustomTextField;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
@@ -87,7 +88,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	protected Button refreshButton;
 	protected Button tableSelectButton;
 	protected Button sqlConsoleButton;
-	protected TextField searchField;
+	protected CustomTextField searchField;
 	protected CheckBox resizeModeCheckBox;
 	protected CheckBox fullModeCheckBox;
 	private final CheckBox limitModeCheckBox;
@@ -100,6 +101,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	private Tab addRecordTab;
 	private final Tab addTableTab;
 	private final Label rowsCountLabel;
+	private final ContextMenu contextMenu = this.createContextMenu();
 	protected TabPane tablesTabPane;
 
 	protected SqlConnector sqlConnector;
@@ -128,14 +130,13 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		pathField = new TextField();
 
 		toolBar = this.createToolbar();
-		toolBar.setOrientation(Orientation.VERTICAL);
 
 		tablesTabPane = new TabPane();
 
 		addTableTab = new Tab("");
 		addTableTab.setGraphic(JavaFXUtils.createIcon("/icons/add.png"));
 		addTableTab.setClosable(false);
-		tablesTabPane.getTabs().add(addTableTab);
+//		tablesTabPane.getTabs().add(addTableTab);
 
 		tablesTabPane.setOnMouseClicked(mouseEvent -> this.tablesTabPaneClickAction());
 
@@ -154,7 +155,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		limitModeCheckBox = new CheckBox("Lines limit " + linesLimit);
 		rowsCountLabel = new Label("0 rows");
 
-		this.setLeft(toolBar);
+		this.setTop(toolBar);
 		this.setCenter(tablesTabPane);
 		this.setBottom(rowsCountLabel);
 
@@ -191,8 +192,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		editButton.setOnAction(mouseEvent -> editButtonAction(this.simulateClickEvent(editButton)));
 		editButton.setTooltip(new Tooltip("Edit selected record"));
 
-		searchField = new TextField();
+		searchField = new CustomTextField();
 		searchField.setPromptText("Search...");
+		searchField.setRight(JavaFXUtils.createIcon("/icons/magnify.png"));
 		searchField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				if (searchField.getText().isEmpty()) {
@@ -250,8 +252,9 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			columnsSettingsButton.setOnMouseClicked(mouseEvent -> this.columnsSettingsButtonAction());
 			columnsSettingsButton.setTooltip(new Tooltip("Select visible columns"));
 
-			return new FlowPane(searchButton, tableSelectButton, columnsSettingsButton, settingsButton, refreshButton,
-					addButton, editButton, deleteButton, importCsvButton, exportCsvButton, sqlConsoleButton);
+			return new FlowPane(searchField, columnsSettingsButton, settingsButton, 
+					addButton, editButton, deleteButton, importCsvButton, exportCsvButton,
+					sqlConsoleButton);
 		} else {
 			return new FlowPane(searchButton, settingsButton);
 		}
@@ -310,6 +313,14 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		sqlTableView.setSqlConnector(sqlConnector);
 		sqlTableView.setOnMouseClicked(mouseEvent -> {
 			sqlTableView.requestFocus();
+			
+			// mouse event handler is used instead of setContextMenu() because setContextMenu() seems to stop event propagation to cells
+			contextMenu.hide();
+			if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+		        contextMenu.show(this, mouseEvent.getScreenX(), mouseEvent.getScreenY());
+		        return;
+		    }
+			
 			if (mouseEvent.getClickCount() == 2) {
 				SqlTableView tableView = getSelectedSqlTableView();
 				if (tableView.getSelectionModel().getSelectedItem() != null) {
@@ -326,7 +337,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 				}
 			}
 		});
-		sqlTableView.setContextMenu(this.createContextMenu());
+		
 		SqlTableTab tab = new SqlTableTab(EMPTY, sqlTableView);
 		sqlTableView.setParent(tab);
 		tab.customTextProperty().addListener((observable, oldValue, newValue) -> determineTabIcon(tab));
@@ -475,8 +486,10 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			SqlTableView sqlTableView = getSelectedSqlTableView();
 			if (sqlTableView.areCellsEditable() && sqlTableView.getSelectedCell() != null)
 				sqlTableView.getSelectedCell().startEdit();
+			else
+				DialogFactory.createErrorNotification("Cell is not editable", "Primary key not found to perform edit");
 		});
-
+		
 		MenuItem menuItemCopyCell = new MenuItem("Copy Cell", JavaFXUtils.createIcon("/icons/copy.png"));
 
 		menuItemCopyCell.setOnAction(event -> {
@@ -501,17 +514,12 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		menuItemCompare.setOnAction(actionEvent -> compareAction(simulateClickEvent()));
 
 		contextMenu.getItems().addAll(menuItemCopyCell, menuItemCopy, new SeparatorMenuItem(), menuItemEdit, menuItemCellEdit,
-				menuItemDelete, new SeparatorMenuItem(), menuItemSearch, menuItemCompare);
+				menuItemDelete, new SeparatorMenuItem(), menuItemCompare);
 
 		return contextMenu;
 	}
 
 	private SqlTableRowEditBox createEditBox(final MapTableViewRow sqlTableRow, boolean isResizable) {
-		return createEditBox(sqlTableRow, isResizable, Orientation.HORIZONTAL);
-	}
-
-	private SqlTableRowEditBox createEditBox(final MapTableViewRow sqlTableRow, boolean isResizable,
-			Orientation toolBarOrientation) {
 		SqlTableRowEditBox editBox = new SqlTableRowEditBox(getSelectedSqlTableView(), sqlTableRow, isResizable);
 
 		Button copyButton = new Button("", JavaFXUtils.createIcon("/icons/copy.png"));
@@ -529,14 +537,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		refreshButton.setOnAction(event -> editBox.refresh());
 		refreshButton.setFocusTraversable(false);
 
-		FlowPane sideBar = new FlowPane(Orientation.VERTICAL, copyButton, pasteButton, refreshButton);
-
-        switch (toolBarOrientation) {
-            case VERTICAL -> editBox.setBarBottom(sideBar);
-            case HORIZONTAL -> editBox.setBarLeft(sideBar);
-            default -> {
-            }
-        }
+		FlowPane toolbar = new FlowPane(copyButton, pasteButton, refreshButton);
+		editBox.setToolbar(toolbar);
 
 		if (isResizable) {
 			for (Node node : editBox.getChildren()) {
@@ -841,7 +843,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		// remove listener on close
 		popOver.setOnHidden(windowEvent -> sqlTableRow.removeObserver(editBox));
-		popOver.show(editButton, event.getScreenX(), event.getScreenY());
+		popOver.show(toolBar, event.getScreenX(), event.getScreenY());
 		editBox.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
 				popOver.hide();
@@ -920,7 +922,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 					((SqlTableRowEditBox) node).close();
 				}
 			});
-			popOver.show(editButton, mouseEvent.getScreenX(), mouseEvent.getScreenY());
+			popOver.show(toolBar, mouseEvent.getScreenX(), mouseEvent.getScreenY());
 		}
 	}
 
@@ -960,7 +962,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 
 		settingsButton.requestFocus();
-		popOver = new CustomPopOver(new VBox(resizeModeCheckBox, fullModeCheckBox, limitModeCheckBox));
+		popOver = new CustomPopOver(new VBox(resizeModeCheckBox, fullModeCheckBox));
 		popOver.show(settingsButton);
 	}
 
@@ -1165,7 +1167,13 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	public void updateRecordOfSqlTableView(final SqlTableRowEditBox editBox, final MapTableViewRow sqlTableRow) {
 		sqlConnector.executeAsync(() -> {
 			try {
-				getSelectedSqlTableView().updateRecord(editBox, sqlTableRow);
+				var sqlTableView = getSelectedSqlTableView();
+				if (sqlTableView.getSqlTable().getPrimaryKey() == null) {
+					DialogFactory.createErrorNotification("Update failed", "Cannot update entry, primary key not found.");
+					return;
+				}
+				
+				sqlTableView.updateRecord(editBox, sqlTableRow);
 				DialogFactory.createNotification("Record update", "Successfully updated!");
 			} catch (Exception e) {
 				DialogFactory.createErrorNotification(e);
@@ -1174,9 +1182,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	protected MouseEvent simulateClickEvent() {
-		SqlTableView sqlTableView = getSelectedSqlTableView();
-		return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, sqlTableView.getContextMenu().getX(),
-				sqlTableView.getContextMenu().getY(), MouseButton.PRIMARY, 1, false, false, false, false, false, false,
+		return new MouseEvent(MouseEvent.MOUSE_CLICKED, 0, 0, contextMenu.getX(),
+				contextMenu.getY(), MouseButton.PRIMARY, 1, false, false, false, false, false, false,
 				false, false, false, false, null);
 		// new MouseEvent(source, target, eventType, x, y, screenX, screenY, button,
 		// clickCount, shiftDown, controlDown, altDown, metaDown, primaryButtonDown,

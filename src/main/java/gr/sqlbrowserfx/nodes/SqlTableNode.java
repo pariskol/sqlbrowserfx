@@ -51,19 +51,18 @@ public class SqlTableNode extends VBox {
 
 		titleLabel.prefWidthProperty().bind(columnsVbox.widthProperty());
 		configureBorder(this);
+	}
+	
+	public void showSchemaPopup() {
+		var schema = DbCash.getSchemaFor(table.getName());
+		SqlCodeArea codeArea = new SqlCodeArea(schema, false, false, true);
+		VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
+		scrollPane.setPrefSize(600, 400);
 
-		this.setOnMouseClicked(event -> {
-			var schema = DbCash.getSchemaFor(table.getName());
-			SqlCodeArea codeArea = new SqlCodeArea(schema, false, false, true);
-			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
-			scrollPane.setPrefSize(600, 400);
-
-			PopOver popOver = new PopOver(scrollPane);
-			popOver.setArrowSize(0);
-			popOver.setDetachable(false);
-			popOver.show(this);
-		});
-
+		PopOver popOver = new PopOver(scrollPane);
+		popOver.setArrowSize(0);
+		popOver.setDetachable(false);
+		popOver.show(this);
 	}
 
 	public SqlTable getSqlTable() {

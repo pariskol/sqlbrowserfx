@@ -30,6 +30,7 @@ import gr.sqlbrowserfx.dock.nodes.DDbDiagramPane;
 import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.DbConfigBox;
 import gr.sqlbrowserfx.nodes.FilesTreeView;
 import gr.sqlbrowserfx.nodes.HelpTabPane;
@@ -43,6 +44,7 @@ import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
 import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
+import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
 import gr.sqlbrowserfx.nodes.tableviews.JSONTableView;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
@@ -58,6 +60,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -451,7 +454,7 @@ public class SqlBrowserFXApp extends Application {
 		var tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.createIcon("/icons/details.png"));
 		tablesTreeViewItem.setOnAction(event -> {
 			var treeView = new DDBTreePane(DB, sqlConnector);
-			DockNode dockNode = new DockNode(treeView, "Structure", JavaFXUtils.createIcon("/icons/details.png"));
+			var dockNode = new DockNode(treeView, "Structure", JavaFXUtils.createIcon("/icons/details.png"));
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 		
@@ -487,7 +490,7 @@ public class SqlBrowserFXApp extends Application {
 
 		menu1.getItems().addAll(sqlPaneViewItem, dbDiagramItem, new SeparatorMenuItem(),
 				filesTreeViewItem, jsonTableViewItem, new SeparatorMenuItem(),
-				sqlConsoleViewItem, terminalViewItem, logItem);
+				sqlConsoleViewItem, logItem);
 
 		final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
@@ -524,14 +527,24 @@ public class SqlBrowserFXApp extends Application {
 		menu3.setGraphic(customGraphic);
 		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
 			if (!isInternalDBShowing) {
-				DSqlPane newSqlPane = new DSqlPane(SqlBrowserFXAppManager.getConfigSqlConnector());
-				newSqlPane.asDockNode().setTitle("SqlBrowserFX Internal Database");
-				newSqlPane.asDockNode().setDockPane(dockPane);
-				newSqlPane.asDockNode().setFloating(true);
-				newSqlPane.createSqlTableTabWithDataUnsafe("connections_history");
-				newSqlPane.createSqlTableTabWithDataUnsafe("saved_queries");
+				var sqlPane = new SqlPane(SqlBrowserFXAppManager.getConfigSqlConnector());
+				sqlPane.createSqlTableTabWithDataUnsafe("connections_history");
+				sqlPane.createSqlTableTabWithDataUnsafe("saved_queries");
 				isInternalDBShowing  = true;
-				newSqlPane.asDockNode().setOnClose(() -> isInternalDBShowing = false);
+				
+				var dbTreeView = new DBTreeView(SqlBrowserFXAppManager.INTERNAL_DB_PATH, SqlBrowserFXAppManager.getConfigSqlConnector());
+				var openTable = new MenuItem("Open");
+				openTable.setOnAction(event -> {
+					var table = dbTreeView.getSelectionModel().getSelectedItem().getValue();
+					sqlPane.createSqlTableTabWithData(table);
+
+				});
+				dbTreeView.setContextMenu(new ContextMenu(openTable));
+				var splitPane = new SplitPane(dbTreeView, sqlPane);
+				splitPane.setDividerPositions(0.25f, 0.75f);
+				var dockNode = new DockNode(dockPane, splitPane, "SqlBrowserFX Internal Database", JavaFXUtils.createIcon("/icons/table.png"));
+				
+				dockNode.setOnClose(() -> isInternalDBShowing = false);
 			}
 		});
 		

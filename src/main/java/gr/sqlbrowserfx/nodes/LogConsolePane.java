@@ -44,7 +44,7 @@ public class LogConsolePane extends BorderPane implements ToolbarOwner {
 		showLinesCheckBox.setSelected(true);
 		followCarretCheckBox.setSelected(true);
 		
-		this.setLeft(this.createToolbar());
+		this.setTop(this.createToolbar());
 		this.setCenter(new VirtualizedScrollPane<>(logCodeArea));
 		
 		this.startTailing();
@@ -78,7 +78,6 @@ public class LogConsolePane extends BorderPane implements ToolbarOwner {
 		});
 		settingsButton.setTooltip(new Tooltip("Adjust settings"));
 		FlowPane toolbar = new FlowPane(settingsButton);
-		toolbar.setOrientation(Orientation.VERTICAL);
 		return toolbar;
 	}
 

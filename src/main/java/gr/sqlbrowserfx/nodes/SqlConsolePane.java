@@ -113,7 +113,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         autoCompleteOnTypeCheckBox.setSelected(true);
 
         openInNewTableViewCheckBox = new CheckBox("Open in new table");
-        openInNewTableViewCheckBox.setSelected(false);
+        openInNewTableViewCheckBox.setSelected(true);
 
         queryTabPane.getSelectionModel().selectedItemProperty().addListener(
                 (ov, oldTab, newTab) -> {
@@ -138,8 +138,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
         toolbar = this.createToolbar();
 
+        this.setTop(toolbar);
         this.setCenter(splitPane);
-        this.setLeft(toolbar);
 
         // initial create one tab
         this.addTab();
@@ -298,8 +298,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         searchButton.setOnMouseClicked(mouseEvent -> this.showFileSearchPopOver());
         searchButton.setTooltip(new Tooltip("Search file"));
 
-        FlowPane toolbar = new FlowPane(searchButton, executeButton, stopExecutionButton, settingsButton, openButton);
-        toolbar.setOrientation(Orientation.VERTICAL);
+        FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton, settingsButton, openButton);
         return toolbar;
     }
 
