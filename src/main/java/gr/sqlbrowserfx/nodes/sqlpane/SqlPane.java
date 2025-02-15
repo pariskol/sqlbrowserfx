@@ -252,7 +252,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			columnsSettingsButton.setOnMouseClicked(mouseEvent -> this.columnsSettingsButtonAction());
 			columnsSettingsButton.setTooltip(new Tooltip("Select visible columns"));
 
-			return new FlowPane(searchField, columnsSettingsButton, settingsButton, 
+			return new FlowPane(searchField, refreshButton, columnsSettingsButton, settingsButton, 
 					addButton, editButton, deleteButton, importCsvButton, exportCsvButton,
 					sqlConsoleButton);
 		} else {
@@ -593,6 +593,8 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		SqlTableView sqlTableView = sqlTableTab.getSqlTableView();
 		sqlQueryRunning = true;
 		String query = "select " + columnsFilter + " from " + table + whereFilter;
+
+		sqlTableView.setQuery(query);
 
 		// TODO: a more abstract implementation is needed for different connectors
 		if (this.isLimitSet()) {
@@ -942,17 +944,28 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 	}
 
 	protected void refreshButtonAction() {
-		// TODO rerun original query in case an sqlcodearea is involved
 		refreshButton.requestFocus();
 		if (!sqlQueryRunning) {
 			if (tablesTabPane.getSelectionModel().getSelectedItem() != null
 					&& !getSelectedTableTab().getCustomText().equals(EMPTY)) {
-				String tableName = getSelectedTableTab().getCustomText();
 				SqlTableTab tab = getSelectedTableTab();
 				tab.startLoading();
-				sqlConnector.executeAsync(() -> this.getDataFromDB(tableName, tab));
-				this.setSearchApplied(false);
-				this.updateRowsCountLabel();
+				sqlConnector.executeAsync(() -> {
+					try {
+						sqlConnector.executeQueryRawSafely(
+							tab.getSqlTableView().getQuery(), 
+							resultSet -> tab.getSqlTableView().setItemsLater(resultSet));
+
+					} catch (SQLException e) {
+						DialogFactory.createErrorNotification(e);
+						if (e.getErrorCode() == MemoryGuard.SQL_MEMORY_ERROR_CODE) {
+							System.gc();
+						}
+					} finally {
+						this.setSearchApplied(false);
+						this.updateRowsCountLabel();
+					}
+				});
 			}
 		}
 	}

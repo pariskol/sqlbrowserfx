@@ -147,6 +147,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
 
 		sqlTableView.setFilledByQuery(true);
+		sqlTableView.setQuery(query);
 		try {
 			sqlTableView.setItemsLater(rset);
 		} catch (SQLException e) {
