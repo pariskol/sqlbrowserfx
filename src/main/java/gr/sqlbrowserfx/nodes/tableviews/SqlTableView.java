@@ -69,6 +69,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 
 	private final Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 	private SqlTableTab parent;
+	private String query;
 
 	public SqlTableView() {
 
@@ -643,5 +644,14 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 	public SimpleBooleanProperty autoResizeProperty() {
 		return autoResizeProperty;
 	}
+
+	public String getQuery() {
+		return query;
+	}
+
+	public void setQuery(String query) {
+		this.query = query;
+	}
+	
 
 }
