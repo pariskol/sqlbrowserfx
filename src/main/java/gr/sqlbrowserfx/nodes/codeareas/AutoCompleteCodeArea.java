@@ -81,7 +81,17 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         searchAndReplacePopOver = new SearchAndReplacePopOver(this);
 		autoCompletePopup = this.createAutoCompletePopup();
 
-        this.setOnKeyTyped(this::autoCompleteAction);
+        this.setOnKeyPressed(event -> {
+        	if (event.isControlDown() || 
+    			event.isShiftDown() || 
+    			event.isAltDown() ||
+    			(!Character.isLetterOrDigit(event.getCharacter().charAt(0)) && !event.getCharacter().equals("."))
+			) {
+        		return;
+        	}
+        	System.out.println(event.getCharacter() + event.getCode());
+        	this.autoCompleteAction(event);
+        });
         this.setContextMenu(this.createContextMenu());
         this.setKeys();
 
@@ -477,21 +487,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         DialogFactory.createNotification("File saved", "File saved at " + new Date());
     }
 
-    protected List<Keyword> calcualtAutocompleteSuggestions(KeyEvent event, int caretPosition, String query) {
-		var ch = event.getCharacter();
-		List<Keyword> suggestions = null;
-
-		if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
-				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
-				|| ch.equals(".") || ch.equals(",") || ch.equals("_") || ch.equals(" ")
-				|| event.getCode() == KeyCode.ENTER
-				|| event.getCode() == KeyCode.BACK_SPACE) {
-			suggestions = this.getQuerySuggestions(query);
-		}
-		
-		return suggestions;
-    }
-    
     protected void autoCompleteAction(KeyEvent event) {
 		var caretPosition = this.getCaretPosition();
 		var query = this.calculateQuery(caretPosition);
@@ -501,7 +496,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 			return;
 		}
 		
-		var suggestions = this.calcualtAutocompleteSuggestions(event, caretPosition, query);
+		var suggestions = this.getQuerySuggestions(query);
 		
 		if (suggestions == null || suggestions.isEmpty()) {
 			this.hideAutocompletePopup();
@@ -546,7 +541,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
                         suggestionsList, KeyEvent.KEY_PRESSED, null, null, KeyCode.ENTER, false, false, false, false)));
     }
 
-    protected void listViewOnEnterAction(ListView<Keyword> suggestionsList, final String query, final int caretPosition,
+    protected void listViewOnEnterAction(ListView<Keyword> suggestionsList, final String query, final int oldCurrentPosition,
                                          KeyEvent keyEvent) {
         final var word = (suggestionsList.getSelectionModel().getSelectedItem() != null)
                 ? suggestionsList.getSelectionModel().getSelectedItem().getKeyword()
@@ -561,10 +556,11 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
                         trl = split[1].length();
                     }
                 }
-                this.replaceText(this.getCaretPosition() - trl, this.getCaretPosition(), word);
+                var currentCaretPosition = this.getCaretPosition();
+                this.replaceText(currentCaretPosition - trl, currentCaretPosition, word);
             } else {
-                this.replaceText(caretPosition - query.length(), caretPosition, word);
-                this.moveTo(caretPosition + word.length() - query.length());
+                this.replaceText(oldCurrentPosition - query.length(), oldCurrentPosition, word);
+                this.moveTo(oldCurrentPosition + word.length() - query.length());
             }
             enableInsertMode(false);
         });

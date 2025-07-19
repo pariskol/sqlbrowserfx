@@ -136,36 +136,27 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		this.analyzeTextForTables(this.getText());
 	}
 	
-	@Override
-	protected List<Keyword> calcualtAutocompleteSuggestions(KeyEvent event, int caretPosition, String query) {
-		var ch = event.getCharacter();
-		List<Keyword> suggestions = null;
+    protected void autoCompleteSavedQuery(KeyEvent event) {
+		var caretPosition = this.getCaretPosition();
+		var query = this.calculateQuery(caretPosition);
 		
-		if (event.isShiftDown() && event.isControlDown() && event.getCode() == KeyCode.SPACE) {
-			suggestions = this.getSavedQueries(query);
-		}
-		else if(ch.equals("(")) {
-			this.insertText(this.getCaretPosition(), ")");
-			this.moveTo(this.getCaretPosition() - 1);
-			return null;
-		}
-		else if ((Character.isLetter(ch.charAt(0)) && autoCompleteProperty().get() && !event.isControlDown())
-				|| (event.isControlDown() && event.getCode() == KeyCode.SPACE)
-				|| ch.equals(".") || ch.equals(",") || ch.equals("_") || ch.equals(" ")
-				|| event.getCode() == KeyCode.ENTER
-				|| event.getCode() == KeyCode.BACK_SPACE) {
-			var isColumnSuggestion = query.contains(".");
-			enableInsertMode(isColumnSuggestion);
-			suggestions = isColumnSuggestion ? this.getColumnsSuggestions(query) : this.getQuerySuggestions(query);
-		}
-		else {
-			suggestions = super.calcualtAutocompleteSuggestions(event, caretPosition, query);
+		if (query.isEmpty()) {
+			this.hideAutocompletePopup();
+			return;
 		}
 		
-		return suggestions;
-	}
-	
-	
+		var suggestions = this.getSavedQueries(query);
+		
+		if (suggestions == null || suggestions.isEmpty()) {
+			this.hideAutocompletePopup();
+			return;
+		}
+		
+		this.showSuggestionsList(suggestions, query, caretPosition);
+		event.consume();
+    }
+    
+    
 	@Override
 	protected void onMouseClicked() {
 		super.onMouseClicked();
@@ -204,6 +195,12 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	protected List<Keyword> getQuerySuggestions(String query) {
 		if (query.isEmpty()) {
 			return null;
+		}
+		var isColumnSuggestion = query.contains(".");
+		enableInsertMode(isColumnSuggestion);
+		
+		if (isColumnSuggestion) {
+			return this.getColumnsSuggestions(query);
 		}
 		
 		return
@@ -311,7 +308,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
         );
 		var autocomplete = InputMap.consume(
 				EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
-				action -> this.autoCompleteAction(new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, true, true, false, false))
+				action -> this.autoCompleteSavedQuery(action)
         );
 		var history = InputMap.consume(
 			EventPattern.keyPressed(KeyCode.H, KeyCombination.CONTROL_DOWN),
