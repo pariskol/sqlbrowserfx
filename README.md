@@ -12,7 +12,7 @@ SqlBrowserFX is a feature rich cross platform sql client for SQLite , MySQL, Mar
 * Support for sql, java files editing via drag and drop.
 * Adjustable responsive ui supporting multiple code areas and tables opened at the same time.
 * Graphical representation of database as tree.
-* Graphical representation of database as diagram.
+* Graphical representation of database as diagram (ERD).
 * Exposure of database to the web as RESTful service with one click.
 * Import, export csv files.
 * Queries History.
@@ -20,9 +20,9 @@ SqlBrowserFX is a feature rich cross platform sql client for SQLite , MySQL, Mar
 * Support for SQLite.
 * Support for MySQL, MariaDB.
 * Partial Support for PostgreSQL.
+* Partial Support for SqlServer.
 * Cross Platform.
 * Css themable (Dark, Light etc).
-* Generation of simple database tables diagram.
 
 ### Prerequisites
 
@@ -37,6 +37,7 @@ You can also run install.sh script , if you are using linux in order to install 
 'sqlfx'.
 
 ### Compatibility with older versions of java
+* Tag 3.11.0 -> Java 21
 * Tag 2.5.0 -> Java 17
 * Tag 1.5.0 -> Java 8
 
