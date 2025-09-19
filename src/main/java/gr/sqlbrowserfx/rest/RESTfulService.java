@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import io.javalin.plugin.bundled.CorsPluginConfig;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -25,8 +24,12 @@ public class RESTfulService {
 	
 	public static void init(SqlConnector sqlConnector) {
 		APP = Javalin.create(config -> {
-			config.plugins.enableCors(cors -> cors.add(CorsPluginConfig::anyHost));
-			config.plugins.enableDevLogging();
+		    config.bundledPlugins.enableCors(cors -> {
+		        cors.addRule(rule -> {
+		            rule.anyHost();
+		        });
+		    });
+		    config.bundledPlugins.enableDevLogging();
 		});
 		APP.exception(Exception.class, (e, ctx) -> {
 			logger.error(e.getMessage());
