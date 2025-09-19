@@ -81,17 +81,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         searchAndReplacePopOver = new SearchAndReplacePopOver(this);
 		autoCompletePopup = this.createAutoCompletePopup();
 
-        this.setOnKeyPressed(event -> {
-        	if (event.isControlDown() || 
-    			event.isShiftDown() || 
-    			event.isAltDown() ||
-    			(!Character.isLetterOrDigit(event.getCharacter().charAt(0)) && !event.getCharacter().equals("."))
-			) {
-        		return;
-        	}
-        	System.out.println(event.getCharacter() + event.getCode());
-        	this.autoCompleteAction(event);
-        });
         this.setContextMenu(this.createContextMenu());
         this.setKeys();
 
@@ -276,6 +265,17 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
                     && keyEvent.getCode() != KeyCode.O) {
                 keyEvent.consume();
             }
+        });
+        this.setOnKeyTyped(keyEvent -> {
+        	if (
+    			this.autoCompleteProperty.get() &&
+    			!keyEvent.isControlDown() &&
+    			!keyEvent.isShiftDown() && 
+    			!keyEvent.isAltDown() &&
+    			(Character.isLetterOrDigit(keyEvent.getCharacter().charAt(0)) || keyEvent.getCharacter().equals("."))
+			) {
+            	this.autoCompleteAction(keyEvent);
+        	}
         });
         this.setInputMap();
     }
