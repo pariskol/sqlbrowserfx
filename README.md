@@ -26,7 +26,7 @@ SqlBrowserFX is a feature rich cross platform sql client for SQLite , MySQL, Mar
 
 ### Prerequisites
 
-* Java 21 +
+* Java 25 +
 * Installation of desired database.
 
 ### Installing
@@ -53,7 +53,6 @@ Run SqlBrowserFX.exe for Windows, or run sqlbrowserfx.sh for Linux.
 * [DockFX](https://github.com/RobertBColton/DockFX) - The docking framework used (a moded version actually).
 * [RichTextFΧ](https://github.com/FXMisc/RichTextFX) - Library which provides editor with syntax highlighting feature.
 * [ControlsFX](https://github.com/controlsfx/controlsfx) - Library which provides many useful custom gui components.
-* [Spark Java](https://github.com/perwendel/spark)  - The web framework used. (Until version 1.5.0)
 * [Javalin](https://github.com/tipsy/javalin) - The NEW web framework used.
 * [Icons8](https://icons8.com/) - The icons used.
 
