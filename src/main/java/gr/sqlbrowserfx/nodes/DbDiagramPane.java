@@ -12,10 +12,11 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 
-public class DbDiagramPane extends ScrollPane implements ContextMenuOwner {
+public class DbDiagramPane extends BorderPane implements ContextMenuOwner {
 
 	private int counter = 0;
 	private int rows = 0;
@@ -48,16 +49,16 @@ public class DbDiagramPane extends ScrollPane implements ContextMenuOwner {
 			ProgressIndicator progressIndicator = new ProgressIndicator();
 			progressIndicator.setMaxHeight(40);
 			progressIndicator.setMaxWidth(40);
-			this.setContent(progressIndicator);
+			this.setCenter(progressIndicator);
 		}
 		else {
-			Platform.runLater(() -> this.setContent(this.diagramPane));
+			Platform.runLater(() -> this.setCenter(new ScrollPane(this.diagramPane)));
 		}
 	}
 	
 	public void init(List<SqlTable> tables) {
 	    this.grid = new int[(int) Math.ceil(tables.size() / COLS_NUM) + 1][COLS_NUM];
-	    this.setContent(diagramPane);
+	    this.setCenter(new ScrollPane(diagramPane));
 
 	    tables.forEach(table -> {
 	        final var tableDiagramNode = new SqlTableNode(table);
