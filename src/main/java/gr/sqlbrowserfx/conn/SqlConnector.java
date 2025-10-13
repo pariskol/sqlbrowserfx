@@ -436,17 +436,14 @@ public abstract class SqlConnector {
 	
 	abstract public void getTriggers(String table, ResultSetAction action) throws SQLException;
 	
-	abstract public void getSchema(String name, ResultSetAction action) throws SQLException;
+	abstract public void getTableSchema(String name, ResultSetAction action) throws SQLException;
+	abstract public void getViewSchema(String name, ResultSetAction action) throws SQLException;
+	abstract public void getIndexSchema(String name, ResultSetAction action) throws SQLException;
+
 
 	public void getContents(ResultSetAction action) throws SQLException {
 		this.executeQuery(getContentsQuery(), action);
 	}
-
-	public abstract String getTableSchemaColumn();
-
-	public abstract String getViewSchemaColumn();
-
-	public abstract String getIndexSchemaColumn();
 
 
 	public String getDriver() {

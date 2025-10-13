@@ -18,10 +18,6 @@ import gr.sqlbrowserfx.LoggerConf;
 
 public class MysqlConnector extends SqlConnector {
 
-	private final String SCHEMA_VIEW_QUERY;
-	private final String SCHEMA_TABLE_QUERY;
-	private final String SCHEMA_INDEX_QUERY;
-
 	private final String database;
 
 	public MysqlConnector(String database, String user, String password) {
@@ -29,17 +25,11 @@ public class MysqlConnector extends SqlConnector {
 				"jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
 				user, password);
 		this.database = database;
-		SCHEMA_VIEW_QUERY = "SHOW CREATE VIEW " + database + ".";
-		SCHEMA_TABLE_QUERY = "SHOW CREATE TABLE " + database + ".";
-		SCHEMA_INDEX_QUERY = "SELECT DISTINCT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = '" + database + "' AND TABLE_NAME = ?";
 	}
 	
 	public MysqlConnector(String url, String database, String user, String password) {
 		super("com.mysql.cj.jdbc.Driver", url, user, password);
 		this.database = database;
-		SCHEMA_VIEW_QUERY = "SHOW CREATE VIEW " + database + ".";
-		SCHEMA_TABLE_QUERY = "SHOW CREATE TABLE " + database + ".";
-		SCHEMA_INDEX_QUERY = "SHOW CREATE TABLE " + database + ".";
 	}
 
 	
@@ -128,18 +118,20 @@ public class MysqlConnector extends SqlConnector {
 	}
 	
 	@Override
-	public void getSchema(String name, ResultSetAction action) throws SQLException {
-		try {
-			this.executeQuery(SCHEMA_TABLE_QUERY + name, action);
-		} catch (SQLException e) {
-			try {
-				this.executeQuery(SCHEMA_VIEW_QUERY + name, action);
-			} catch (SQLException e2) {
-				this.executeQuery(SCHEMA_INDEX_QUERY, Arrays.asList(name), action);
-			}
-		}
+	public void getTableSchema(String name, ResultSetAction action) throws SQLException {
+		this.executeQuery("SHOW CREATE TABLE " + database + "." + name, action);
 	}
-
+	
+	@Override
+	public void getViewSchema(String name, ResultSetAction action) throws SQLException {
+		this.executeQuery("SHOW CREATE VIEW " + database + "." + name, action);
+	}
+	
+	@Override
+	public void getIndexSchema(String name, ResultSetAction action) throws SQLException {
+		throw new RuntimeException("No implemented");
+	}
+	
 	@Override
 	public String findPrimaryKey(String tableName) throws SQLException {
 		StringBuilder primaryKeyBuilder = new StringBuilder();
@@ -176,22 +168,6 @@ public class MysqlConnector extends SqlConnector {
 		return foreignKeys;
 	}
 	
-	@Override
-	public String getTableSchemaColumn() {
-		return "Create Table";
-	}
-
-	@Override
-	public String getViewSchemaColumn() {
-		return "Create View";
-	}
-
-	@Override
-	public String getIndexSchemaColumn() {
-		return "COLUMN_NAME";
-	}
-	
-
 	@Override
 	public String getDbSchema() {
 		return database;

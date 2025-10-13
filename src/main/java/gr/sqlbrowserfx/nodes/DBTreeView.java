@@ -52,8 +52,6 @@ import javafx.scene.layout.HBox;
 public class DBTreeView extends TreeView<String>
 		implements ContextMenuOwner, InputMapOwner, SimpleObserver<String>, SimpleObservable<String> {
 
-	private static final String ACTION_STATEMENT = "ACTION_STATEMENT";
-	private static final String TRIGGER_NAME = "TRIGGER_NAME";
 	private final Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 	private final SqlConnector sqlConnector;
 
@@ -319,9 +317,9 @@ public class DBTreeView extends TreeView<String>
 			// triggers tree item is the 2nd child
 			treeItem.getChildren().get(2).getChildren().clear();
 			sqlConnector.getTriggers(treeItem.getValue(), rset -> {
-				var triggerTreeItem = new TreeItem<>(rset.getString(TRIGGER_NAME),
+				var triggerTreeItem = new TreeItem<>(rset.getString(1),
                         JavaFXUtils.createIcon("/icons/trigger.png"));
-				var schema = rset.getString(ACTION_STATEMENT);
+				var schema = rset.getString(2);
 				triggerTreeItem.getChildren()
 						.add(new TreeItem<>(schema, JavaFXUtils.createIcon("/icons/script.png")));
 				var triggerItems = treeItem.getChildren().get(2).getChildren();
@@ -406,13 +404,25 @@ public class DBTreeView extends TreeView<String>
 		var schemaTree = new TreeItem<>("schema", JavaFXUtils.createIcon("/icons/script.png"));
 		treeItem.getChildren().add(schemaTree);
 	
-		sqlConnector.getSchema(treeItem.getValue(), rset -> {
-			var schema = rset.getString(schemaColumn);
-			// FIXME: find a more abstract way
-			DbCash.addSchemaFor(treeItem.getValue(), schema);
-			var schemaItem = new TreeItem<>(schema);
-			schemaTree.getChildren().add(schemaItem);
-		});
+		if (schemaColumn.equals("table")) {
+			sqlConnector.getTableSchema(treeItem.getValue(), rset -> {
+				var schema = rset.getString(1);
+				// FIXME: find a more abstract way
+				DbCash.addSchemaFor(treeItem.getValue(), schema);
+				var schemaItem = new TreeItem<>(schema);
+				schemaTree.getChildren().add(schemaItem);
+			});
+		}
+		else {
+			sqlConnector.getViewSchema(treeItem.getValue(), rset -> {
+				var schema = rset.getString(1);
+				// FIXME: find a more abstract way
+				DbCash.addSchemaFor(treeItem.getValue(), schema);
+				var schemaItem = new TreeItem<>(schema);
+				schemaTree.getChildren().add(schemaItem);
+			});
+		}
+
 	
 		var columnsTree = new TreeItem<>("columns", JavaFXUtils.createIcon("/icons/columns.png"));
 		treeItem.getChildren().add(columnsTree);
@@ -451,13 +461,13 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	private void fillTableTreeItem(TreeItem<String> treeItem) throws SQLException {
-		this.fillTVTreeItem(treeItem, sqlConnector.getTableSchemaColumn());
+		this.fillTVTreeItem(treeItem, "table");
 		var triggersTreeItem = new TreeItem<>("triggers",
                 JavaFXUtils.createIcon("/icons/trigger.png"));
 		sqlConnector.getTriggers(treeItem.getValue(), rset -> {
-			var triggerTreeItem = new TreeItem<>(rset.getString(TRIGGER_NAME),
+			var triggerTreeItem = new TreeItem<>(rset.getString(1),
                     JavaFXUtils.createIcon("/icons/trigger.png"));
-			var schema = rset.getString(ACTION_STATEMENT);
+			var schema = rset.getString(2);
 			triggerTreeItem.getChildren()
 					.add(new TreeItem<>(schema, JavaFXUtils.createIcon("/icons/script.png")));
 			triggersTreeItem.getChildren().add(triggerTreeItem);
@@ -467,15 +477,15 @@ public class DBTreeView extends TreeView<String>
 	}
 
 	private void fillViewTreeItem(TreeItem<String> treeItem) throws SQLException {
-		this.fillTVTreeItem(treeItem, sqlConnector.getViewSchemaColumn());
+		this.fillTVTreeItem(treeItem, "view");
 	}
 
 	private void fillIndexTreeItem(TreeItem<String> treeItem) throws SQLException {
 		var schemaTree = new TreeItem<>("schema", JavaFXUtils.createIcon("/icons/script.png"));
 		treeItem.getChildren().add(schemaTree);
 
-		sqlConnector.getSchema(treeItem.getValue(), rset -> {
-			var schema = rset.getString(sqlConnector.getIndexSchemaColumn());
+		sqlConnector.getIndexSchema(treeItem.getValue(), rset -> {
+			var schema = rset.getString(1);
 			schemaTree.getChildren().add(new TreeItem<>(schema));
 		});
 	}

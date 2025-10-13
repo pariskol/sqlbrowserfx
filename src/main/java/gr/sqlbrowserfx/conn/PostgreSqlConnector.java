@@ -92,26 +92,26 @@ public class PostgreSqlConnector extends SqlConnector {
 	}
 
 	@Override
-	public void getSchema(String name, ResultSetAction action) throws SQLException {
+	public void getTableSchema(String name, ResultSetAction action) throws SQLException {
+		this.getSchema(name, action);
+	}
+	
+	@Override
+	public void getViewSchema(String name, ResultSetAction action) throws SQLException {
+		this.getSchema(name, action);
+	}
+	
+	@Override
+	public void getIndexSchema(String name, ResultSetAction action) throws SQLException {
+		this.getSchema(name, action);
+	}
+	
+	
+	private void getSchema(String name, ResultSetAction action) throws SQLException {
 		this.executeQuery(
 				"select table_name, view_definition as schema from INFORMATION_SCHEMA.views "
 				+ "WHERE table_schema = ANY (current_schemas(false)) and table_name = ?",
 				Arrays.asList(name), action);
-	}
-
-	@Override
-	public String getTableSchemaColumn() {
-		return "schema";
-	}
-
-	@Override
-	public String getViewSchemaColumn() {
-		return "schema";
-	}
-
-	@Override
-	public String getIndexSchemaColumn() {
-		return "schema";
 	}
 
 	@Override
