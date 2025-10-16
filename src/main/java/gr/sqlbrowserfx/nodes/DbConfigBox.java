@@ -76,7 +76,6 @@ public abstract class DbConfigBox extends VBox {
 				Platform.runLater(() -> {
 					urlField.setText(row.get("url").toString());
 					userField.setText(row.get("user").toString());
-					databaseField.setText(row.get("database").toString());
 				});
 			}
 		});

@@ -17,9 +17,6 @@ import gr.sqlbrowserfx.LoggerConf;
 
 public class SqliteConnector extends SqlConnector {
 
-	private final String SCHEMA_COLUMN = "sql";
-	private final String SCHEMA_QUERY = "select sql from sqlite_master where name = ?";
-	
 	private final LinkedBlockingQueue<UpdateQuery> updateQueriesQueue;
 	private Connection updateConnection;
 	
@@ -171,25 +168,26 @@ public class SqliteConnector extends SqlConnector {
 		return "select name,type from sqlite_master order by name";
 	}
 
+	
 	@Override
-	public void getSchema(String name, ResultSetAction action) throws SQLException {
-		this.executeQuery(SCHEMA_QUERY, Arrays.asList(name), action);
+	public void getTableSchema(String name, ResultSetAction action) throws SQLException {
+		this.getSchema(name, action);
+	}
+	
+	@Override
+	public void getViewSchema(String name, ResultSetAction action) throws SQLException {
+		this.getSchema(name, action);
+	}
+	
+	@Override
+	public void getIndexSchema(String name, ResultSetAction action) throws SQLException {
+		this.getSchema(name, action);
+	}
+	
+	private void getSchema(String name, ResultSetAction action) throws SQLException {
+		this.executeQuery("select sql from sqlite_master where name = ?", Arrays.asList(name), action);
 	}
 
-	@Override
-	public String getTableSchemaColumn() {
-		return SCHEMA_COLUMN;
-	}
-
-	@Override
-	public String getViewSchemaColumn() {
-		return SCHEMA_COLUMN;
-	}
-
-	@Override
-	public String getIndexSchemaColumn() {
-		return SCHEMA_COLUMN;
-	}
 
 	@Override
 	public void getTriggers(String table, ResultSetAction action) throws SQLException {
