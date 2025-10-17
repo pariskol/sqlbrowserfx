@@ -119,17 +119,66 @@ public class MysqlConnector extends SqlConnector {
 	
 	@Override
 	public void getTableSchema(String name, ResultSetAction action) throws SQLException {
-		this.executeQuery("SHOW CREATE TABLE " + database + "." + name, action);
-	}
+		// FIXME: cannot make it work triple quoted
+		String sql = "SELECT CONCAT('CREATE TABLE `', t.TABLE_SCHEMA, '`.`', t.TABLE_NAME, '` ( ', GROUP_CONCAT(CONCAT('  `', c.COLUMN_NAME, '` ', c.COLUMN_TYPE, IF(c.IS_NULLABLE='NO',' NOT NULL',''), IF(c.COLUMN_DEFAULT IS NOT NULL, CONCAT(' DEFAULT \\'', REPLACE(c.COLUMN_DEFAULT,'\\\\','\\\\\\\\'), '\\''),''), IF(c.EXTRA<>'', CONCAT(' ', c.EXTRA),''), IF(c.COLUMN_COMMENT<>'', CONCAT(' COMMENT \\'', REPLACE(c.COLUMN_COMMENT,'\\'','\\\\\\''), '\\''),'') ) ORDER BY c.ORDINAL_POSITION SEPARATOR ', '), IF(pk.primary_key IS NOT NULL, CONCAT(', PRIMARY KEY (', pk.primary_key, ')'), ''), IF(uk.unique_keys IS NOT NULL, CONCAT(', ', uk.unique_keys), ''), IF(fk.foreign_keys IS NOT NULL, CONCAT(', ', fk.foreign_keys), ''), ' ) ENGINE=', MAX(t.ENGINE), ' DEFAULT CHARSET=', MAX(SUBSTRING_INDEX(t.TABLE_COLLATION,'_',1)), ';') AS create_table_statement FROM information_schema.TABLES t JOIN information_schema.COLUMNS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME LEFT JOIN (SELECT kcu.TABLE_SCHEMA, kcu.TABLE_NAME, GROUP_CONCAT(CONCAT('`', kcu.COLUMN_NAME, '`') ORDER BY kcu.ORDINAL_POSITION) AS primary_key FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE kcu ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA AND tc.TABLE_NAME = kcu.TABLE_NAME WHERE tc.CONSTRAINT_TYPE='PRIMARY KEY' GROUP BY kcu.TABLE_SCHEMA, kcu.TABLE_NAME) pk ON t.TABLE_SCHEMA = pk.TABLE_SCHEMA AND t.TABLE_NAME = pk.TABLE_NAME LEFT JOIN (SELECT uk_sub.TABLE_SCHEMA, uk_sub.TABLE_NAME, GROUP_CONCAT(CONCAT('UNIQUE KEY `', uk_sub.CONSTRAINT_NAME, '` (', uk_sub.column_list, ')') SEPARATOR ', ') AS unique_keys FROM (SELECT kcu.TABLE_SCHEMA, kcu.TABLE_NAME, kcu.CONSTRAINT_NAME, GROUP_CONCAT(CONCAT('`', kcu.COLUMN_NAME, '`') ORDER BY kcu.ORDINAL_POSITION) AS column_list FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE kcu ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA AND tc.TABLE_NAME = kcu.TABLE_NAME WHERE tc.CONSTRAINT_TYPE='UNIQUE' GROUP BY kcu.TABLE_SCHEMA, kcu.TABLE_NAME, kcu.CONSTRAINT_NAME) AS uk_sub GROUP BY uk_sub.TABLE_SCHEMA, uk_sub.TABLE_NAME) uk ON t.TABLE_SCHEMA = uk.TABLE_SCHEMA AND t.TABLE_NAME = uk.TABLE_NAME LEFT JOIN (SELECT fk_sub.TABLE_SCHEMA, fk_sub.TABLE_NAME, GROUP_CONCAT(CONCAT('CONSTRAINT `', fk_sub.CONSTRAINT_NAME, '` FOREIGN KEY (`', fk_sub.COLUMN_NAME, '`) REFERENCES `', fk_sub.REFERENCED_TABLE_NAME, '`(`', fk_sub.REFERENCED_COLUMN_NAME, '`)') SEPARATOR ', ') AS foreign_keys FROM information_schema.KEY_COLUMN_USAGE fk_sub JOIN information_schema.TABLE_CONSTRAINTS tc ON fk_sub.CONSTRAINT_NAME = tc.CONSTRAINT_NAME AND fk_sub.TABLE_SCHEMA = tc.TABLE_SCHEMA AND fk_sub.TABLE_NAME = tc.TABLE_NAME WHERE tc.CONSTRAINT_TYPE='FOREIGN KEY' GROUP BY fk_sub.TABLE_SCHEMA, fk_sub.TABLE_NAME) fk ON t.TABLE_SCHEMA = fk.TABLE_SCHEMA AND t.TABLE_NAME = fk.TABLE_NAME WHERE 1=1 ";
+		this.executeQuery(
+			sql + 
+			" AND t.TABLE_SCHEMA = '" + database + "' " +
+			" AND t.TABLE_NAME = '" + name + "' " +
+			"""
+			GROUP BY
+				t.TABLE_SCHEMA,
+				t.TABLE_NAME
+			"""
+			,
+			action);	
+		}
 	
 	@Override
 	public void getViewSchema(String name, ResultSetAction action) throws SQLException {
-		this.executeQuery("SHOW CREATE VIEW " + database + "." + name, action);
+		this.executeQuery(
+			"""
+			SELECT CONCAT(
+			    'CREATE ',
+			    CASE WHEN IS_UPDATABLE = 'NO' THEN 'ALGORITHM=UNDEFINED ' ELSE '' END,
+			    'DEFINER=`', DEFINER, '` ',
+			    'SQL SECURITY ', SECURITY_TYPE, ' ',
+			    'VIEW `', TABLE_SCHEMA, '`.`', TABLE_NAME, '` AS ',
+			    VIEW_DEFINITION,
+			    CASE WHEN CHECK_OPTION != 'NONE' THEN CONCAT(' WITH ', CHECK_OPTION, ' CHECK OPTION') ELSE '' END,
+			    ';'
+			) AS create_view_statement
+			FROM information_schema.VIEWS
+			WHERE 1=1
+			  AND TABLE_SCHEMA = ?
+			  AND TABLE_NAME = ?
+			""",
+			Arrays.asList(database, name), 
+			action);
 	}
 	
 	@Override
 	public void getIndexSchema(String name, ResultSetAction action) throws SQLException {
+		this.executeQuery(
+				"""
+				SELECT DISTINCT
+				  CONCAT(
+				    'CREATE ',
+				    CASE WHEN s.NON_UNIQUE = 0 AND s.INDEX_NAME <> 'PRIMARY' THEN 'UNIQUE ' ELSE '' END,
+				    CASE WHEN s.INDEX_NAME = 'PRIMARY' THEN 'PRIMARY KEY ' ELSE CONCAT('INDEX `', s.INDEX_NAME, '` ') END,
+				    '(',
+				    GROUP_CONCAT(CONCAT('`', s.COLUMN_NAME, '`') ORDER BY s.SEQ_IN_INDEX SEPARATOR ', '),
+				    ') USING ', s.INDEX_TYPE, ';'
+				  ) AS create_index_statement
+				FROM information_schema.STATISTICS s
+				WHERE s.TABLE_SCHEMA = ?
+				  AND s.TABLE_NAME = ?
+				GROUP BY s.TABLE_NAME, s.INDEX_NAME, s.INDEX_TYPE, s.NON_UNIQUE
+				""",
+				Arrays.asList(database, name), 
+				action);
 		throw new RuntimeException("No implemented");
+
 	}
 	
 	@Override

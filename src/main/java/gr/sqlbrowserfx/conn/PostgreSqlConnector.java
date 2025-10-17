@@ -61,9 +61,12 @@ public class PostgreSqlConnector extends SqlConnector {
 
 	@Override
 	public String getContentsQuery() {
-		return "select tb.table_name, tb.table_type from INFORMATION_SCHEMA.tables as tb WHERE tb.table_schema = ANY (current_schemas(false))"
-				+ " union "
-				+ "select indexname as table_name , 'INDEX'as table_type  from pg_indexes where schemaname = 'public'";
+		return 
+		"""
+		select tb.table_name, tb.table_type from INFORMATION_SCHEMA.tables as tb WHERE tb.table_schema = ANY (current_schemas(false)) 
+		union 
+		select indexname as table_name , 'INDEX'as table_type  from pg_indexes where schemaname = 'public'
+		""";
 	}
 
 	@Override
@@ -73,20 +76,22 @@ public class PostgreSqlConnector extends SqlConnector {
 	
 	@Override
 	public void getTriggers(String table, ResultSetAction action) throws SQLException {
-		String query = 
-			"select event_object_schema as table_schema, "
-			+ "       event_object_table as table_name, "
-			+ "       trigger_schema, "
-			+ "       trigger_name as TRIGGER_NAME, "
-			+ "       string_agg(event_manipulation, ',') as event, "
-			+ "       action_timing as activation, "
-			+ "       action_condition as condition, "
-			+ "       action_statement as ACTION_STATEMENT "
-			+ "from information_schema.triggers "
-			+ "where event_object_table = ? "
-			+ "group by 1,2,3,4,6,7,8 "
-			+ "order by table_schema, "
-			+ "         table_name;";
+		String query =
+			"""
+			select 
+			   event_object_schema as table_schema, 
+		       event_object_table as table_name, 
+		       trigger_schema, 
+		       trigger_name as TRIGGER_NAME, 
+		       string_agg(event_manipulation, ',') as event, 
+		       action_timing as activation, 
+		       action_condition as condition, 
+		       action_statement as ACTION_STATEMENT 
+			from information_schema.triggers 
+			where event_object_table = ? 
+			group by 1,2,3,4,6,7,8 
+			order by table_schema, table_name
+			""";
 		this.executeQuery(query, Arrays.asList(table), action);
 
 	}
@@ -109,8 +114,10 @@ public class PostgreSqlConnector extends SqlConnector {
 	
 	private void getSchema(String name, ResultSetAction action) throws SQLException {
 		this.executeQuery(
-				"select table_name, view_definition as schema from INFORMATION_SCHEMA.views "
-				+ "WHERE table_schema = ANY (current_schemas(false)) and table_name = ?",
+				"""
+				select table_name, view_definition as schema from INFORMATION_SCHEMA.views 
+				where table_schema = ANY (current_schemas(false)) and table_name = ?
+				""",
 				Arrays.asList(name), action);
 	}
 
