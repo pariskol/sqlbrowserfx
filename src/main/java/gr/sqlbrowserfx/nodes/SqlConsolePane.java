@@ -82,7 +82,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         listeners = new ArrayList<>();
 
         queryTabPane = new TabPane();
-        DraggingTabPaneSupport draggingSupport = new DraggingTabPaneSupport("/icons/thunder.png");
+        var draggingSupport = new DraggingTabPaneSupport("/icons/thunder.png");
         draggingSupport.addSupport(queryTabPane);
         newConsoleTab = new Tab("");
         newConsoleTab.setGraphic(JavaFXUtils.createIcon("/icons/add.png"));
@@ -118,7 +118,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         queryTabPane.getSelectionModel().selectedItemProperty().addListener(
                 (ov, oldTab, newTab) -> {
                     if (newTab.getContent() != null) {
-                        CodeArea codeArea = (oldTab.getContent() != null) ? ((VirtualizedScrollPane<CodeArea>) oldTab.getContent()).getContent()
+                    	var codeArea = (oldTab.getContent() != null) ? ((VirtualizedScrollPane<CodeArea>) oldTab.getContent()).getContent()
                                 : null;
 
                         if (codeArea instanceof TextAnalyzer) {
@@ -153,10 +153,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         });
 
         this.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            boolean success = false;
+        	var db = event.getDragboard();
+        	var success = false;
             if (db.hasFiles()) {
-                File file = db.getFiles().get(0);
+            	var file = db.getFiles().get(0);
                 SqlConsolePane.this.openNewFileTab(file);
                 success = true;
             }
@@ -175,11 +175,11 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
     @SuppressWarnings("unchecked")
     private void addTab() {
-        Tab selectedTab = queryTabPane.getSelectionModel().getSelectedItem();
+    	var selectedTab = queryTabPane.getSelectionModel().getSelectedItem();
         if (selectedTab == newConsoleTab) {
             this.openNewSqlConsoleTab();
         } else {
-            CodeArea codeArea = ((VirtualizedScrollPane<CodeArea>) selectedTab.getContent()).getContent();
+        	var codeArea = ((VirtualizedScrollPane<CodeArea>) selectedTab.getContent()).getContent();
             if (codeArea instanceof CSqlCodeArea) {
                 codeAreaRef = (CSqlCodeArea) codeArea;
             }
@@ -197,13 +197,13 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
         createFileSearchPopover();
 
-        Bounds boundsInScene = this.localToScreen(this.getBoundsInLocal());
+        var boundsInScene = this.localToScreen(this.getBoundsInLocal());
         fileSearchPopOver.show(toolbar, boundsInScene.getMaxX() - 620,
                 boundsInScene.getMinY());
     }
 
     private void openNewSqlConsoleTab() {
-        CSqlCodeArea sqlCodeArea = new CSqlCodeArea();
+    	var sqlCodeArea = new CSqlCodeArea();
         sqlCodeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
         sqlCodeArea.showLinesProperty().bind(this.showLinesCheckBox.selectedProperty());
         sqlCodeArea.autoCompleteProperty().bind(this.autoCompleteOnTypeCheckBox.selectedProperty());
@@ -211,9 +211,14 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         sqlCodeArea.setRunAction(this::executeButtonAction);
         sqlCodeArea.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> SqlConsolePane.this.changed());
 
-        VirtualizedScrollPane<CodeArea> scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
-        Tab newTab = new Tab("query " + queryTabPane.getTabs().size(), scrollPane);
-        newTab.setOnClosed(event -> sqlCodeArea.stopTextAnalyzerDaemon());
+        var scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
+        var newTab = new Tab("query " + queryTabPane.getTabs().size(), scrollPane);
+        
+		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
+		closeTabItem.setOnAction(event -> newTab.getTabPane().getTabs().remove(newTab));
+		
+		newTab.setContextMenu(new ContextMenu(closeTabItem));
+		newTab.setOnClosed(event -> sqlCodeArea.stopTextAnalyzerDaemon());
 
         queryTabPane.getTabs().add(newTab);
         queryTabPane.getSelectionModel().select(newTab);
