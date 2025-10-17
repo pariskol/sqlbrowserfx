@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gr.sqlbrowserfx</groupId>
 	<artifactId>sqlbrowserfx</artifactId>
-	<version>3.12.1-SNAPSHOT</version>
+	<version>4.0.1-SNAPSHOT</version>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>21</maven.compiler.source>
-		<maven.compiler.target>21</maven.compiler.target>
+		<maven.compiler.source>25</maven.compiler.source>
+		<maven.compiler.target>25</maven.compiler.target>
 		<attach.version>4.0.10</attach.version>
 		<javafx.version>21.0.8</javafx.version>
 		<log4j.version>2.22.1</log4j.version>
