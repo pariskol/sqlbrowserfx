@@ -361,7 +361,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		datePicker.setOnAction(actionEvent -> {
 		    var date = datePicker.getValue();
 		    var dateStr = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-		    this.getQueriesHistory(codeArea,dateStr);
+		    this.getQueriesHistory(codeArea, dateStr);
 
 		});
 		var pane = new VirtualizedScrollPane<CodeArea>(codeArea);
@@ -396,7 +396,12 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not get query");
 					}
 				}
-				Platform.runLater(() -> codeArea.replaceText(history.toString()));
+				Platform.runLater(() -> {
+					codeArea.replaceText(history.toString());
+					var pattern = "--  Executed at :";
+					codeArea.moveTo(codeArea.getText().lastIndexOf(pattern) + pattern.length());
+					codeArea.requestFollowCaret();
+				});
 			}
 		);
 	}
