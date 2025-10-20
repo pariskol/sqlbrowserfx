@@ -17,6 +17,10 @@ import org.dockfx.DockPos;
 import org.dockfx.DockWeights;
 import org.slf4j.LoggerFactory;
 
+import com.kodedu.terminalfx.TerminalBuilder;
+import com.kodedu.terminalfx.TerminalTab;
+import com.kodedu.terminalfx.config.TerminalConfig;
+
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.PostgreSqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -34,7 +38,6 @@ import gr.sqlbrowserfx.nodes.FilesTreeView;
 import gr.sqlbrowserfx.nodes.HelpTabPane;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.PostgreSqlConfigBox;
-import gr.sqlbrowserfx.nodes.SimpleTerminalPane;
 import gr.sqlbrowserfx.nodes.SqlConnectorType;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.SqlServerConfigBox;
@@ -71,6 +74,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
@@ -394,9 +398,19 @@ public class SqlBrowserFXApp extends Application {
 			});
 		});
 		
-		var terminalViewItem = new MenuItem("Open Simple Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
+		var terminalViewItem = new MenuItem("Open Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
 		terminalViewItem.setOnAction(event -> {
-			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, new SimpleTerminalPane(),
+			TerminalConfig darkConfig = new TerminalConfig();
+			darkConfig.setBackgroundColor(Color.rgb(16, 16, 16));
+			darkConfig.setForegroundColor(Color.rgb(240, 240, 240));
+			darkConfig.setCursorColor(Color.rgb(255, 0, 0, 0.5));
+
+			TerminalBuilder terminalBuilder = new TerminalBuilder(darkConfig);
+			TerminalTab terminal = terminalBuilder.newTerminal();
+			TabPane tabPane = new TabPane();
+			tabPane.getTabs().add(terminal);
+			
+			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, tabPane,
 					"Simple Terminal", JavaFXUtils.createIcon("/icons/console.png")));
 		});
 		
@@ -407,8 +421,8 @@ public class SqlBrowserFXApp extends Application {
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 		
-		var chatGPTMenuItem = new MenuItem("Open ChatGPT", JavaFXUtils.createIcon("/icons/chatgpt.png"));
-		chatGPTMenuItem.setOnAction(event -> {
+		var chatGPTViewItem = new MenuItem("Open ChatGPT View", JavaFXUtils.createIcon("/icons/chatgpt.png"));
+		chatGPTViewItem.setOnAction(event -> {
 			var chatGptWebView = new ChatGptWebView();
 		    SqlBrowserFXAppManager.registerChatGpt(chatGptWebView);
 		    var dockNode = new DockNode(chatGptWebView, "ChatGPT", JavaFXUtils.createIcon("/icons/chatgpt.png"));
@@ -430,22 +444,25 @@ public class SqlBrowserFXApp extends Application {
         });
 		
 		
-		var logItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
-		logItem.setOnAction(actionEvent -> JavaFXUtils.zoomToCurrentFactor(new DLogConsolePane(dockPane).asDockNode()));
+		var logViewItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
+		logViewItem.setOnAction(actionEvent -> JavaFXUtils.zoomToCurrentFactor(new DLogConsolePane(dockPane).asDockNode()));
 
-		var dbDiagramItem = new MenuItem("Open DB Diagram View", JavaFXUtils.createIcon("/icons/diagram.png"));
-		dbDiagramItem.setOnAction(event -> {
+		var dbDiagramViewItem = new MenuItem("Open DB Diagram View", JavaFXUtils.createIcon("/icons/diagram.png"));
+		dbDiagramViewItem.setOnAction(event -> {
 			var dbDiagramPane = new DDbDiagramPane(sqlConnector);
 			dbDiagramPane.asDockNode().setDockPane(dockPane);
 			dbDiagramPane.asDockNode().setFloating(true);
 		});
 
 		menu1.getItems().addAll(
-				sqlPaneViewItem, dbDiagramItem, 
+				sqlPaneViewItem, 
+				dbDiagramViewItem, 
 				new SeparatorMenuItem(),
 				filesTreeViewItem, 
 				new SeparatorMenuItem(),
-				logItem, chatGPTMenuItem);
+				terminalViewItem,
+				logViewItem,
+				chatGPTViewItem);
 
 		final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
