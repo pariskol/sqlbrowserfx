@@ -1,5 +1,22 @@
 package gr.sqlbrowserfx.nodes;
 
+import java.io.File;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
+import org.slf4j.LoggerFactory;
+
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -18,10 +35,19 @@ import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
-import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
-import javafx.scene.control.*;
-import javafx.scene.input.Dragboard;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.SplitPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.TransferMode;
@@ -30,22 +56,6 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.wellbehaved.event.EventPattern;
-import org.fxmisc.wellbehaved.event.InputMap;
-import org.fxmisc.wellbehaved.event.Nodes;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleObservable<String> {
 
@@ -202,6 +212,35 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
                 boundsInScene.getMinY());
     }
 
+    private void addTabContextMenu(Tab tab) {
+		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
+		closeTabItem.setOnAction(event -> tab.getTabPane().getTabs().remove(tab));
+		
+		var renameTabItem = new MenuItem("Rename Tab", JavaFXUtils.createIcon("/icons/edit.png"));
+		renameTabItem.setOnAction(event -> {
+			var tabGraphic = tab.getGraphic();
+			var textField = new TextField();
+			textField.setPromptText("Enter new name");
+			textField.setOnKeyPressed(keyEvent -> {
+				if (keyEvent.getCode() == KeyCode.ENTER) {
+					// graphic is label because we are using DragTabPaneSupport util
+					var label = (Label) tabGraphic;
+					label.setText(textField.getText());
+					tab.setGraphic(tabGraphic);
+				}
+				if (keyEvent.getCode() == KeyCode.ESCAPE) {
+					tab.setGraphic(tabGraphic);
+				}
+				
+				keyEvent.consume();
+			});
+			tab.setGraphic(textField);
+			textField.requestFocus();
+		});
+		
+		tab.setContextMenu(new ContextMenu(closeTabItem, renameTabItem));
+    }
+    
     private void openNewSqlConsoleTab() {
     	var sqlCodeArea = new CSqlCodeArea();
         sqlCodeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
@@ -213,11 +252,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
         var scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
         var newTab = new Tab("query " + queryTabPane.getTabs().size(), scrollPane);
-        
-		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
-		closeTabItem.setOnAction(event -> newTab.getTabPane().getTabs().remove(newTab));
-		
-		newTab.setContextMenu(new ContextMenu(closeTabItem));
+        addTabContextMenu(newTab);
 		newTab.setOnClosed(event -> sqlCodeArea.stopTextAnalyzerDaemon());
 
         queryTabPane.getTabs().add(newTab);
@@ -246,7 +281,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
         Tab tab = new Tab(selectedFile.getName(), vsp);
         tab.setOnCloseRequest((event) -> {
-
             if (fileCodeArea.isTextDirty()) {
                 event.consume();
 
@@ -258,6 +292,21 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
                 }
             }
         });
+		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
+		closeTabItem.setOnAction(event -> {
+            if (fileCodeArea.isTextDirty()) {
+                event.consume();
+
+                if (DialogFactory.createConfirmationDialog(
+                        "Unsaved work",
+                        "Do you want to discard changes ?")
+                ) {
+                    queryTabPane.getTabs().remove(tab);
+                }
+            }
+		});
+		tab.setContextMenu(new ContextMenu(closeTabItem));
+		
         tab.setGraphic(JavaFXUtils.createIcon("/icons/code-file.png"));
         queryTabPane.getTabs().add(tab);
         queryTabPane.getSelectionModel().select(tab);
