@@ -10,4 +10,7 @@ public interface CodeAreaSyntaxProvider<T> {
 	Matcher getPatternMatcher(String text);
 	String format(String text);
 	String format(String text, FormatterMode mode);
+	default void getAiHelp(String question) {
+		throw new RuntimeException("Not implemeted!");
+	};
 }

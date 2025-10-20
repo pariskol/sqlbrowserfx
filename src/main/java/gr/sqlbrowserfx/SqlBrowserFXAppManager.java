@@ -10,8 +10,8 @@ import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreeView;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
+import gr.sqlbrowserfx.nodes.ChatGptWebView;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
-import javafx.scene.web.WebEngine;
 
 public class SqlBrowserFXAppManager {
 
@@ -22,7 +22,7 @@ public class SqlBrowserFXAppManager {
 	private static final List<SqlPane> SQL_PANES = new ArrayList<>();
 	private static final List<DDBTreeView> DB_TREE_VIEWS = new ArrayList<>();
 	private static String DB_TYPE = "sqlite";
-	private static WebEngine chatGptWebEngine;
+	private static ChatGptWebView chatGpt;
 	
 	public static SqlConnector getConfigSqlConnector() {
 		return SQL_CONNECTOR;
@@ -82,26 +82,18 @@ public class SqlBrowserFXAppManager {
 		DB_TREE_VIEWS.remove(treeView);
 	}
 	
-	public static void setChatGptWebEngine(WebEngine webEngine) {
-		chatGptWebEngine = webEngine;
+	public static void registerChatGpt(ChatGptWebView chatGpt) {
+		SqlBrowserFXAppManager.chatGpt = chatGpt;
+	}
+	
+	public static void unregisterChatGpt() {
+		SqlBrowserFXAppManager.chatGpt = null;
 	}
 	
 	public static void askChatGpt(String question) {
-		String safeText = question.replace("\\", "\\\\").replace("\"", "\\\"")
-				.replace("\n", "\\n").replace("\r", "");
-
-		String js = """
-				(function() {
-						const el = document.getElementById('prompt-textarea');
-				        el.innerText = "%s";
-				        setTimeout(() => {
-				            const btn = document.getElementById('composer-submit-button');
-				btn.click();
-				        }, 500);
-
-				})();
-				""".formatted(safeText);
-
-		chatGptWebEngine.executeScript(js);
+		if (chatGpt == null) {
+			throw new RuntimeException("ChatGPT is not open");
+		}
+		chatGpt.askChatGpt(question);
 	}
 }

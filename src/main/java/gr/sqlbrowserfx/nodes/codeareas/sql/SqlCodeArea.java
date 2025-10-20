@@ -420,7 +420,18 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		menuItemShowSchema.setOnAction(action -> SqlCodeArea.this.showSchemaPopOver());
 		menuItemShowSchema.disableProperty().bind(this.isTextSelectedProperty().not());
 		
-		menu.getItems().addAll(new SeparatorMenuItem(), menuItemHistory, menuItemShowSchema);
+        var menuItemCheckErrorsChatGpt = new MenuItem("Check For Erros (ChatGPT)", JavaFXUtils.createIcon("/icons/chatgpt.png"));
+        menuItemCheckErrorsChatGpt.setOnAction(event -> syntaxProvider.getAiHelp("Check fllowing sql code for errors, keep your answer short with mainly code examples: " + (this.getSelectedText() != null ? this.getSelectedText() : this.getText())));
+        menuItemCheckErrorsChatGpt.disableProperty().bind(this.isTextSelectedProperty().not());
+
+        var menuItemAskChatGpt = new MenuItem("Ask ChaGPT", JavaFXUtils.createIcon("/icons/chatgpt.png"));
+        menuItemAskChatGpt.setOnAction(event -> syntaxProvider.getAiHelp(this.getSelectedText()));
+        menuItemAskChatGpt.disableProperty().bind(this.isTextSelectedProperty().not());
+
+        
+		menu.getItems().addAll(
+			new SeparatorMenuItem(), menuItemCheckErrorsChatGpt, menuItemAskChatGpt,
+			new SeparatorMenuItem(), menuItemHistory, menuItemShowSchema);
 
 		return menu;
 	}

@@ -138,4 +138,9 @@ public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String>
 			return SqlFormatter.format(text);
 		}
 	}
+	
+	@Override
+	public void getAiHelp(String question) {
+		SqlBrowserFXAppManager.askChatGpt(question);
+	}
 }
