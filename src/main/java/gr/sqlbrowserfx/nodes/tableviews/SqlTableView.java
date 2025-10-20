@@ -245,7 +245,7 @@ public class SqlTableView extends TableView<MapTableViewRow> implements InputMap
 				parent.load();
 				this.clear();
 			});
-			throw new SQLException("MemoryGuard action", "", MemoryGuard.SQL_MEMORY_ERROR_CODE);
+			throw new SQLException("Query cnacelled", "", MemoryGuard.SQL_MEMORY_ERROR_CODE);
 		}
 
 		Platform.runLater(() -> {

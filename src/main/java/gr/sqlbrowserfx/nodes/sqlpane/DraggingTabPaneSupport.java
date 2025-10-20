@@ -5,11 +5,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.collections.ListChangeListener.Change;
 import javafx.scene.Node;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 
 public class DraggingTabPaneSupport {
@@ -32,6 +36,7 @@ public class DraggingTabPaneSupport {
 	
 	public void addSupport(TabPane tabPane) {
         tabPane.getTabs().forEach(this::addDragHandlers);
+
         tabPane.getTabs().addListener((Change<? extends Tab> c) -> {
             while (c.next()) {
                 if (c.wasAdded()) {
@@ -107,7 +112,7 @@ public class DraggingTabPaneSupport {
             tab.setText(null);
             tab.setGraphic(label);
         }
-
+        
         Node graphic = tab.getGraphic();
         graphic.setOnDragDetected(e -> {
             Dragboard dragboard = graphic.startDragAndDrop(TransferMode.MOVE);

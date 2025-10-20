@@ -601,23 +601,23 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			query += " limit " + linesLimit;
 		}
 
-		String message = "Executing : " + query;
-		logger.debug(message);
+		logger.debug("Executing : " + query);
 		try {
-			sqlConnector.executeQueryRawSafely(query, resultSet -> {
-				sqlTableView.setItemsLater(resultSet);
-				// in case the query contains a view reset name
+	        sqlConnector.executeCancelableQuery(query, rset -> {
+	        	sqlTableView.setItemsLater(rset);
 				sqlTableView.setTableName(table);
-			});
+	        }, 
+    		stmt -> sqlTableTab.setOnClosed(action -> {
+	            try {
+	                stmt.cancel();
+	            } catch (SQLException e) {
+	                LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+	            }
+	        }));
 
 		} catch (SQLException e) {
 			DialogFactory.createErrorNotification(e);
 			if (e.getErrorCode() == MemoryGuard.SQL_MEMORY_ERROR_CODE) {
-				// TODO what must be done here in order to free memory?
-//				Platform.runLater(() -> {
-//					sqlTableTab.getOnClosed().handle(new ActionEvent());
-//					tablesTabPane.getTabs().remove(sqlTableTab);
-//				});
 				System.gc();
 			}
 		} finally {
