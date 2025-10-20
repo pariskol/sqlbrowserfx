@@ -411,7 +411,7 @@ public class SqlBrowserFXApp extends Application {
 			tabPane.getTabs().add(terminal);
 			
 			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, tabPane,
-					"Simple Terminal", JavaFXUtils.createIcon("/icons/console.png")));
+					"Terminal", JavaFXUtils.createIcon("/icons/console.png")));
 		});
 		
 		var tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.createIcon("/icons/details.png"));
