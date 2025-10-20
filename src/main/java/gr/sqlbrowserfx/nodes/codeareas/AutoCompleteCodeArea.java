@@ -21,6 +21,7 @@ import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.InputMapOwner;
@@ -328,6 +329,12 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
         var menuItemSuggestions = new MenuItem("Suggestions", JavaFXUtils.createIcon("/icons/suggestion.png"));
         menuItemSuggestions.setOnAction(event -> this.autoCompleteAction(this.simulateControlSpaceEvent()));
+        
+        var menuItemAskChatGpt = new MenuItem("Ask ChatGpt", JavaFXUtils.createIcon("/icons/suggestion.png"));
+        menuItemAskChatGpt.setOnAction(event -> {
+        	    SqlBrowserFXAppManager.askChatGpt("Check fllowing sql code for errors, keep your answer short with mainly code examples: " + (this.getSelectedText() != null ? this.getSelectedText() : this.getText().toString()));
+        });
+
 
         var menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
         menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
@@ -374,7 +381,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
                 new SeparatorMenuItem(),
                 menuItemFormat, menuItemFormat3,
                 new SeparatorMenuItem(),
-                menuItemSearchAndReplace, menuItemGoToLine, menuItemSuggestions,
+                menuItemSearchAndReplace, menuItemGoToLine, menuItemSuggestions, menuItemAskChatGpt,
                 new SeparatorMenuItem(),
                 menuItemSaveAs);
         return menu;

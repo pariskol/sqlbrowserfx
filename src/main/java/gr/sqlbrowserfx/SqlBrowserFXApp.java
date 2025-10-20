@@ -70,14 +70,19 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
+import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -458,6 +463,75 @@ public class SqlBrowserFXApp extends Application {
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 		
+		var chatGPTMenuItem = new MenuItem("Open ChatGPT", JavaFXUtils.createIcon("/icons/web.png"));
+		chatGPTMenuItem.setOnAction(event -> {
+			var webView = new WebView();
+		    var webEngine = webView.getEngine();
+		    // Force dark color scheme via CSS injection
+		    String darkModeCSS = """
+		        (function() {
+		            const style = document.createElement('style');
+		            style.textContent = `
+		                :root {
+		                    color-scheme: dark;
+		                    background-color: #222222 !important;
+		                    color: #e0e0e0 !important;
+		                }
+		                html, body *:not(pre):not(pre *) {
+		                    background-color: #222222 !important;
+		                    color: #e0e0e0 !important;
+		                    margin: 0 !important;
+		                    
+		                }
+		            `;
+		            document.documentElement.appendChild(style);
+		        })();
+		    """;
+
+		    // Load ChatGPT and then apply dark mode styling
+		    webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+		        if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
+		            webEngine.executeScript(darkModeCSS);
+		        }
+		    });
+		    webEngine.load("https://chatgpt.com/");
+		    
+		    var copySelectedHtmlText = new MenuItem("Copy Selected Text");
+		    copySelectedHtmlText.setOnAction(_ -> {
+			    var text = (String) webView.getEngine().executeScript("""
+		    		(function() {
+			    		let text = "";
+
+					    if (window.getSelection) {
+					        text = window.getSelection().toString();
+					    } else if (document.selection && document.selection.type != "Control") {
+					        text = document.selection.createRange().text;
+					    }
+					
+					    return text;
+			        })();
+	    		""");
+			    var clipboard = Clipboard.getSystemClipboard();
+			    var content = new ClipboardContent();
+			    content.putString(text);
+			    clipboard.setContent(content);
+		    });
+		    var contextMenu = new ContextMenu(copySelectedHtmlText);
+		    webView.setContextMenuEnabled(false); // disable native WebView menu
+		    webView.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
+		        if (mouseEvent.getButton() == MouseButton.SECONDARY) { // right-click
+		            contextMenu.show(webView, mouseEvent.getScreenX(), mouseEvent.getScreenY());
+		            mouseEvent.consume(); // prevent default
+		        } else {
+		            contextMenu.hide();
+		        }
+		    });
+		    
+		    SqlBrowserFXAppManager.setChatGptWebEngine(webEngine);
+		    new DockNode(dockPane, webView, "ChatGPT", JavaFXUtils.createIcon("/icons/web.png"));
+
+		});
+		
 		var jsonTableViewItem = new MenuItem("Open JSON Table View", JavaFXUtils.createIcon("/icons/web.png"));
 		jsonTableViewItem.setOnAction(event -> {
 			var jsonTableView = this.createJsonTableView();
@@ -490,7 +564,7 @@ public class SqlBrowserFXApp extends Application {
 
 		menu1.getItems().addAll(sqlPaneViewItem, dbDiagramItem, new SeparatorMenuItem(),
 				filesTreeViewItem, jsonTableViewItem, new SeparatorMenuItem(),
-				sqlConsoleViewItem, logItem);
+				sqlConsoleViewItem, logItem, chatGPTMenuItem);
 
 		final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
