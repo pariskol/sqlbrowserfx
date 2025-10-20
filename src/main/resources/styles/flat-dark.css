@@ -11,7 +11,7 @@
 	-fx-control-inner-background: -fx-primary-color;
 	-fx-control-inner-background-alt: -fx-control-inner-background;
 	-fx-faint-focus-color: transparent;
-	-fx-font-size: 13.0pt;
+	-fx-font-size: 12.0pt;
 	/*-fx-selection-bar-non-focused: derive(-fx-accent,30%);*/
 	-fx-selection-bar-non-focused: derive(-fx-base, 90.0%);
 	-fx-background: derive(-fx-base, 10%);

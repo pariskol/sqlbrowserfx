@@ -1,8 +1,6 @@
 
 package gr.sqlbrowserfx;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.file.Files;
@@ -17,7 +15,6 @@ import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
 import org.dockfx.DockWeights;
-import org.json.JSONArray;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.conn.MysqlConnector;
@@ -30,6 +27,7 @@ import gr.sqlbrowserfx.dock.nodes.DDbDiagramPane;
 import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.ChatGptWebView;
 import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.DbConfigBox;
 import gr.sqlbrowserfx.nodes.FilesTreeView;
@@ -46,11 +44,8 @@ import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
 import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
-import gr.sqlbrowserfx.nodes.tableviews.JSONTableView;
-import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.rest.RESTfulService;
 import gr.sqlbrowserfx.rest.RESTfulServiceConfig;
-import gr.sqlbrowserfx.utils.HttpClient;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
 import javafx.application.Application;
@@ -70,19 +65,14 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
-import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -324,46 +314,6 @@ public class SqlBrowserFXApp extends Application {
 			});
 	}
 
-	private VBox createJsonTableView() {
-		var tableView = new JSONTableView();
-		
-		var requestField = new TextField();
-		requestField.setPromptText("Enter url...");
-		final var executor = Executors.newSingleThreadExecutor();
-		requestField.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				executor.execute(() -> {
-					try {
-						
-						var jsonArray = new JSONArray(HttpClient.GET(requestField.getText()));
-						tableView.setItemsLater(jsonArray);
-					} catch (Throwable e) {
-						DialogFactory.createErrorNotification(e);
-					}
-				});
-			}
-		});
-		tableView.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.C) {
-				var content = new StringBuilder();
-				for (MapTableViewRow row :tableView.getSelectionModel().getSelectedItems()) {
-					content.append(row.toString());
-				}
-				
-				var stringSelection = new StringSelection(content.toString());
-				var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-				clipboard.setContents(stringSelection, null);
-			}
-			else if (keyEvent.isControlDown() && keyEvent.getCode() == KeyCode.F) {
-				requestField.requestFocus();
-				requestField.selectAll();
-			}
-		});
-		var vbox = new VBox(requestField, tableView);
-		VBox.setVgrow(tableView, Priority.ALWAYS);
-		return vbox;
-	}
-	
 	private String determineDBType(SqlConnector sqlConnector) {
 		String dbType = null;
 		if (sqlConnector instanceof SqliteConnector)
@@ -444,12 +394,6 @@ public class SqlBrowserFXApp extends Application {
 			});
 		});
 		
-		var sqlConsoleViewItem = new MenuItem("Open Simple Console View", JavaFXUtils.createIcon("/icons/console.png"));
-		sqlConsoleViewItem.setOnAction(event -> {
-			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, new SqlConsolePane(sqlConnector),
-					"Simple SqlConsole", JavaFXUtils.createIcon("/icons/console.png")));
-		});
-		
 		var terminalViewItem = new MenuItem("Open Simple Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
 		terminalViewItem.setOnAction(event -> {
 			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, new SimpleTerminalPane(),
@@ -463,80 +407,14 @@ public class SqlBrowserFXApp extends Application {
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 		
-		var chatGPTMenuItem = new MenuItem("Open ChatGPT", JavaFXUtils.createIcon("/icons/web.png"));
+		var chatGPTMenuItem = new MenuItem("Open ChatGPT", JavaFXUtils.createIcon("/icons/chatgpt.png"));
 		chatGPTMenuItem.setOnAction(event -> {
-			var webView = new WebView();
-		    var webEngine = webView.getEngine();
-		    // Force dark color scheme via CSS injection
-		    String darkModeCSS = """
-		        (function() {
-		            const style = document.createElement('style');
-		            style.textContent = `
-		                :root {
-		                    color-scheme: dark;
-		                    background-color: #222222 !important;
-		                    color: #e0e0e0 !important;
-		                }
-		                html, body *:not(pre):not(pre *) {
-		                    background-color: #222222 !important;
-		                    color: #e0e0e0 !important;
-		                    margin: 0 !important;
-		                    
-		                }
-		            `;
-		            document.documentElement.appendChild(style);
-		        })();
-		    """;
+			var chatGptWebView = new ChatGptWebView();
+		    SqlBrowserFXAppManager.registerChatGpt(chatGptWebView);
+		    var dockNode = new DockNode(chatGptWebView, "ChatGPT", JavaFXUtils.createIcon("/icons/chatgpt.png"));
+			dockNode.dock(dockPane, DockPos.RIGHT);
+			dockNode.setOnClose(() -> SqlBrowserFXAppManager.unregisterChatGpt());
 
-		    // Load ChatGPT and then apply dark mode styling
-		    webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
-		        if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
-		            webEngine.executeScript(darkModeCSS);
-		        }
-		    });
-		    webEngine.load("https://chatgpt.com/");
-		    
-		    var copySelectedHtmlText = new MenuItem("Copy Selected Text");
-		    copySelectedHtmlText.setOnAction(_ -> {
-			    var text = (String) webView.getEngine().executeScript("""
-		    		(function() {
-			    		let text = "";
-
-					    if (window.getSelection) {
-					        text = window.getSelection().toString();
-					    } else if (document.selection && document.selection.type != "Control") {
-					        text = document.selection.createRange().text;
-					    }
-					
-					    return text;
-			        })();
-	    		""");
-			    var clipboard = Clipboard.getSystemClipboard();
-			    var content = new ClipboardContent();
-			    content.putString(text);
-			    clipboard.setContent(content);
-		    });
-		    var contextMenu = new ContextMenu(copySelectedHtmlText);
-		    webView.setContextMenuEnabled(false); // disable native WebView menu
-		    webView.addEventFilter(MouseEvent.MOUSE_PRESSED, mouseEvent -> {
-		        if (mouseEvent.getButton() == MouseButton.SECONDARY) { // right-click
-		            contextMenu.show(webView, mouseEvent.getScreenX(), mouseEvent.getScreenY());
-		            mouseEvent.consume(); // prevent default
-		        } else {
-		            contextMenu.hide();
-		        }
-		    });
-		    
-		    SqlBrowserFXAppManager.setChatGptWebEngine(webEngine);
-		    new DockNode(dockPane, webView, "ChatGPT", JavaFXUtils.createIcon("/icons/web.png"));
-
-		});
-		
-		var jsonTableViewItem = new MenuItem("Open JSON Table View", JavaFXUtils.createIcon("/icons/web.png"));
-		jsonTableViewItem.setOnAction(event -> {
-			var jsonTableView = this.createJsonTableView();
-			JavaFXUtils.zoomToCurrentFactor(
-					new DockNode(dockPane, jsonTableView, "JSON Data Explorer", JavaFXUtils.createIcon("/icons/web.png")));
 		});
 		
 		var filesTreeViewItem = new MenuItem("Open Files Tree View", JavaFXUtils.createIcon("/icons/folder.png"));
@@ -562,9 +440,12 @@ public class SqlBrowserFXApp extends Application {
 			dbDiagramPane.asDockNode().setFloating(true);
 		});
 
-		menu1.getItems().addAll(sqlPaneViewItem, dbDiagramItem, new SeparatorMenuItem(),
-				filesTreeViewItem, jsonTableViewItem, new SeparatorMenuItem(),
-				sqlConsoleViewItem, logItem, chatGPTMenuItem);
+		menu1.getItems().addAll(
+				sqlPaneViewItem, dbDiagramItem, 
+				new SeparatorMenuItem(),
+				filesTreeViewItem, 
+				new SeparatorMenuItem(),
+				logItem, chatGPTMenuItem);
 
 		final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
