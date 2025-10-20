@@ -153,7 +153,10 @@ public abstract class DbConfigBox extends VBox {
 	}
 	
 	public void showLoader(boolean show) {
-		Platform.runLater(() -> this.loader.setVisible(show));
+		Platform.runLater(() -> {
+			JavaFXUtils.setChildrenDisabled(this, show);
+			this.loader.setVisible(show);
+		});
 	}
 
 

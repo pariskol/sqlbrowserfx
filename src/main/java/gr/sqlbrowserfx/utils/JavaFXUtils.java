@@ -9,6 +9,7 @@ import org.fxmisc.wellbehaved.event.Nodes;
 import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -95,5 +96,19 @@ public class JavaFXUtils {
 		timer.setRepeats(false);
 		timer.start();
 	}
+	
+    public static void setChildrenDisabled(Node node, boolean disable) {
+        if (node instanceof Parent parent) {
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                child.setDisable(disable);
+                // Recursively apply to children if the child is also a Parent
+                if (child instanceof Parent) {
+                    setChildrenDisabled(child, disable);
+                }
+            }
+        } else {
+            node.setDisable(disable);
+        }
+    }
 
 }
