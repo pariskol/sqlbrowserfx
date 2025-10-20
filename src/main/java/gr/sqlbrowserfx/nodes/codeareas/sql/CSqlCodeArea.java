@@ -77,6 +77,15 @@ public class CSqlCodeArea extends SqlCodeArea {
 		}
 
 		var addButton = new Button("Save", JavaFXUtils.createIcon("/icons/save.png"));
+
+		categoryField.setPromptText("Write a name to create new...");
+		var vb = new VBox(
+				new Label("Choose category"), 
+				categoryField, 
+				descriptionField, 
+				addButton);
+		vb.setPrefWidth(300);
+
 		addButton.setOnAction(event -> {
 			sqlConnector.executeAsync(() -> {
 				try {
@@ -87,20 +96,13 @@ public class CSqlCodeArea extends SqlCodeArea {
 									descriptionField.getText()));
 					DialogFactory.createNotification("Info", "Query has been saved successfuly");
 					this.fireEvent(new SimpleEvent());
+					saveQueryPopOver.hide();
 				} catch (SQLException e) {
 					DialogFactory.createErrorNotification(e);
 				}
 			});
 		});
-
-		categoryField.setPromptText("Write a name to create new...");
-		var vb = new VBox(
-				new Label("Choose category"), 
-				categoryField, 
-				descriptionField, 
-				addButton);
-		vb.setPrefWidth(300);
-
+		
 		categoryField.prefWidthProperty().bind(vb.widthProperty());
 		saveQueryPopOver  = new PopOver(vb);
 		
