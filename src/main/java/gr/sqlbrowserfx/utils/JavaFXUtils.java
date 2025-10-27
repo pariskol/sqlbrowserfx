@@ -6,6 +6,7 @@ import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.scene.Node;
@@ -15,6 +16,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.ScrollEvent;
+import javafx.util.Duration;
 
 public class JavaFXUtils {
 
@@ -109,6 +111,12 @@ public class JavaFXUtils {
         } else {
             node.setDisable(disable);
         }
+    }
+    
+	public static void setTimeout(Runnable runnable, Integer secs) {
+		var pause = new PauseTransition(Duration.seconds(secs));
+		pause.setOnFinished(event -> runnable.run());
+		pause.play();
     }
 
 }
