@@ -425,8 +425,7 @@ public class SqlBrowserFXApp extends Application {
 		chatGPTViewItem.setOnAction(event -> {
 			var chatGptWebView = new ChatGptWebView();
 		    SqlBrowserFXAppManager.registerChatGpt(chatGptWebView);
-		    var dockNode = new DockNode(chatGptWebView, "ChatGPT", JavaFXUtils.createIcon("/icons/chatgpt.png"));
-			dockNode.dock(dockPane, DockPos.RIGHT);
+		    var dockNode = new DockNode(dockPane, chatGptWebView, "ChatGPT", JavaFXUtils.createIcon("/icons/chatgpt.png"));
 			dockNode.setOnClose(() -> SqlBrowserFXAppManager.unregisterChatGpt());
 
 		});

@@ -10,6 +10,7 @@ import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreeView;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
+import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ChatGptWebView;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 
@@ -92,8 +93,17 @@ public class SqlBrowserFXAppManager {
 	
 	public static void askChatGpt(String question) {
 		if (chatGpt == null) {
-			throw new RuntimeException("ChatGPT is not open");
+			DialogFactory.createNotification("ChatGPT is not open", "Please open ChatGPT dock node first.");
+			return;
 		}
 		chatGpt.askChatGpt(question);
+	}
+
+	public static String getAiGeneratedCode() {
+		if (chatGpt == null) {
+			DialogFactory.createNotification("ChatGPT is not open", "Please open ChatGPT dock node first.");
+			return "";
+		}
+		return chatGpt.getAiGeneratedCode();
 	}
 }
