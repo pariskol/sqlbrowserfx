@@ -7,6 +7,7 @@ import org.fxmisc.wellbehaved.event.Nodes;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
@@ -77,8 +78,16 @@ public class ChatGptWebView extends BorderPane implements ContextMenuOwner, Inpu
 			btn.click();
         })();
 	""";
-
-	private final WebView webView = new WebView();;
+	
+	private final String getLastCodeJs = """
+			(function() {
+				const codeElements = document.querySelectorAll('code');
+				const lastCode = codeElements[codeElements.length - 1];
+				return lastCode.textContent;
+	        })();
+		""";
+	
+	private final WebView webView = new WebView();
 	
 	public ChatGptWebView() {	    
 	    var webEngine = webView.getEngine();
@@ -92,6 +101,7 @@ public class ChatGptWebView extends BorderPane implements ContextMenuOwner, Inpu
 	    
 	    this.setContextMenu();
 	    this.setInputMap();
+	    
 	    this.setCenter(webView);
 	}
 	
@@ -152,8 +162,20 @@ public class ChatGptWebView extends BorderPane implements ContextMenuOwner, Inpu
 		this.getEngine().executeScript(this.clickAskButtonJs);
 	}
 	
+	public String getAiGeneratedCode() {
+		return (String) this.getEngine().executeScript(this.getLastCodeJs);
+	}
+
 	private void copySelectedTextToClipoboard() {
 		var text = (String) webView.getEngine().executeScript(this.selectedTextJs);
+	    var clipboard = Clipboard.getSystemClipboard();
+	    var content = new ClipboardContent();
+	    content.putString(text);
+	    clipboard.setContent(content);
+	}
+	
+	private void copyLastCodeBlockToClipboard() {
+		var text = (String) webView.getEngine().executeScript(this.getLastCodeJs);
 	    var clipboard = Clipboard.getSystemClipboard();
 	    var content = new ClipboardContent();
 	    content.putString(text);
@@ -165,10 +187,13 @@ public class ChatGptWebView extends BorderPane implements ContextMenuOwner, Inpu
 		var copySelectedHtmlText = new MenuItem("Copy Selected Text", JavaFXUtils.createIcon("/icons/copy.png"));
 	    copySelectedHtmlText.setOnAction(copyAction -> this.copySelectedTextToClipoboard());
 	    
+		var copyLastCodeBlock = new MenuItem("Copy Last Code Block", JavaFXUtils.createIcon("/icons/var.png"));
+		copyLastCodeBlock.setOnAction(copyAction -> this.copyLastCodeBlockToClipboard());
+	    
 	    var refresh = new MenuItem("Refresh", JavaFXUtils.createIcon("/icons/refresh.png"));
 	    refresh.setOnAction(copyAction -> this.getEngine().reload());
 	    
-	    return new ContextMenu(copySelectedHtmlText, refresh);
+	    return new ContextMenu(copySelectedHtmlText, copyLastCodeBlock, new SeparatorMenuItem(), refresh);
 	}
 
 }
