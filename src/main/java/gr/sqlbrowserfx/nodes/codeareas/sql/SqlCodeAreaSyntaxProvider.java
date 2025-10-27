@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
+import gr.sqlbrowserfx.nodes.codeareas.AiProvider;
 import gr.sqlbrowserfx.nodes.codeareas.CodeAreaSyntaxProvider;
 import gr.sqlbrowserfx.nodes.codeareas.FormatterMode;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
@@ -25,7 +26,7 @@ import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 import gr.sqlbrowserfx.utils.SqlFormatter;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 
-public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String> {
+public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String>, AiProvider {
 	
 	private static final Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
 
@@ -142,5 +143,10 @@ public class SqlCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String>
 	@Override
 	public void getAiHelp(String question) {
 		SqlBrowserFXAppManager.askChatGpt(question);
+	}
+	
+	@Override
+	public String getAiGeneratedCode() {
+		return SqlBrowserFXAppManager.getAiGeneratedCode();
 	}
 }
