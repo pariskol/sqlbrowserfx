@@ -11,7 +11,7 @@
 		<maven.compiler.source>25</maven.compiler.source>
 		<maven.compiler.target>25</maven.compiler.target>
 		<attach.version>4.0.10</attach.version>
-		<javafx.version>21.0.8</javafx.version>
+		<javafx.version>25</javafx.version>
 		<log4j.version>2.22.1</log4j.version>
 	</properties>
 
@@ -89,7 +89,7 @@
 			<groupId>org.fxmisc.richtext</groupId>
 			<artifactId>richtextfx</artifactId>
 			<!-- 0.10.9 works better than 0.11.2 -->
-			<version>0.11.6</version>
+			<version>0.11.7</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
