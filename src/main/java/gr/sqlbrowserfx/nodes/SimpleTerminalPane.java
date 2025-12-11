@@ -183,7 +183,7 @@ public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, Inpu
             }
         });
 
-        var toolbar = new FlowPane(
+        var toolbar = new CustomFlowPane(
                 clearHistoryButton,
                 toggleHistoryListButton
         );

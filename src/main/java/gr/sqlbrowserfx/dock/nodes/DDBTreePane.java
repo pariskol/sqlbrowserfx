@@ -15,6 +15,7 @@ import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
+import gr.sqlbrowserfx.nodes.CustomFlowPane;
 import gr.sqlbrowserfx.nodes.InputMapOwner;
 import gr.sqlbrowserfx.nodes.TableCreationPane;
 import gr.sqlbrowserfx.nodes.ToolbarOwner;
@@ -107,7 +108,7 @@ public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner, I
 		});
 		refreshButton.setTooltip(new Tooltip("Refresh"));
 		
-		FlowPane toolbar =  new FlowPane(dbTreeView.getSearchBox(), addButton, refreshButton);
+		FlowPane toolbar =  new CustomFlowPane(dbTreeView.getSearchBox(), addButton, refreshButton);
 		toolbar.setPrefWidth(addButton.getWidth());
 		return toolbar;
 	}

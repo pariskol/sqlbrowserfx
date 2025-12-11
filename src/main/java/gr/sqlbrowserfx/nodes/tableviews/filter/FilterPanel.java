@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import gr.sqlbrowserfx.nodes.CustomHBox;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.value.ChangeListener;
@@ -136,7 +137,7 @@ public final class FilterPanel<T,R> extends VBox {
         getChildren().add(checkListView);
 
         //initialize apply button
-        HBox buttonBox = new HBox();
+        HBox buttonBox = new CustomHBox();
 
         Button applyBttn = new Button(getString("filterpanel.apply.button")); //$NON-NLS-1$
         HBox.setHgrow(applyBttn, Priority.ALWAYS);

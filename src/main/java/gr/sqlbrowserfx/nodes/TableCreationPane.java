@@ -46,7 +46,7 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner, Simpl
 		columnBoxesListView.getItems().add(columnCreationBox);
 		sqlCodeArea = new SqlCodeArea();
 		SplitPane splitPane = new SplitPane(
-				new VBox(tableNameField, columnBoxesListView),
+				new CustomVBox(tableNameField, columnBoxesListView),
 				sqlCodeArea);
 		splitPane.setOrientation(Orientation.VERTICAL);
 		this.setCenter(splitPane);
@@ -82,7 +82,7 @@ public class TableCreationPane extends BorderPane implements ToolbarOwner, Simpl
 		});
 		createQueryButton.setTooltip(new Tooltip("Generate sql create statement"));
 
-		FlowPane toolbar = new FlowPane(addButton, createQueryButton);
+		FlowPane toolbar = new CustomFlowPane(addButton, createQueryButton);
 		toolbar.setPrefWidth(addButton.getWidth());
 		return toolbar;
 	}

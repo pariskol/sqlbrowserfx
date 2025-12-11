@@ -32,6 +32,8 @@ import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ChatGptWebView;
+import gr.sqlbrowserfx.nodes.CustomHBox;
+import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.DbConfigBox;
 import gr.sqlbrowserfx.nodes.FilesTreeView;
@@ -71,7 +73,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -142,12 +143,12 @@ public class SqlBrowserFXApp extends Application {
 		var selectedDBtext = new Label("No database selected");
 		var openButton = new Button("Open", JavaFXUtils.createIcon("/icons/database.png"));
 		openButton.setOnAction(actionEvent -> dbSelectionAction(selectedDBtext.getText()));
-		var bottomBox = new HBox(selectedDBtext, openButton);
+		var bottomBox = new CustomHBox(selectedDBtext, openButton);
 		bottomBox.setPadding(new Insets(5));
 		bottomBox.setSpacing(5);
 		bottomBox.setAlignment(Pos.CENTER_RIGHT);
 
-		var rightBox = new VBox();
+		var rightBox = new CustomVBox();
 		var text = new Label("Browse system for database...");
 		var fileChooserButton = new Button("Search", JavaFXUtils.createIcon("/icons/magnify.png"));
 		fileChooserButton.setOnAction(actionEvent -> {
@@ -181,10 +182,8 @@ public class SqlBrowserFXApp extends Application {
 						dbSelectionAction(selectedDBtext.getText());
 				}
 			});
-		var leftBox = new VBox(recentDBsText, recentDBsTableView);
+		var leftBox = new CustomVBox(recentDBsText, recentDBsTableView);
 		leftBox.setAlignment(Pos.CENTER);
-		leftBox.setPadding(new Insets(5));
-		leftBox.setSpacing(5);
 
 		var borderPane = new BorderPane();
 		borderPane.setCenter(rightBox);
@@ -358,20 +357,19 @@ public class SqlBrowserFXApp extends Application {
 		// fixed size 
 		SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
 		
-		var vbox = new VBox();
-		vbox.setAlignment(Pos.CENTER);
-		vbox.getChildren().addAll(menuBar, dockPane);
-		VBox.setVgrow(dockPane, Priority.ALWAYS);
+		var mainPane = new BorderPane();
+		mainPane.setTop(menuBar);
+		mainPane.setCenter(dockPane);
 		
-		JavaFXUtils.addZoomInOutSupport(vbox);
+		JavaFXUtils.addZoomInOutSupport(mainPane);
 
 		if (primaryScene == null) {
-			primaryScene = new Scene(vbox);
+			primaryScene = new Scene(mainPane);
 			STAGE.setScene(primaryScene);
 			primaryScene.getStylesheets().add(CSS_THEME);
 		}
 
-		primaryScene.setRoot(vbox);
+		primaryScene.setRoot(mainPane);
 		STAGE.heightProperty().addListener((obs, oldVal, newVal) -> {
 			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.TRUE);
 			for (SplitPane split : dockPane.getSplitPanes()) {
@@ -493,7 +491,7 @@ public class SqlBrowserFXApp extends Application {
 		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
 
 		var menu3 = new Menu();
-		var customGraphic = new HBox(JavaFXUtils.createIcon("/icons/settings.png"), new Label("Internal DB"));
+		var customGraphic = new CustomHBox(JavaFXUtils.createIcon("/icons/settings.png"), new Label("Internal DB"));
 		customGraphic.setSpacing(5);
 		menu3.setGraphic(customGraphic);
 		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
@@ -531,7 +529,7 @@ public class SqlBrowserFXApp extends Application {
 			menu4.setDisable(true);
 		
 		var menu5 = new Menu();
-		customGraphic = new HBox(JavaFXUtils.createIcon("/icons/help.png"), new Label("Help"));
+		customGraphic = new CustomHBox(JavaFXUtils.createIcon("/icons/help.png"), new Label("Help"));
 		customGraphic.setSpacing(5);
 		menu5.setGraphic(customGraphic);
 		menu5.getGraphic().setOnMouseClicked(mouseEvent -> {
@@ -560,8 +558,7 @@ public class SqlBrowserFXApp extends Application {
 		var portField = new TextField(restServiceConfig.getPort().toString());
 		var saveButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
 
-		var vBox = new VBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
-		vBox.setPadding(new Insets(15));
+		var vBox = new CustomVBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
 
 		var stage = new Stage();
 		var scene = new Scene(vBox);

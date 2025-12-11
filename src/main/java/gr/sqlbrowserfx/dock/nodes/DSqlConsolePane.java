@@ -19,6 +19,7 @@ import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.SqlConnector;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.codeareas.sql.HistorySqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
@@ -64,7 +65,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable{
 
 		});
 		VirtualizedScrollPane<SqlCodeArea> vsp = new VirtualizedScrollPane<>(historyCodeArea);
-		historyBox = new VBox(datePicker, vsp);
+		historyBox = new CustomVBox(datePicker, vsp);
 		VBox.setVgrow(vsp, Priority.ALWAYS);
 		
 		this.getQueriesHistory(LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));

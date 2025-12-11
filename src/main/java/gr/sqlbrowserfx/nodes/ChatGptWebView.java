@@ -5,6 +5,7 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import gr.sqlbrowserfx.utils.JavaFXUtils.CssType;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
@@ -20,44 +21,83 @@ import javafx.scene.web.WebView;
 
 public class ChatGptWebView extends BorderPane implements ContextMenuOwner, InputMapOwner {
 	
-	private final String darkModeCssJs = """
+	private final String lightModeCssJs = """
         (function() {
             const style = document.createElement('style');
             style.textContent = `
                 :root {
                     color-scheme: dark;
-                    background-color: #222222 !important;
+                    background-color:#F7F7FB !important;
                     color: #e0e0e0 !important;
                 }
                 html, body *:not(pre):not(pre *) {
-                    background-color: #222222 !important;
+                    background-color:#F7F7FB !important;
                     color: #e0e0e0 !important;
                     margin: 0 !important;
                     box-shadow: none !important;
 					text-shadow: none !important;
                 }
                 pre * {
-                    background-color: #2d2d2d !important;
+                    background-color: #F7F7FB !important;
                     color: #e0e0e0 !important;
-                    border-radius: 5px !important;
+                    border-radius: 4px !important;
                 }
 			    button {
-			    	border-radius: 5px !important;
+			    	border-radius: 4px !important;
 			    	border-width: 2px !important;
-			    	border-color: #2d2d2d !important;
+			    	border-color: #F7F7FB !important;
 				}
 				button:hover {
-					border-color: #196de3 !important;
+					border-color: #c98fdb !important;
 				}
 				form {
-                    border-radius: 5px !important;
+                    border-radius: 4px !important;
 					border-width: 2px !important;
-					border-color: #2d2d2d !important;
+					border-color: #F7F7FB !important;
 				}
             `;
             document.documentElement.appendChild(style);
         })();
-    """;
+	""";
+	
+	private final String darkModeCssJs = """
+	        (function() {
+	            const style = document.createElement('style');
+	            style.textContent = `
+	                :root {
+	                    color-scheme: dark;
+	                    background-color: #222222 !important;
+	                    color: #e0e0e0 !important;
+	                }
+	                html, body *:not(pre):not(pre *) {
+	                    background-color: #222222 !important;
+	                    color: #e0e0e0 !important;
+	                    margin: 0 !important;
+	                    box-shadow: none !important;
+						text-shadow: none !important;
+	                }
+	                pre * {
+	                    background-color: #2d2d2d !important;
+	                    color: #e0e0e0 !important;
+	                    border-radius: 4px !important;
+	                }
+				    button {
+				    	border-radius: 4px !important;
+				    	border-width: 2px !important;
+				    	border-color: #2d2d2d !important;
+					}
+					button:hover {
+						border-color: #196de3 !important;
+					}
+					form {
+	                    border-radius: 4px !important;
+						border-width: 2px !important;
+						border-color: #2d2d2d !important;
+					}
+	            `;
+	            document.documentElement.appendChild(style);
+	        })();
+	    """;
 	private final String selectedTextJs = """
 		(function() {
     		let text = "";
@@ -94,7 +134,12 @@ public class ChatGptWebView extends BorderPane implements ContextMenuOwner, Inpu
 	    // Load ChatGPT and then apply dark mode styling
 	    webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
 	        if (newState == javafx.concurrent.Worker.State.SUCCEEDED) {
-	            webEngine.executeScript(this.darkModeCssJs);
+	        	if (JavaFXUtils.getCssType() == CssType.DARK) {
+	        		webEngine.executeScript(this.darkModeCssJs);
+	        	}
+	        	else {
+	        		webEngine.executeScript(this.lightModeCssJs);
+	        	}
 	        }
 	    });
 	    webEngine.load("https://chatgpt.com/");

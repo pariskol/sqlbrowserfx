@@ -20,8 +20,6 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObservable<String> {
 
@@ -93,13 +91,13 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 		caseInsensitiveCheckBox.setFocusTraversable(false);
 		
 		if (enableReplace) {
-			this.setContentNode(new HBox(new VBox(findField, replaceField, new HBox(findButton, replaceButton, replaceAllButton)),
-										 new VBox(wholeWordCheckBox, caseInsensitiveCheckBox))
+			this.setContentNode(new CustomHBox(new CustomVBox(findField, replaceField, new CustomHBox(findButton, replaceButton, replaceAllButton)),
+										 new CustomVBox(wholeWordCheckBox, caseInsensitiveCheckBox))
 					);
 		}
 		else {
-			this.setContentNode(new HBox(new VBox(findField, findButton),
-										 new VBox(wholeWordCheckBox, caseInsensitiveCheckBox)));
+			this.setContentNode(new CustomHBox(new CustomVBox(findField, findButton),
+										 new CustomVBox(wholeWordCheckBox, caseInsensitiveCheckBox)));
 		}
 	}
 	

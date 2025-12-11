@@ -11,6 +11,7 @@ import org.fxmisc.wellbehaved.event.Nodes;
 import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
+import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -20,7 +21,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.VBox;
 
 public class CSqlCodeArea extends SqlCodeArea {
 
@@ -79,7 +79,7 @@ public class CSqlCodeArea extends SqlCodeArea {
 		var addButton = new Button("Save", JavaFXUtils.createIcon("/icons/save.png"));
 
 		categoryField.setPromptText("Write a name to create new...");
-		var vb = new VBox(
+		var vb = new CustomVBox(
 				new Label("Choose category"), 
 				categoryField, 
 				descriptionField, 

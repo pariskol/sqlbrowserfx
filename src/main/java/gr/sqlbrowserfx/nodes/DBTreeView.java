@@ -141,7 +141,7 @@ public class DBTreeView extends TreeView<String>
 			this.scrollTo(row);
 		});
 
-		searchBox = new HBox(searchField, nextSearchResultButton);
+		searchBox = new CustomHBox(searchField, nextSearchResultButton);
 		this.setInputMap();
 	}
 
@@ -544,7 +544,7 @@ public class DBTreeView extends TreeView<String>
 	}
 	
 	public void showSearchPopup(Node owner) {
-		var popOver = new CustomPopOver(new HBox(searchField, nextSearchResultButton));
+		var popOver = new CustomPopOver(new CustomHBox(searchField, nextSearchResultButton));
 		popOver.show(owner);
     }
 

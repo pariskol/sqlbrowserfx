@@ -1,5 +1,6 @@
 package gr.sqlbrowserfx.nodes.tableviews.filter;
 
+import gr.sqlbrowserfx.nodes.CustomHBox;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -26,7 +27,7 @@ public class SqlTableFilter extends TableFilter<MapTableViewRow>{
 		((SqlTableView) tableColumn.getTableView()).resetColumnGraphic(tableColumn);
 		boolean isFilterable = ((SqlTableView)tableColumn.getTableView()).getUniqueEntriesForColumn(tableColumn.getText()) < MAX_FILTERABLE_VALUES;
     	if (isFilterable) {
-    		Node graphic = tableColumn.getGraphic() != null ? new HBox(tableColumn.getGraphic(),JavaFXUtils.createIcon("/icons/filter.png")) : JavaFXUtils.createIcon("/icons/filter.png"); 
+    		Node graphic = tableColumn.getGraphic() != null ? new CustomHBox(tableColumn.getGraphic(),JavaFXUtils.createIcon("/icons/filter.png")) : JavaFXUtils.createIcon("/icons/filter.png"); 
 			tableColumn.setGraphic(graphic);
     	}
 		return isFilterable;
