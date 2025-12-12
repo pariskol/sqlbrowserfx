@@ -54,7 +54,6 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
 public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleObservable<String> {
@@ -338,7 +337,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
             if (popOverIsShowing) return;
 
             popOverIsShowing = true;
-            CustomPopOver popOver = new CustomPopOver(new VBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox, showLinesCheckBox));
+            CustomPopOver popOver = new CustomPopOver(new CustomVBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox, showLinesCheckBox));
             popOver.setOnHidden(event -> popOverIsShowing = false);
             popOver.show(settingsButton);
         });
@@ -352,7 +351,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         searchButton.setOnMouseClicked(mouseEvent -> this.showFileSearchPopOver());
         searchButton.setTooltip(new Tooltip("Search file"));
 
-        FlowPane toolbar = new FlowPane(executeButton, stopExecutionButton, settingsButton, openButton);
+        FlowPane toolbar = new CustomFlowPane(executeButton, stopExecutionButton, settingsButton, openButton);
         return toolbar;
     }
 

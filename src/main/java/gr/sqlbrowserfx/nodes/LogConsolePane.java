@@ -10,13 +10,11 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import gr.sqlbrowserfx.nodes.codeareas.log.CodeAreaTailerListener;
 import gr.sqlbrowserfx.nodes.codeareas.log.LogCodeArea;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
-import javafx.geometry.Orientation;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.VBox;
 
 public class LogConsolePane extends BorderPane implements ToolbarOwner {
 	private boolean popOverIsShowing = false;
@@ -71,13 +69,13 @@ public class LogConsolePane extends BorderPane implements ToolbarOwner {
 		settingsButton.setOnMouseClicked(mouseEvent -> {
 			if (!popOverIsShowing) {
 				popOverIsShowing = true;
-				PopOver popOver = new PopOver(new VBox(wrapTextCheckBox, showLinesCheckBox, followCarretCheckBox));
+				PopOver popOver = new PopOver(new CustomVBox(wrapTextCheckBox, showLinesCheckBox, followCarretCheckBox));
 				popOver.setOnHidden(event -> popOverIsShowing = false);
 				popOver.show(settingsButton);
 			}
 		});
 		settingsButton.setTooltip(new Tooltip("Adjust settings"));
-		FlowPane toolbar = new FlowPane(settingsButton);
+		FlowPane toolbar = new CustomFlowPane(settingsButton);
 		return toolbar;
 	}
 

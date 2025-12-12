@@ -34,6 +34,9 @@ import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.TableColumnFilteringEvent;
 import gr.sqlbrowserfx.listeners.TableSearchFilteringEvent;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
+import gr.sqlbrowserfx.nodes.CustomFlowPane;
+import gr.sqlbrowserfx.nodes.CustomHBox;
+import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.nodes.InputMapOwner;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.ToolbarOwner;
@@ -252,11 +255,11 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			columnsSettingsButton.setOnMouseClicked(mouseEvent -> this.columnsSettingsButtonAction());
 			columnsSettingsButton.setTooltip(new Tooltip("Select visible columns"));
 
-			return new FlowPane(searchField, refreshButton, columnsSettingsButton, settingsButton, 
+			return new CustomFlowPane(searchField, refreshButton, columnsSettingsButton, settingsButton, 
 					addButton, editButton, deleteButton, importCsvButton, exportCsvButton,
 					sqlConsoleButton);
 		} else {
-			return new FlowPane(searchButton, settingsButton);
+			return new CustomFlowPane(searchButton, settingsButton);
 		}
 
 	}
@@ -537,7 +540,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		refreshButton.setOnAction(event -> editBox.refresh());
 		refreshButton.setFocusTraversable(false);
 
-		FlowPane toolbar = new FlowPane(copyButton, pasteButton, refreshButton);
+		FlowPane toolbar = new CustomFlowPane(copyButton, pasteButton, refreshButton);
 		editBox.setToolbar(toolbar);
 
 		if (isResizable) {
@@ -888,7 +891,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 		}
 
-		HBox compareBox = new HBox();
+		HBox compareBox = new CustomHBox();
 		for (MapTableViewRow row : getSelectedSqlTableView().getSelectionModel().getSelectedItems()) {
 			SqlTableRowEditBox editBox = createEditBox(row, true);
 
@@ -939,7 +942,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 		ComboBox<String> viewsBox = this.createViewsBox();
 		viewsBox.prefWidthProperty().bind(tablesBox.widthProperty());
 
-		popOver = new CustomPopOver(new VBox(new Label("Select"), tablesBox, viewsBox));
+		popOver = new CustomPopOver(new CustomVBox(new Label("Select"), tablesBox, viewsBox));
 		popOver.show(tableSelectButton);
 	}
 
@@ -975,7 +978,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 
 		settingsButton.requestFocus();
-		popOver = new CustomPopOver(new VBox(resizeModeCheckBox, fullModeCheckBox));
+		popOver = new CustomPopOver(new CustomVBox(resizeModeCheckBox, fullModeCheckBox));
 		popOver.show(settingsButton);
 	}
 
@@ -984,7 +987,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 			return;
 
 		searchButton.requestFocus();
-		VBox searchBox = new VBox(new Label("Type and press enter"), searchField);
+		VBox searchBox = new CustomVBox(new Label("Type and press enter"), searchField);
 		searchBox.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ESCAPE) {
 				popOver.hide();
@@ -1002,7 +1005,7 @@ public class SqlPane extends BorderPane implements ToolbarOwner, ContextMenuOwne
 
 		if (getSelectedSqlTableView().getSqlTable() != null) {
 			this.fillColumnCheckBoxes(getSelectedSqlTableView());
-			VBox vBox = new VBox();
+			VBox vBox = new CustomVBox();
 			for (CheckBox checkBox : columnCheckBoxesMap.values()) {
 				vBox.getChildren().add(checkBox);
 			}

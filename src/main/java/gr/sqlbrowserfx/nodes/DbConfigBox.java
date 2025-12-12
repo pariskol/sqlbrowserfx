@@ -62,8 +62,7 @@ public abstract class DbConfigBox extends VBox {
 		this.loader.setMaxSize(40, 40);
 		this.loader.setVisible(false);
 		
-		HBox hb = new HBox(connectButton, loader);
-		hb.setSpacing(5);
+		HBox hb = new CustomHBox(connectButton, loader);
 		this.getChildren().add(hb);
 		
 		this.getChildren().add(new Label("History"));

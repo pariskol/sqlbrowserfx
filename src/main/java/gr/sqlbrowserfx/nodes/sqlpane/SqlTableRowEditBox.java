@@ -11,6 +11,8 @@ import java.util.List;
 import org.controlsfx.control.PopOver;
 
 import gr.sqlbrowserfx.listeners.SimpleObserver;
+import gr.sqlbrowserfx.nodes.CustomHBox;
+import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -48,7 +50,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 		
 		messageLabel = new Label();
 		messageLabel.setTextFill(Color.GREEN);
-		centerBox = new VBox();
+		centerBox = new CustomVBox();
 		detailsArea = new TextArea();
 		fieldsMap = new LinkedHashMap<>();
 		columns = sqlTableView.getColumnsNames();
@@ -57,7 +59,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 			label.setTooltip(new Tooltip(columnName));
 			TextArea textArea = new TextArea();
 			textArea.setPrefRowCount(1);
-			textArea.setPrefColumnCount(10);
+			textArea.setPrefColumnCount(14);
 			textArea.setOnKeyPressed(event -> {
 				if (!event.isControlDown())
 					return;
@@ -144,7 +146,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 					infoText.setPrefColumnCount(30);
 					infoText.setPrefRowCount(12);
 					textArea.textProperty().bind(infoText.textProperty());
-					PopOver info = new CustomPopOver(new VBox(infoText));
+					PopOver info = new CustomPopOver(new CustomVBox(infoText));
 					info.setOnHidden(event-> textArea.textProperty().unbind());
 					info.show(infoButton);
 					infoText.setOnKeyPressed(event-> {if (event.getCode() == KeyCode.ESCAPE) info.hide();});
@@ -166,7 +168,7 @@ public class SqlTableRowEditBox extends BorderPane implements SimpleObserver<Map
 				textArea.setTooltip(new Tooltip("Foreign key"));
 				label.setGraphic(JavaFXUtils.createIcon("/icons/foreign-key.png"));
 			}
-			HBox node = new HBox(label, textArea, infoButton);
+			HBox node = new CustomHBox(label, textArea, infoButton);
 
 			if (resizeable) {
 				label.prefWidthProperty().bind(node.widthProperty().multiply(0.4));

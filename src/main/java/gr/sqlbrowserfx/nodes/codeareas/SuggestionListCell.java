@@ -1,5 +1,6 @@
 package gr.sqlbrowserfx.nodes.codeareas;
 
+import gr.sqlbrowserfx.nodes.CustomHBox;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
@@ -32,12 +33,11 @@ public class SuggestionListCell extends ListCell<Keyword>{
 				var hint = new Label(item.getDescription());
 				hint.setStyle("-fx-text-fill: -fx-secondary-light-color; -fx-font-size: 10pt;");
 				
-				var hbox = new HBox(
+				var hbox = new CustomHBox(
 					JavaFXUtils.createIcon("/icons/function.png"),
 					new Label(item.getKeyword()),
 					hint
 				);
-		        hbox.setSpacing(5);
 		        hbox.setAlignment(Pos.CENTER_LEFT);
 			        
 				this.setGraphic(hbox);

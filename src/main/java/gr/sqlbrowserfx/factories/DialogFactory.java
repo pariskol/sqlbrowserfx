@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
 import gr.sqlbrowserfx.SqlBrowserFXApp;
+import gr.sqlbrowserfx.nodes.CustomHBox;
+import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
 import gr.sqlbrowserfx.nodes.tableviews.SqlTableView;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
@@ -66,7 +68,7 @@ public class DialogFactory {
 			textArea.setWrapText(true);
 
 			VBox.setVgrow(textArea, Priority.ALWAYS);
-			VBox expContent = new VBox(label,textArea);
+			VBox expContent = new CustomVBox(label,textArea);
 
 			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 			alert.getDialogPane().setExpandableContent(expContent);
@@ -159,10 +161,10 @@ public class DialogFactory {
         dialog.initModality(Modality.NONE);
         dialog.initOwner(owner.getScene().getWindow());
 
-        HBox buttonBox = new HBox();
+        HBox buttonBox = new CustomHBox();
         buttonBox.setAlignment(NOTIFICATION_POS);
 
-        VBox dialogVbox = new VBox();
+        VBox dialogVbox = new CustomVBox();
         dialogVbox.setAlignment(Pos.CENTER);
 
 

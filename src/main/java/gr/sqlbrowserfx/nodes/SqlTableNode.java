@@ -33,7 +33,7 @@ public class SqlTableNode extends VBox {
 		titleLabel.setPadding(new Insets(0, 0, 6, 0));
 		titleLabel.setAlignment(Pos.CENTER);
 		configureTitleBorder(titleLabel);
-		var columnsVbox = new VBox();
+		var columnsVbox = new CustomVBox();
 		table.getColumns().forEach(col -> {
 			if (table.isPrimaryKey(col)) {
 				columnsVbox.getChildren()

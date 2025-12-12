@@ -27,6 +27,8 @@ import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.DbCash;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
+import gr.sqlbrowserfx.nodes.CustomHBox;
+import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.nodes.codeareas.AutoCompleteCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.HighLighter;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
@@ -44,8 +46,6 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider> implements ContextMenuOwner, HighLighter, TextAnalyzer {
 
@@ -370,10 +370,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		});
 		var pane = new VirtualizedScrollPane<CodeArea>(codeArea);
 		pane.setPrefSize(600, 400);
-		var hbox = new HBox(codeArea.getSearchAndReplacePopOver(), codeArea.createGoToLinePopOver().getContentNode(), datePicker);
+		var hbox = new CustomHBox(codeArea.getSearchAndReplacePopOver(), codeArea.createGoToLinePopOver().getContentNode(), datePicker);
 		hbox.setSpacing(20);
 		
-		var vbox = new VBox(new Label("Query History", JavaFXUtils.createIcon("/icons/monitor.png")), hbox, pane);
+		var vbox = new CustomVBox(new Label("Query History", JavaFXUtils.createIcon("/icons/monitor.png")), hbox, pane);
 		vbox.setPrefSize(600, 500);
 
 		historyPopOver = new CustomPopOver(vbox);
@@ -403,8 +403,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 				Platform.runLater(() -> {
 					codeArea.replaceText(history.toString());
 					var pattern = "--  Executed at :";
-					codeArea.moveTo(codeArea.getText().lastIndexOf(pattern) + pattern.length());
-					codeArea.requestFollowCaret();
+					if (codeArea.getText().lastIndexOf(pattern) != -1) {
+						codeArea.moveTo(codeArea.getText().lastIndexOf(pattern) + pattern.length());
+						codeArea.requestFollowCaret();
+					}
 				});
 			}
 		);

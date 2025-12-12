@@ -20,7 +20,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 
@@ -99,7 +98,7 @@ public class FileSearchPopOver extends CustomPopOver {
 		});
 		descLabel.setTooltip(new Tooltip("Click to change root path"));
 		
-		this.setContentNode(new VBox(descLabel, searchField, filesListView));
+		this.setContentNode(new CustomVBox(descLabel, searchField, filesListView));
 		this.setOnHidden(event -> {
 			if (executor != null) {
 				executor.shutdownNow();

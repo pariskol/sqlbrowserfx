@@ -19,6 +19,11 @@ import javafx.scene.input.ScrollEvent;
 import javafx.util.Duration;
 
 public class JavaFXUtils {
+	
+	public enum CssType {
+		LIGHT,
+		DARK
+	}
 
 	private static  String CSS_THEME = "/styles/" + PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark");
 	private static double ZOOM = 1.0;
@@ -29,6 +34,14 @@ public class JavaFXUtils {
 		} catch (Exception e) {
 			CSS_THEME = "/styles/flat-dark";
 		}
+	}
+	
+	public static String getCssTheme() {
+		return CSS_THEME;
+	}
+	
+	public static CssType getCssType() {
+		return CSS_THEME.contains("dark") ? CssType.DARK : CssType.LIGHT;
 	}
 	
 	public static Double getZoomFactorApplied() {

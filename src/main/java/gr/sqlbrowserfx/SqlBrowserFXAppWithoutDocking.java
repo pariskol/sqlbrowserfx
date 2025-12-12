@@ -19,6 +19,8 @@ import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsolePaneNH;
 import gr.sqlbrowserfx.factories.DialogFactory;
+import gr.sqlbrowserfx.nodes.CustomHBox;
+import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
@@ -52,7 +54,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -126,12 +127,12 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 		var selectedDBtext = new Label("No database selected");
 		var openButton = new Button("Open", JavaFXUtils.createIcon("/icons/database.png"));
 		openButton.setOnAction(actionEvent -> dbSelectionAction(selectedDBtext.getText()));
-		var bottomBox = new HBox(selectedDBtext, openButton);
+		var bottomBox = new CustomHBox(selectedDBtext, openButton);
 		bottomBox.setPadding(new Insets(5));
 		bottomBox.setSpacing(5);
 		bottomBox.setAlignment(Pos.CENTER_RIGHT);
 
-		var rightBox = new VBox();
+		var rightBox = new CustomVBox();
 		var text = new Label("Browse system for database...");
 		var fileChooserButton = new Button("Search", JavaFXUtils.createIcon("/icons/magnify.png"));
 		fileChooserButton.setOnAction(actionEvent -> {
@@ -164,7 +165,7 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 					dbSelectionAction(selectedDBtext.getText());
 			}
 		});
-		var leftBox = new VBox(recentDBsText, recentDBsTableView);
+		var leftBox = new CustomVBox(recentDBsText, recentDBsTableView);
 		leftBox.setAlignment(Pos.CENTER);
 		leftBox.setPadding(new Insets(5));
 		leftBox.setSpacing(5);
@@ -315,7 +316,7 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 		TextField portField = new TextField(restServiceConfig.getPort().toString());
 		Button saveButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
 
-		VBox vBox = new VBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
+		VBox vBox = new CustomVBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
 		vBox.setPadding(new Insets(15));
 
 		Stage stage = new Stage();
@@ -369,7 +370,7 @@ public class SqlBrowserFXAppWithoutDocking extends Application {
 
 		MenuBar menuBar = createMenu();
 
-		var vbox = new VBox();
+		var vbox = new CustomVBox();
 		vbox.setAlignment(Pos.CENTER);
 		vbox.getChildren().addAll(menuBar, mainSp);
 		VBox.setVgrow(mainSp, Priority.ALWAYS);

@@ -39,8 +39,6 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.TransferMode;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 
 public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenuOwner, InputMapOwner {
 
@@ -364,9 +362,9 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 	}
 
 	private void createSearPopOver() {
-		var vb = new VBox(
+		var vb = new CustomVBox(
 				new Label("Type and press enter"),
-				new HBox(searchField, nextSearchResultButton),
+				new CustomHBox(searchField, nextSearchResultButton),
 				searResultsLabel,
 				searchResultsListView
 			);
