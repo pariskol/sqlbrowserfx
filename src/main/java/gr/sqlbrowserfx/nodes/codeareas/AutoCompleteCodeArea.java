@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -52,6 +53,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     private static final int Y_OFFSET = (int) (Math.round(JavaFXUtils.getZoomFactorApplied() * 35 + 5));
     private boolean autoCompletePopupShowing = false;
     private boolean insertMode = false;
+    private boolean hasSimpleContextMenu = false;
     private final T syntaxProvider;
 
     private ListView<Keyword> suggestionsList;
@@ -370,6 +372,16 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         var menuItemSaveAs = new MenuItem("Save File As...", JavaFXUtils.createIcon("/icons/save.png"));
         menuItemSaveAs.setOnAction(action -> this.saveAsFileAction());
 
+		if (hasSimpleContextMenu) {
+			menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste,
+				new SeparatorMenuItem(),
+				menuItemSearchAndReplace, menuItemGoToLine,
+				new SeparatorMenuItem(),
+                menuItemSaveAs
+			);
+			return menu;
+		}
+		
         menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste, menuItemUperCase, menuItemLowerCase,
                 new SeparatorMenuItem(),
                 menuItemFormat, menuItemFormat3,
@@ -586,24 +598,34 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         return popup;
     }
 
+    private boolean hasGroup(Matcher matcher, String group) {
+        try {
+            return matcher.group(group) != null;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+    
     @Override
     public StyleSpans<Collection<String>> computeHighlighting(String text) {
         var matcher = syntaxProvider.getPatternMatcher(text);
         var lastKwEnd = 0;
         var spansBuilder = new StyleSpansBuilder<Collection<String>>();
         while (matcher.find()) {
-            var styleClass = matcher
-                    .group("KEYWORD") != null
-                    ? "keyword"
-                    : matcher.group("FUNCTION") != null ? "function"
-                    : matcher.group("METHOD") != null ? "method"
-                    : matcher.group("PAREN") != null ? "paren"
-                    : matcher.group("SEMICOLON") != null ? "semicolon"
-                    : matcher.group("STRING2") != null ? "string2"
-                    : matcher.group("STRING") != null ? "string"
-                    : matcher.group("COMMENT") != null
-                    ? "comment"
-                    : null;
+        	var styleClass =
+        		      hasGroup(matcher, "COMMENT")    ? "comment"      // highest priority
+        		    : hasGroup(matcher, "STRING")     ? "string"
+        		    : hasGroup(matcher, "STRING2")    ? "string"
+        		    : hasGroup(matcher, "STRING3")    ? "string"
+        		    : hasGroup(matcher, "DIAMOND")    ? "diamond"      // DIAMOND after strings/comments
+        		    : hasGroup(matcher, "ANNOTATION") ? "annotation"
+        		    : hasGroup(matcher, "METHOD")     ? "method"
+        		    : hasGroup(matcher, "FUNCTION")   ? "function"
+        		    : hasGroup(matcher, "KEYWORD")    ? "keyword"
+        		    : hasGroup(matcher, "PAREN")      ? "paren"
+        		    : hasGroup(matcher, "SEMICOLON")  ? "semicolon"
+        		    : null;
+
             /* never happens */
             assert styleClass != null;
             spansBuilder.add(Collections.emptyList(), matcher.start() - lastKwEnd);
@@ -666,4 +688,19 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     protected void enableInsertMode(Boolean enable) {
         this.insertMode = enable;
     }
+
+	public T getSyntaxProvider() {
+		return syntaxProvider;
+	}
+
+	public boolean hasSimpleContextMenu() {
+		return hasSimpleContextMenu;
+	}
+
+	public void setHasSimpleContextMenu(boolean hasSimpleContextMenu) {
+		this.hasSimpleContextMenu = hasSimpleContextMenu;
+		this.setContextMenu(this.createContextMenu());
+	}
+	
+	
 }

@@ -26,7 +26,8 @@ public class JavaCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String
             "new", "package", "private", "protected", "public",
             "return", "short", "static", "strictfp", "super",
             "switch", "synchronized", "this", "throw", "throws",
-            "transient", "try", "void", "volatile", "while", "var"
+            "transient", "try", "void", "volatile", "while", "var",
+            "record"
     };
 	
 	private static final Set<Keyword> KEYWORDS_lIST = new LinkedHashSet<>(

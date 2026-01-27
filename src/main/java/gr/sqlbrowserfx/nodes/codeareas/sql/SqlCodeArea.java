@@ -51,7 +51,6 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 
 	private Map<String, Set<String>> tableAliases = new HashMap<>();
 	private Set<String> variablesAliases = new HashSet<>();
-	private final SqlCodeAreaSyntaxProvider syntaxProvider = new SqlCodeAreaSyntaxProvider();
 
 	private Thread textAnalyzerDaemon;
 	protected MenuItem menuItemRun;
@@ -211,7 +210,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 									.flatMap(Collection::stream)
 									.map(t -> new Keyword(t, KeywordType.ALIAS))
 					),
-					syntaxProvider.getKeywords().stream()
+					getSyntaxProvider().getKeywords().stream()
 					)
 				.filter(keyword -> keyword != null && keyword.getKeyword().startsWith(query))
 				.toList();
@@ -229,7 +228,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	    for (var entry : tableAliases.entrySet()) {
 	        if (entry.getValue().contains(tableAlias)) {
 	            var knownTable = entry.getKey();
-	            var keywords = syntaxProvider.getKeywords(KeywordType.COLUMN, knownTable);
+	            var keywords = getSyntaxProvider().getKeywords(KeywordType.COLUMN, knownTable);
 	            if (columnPattern != null) {
 	                return keywords.stream()
 	                               .filter(col -> StringUtils.containsIgnoreCase(col.getKeyword(), columnPattern))
@@ -241,12 +240,12 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 	    }
 
 	    // If no alias match was found, try using the tableAlias directly as the table name
-	    var keywords = syntaxProvider.getKeywords(KeywordType.COLUMN, tableAlias);
+	    var keywords = getSyntaxProvider().getKeywords(KeywordType.COLUMN, tableAlias);
 	    return keywords != null ? new ArrayList<>(keywords) : new ArrayList<>();
 	}
 	
     private boolean syntaxProviderHasTable(String table) {
-    	return !syntaxProvider.getKeywords(KeywordType.COLUMN, table).isEmpty();
+    	return !getSyntaxProvider().getKeywords(KeywordType.COLUMN, table).isEmpty();
     }
     
 	private Map<String, Set<String>> analyzeTextForTables(String text) {
@@ -423,7 +422,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		    : "";
 
 		var question = this.getSelectedText().isEmpty() ? result : this.getSelectedText();
-		syntaxProvider.getAiHelp("Generate only code and only one code block for: " + question);
+		getSyntaxProvider().getAiHelp("Generate only code and only one code block for: " + question);
 		// FIXME: enable this to paste code in code area
 		//		JavaFXUtils.setTimeout(() -> this.appendText('\n' + syntaxProvider.getAiGeneratedCode()), 6);
 	}
@@ -446,7 +445,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
         	if (this.getText().isEmpty() && this.getSelectedText() == null) {
         		return;
         	}
-        	syntaxProvider.getAiHelp("Check following sql code for errors, keep your answer short with mainly code examples: " + (this.getSelectedText() != null ? this.getSelectedText() : this.getText()));
+        	getSyntaxProvider().getAiHelp("Check following sql code for errors, keep your answer short with mainly code examples: " + (this.getSelectedText() != null ? this.getSelectedText() : this.getText()));
         });
 
         var menuItemExplainChatGpt = new MenuItem("Explain (ChaGPT)", JavaFXUtils.createIcon("/icons/chatgpt.png"));
@@ -454,7 +453,7 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
         	if (this.getText().isEmpty() && this.getSelectedText() == null) {
         		return;
         	}
-        	syntaxProvider.getAiHelp("Explain the following with short answer: " + this.getSelectedText());
+        	getSyntaxProvider().getAiHelp("Explain the following with short answer: " + this.getSelectedText());
         });
         menuItemExplainChatGpt.disableProperty().bind(this.isTextSelectedProperty().not());
         
