@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.fxmisc.richtext.CodeArea;
 import org.slf4j.Logger;
@@ -24,7 +26,6 @@ import javafx.scene.input.KeyCode;
 public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObservable<String> {
 
 	private final CodeArea codeArea;
-	private volatile int lastPos;
 
 	protected TextField findField;
 	protected TextField replaceField;
@@ -102,86 +103,94 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 	}
 	
 	private int findButtonActionImpl() {
-//		recursionRound++;
-		String pattern = findField.getText();
-		if (pattern.isEmpty())
-			return 0;
-		
-		if (System.currentTimeMillis() >= terminationTime) {
-			logger.debug("Find action for '" + pattern + "' timed out");
-			return 0;
-		}
-		
-		String text = codeArea.getText();
-		if (caseInsensitiveCheckBox.isSelected()) {
-			pattern = pattern.toLowerCase();
-			text = text.toLowerCase();
-		}
-		lastPos = text.indexOf(pattern, codeArea.getCaretPosition());
-		
-		if (lastPos != -1) {
-//FIXME This is no working properly
-//---------------------------------------------------------------------				
-//				if (wholeWordCheckBox.isSelected()) {
-//					if (lastPos != 0 && (text.charAt(lastPos - 1) == ' ' || text.charAt(lastPos - 1) == '\n')
-//							&& (text.charAt(lastPos + pattern.length() + 1) == ' ' && text.charAt(lastPos + pattern.length() + 1) == '\n'))
-//					else
-//						return;
-//				}
-//---------------------------------------------------------------------				
+	    String pattern = findField.getText();
+	    if (pattern.isEmpty()) return 0;
 
-			javafxThreadRunning = true;
-			final String finalPattern = pattern;
-			Platform.runLater(() -> {
-				synchronized (javafxThreadRunningLock) {
-					selectMatchingWord(finalPattern);
-					javafxThreadRunning = false;
-					javafxThreadRunningLock.notify();
-				}
-			});
-			while (javafxThreadRunning) {
-				synchronized (javafxThreadRunningLock) {
-					try {
-						javafxThreadRunningLock.wait(100);
-					} catch (InterruptedException e) {
-						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
-					}
-				}
-			}
+	    // timeout check
+	    if (System.currentTimeMillis() >= terminationTime) {
+	        logger.debug("Find action for '" + pattern + "' timed out");
+	        return 0;
+	    }
 
-//				recursionRound = 0;
-			return 1;
-		}
-		else if (lastPos == -1) { // && recursionRound == 1) {
-			lastPos = 0;
-			javafxThreadRunning = true;
-			Platform.runLater(() -> {
-				synchronized (javafxThreadRunningLock) {
-					codeArea.moveTo(0);
-					javafxThreadRunning = false;
-					javafxThreadRunningLock.notify();
-				}
-			});
-			
-			while (javafxThreadRunning) {
-				synchronized (javafxThreadRunningLock) {
-					try {
-						javafxThreadRunningLock.wait(100);
-					} catch (InterruptedException e) {
-						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
-					}
-				}
-			}
-			//recursion
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException ignored) {
-			}
-			this.findButtonActionImpl();
-		}
-		
-		return 0;
+	    String text = codeArea.getText();
+
+	    // handle case-insensitive
+	    boolean caseInsensitive = caseInsensitiveCheckBox.isSelected();
+	    String searchPattern = pattern;
+	    if (caseInsensitive) {
+	        searchPattern = pattern.toLowerCase();
+	        text = text.toLowerCase();
+	    }
+
+	    // start searching from caret
+	    int pos = text.indexOf(searchPattern, codeArea.getCaretPosition());
+
+	    while (pos != -1) {
+	        // handle whole-word
+	        if (wholeWordCheckBox.isSelected()) {
+	            boolean leftBoundary = (pos == 0) ||
+	                    !Character.isLetterOrDigit(text.charAt(pos - 1));
+	            boolean rightBoundary = (pos + searchPattern.length() >= text.length()) ||
+	                    !Character.isLetterOrDigit(text.charAt(pos + searchPattern.length()));
+
+	            if (!(leftBoundary && rightBoundary)) {
+	                // not a whole word, continue searching
+	                pos = text.indexOf(searchPattern, pos + 1);
+	                continue;
+	            }
+	        }
+
+	        // found a match, select it in JavaFX thread
+	        final int finalPos = pos;
+	        final String finalPattern = pattern;
+	        javafxThreadRunning = true;
+	        Platform.runLater(() -> {
+	            synchronized (javafxThreadRunningLock) {
+	                selectMatchingWord(finalPattern, finalPos);
+	                javafxThreadRunning = false;
+	                javafxThreadRunningLock.notify();
+	            }
+	        });
+
+	        while (javafxThreadRunning) {
+	            synchronized (javafxThreadRunningLock) {
+	                try {
+	                    javafxThreadRunningLock.wait(100);
+	                } catch (InterruptedException e) {
+	                    LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+	                }
+	            }
+	        }
+
+	        return 1; // match found
+	    }
+
+	    // if no match found, wrap search to start of document
+	    javafxThreadRunning = true;
+	    Platform.runLater(() -> {
+	        synchronized (javafxThreadRunningLock) {
+	            codeArea.moveTo(0);
+	            javafxThreadRunning = false;
+	            javafxThreadRunningLock.notify();
+	        }
+	    });
+
+	    while (javafxThreadRunning) {
+	        synchronized (javafxThreadRunningLock) {
+	            try {
+	                javafxThreadRunningLock.wait(100);
+	            } catch (InterruptedException e) {
+	                LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+	            }
+	        }
+	    }
+
+	    // optional small pause before recursive search
+	    try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+
+	    return this.findButtonActionImpl(); // recursive search from start
 	}
+
 	
 	private void disableButtons(boolean disable) {
 		this.findButton.setDisable(disable);
@@ -205,13 +214,16 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 	}
 	
 	private void resetSearchTerminationTime() {
-		terminationTime = System.currentTimeMillis() + 2000;
+		terminationTime = System.currentTimeMillis() + 3000;
 	}
 	
-	private void selectMatchingWord(String pattern) {
-		codeArea.moveTo(lastPos + pattern.length());
-		codeArea.requestFollowCaret();
-		codeArea.selectRange(lastPos, lastPos + pattern.length());
+	private void selectMatchingWord(String pattern, int position) {
+	    // move caret to the end of the match
+	    codeArea.moveTo(position + pattern.length());
+	    codeArea.requestFollowCaret();
+
+	    // select the matching range
+	    codeArea.selectRange(position, position + pattern.length());
 	}
 
 	private void replaceButtonAction() {
@@ -229,54 +241,85 @@ public class SearchAndReplacePopOver extends CustomPopOver implements SimpleObse
 	}
 	
 	private void replaceButtonActionImpl() {
-		if (terminationTime <= System.currentTimeMillis()) {
-			logger.debug("Replace action timed out");
-			return;
-		}
-		
-		String replacement = replaceField.getText();
-		if (!codeArea.getSelectedText().isEmpty() && !replacement.equals(codeArea.getSelectedText())) {
-			String oldValue = codeArea.getSelectedText();
-			javafxThreadRunning = true;
-			Platform.runLater(() -> {
-				synchronized (javafxThreadRunningLock) {
-					codeArea.replaceSelection(replacement);
-					selectMatchingWord(replacement);
-					this.changed(oldValue + ">" + replacement);
-					javafxThreadRunning = false;
-					javafxThreadRunningLock.notify();
-				}
-			});
-			
-			while (javafxThreadRunning) {
-				synchronized (javafxThreadRunningLock) {
-					try {
-						javafxThreadRunningLock.wait(100);
-					} catch (InterruptedException e) {
-						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
-					}
-				}
-			}
-		}
-		else {
-	    	if (findButtonActionImpl() != 0)
-	    		replaceButtonActionImpl();
-		}
+	    // Timeout check
+	    if (terminationTime <= System.currentTimeMillis()) {
+	        logger.debug("Replace action timed out");
+	        return;
+	    }
+
+	    String replacement = replaceField.getText();
+	    String selectedText = codeArea.getSelectedText();
+
+	    // Only replace if there is a selection and it's different
+	    if (!selectedText.isEmpty() && !replacement.equals(selectedText)) {
+	        String oldValue = selectedText;
+
+	        javafxThreadRunning = true;
+	        Platform.runLater(() -> {
+	            synchronized (javafxThreadRunningLock) {
+	                // Replace selected text
+	                codeArea.replaceSelection(replacement);
+
+	                // Move caret / select replaced text
+	                int caretPos = codeArea.getCaretPosition() - replacement.length();
+	                selectMatchingWord(replacement, caretPos);
+
+	                // Notify change listener
+	                this.changed(oldValue + ">" + replacement);
+
+	                // Release lock
+	                javafxThreadRunning = false;
+	                javafxThreadRunningLock.notify();
+	            }
+	        });
+
+	        // Wait for JavaFX thread to finish
+	        while (javafxThreadRunning) {
+	            synchronized (javafxThreadRunningLock) {
+	                try {
+	                    javafxThreadRunningLock.wait(100);
+	                } catch (InterruptedException e) {
+	                    LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+	                }
+	            }
+	        }
+	    } else {
+	        // No selection, find next match and replace
+	        if (findButtonActionImpl() != 0) {
+	            replaceButtonActionImpl(); // recursive call
+	        }
+	    }
 	}
+
 	
 	public void replaceAllButtonAction() {
-		if (!findField.getText().isEmpty()) {
-			String pattern = findField.getText();
-			if (wholeWordCheckBox.isSelected())
-				pattern = "\\b" + pattern + "\\b";
-			if (caseInsensitiveCheckBox.isSelected())
-				pattern = "(?i)" + pattern;
-			
-			String replacement = codeArea.getText().replaceAll(pattern, replaceField.getText());
-			codeArea.replaceText(replacement);
-			this.changed(findField.getText() + ">" + replaceField.getText());
-		}
+	    String searchText = findField.getText();
+	    if (searchText.isEmpty()) return;
+
+	    String replacementText = replaceField.getText();
+
+	    // Build regex safely
+	    String regex = Pattern.quote(searchText); // escape special characters
+
+	    if (wholeWordCheckBox.isSelected() && searchText.matches("\\w+")) {
+	    	regex = "\\b" + regex + "\\b"; // add word boundaries
+	    }
+
+	    if (caseInsensitiveCheckBox.isSelected()) {
+	        regex = "(?i)" + regex; // case-insensitive
+	    }
+
+	    final String finalRegex = regex;
+	    // Run replacement on JavaFX thread
+	    Platform.runLater(() -> {
+	        String originalText = codeArea.getText();
+	        String replacedText = originalText.replaceAll(finalRegex, Matcher.quoteReplacement(replacementText));	        codeArea.replaceText(replacedText);
+	        codeArea.moveTo(0);
+	        // Notify change
+	        this.changed(searchText + ">" + replacementText);
+	    });
 	}
+
 	
 	public TextField getFindField() {
 		return findField;
