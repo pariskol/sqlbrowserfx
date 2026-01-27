@@ -37,7 +37,7 @@ You can also run install.sh script , if you are using linux in order to install 
 'sqlfx'.
 
 ### Compatibility with older versions of java
-* Tag 3.11.0 -> Java 21
+* Tag 3.12.0 -> Java 21
 * Tag 2.5.0 -> Java 17
 * Tag 1.5.0 -> Java 8
 
