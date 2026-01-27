@@ -1,6 +1,8 @@
 package gr.sqlbrowserfx.utils;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
@@ -20,11 +22,15 @@ public class PropertiesLoader {
 		if (System.getProperty("load.props") != null)
 			IS_ENABLED = Boolean.parseBoolean(System.getProperty("load.props", "true"));
 		if (IS_ENABLED)
-			loadProperties("./");
+			loadProperties();
 	}
 	
 	public static void setLogger(Logger logger) {
 		PropertiesLoader.logger = logger;
+	}
+	
+	public static void loadProperties() {
+		loadProperties("./sqlbrowserfx.properties");
 	}
 	
 	public static void loadProperties(String rootPath) {
@@ -33,22 +39,26 @@ public class PropertiesLoader {
 	        .filter(Files::isRegularFile)
 	        .filter(path -> path.toString().endsWith(".properties"))
 	        .forEach(path -> {
-	        	try (InputStream inputStream = new FileInputStream(path.toFile())) {
-					Properties props = new Properties();
-					props.load(inputStream);
-					propertiesMap.put(path.getFileName().toString(), props);
-		        } catch (IOException e) {
-		        	if (logger != null)
-		    			logger.error(e.getMessage());
-		        	else
-		        		e.printStackTrace();
-				}
+	        	loadProperties(path.toFile());
 	        });
 		} catch (IOException e) {
 			if (logger != null)
     			logger.debug("Could not read property from file");
         	else
         		System.err.println("Could not read property from file");
+		}
+	}
+
+	private static void loadProperties(File file) {
+		try (InputStream inputStream = new FileInputStream(file)) {
+			Properties props = new Properties();
+			props.load(inputStream);
+			propertiesMap.put(file.getName(), props);
+		} catch (IOException e) {
+			if (logger != null)
+				logger.error(e.getMessage());
+			else
+				e.printStackTrace();
 		}
 	}
 	
@@ -124,6 +134,23 @@ public class PropertiesLoader {
 				return propertiesMap.get(key);
 		}
 		return null;
+	}
+	
+	public static void storeProperty(String absolutePath, String prop, String value) {
+		var file = new File(absolutePath);
+		try (var inputStream = new FileInputStream(file)) {
+			 var props = new Properties();
+			props.load(inputStream);
+			// update or add property
+			props.setProperty(prop, value);
+
+			// save back
+			try (var out = new FileOutputStream(file)) {
+			    props.store(out, "");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	

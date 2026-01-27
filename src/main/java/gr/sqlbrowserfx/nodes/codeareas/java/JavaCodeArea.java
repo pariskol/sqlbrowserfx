@@ -33,7 +33,6 @@ import javafx.scene.input.KeyEvent;
 public class JavaCodeArea extends AutoCompleteCodeArea<JavaCodeAreaSyntaxProvider> implements ContextMenuOwner, HighLighter, TextAnalyzer {
 
 	private Set<String> variablesAliases = new HashSet<>();
-	private final JavaCodeAreaSyntaxProvider syntaxProvider = new JavaCodeAreaSyntaxProvider();
 
 	private Thread textAnalyzerDaemon;
 	protected MenuItem menuItemRun;
@@ -181,7 +180,7 @@ public class JavaCodeArea extends AutoCompleteCodeArea<JavaCodeAreaSyntaxProvide
 		return
 				Stream.concat(
 					variablesAliases.stream().map(v -> new Keyword(v, KeywordType.VARIABLE)), 
-					syntaxProvider.getKeywords().stream()
+					getSyntaxProvider().getKeywords().stream()
 					)
 				.filter(keyword -> keyword != null && keyword.getKeyword().startsWith(query))
 				.collect(Collectors.toList());

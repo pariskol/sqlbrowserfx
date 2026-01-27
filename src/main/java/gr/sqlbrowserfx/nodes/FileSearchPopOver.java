@@ -36,6 +36,7 @@ public class FileSearchPopOver extends CustomPopOver {
 	private final ListView<String> filesListView;
 	private String rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
 			.replaceAll("\"", "");
+	private Label descLabel;
 
 	public FileSearchPopOver(Action action) {
 		super();
@@ -88,32 +89,41 @@ public class FileSearchPopOver extends CustomPopOver {
 		// TODO: add open button if has any value
 		ImageView descIcon = JavaFXUtils.createIcon("/icons/settings.png");
 		
-		Label descLabel = new Label("File Search in: " + rootPath, descIcon);
+		descLabel = new Label("File Search in: " + rootPath, descIcon);
 		descLabel.setOnMouseClicked(event -> {
 			this.hide();
-			DirectoryChooser dirChooser = new DirectoryChooser();
-			File selectedDir = dirChooser.showDialog(this.getOwnerWindow());
-			this.rootPath = selectedDir.getAbsolutePath();
-			descLabel.setText("File Search in: " + rootPath);
+			var dirChooser = new DirectoryChooser();
+			var initialDir = new File(this.rootPath);
+			dirChooser.setInitialDirectory(initialDir);
+			var selectedDir = dirChooser.showDialog(this.getOwnerWindow());
+			if (selectedDir != null) {
+				this.rootPath = selectedDir.getAbsolutePath();
+				descLabel.setText("File Search in: " + rootPath);
+				PropertiesLoader.storeProperty("./sqlbrowserfx.properties", "sqlbrowserfx.root.path", this.rootPath);
+			}
 		});
 		descLabel.setTooltip(new Tooltip("Click to change root path"));
 		
 		this.setContentNode(new CustomVBox(descLabel, searchField, filesListView));
+
+		this.setOnShowing(event -> {
+			PropertiesLoader.loadProperties();
+			rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
+					.replaceAll("\"", "");
+			this.descLabel.setText("File Search in: " + rootPath);
+		});
+		this.setOnShown(event -> searchField.requestFocus());
+		this.setHideOnEscape(true);
 		this.setOnHidden(event -> {
 			if (executor != null) {
 				executor.shutdownNow();
 			}
 		});
-
-		this.setOnShown(event -> searchField.requestFocus());
-		this.setHideOnEscape(true);
 		
 		filesListView.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				String filePath = filesListView.getSelectionModel().getSelectedItem();
 				action.run(new File(filePath));
-			} else if (keyEvent.getCode() == KeyCode.ESCAPE) {
-				this.hide();
 			}
 		});
 		filesListView.setOnMouseClicked(mouseEvent -> {
