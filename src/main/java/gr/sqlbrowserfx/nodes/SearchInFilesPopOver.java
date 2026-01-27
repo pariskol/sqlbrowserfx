@@ -48,8 +48,7 @@ import javafx.stage.DirectoryChooser;
 
 public class SearchInFilesPopOver extends CustomPopOver {
 
-	private String rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
-			.replaceAll("\"", "");
+	private String rootPath = "~/";
 	
 	private CodeArea codeArea = new CodeArea();
 	TextField searchField;
@@ -62,9 +61,10 @@ public class SearchInFilesPopOver extends CustomPopOver {
 	
 	private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
+	private Label descLabel;
+
 	
 	public SearchInFilesPopOver() {
-		
 		var fileSearchBox = this.createFileSearchBox();
 		var linesListBox = this.createLinesListBox();
 		var hSplit = new SplitPane(fileSearchBox, new CustomVBox(new Label("Lines Matches"),linesListBox));
@@ -78,13 +78,18 @@ public class SearchInFilesPopOver extends CustomPopOver {
 		var borderPane = new BorderPane(vSplit);
 		this.setContentNode(borderPane);
 		this.setPrefSize(1000, 800);
-		// Add ESC key handler to close the stage
-		borderPane.setOnKeyPressed(event -> {
-	    	if (event.getCode() == KeyCode.ESCAPE) {
-	    		PropertiesLoader.storeProperty("./sqlbrowserfx.properties", "sqlbrowserfx.root.path", this.rootPath);
-	    		this.hide();
-	    	}
-	    });
+		this.setHideOnEscape(true);
+		this.setOnShowing(event -> {
+			PropertiesLoader.loadProperties();
+			rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
+					.replaceAll("\"", "");
+			this.descLabel.setText("File Search in: " + rootPath);
+		});
+		this.setOnHidden(event -> {
+			if (executor != null) {
+				executor.shutdownNow();
+			}
+		});
 	}
 
 	
@@ -142,17 +147,18 @@ public class SearchInFilesPopOver extends CustomPopOver {
 		caseInsensitiveCheckBox.setTooltip(new Tooltip("Case Insensitive"));
 		caseInsensitiveCheckBox.setFocusTraversable(false);
 
-		var descLabel = new Label("File Search in: " + rootPath);
+		descLabel = new Label("File Search in: " + rootPath);
 
 		var settingsButton = new Button("", JavaFXUtils.createIcon("/icons/settings.png"));
 		settingsButton.setOnMouseClicked(event -> {
 			var dirChooser = new DirectoryChooser();
-			File initialDir = new File(this.rootPath);
+			var initialDir = new File(this.rootPath);
 			dirChooser.setInitialDirectory(initialDir);
-			var selectedDir = dirChooser.showDialog(vbox.getScene().getWindow());
+			var selectedDir = dirChooser.showDialog(this.getOwnerWindow());
 			if (selectedDir != null) {
 				this.rootPath = selectedDir.getAbsolutePath();
 				descLabel.setText("File Search in: " + rootPath);
+				PropertiesLoader.storeProperty("./sqlbrowserfx.properties", "sqlbrowserfx.root.path", this.rootPath);
 			}
 		});
 		settingsButton.setTooltip(new Tooltip("Click to change root path"));
