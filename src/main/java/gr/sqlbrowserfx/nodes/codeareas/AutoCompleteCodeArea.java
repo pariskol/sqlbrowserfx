@@ -26,6 +26,7 @@ import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.InputMapOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
+import gr.sqlbrowserfx.nodes.SearchInFilesPopOver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SimpleLineNumberFactory;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
@@ -51,7 +52,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     // this is a random offset that achieves to locate correctly
     // the autocomplete pop up when zooming
     private static final int Y_OFFSET = (int) (Math.round(JavaFXUtils.getZoomFactorApplied() * 35 + 5));
-    private boolean autoCompletePopupShowing = false;
     private boolean insertMode = false;
     private boolean hasSimpleContextMenu = false;
     private final T syntaxProvider;
@@ -59,6 +59,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     private ListView<Keyword> suggestionsList;
     private Popup autoCompletePopup;
     protected SearchAndReplacePopOver searchAndReplacePopOver;
+    protected SearchInFilesPopOver searchInFilesPopOver;
     private final SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
     private final SimpleBooleanProperty autoCompleteProperty = new SimpleBooleanProperty(true);
     private final SimpleBooleanProperty isTextSelectedProperty = new SimpleBooleanProperty(false);
@@ -77,15 +78,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         super();
 
         this.setEditable(editable);
-
         this.selectedTextProperty().addListener((ob, ov, nv) -> this.isTextSelectedProperty.set(!nv.isEmpty()));
-
-        searchAndReplacePopOver = new SearchAndReplacePopOver(this);
-		autoCompletePopup = this.createAutoCompletePopup();
-
         this.setContextMenu(this.createContextMenu());
         this.setKeys();
-
         this.setOnMouseClicked(mouseEvent -> this.onMouseClicked());
 
         this.showLinesProperty.addListener((ob, ov, nv) -> enableShowLineNumbers(nv));
@@ -111,13 +106,32 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
     abstract protected T initSyntaxProvider();
 
+	protected Boolean isAutoCompletePopupShowing() {
+        return this.autoCompletePopup != null && this.autoCompletePopup.isShowing();
+    }
+	
+	protected Boolean isSearchInFilesPopOverShowing() {
+		return this.searchInFilesPopOver != null && this.searchInFilesPopOver.isShowing();
+	}
+
+	protected Boolean isSearchAndReplacePopOverShowing() {
+		return this.searchAndReplacePopOver != null && this.searchAndReplacePopOver.isShowing();
+	}
+	
+	
     protected void onMouseClicked() {
-        if (autoCompletePopupShowing) {
+        if (isAutoCompletePopupShowing()) {
             hideAutocompletePopup();
         }
 
-        searchAndReplacePopOver.hide();
-
+		if (isSearchInFilesPopOverShowing()) {
+			searchInFilesPopOver.hide();
+		}
+		
+		if (isSearchAndReplacePopOverShowing()) {
+			searchAndReplacePopOver.hide();
+		}
+		
         if (goToLinePopOver != null) {
             goToLinePopOver.hide();
         }
@@ -218,11 +232,15 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
                 action -> this.replaceSelection("(" + getSelectedText() + ")"));
         
         
+        var searchInFiles = InputMap.consume(
+                EventPattern.keyPressed(KeyCode.H, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
+                action -> this.showSearchInFilesPopup());
 
         Nodes.addFallbackInputMap(this, addTabs);
         Nodes.addFallbackInputMap(this, removeTabs);
         Nodes.addInputMap(this, autocomplete);
         Nodes.addInputMap(this, searchAndReplace);
+        Nodes.addInputMap(this, searchInFiles);
         Nodes.addInputMap(this, delete);
         Nodes.addInputMap(this, toUpper);
         Nodes.addInputMap(this, toLower);
@@ -293,6 +311,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     }
 
     protected void showSearchAndReplacePopup() {
+		if (searchAndReplacePopOver == null) {
+			searchAndReplacePopOver = new SearchAndReplacePopOver(this);
+		}
         if (!this.getSelectedText().isEmpty()) {
             searchAndReplacePopOver.getFindField().setText(this.getSelectedText());
             searchAndReplacePopOver.getFindField().selectAll();
@@ -300,6 +321,14 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         var boundsInScene = this.localToScreen(this.getBoundsInLocal());
         searchAndReplacePopOver.getFindField().requestFocus();
         searchAndReplacePopOver.show(getParent(), boundsInScene.getMaxX() - 400, boundsInScene.getMinY());
+    }
+    
+    protected void showSearchInFilesPopup() {
+        var boundsInScene = this.localToScreen(this.getBoundsInLocal());
+        if (this.searchInFilesPopOver == null) {
+        	this.searchInFilesPopOver = new SearchInFilesPopOver();
+        }
+        this.searchInFilesPopOver.show(getParent(), boundsInScene.getMinX(), boundsInScene.getMinY());
     }
 
     // FIXME: we override copy method as it the default method seems broken for strings containing '{' or '}'
@@ -333,6 +362,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         
         var menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
         menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
+        
+        var menuItemSearchInFiles = new MenuItem("Search In Files...", JavaFXUtils.createIcon("/icons/magnify.png"));
+        menuItemSearchInFiles.setOnAction(action -> this.showSearchInFilesPopup());
 
         var menuItemUperCase = new MenuItem("To Upper Case", JavaFXUtils.createIcon("/icons/uppercase.png"));
         menuItemUperCase.setOnAction(action -> this.convertSelectedTextToUpperCase());
@@ -386,7 +418,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
                 new SeparatorMenuItem(),
                 menuItemFormat, menuItemFormat3,
                 new SeparatorMenuItem(),
-                menuItemSearchAndReplace, menuItemGoToLine, menuItemSuggestions,
+                menuItemSearchAndReplace, menuItemSearchInFiles, menuItemGoToLine, menuItemSuggestions,
                 new SeparatorMenuItem(),
                 menuItemSaveAs);
         return menu;
@@ -526,15 +558,13 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 			return;
 		}
 		
-		autoCompletePopup.getContent().setAll(suggestionsList);
 		this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
 		this.showAutoCompletePopup();
 	}
 	
     protected void hideAutocompletePopup() {
-        if (autoCompletePopup != null && autoCompletePopupShowing) {
+        if (isAutoCompletePopupShowing()) {
             autoCompletePopup.hide();
-            autoCompletePopupShowing = false;
         }
     }
 
@@ -581,20 +611,21 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     }
 
     protected void showAutoCompletePopup() {
+		if (autoCompletePopup == null) {
+			autoCompletePopup = this.createAutoCompletePopup();
+		}
+		
+		autoCompletePopup.getContent().setAll(suggestionsList);
+		
         var pointer = this.caretBoundsProperty().getValue().get();
-        if (!autoCompletePopupShowing) {
+        if (!isAutoCompletePopupShowing()) {
             autoCompletePopup.show(this, pointer.getMaxX(), pointer.getMinY() + Y_OFFSET);
-            autoCompletePopupShowing = true;
         }
     }
 
     protected Popup createAutoCompletePopup() {
-        if (autoCompletePopup != null)
-            return autoCompletePopup;
-
         var popup = new Popup();
         popup.setAutoHide(true);
-        popup.setOnAutoHide(event -> autoCompletePopupShowing = false);
         return popup;
     }
 
