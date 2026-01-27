@@ -128,13 +128,13 @@ public class PropertiesLoader {
 		return null;
 	}
 	
-	public static void storeProperty(String absolutePath, String value) {
+	public static void storeProperty(String absolutePath, String prop, String value) {
 		var file = new File(absolutePath);
 		try (var inputStream = new FileInputStream(file)) {
 			 var props = new Properties();
 			props.load(inputStream);
 			// update or add property
-			props.setProperty("amarildo.root.path", value);
+			props.setProperty(prop, value);
 
 			// save back
 			try (var out = new FileOutputStream(file)) {
