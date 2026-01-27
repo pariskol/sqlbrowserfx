@@ -344,17 +344,11 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
                 }
 			}
         );
-		var generateCode = InputMap.consume(
-			EventPattern.keyPressed(KeyCode.G, KeyCombination.CONTROL_DOWN),
-			action -> this.generateCode()
-        );
-
 		
         Nodes.addInputMap(this, run);
         Nodes.addInputMap(this, autocomplete);
         Nodes.addInputMap(this, history);
         Nodes.addInputMap(this, comment);
-        Nodes.addInputMap(this, generateCode);
 	}
 
 	private void showHistoryPopOver() {
@@ -411,22 +405,6 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		);
 	}
 	
-	private void generateCode() {
-		// Assume codeArea is your CodeArea instance
-		var caretPos = this.getCaretPosition();
-		var textBeforeCaret = this.getText().substring(0, caretPos);
-		var lastCommentIdx = textBeforeCaret.lastIndexOf("--");
-
-		var result = lastCommentIdx != -1
-		    ? textBeforeCaret.substring(lastCommentIdx, caretPos)
-		    : "";
-
-		var question = this.getSelectedText().isEmpty() ? result : this.getSelectedText();
-		getSyntaxProvider().getAiHelp("Generate only code and only one code block for: " + question);
-		// FIXME: enable this to paste code in code area
-		//		JavaFXUtils.setTimeout(() -> this.appendText('\n' + syntaxProvider.getAiGeneratedCode()), 6);
-	}
-	
 	@Override
 	public ContextMenu createContextMenu() {
 		var menu = super.createContextMenu();
@@ -439,32 +417,10 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		
 		var menuItemShowSchema = new MenuItem("Show Schema", JavaFXUtils.createIcon("/icons/script.png"));
 		menuItemShowSchema.setOnAction(action -> SqlCodeArea.this.showSchemaPopOver());
-		
-        var menuItemCheckErrorsChatGpt = new MenuItem("Check For Erros (ChatGPT)", JavaFXUtils.createIcon("/icons/chatgpt.png"));
-        menuItemCheckErrorsChatGpt.setOnAction(event -> {
-        	if (this.getText().isEmpty() && this.getSelectedText() == null) {
-        		return;
-        	}
-        	getSyntaxProvider().getAiHelp("Check following sql code for errors, keep your answer short with mainly code examples: " + (this.getSelectedText() != null ? this.getSelectedText() : this.getText()));
-        });
-
-        var menuItemExplainChatGpt = new MenuItem("Explain (ChaGPT)", JavaFXUtils.createIcon("/icons/chatgpt.png"));
-        menuItemExplainChatGpt.setOnAction(event -> {
-        	if (this.getText().isEmpty() && this.getSelectedText() == null) {
-        		return;
-        	}
-        	getSyntaxProvider().getAiHelp("Explain the following with short answer: " + this.getSelectedText());
-        });
-        menuItemExplainChatGpt.disableProperty().bind(this.isTextSelectedProperty().not());
-        
-        var menuItemGenerateCodeChatGpt = new MenuItem("Generate Code (ChaGPT)", JavaFXUtils.createIcon("/icons/chatgpt.png"));
-        menuItemGenerateCodeChatGpt.setOnAction(event -> this.generateCode());
-        menuItemGenerateCodeChatGpt.disableProperty().bind(this.isTextSelectedProperty().not());
-
         
 		menu.getItems().addAll(
-			new SeparatorMenuItem(), menuItemCheckErrorsChatGpt, menuItemExplainChatGpt, menuItemGenerateCodeChatGpt,
-			new SeparatorMenuItem(), menuItemHistory, menuItemShowSchema);
+			new SeparatorMenuItem(), menuItemHistory, menuItemShowSchema
+		);
 
 		return menu;
 	}

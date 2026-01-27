@@ -10,8 +10,6 @@ import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreeView;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
-import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.nodes.ChatGptWebView;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 
 public class SqlBrowserFXAppManager {
@@ -23,7 +21,6 @@ public class SqlBrowserFXAppManager {
 	private static final List<SqlPane> SQL_PANES = new ArrayList<>();
 	private static final List<DDBTreeView> DB_TREE_VIEWS = new ArrayList<>();
 	private static String DB_TYPE = "sqlite";
-	private static ChatGptWebView chatGpt;
 	
 	public static SqlConnector getConfigSqlConnector() {
 		return SQL_CONNECTOR;
@@ -82,28 +79,5 @@ public class SqlBrowserFXAppManager {
 	public static void unregisterDDBTreeView(DDBTreeView treeView) {
 		DB_TREE_VIEWS.remove(treeView);
 	}
-	
-	public static void registerChatGpt(ChatGptWebView chatGpt) {
-		SqlBrowserFXAppManager.chatGpt = chatGpt;
-	}
-	
-	public static void unregisterChatGpt() {
-		SqlBrowserFXAppManager.chatGpt = null;
-	}
-	
-	public static void askChatGpt(String question) {
-		if (chatGpt == null) {
-			DialogFactory.createNotification("ChatGPT is not open", "Please open ChatGPT dock node first.");
-			return;
-		}
-		chatGpt.askChatGpt(question);
-	}
 
-	public static String getAiGeneratedCode() {
-		if (chatGpt == null) {
-			DialogFactory.createNotification("ChatGPT is not open", "Please open ChatGPT dock node first.");
-			return "";
-		}
-		return chatGpt.getAiGeneratedCode();
-	}
 }

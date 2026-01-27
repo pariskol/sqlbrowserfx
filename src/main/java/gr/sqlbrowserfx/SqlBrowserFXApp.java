@@ -31,7 +31,6 @@ import gr.sqlbrowserfx.dock.nodes.DDbDiagramPane;
 import gr.sqlbrowserfx.dock.nodes.DLogConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.factories.DialogFactory;
-import gr.sqlbrowserfx.nodes.ChatGptWebView;
 import gr.sqlbrowserfx.nodes.CustomHBox;
 import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.nodes.DBTreeView;
@@ -417,15 +416,6 @@ public class SqlBrowserFXApp extends Application {
 			dockNode.dock(dockPane, DockPos.RIGHT);	
 		});
 		
-		var chatGPTViewItem = new MenuItem("Open ChatGPT View", JavaFXUtils.createIcon("/icons/chatgpt.png"));
-		chatGPTViewItem.setOnAction(event -> {
-			var chatGptWebView = new ChatGptWebView();
-		    SqlBrowserFXAppManager.registerChatGpt(chatGptWebView);
-		    var dockNode = new DockNode(dockPane, chatGptWebView, "ChatGPT", JavaFXUtils.createIcon("/icons/chatgpt.png"));
-			dockNode.setOnClose(() -> SqlBrowserFXAppManager.unregisterChatGpt());
-
-		});
-		
 		var filesTreeViewItem = new MenuItem("Open Files Tree View", JavaFXUtils.createIcon("/icons/folder.png"));
 		filesTreeViewItem.setOnAction(event -> {
 			var chooser = new DirectoryChooser();
@@ -456,8 +446,7 @@ public class SqlBrowserFXApp extends Application {
 				filesTreeViewItem, 
 				new SeparatorMenuItem(),
 				terminalViewItem,
-				logViewItem,
-				chatGPTViewItem);
+				logViewItem);
 
 		final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
 		var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));

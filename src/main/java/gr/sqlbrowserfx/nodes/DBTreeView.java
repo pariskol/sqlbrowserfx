@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
-import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.DbCash;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -581,24 +580,7 @@ public class DBTreeView extends TreeView<String>
 			popOver.show(this.getSelectionModel().getSelectedItem().getGraphic());
 		});
 		showSchema.disableProperty().bind(this.hasSelectedSchemaProperty.not());
-		
-		var feedSchemaToChatGpt = new MenuItem("Feed Schema (ChatGPT)", JavaFXUtils.createIcon("/icons/chatgpt.png"));
-		feedSchemaToChatGpt.setOnAction(action -> {
-			var schema = this.copyScemaAction();
-			SqlBrowserFXAppManager.askChatGpt("Here is the sql schema: " + schema
-			+ ". Use this information to assist with SQL queries. Do not answer anything else.");
-		});
-		feedSchemaToChatGpt.disableProperty().bind(this.hasSelectedSchemaProperty.not());
 
-        var explainChatGpt = new MenuItem("Explain (ChaGPT)", JavaFXUtils.createIcon("/icons/chatgpt.png"));
-		explainChatGpt.setOnAction(action -> {
-			var schema = this.copyScemaAction();
-			SqlBrowserFXAppManager.askChatGpt("Explain the following sql schema with short answer: " + schema);
-		});
-        explainChatGpt.disableProperty().bind(this.hasSelectedSchemaProperty.not());
-
-        
-        
 		var setAsRoot = new MenuItem("Select As Root", JavaFXUtils.createIcon("/icons/database.png"));
 		setAsRoot.setOnAction(action -> {
 			if (this.getSelectionModel().getSelectedItem() == null)
@@ -616,7 +598,6 @@ public class DBTreeView extends TreeView<String>
 
 		contextMenu.getItems().addAll(
 			copy, copySchema, new SeparatorMenuItem(), 
-			feedSchemaToChatGpt, explainChatGpt, new SeparatorMenuItem(), 
 			collapseAll, showSchema, new SeparatorMenuItem(), 
 			setAsRoot, restoreRoot, new SeparatorMenuItem(), 
 			drop
