@@ -22,11 +22,15 @@ public class PropertiesLoader {
 		if (System.getProperty("load.props") != null)
 			IS_ENABLED = Boolean.parseBoolean(System.getProperty("load.props", "true"));
 		if (IS_ENABLED)
-			loadProperties("./");
+			loadProperties();
 	}
 	
 	public static void setLogger(Logger logger) {
 		PropertiesLoader.logger = logger;
+	}
+	
+	public static void loadProperties() {
+		loadProperties("./sqlbrowserfx.properties");
 	}
 	
 	public static void loadProperties(String rootPath) {
@@ -35,22 +39,26 @@ public class PropertiesLoader {
 	        .filter(Files::isRegularFile)
 	        .filter(path -> path.toString().endsWith(".properties"))
 	        .forEach(path -> {
-	        	try (InputStream inputStream = new FileInputStream(path.toFile())) {
-					Properties props = new Properties();
-					props.load(inputStream);
-					propertiesMap.put(path.getFileName().toString(), props);
-		        } catch (IOException e) {
-		        	if (logger != null)
-		    			logger.error(e.getMessage());
-		        	else
-		        		e.printStackTrace();
-				}
+	        	loadProperties(path.toFile());
 	        });
 		} catch (IOException e) {
 			if (logger != null)
     			logger.debug("Could not read property from file");
         	else
         		System.err.println("Could not read property from file");
+		}
+	}
+
+	private static void loadProperties(File file) {
+		try (InputStream inputStream = new FileInputStream(file)) {
+			Properties props = new Properties();
+			props.load(inputStream);
+			propertiesMap.put(file.getName(), props);
+		} catch (IOException e) {
+			if (logger != null)
+				logger.error(e.getMessage());
+			else
+				e.printStackTrace();
 		}
 	}
 	
