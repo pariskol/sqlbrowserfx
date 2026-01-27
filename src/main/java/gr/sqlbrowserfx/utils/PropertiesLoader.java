@@ -1,6 +1,8 @@
 package gr.sqlbrowserfx.utils;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
@@ -124,6 +126,23 @@ public class PropertiesLoader {
 				return propertiesMap.get(key);
 		}
 		return null;
+	}
+	
+	public static void storeProperty(String absolutePath, String value) {
+		var file = new File(absolutePath);
+		try (var inputStream = new FileInputStream(file)) {
+			 var props = new Properties();
+			props.load(inputStream);
+			// update or add property
+			props.setProperty("amarildo.root.path", value);
+
+			// save back
+			try (var out = new FileOutputStream(file)) {
+			    props.store(out, "");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	
