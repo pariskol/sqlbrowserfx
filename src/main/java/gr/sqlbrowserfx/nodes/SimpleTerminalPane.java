@@ -6,15 +6,13 @@ import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -45,8 +43,23 @@ public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, Inpu
     private final Executor commandExecutor = Executors.newSingleThreadExecutor();
 
     public SimpleTerminalPane() {
+        this(SystemUtils.USER_HOME);
+    }
+
+    public SimpleTerminalPane(String initialDirectory) {
+
+        if (initialDirectory != null && !initialDirectory.isBlank()) {
+            this.currentDirectory = Paths.get(initialDirectory)
+                    .toAbsolutePath()
+                    .normalize()
+                    .toString();
+        } else {
+            this.currentDirectory = SystemUtils.USER_HOME;
+        }
+
         commandLineField.setPromptText("Enter command here...");
         setCommandLineFieldAction();
+
         historyArea.setEditable(false);
         historyArea.setFocusTraversable(false);
         historyArea.prefWidthProperty().bind(this.widthProperty());
@@ -71,49 +84,74 @@ public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, Inpu
 
     private void executeCommand() {
         commandExecutor.execute(() -> {
+            String command = commandLineField.getText().trim();
+
             try {
-                var arguments = createProcessArguments();
-                var processBuilder = new ProcessBuilder(arguments);
-                processBuilder.directory(new File(currentDirectory));
-                var process = processBuilder.start();
-                var output = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
-                var error = IOUtils.toString(process.getErrorStream(), StandardCharsets.UTF_8);
 
-                if (!output.isEmpty()) {
-                    Platform.runLater(() -> historyArea.appendText(output));
-                }
-                if (!error.isEmpty()) {
-                    Platform.runLater(() -> historyArea.appendText(error));
-                }
+                // Handle cd internally (cannot be done via ProcessBuilder)
+                if (command.startsWith("cd")) {
 
-                var processSucceeded = process.exitValue() == 0;
-                var isCdCommand = List.of(arguments).contains("cd");
+                    var parts = command.split("\\s+", 2);
+                    var newDirectory = parts.length > 1 ? parts[1] : SystemUtils.USER_HOME;
 
-                if (processSucceeded && isCdCommand) {
-                    var newDirectory = arguments[3];
-
-                    var goToHomeDirectory = newDirectory.startsWith("~");
-                    if (goToHomeDirectory) {
-                        newDirectory = StringUtils.replace(newDirectory, "~", SystemUtils.USER_HOME);
+                    if (newDirectory.startsWith("~")) {
+                        newDirectory = newDirectory.replace("~", SystemUtils.USER_HOME);
                     }
-                    if (!goToHomeDirectory && !newDirectory.startsWith("/")) {
-                        newDirectory = "/" + newDirectory;
-                    }
-                    if (!goToHomeDirectory) {
-                        newDirectory = this.currentDirectory + newDirectory;
-                    }
-                    // set normalized path without '.', '..'
-                    this.currentDirectory = Paths.get(new File(newDirectory).getAbsolutePath()).normalize().toAbsolutePath().toString();
 
-                    Platform.runLater(() -> historyArea.appendText("Directory changed to: " + this.currentDirectory + "\n"));
+                    var newPath = Paths.get(newDirectory);
+
+                    if (!newPath.isAbsolute()) {
+                        newPath = Paths.get(currentDirectory).resolve(newPath);
+                    }
+
+                    newPath = newPath.normalize().toAbsolutePath();
+
+                    if (Files.exists(newPath) && Files.isDirectory(newPath)) {
+                        currentDirectory = newPath.toString();
+                        var finalDir = currentDirectory;
+
+                        Platform.runLater(() ->
+                                historyArea.appendText("Directory changed to: " + finalDir + "\n"));
+                    } else {
+                        var finalNewDirectory = newDirectory;
+                        Platform.runLater(() ->
+                                historyArea.appendText("Directory not found: " + finalNewDirectory + "\n"));
+                    }
+
+                } else {
+
+                    var arguments = createProcessArguments();
+
+                    var processBuilder = new ProcessBuilder(arguments);
+                    processBuilder.directory(new File(currentDirectory));
+
+                    var process = processBuilder.start();
+
+                    var output = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8)
+                            .replaceAll("\\u001B\\[[;\\d]*[ -/]*[@-~]", "");
+                    var error = IOUtils.toString(process.getErrorStream(), StandardCharsets.UTF_8)
+                            .lines()
+                            .map(line -> "[ERROR] " + line)
+                            .collect(Collectors.joining(System.lineSeparator()));
+                    
+                    process.waitFor();
+
+                    if (!output.isEmpty()) {
+                        Platform.runLater(() -> historyArea.appendText(output));
+                    }
+
+                    if (!error.isEmpty()) {
+                        Platform.runLater(() -> historyArea.appendText(error));
+                    }
                 }
-            } catch (IOException e) {
+
+            } catch (IOException | InterruptedException e) {
                 DialogFactory.createErrorDialog(e);
             } finally {
                 Platform.runLater(() -> {
                     historyListView.getItems().add(commandLineField.getText());
                     commandLineField.clear();
-                    historyArea.appendText(this.currentDirectory + "\n");
+                    historyArea.appendText(currentDirectory + "\n");
                     historyArea.requestFollowCaret();
                     commandLineField.setDisable(false);
                     commandLineField.requestFocus();
@@ -121,21 +159,23 @@ public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, Inpu
             }
         });
     }
+    
     private String[] createProcessArguments() {
         var isWindows = SystemUtils.OS_NAME.toLowerCase().contains("windows");
-        var arguments = new ArrayList<String>();
-        if (isWindows) {
-            arguments.add("C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe");
-            arguments.add("-Command");
-        } else {
-            arguments.add("/bin/bash");
-            arguments.add("-c");
-        }
-        var split = commandLineField.getText().split(" ");
-        Collections.addAll(arguments, split);
 
-        var resultArray = new String[arguments.size()];
-        return arguments.toArray(resultArray);
+        if (isWindows) {
+            return new String[] {
+                "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                "-Command",
+                commandLineField.getText()
+            };
+        } else {
+            return new String[] {
+                "/bin/bash",
+                "-c",
+                commandLineField.getText()
+            };
+        }
     }
 
     @Override
