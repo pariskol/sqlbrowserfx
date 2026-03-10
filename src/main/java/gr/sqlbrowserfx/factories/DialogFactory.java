@@ -10,7 +10,6 @@ import org.controlsfx.control.Notifications;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
-import gr.sqlbrowserfx.SqlBrowserFXApp;
 import gr.sqlbrowserfx.nodes.CustomHBox;
 import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.nodes.tableviews.MapTableViewRow;
@@ -42,6 +41,11 @@ public class DialogFactory {
 
 	private static final Pos NOTIFICATION_POS = Pos.TOP_RIGHT;
 	private static String DEFAULT_STYLESHEET;
+	private static Stage STAGE;
+	
+	public static void setStage(Stage stage) {
+		STAGE = stage;
+	}
 	
 	public static void createErrorDialog(Throwable e) {
 		createErrorDialog(e, null);
@@ -197,7 +201,20 @@ public class DialogFactory {
 		createNotification(title, message, 3);
 	}
 	
+	private static void checkStage() {
+        if (STAGE == null) {
+            throw new RuntimeException("Stage not set for DialogFactory. Please set it before using notifications. You must call DialogFactory.setStage(stage) in the start method of your JavaFX application.");
+        }
+    }
+	
 	public static void createNotification(String title, String message, int durationInSecs) {
+		checkStage();
+		
+		if (STAGE == null) {
+			createInfoDialog(title, message);
+			return;
+		}
+		
 		Platform.runLater(() -> {
 			Notifications.create()
 					.title(title)
@@ -206,7 +223,7 @@ public class DialogFactory {
 					.hideAfter(Duration.seconds(durationInSecs))
 					.position(NOTIFICATION_POS)
 					.onAction(actionEvent -> createInfoDialog(title, message))
-					.owner(SqlBrowserFXApp.STAGE)
+					.owner(STAGE)
 					.showInformation();
 			
 		});
@@ -231,6 +248,14 @@ public class DialogFactory {
 			formattedMessage.append(message);
 		}
 		final String finalMessage = formattedMessage.toString();
+		
+		checkStage();
+
+		if (STAGE == null && throwable != null) {
+			createErrorDialog(throwable, null);
+			return;
+		}
+		
 		Platform.runLater(() -> {
 			Notifications.create()
 					.title(title)
@@ -243,7 +268,7 @@ public class DialogFactory {
 							createErrorDialog(throwable, null);
 						}
 					})
-					.owner(SqlBrowserFXApp.STAGE)
+					.owner(STAGE)
 					.showError();
 			
 		});
