@@ -5,12 +5,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.nodes.codeareas.FileCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.SimpleFileCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.java.FileJavaCodeArea;
@@ -25,6 +25,7 @@ import gr.sqlbrowserfx.utils.PropertiesLoader;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -67,7 +68,7 @@ public class SearchInFilesPopOver extends CustomPopOver {
 	public SearchInFilesPopOver() {
 		var fileSearchBox = this.createFileSearchBox();
 		var linesListBox = this.createLinesListBox();
-		var hSplit = new SplitPane(fileSearchBox, new CustomVBox(new Label("Lines Matches"),linesListBox));
+		var hSplit = new SplitPane(fileSearchBox, linesListBox);
 		hSplit.setOrientation(Orientation.HORIZONTAL);
 		hSplit.setDividerPositions(0.7f, 0.3f); 
 		
@@ -77,7 +78,7 @@ public class SearchInFilesPopOver extends CustomPopOver {
 		
 		var borderPane = new BorderPane(vSplit);
 		this.setContentNode(borderPane);
-		this.setPrefSize(1000, 800);
+		this.setMaxSize(1280, 720);
 		this.setHideOnEscape(true);
 		this.setOnShowing(event -> {
 			PropertiesLoader.loadProperties();
@@ -118,7 +119,11 @@ public class SearchInFilesPopOver extends CustomPopOver {
 			selectLineMatch(linesListView.getSelectionModel().getSelectedItem());
 		});
 		
-		return new VBox(new CustomHBox(prevBtn, nextBtn), linesListView);
+		var label = new Label("Lines Matches");
+		label.setPadding(new Insets(3, 0, 3, 0));
+		var vbox = new CustomVBox(label, new CustomHBox(prevBtn, nextBtn), linesListView);
+		linesListView.prefHeightProperty().bind(filesTableView.heightProperty());
+		return vbox;
 	}
 
 	private VBox createFileSearchBox() {
@@ -244,22 +249,18 @@ public class SearchInFilesPopOver extends CustomPopOver {
 			}
         });
         
-        var openInVSCode = new MenuItem("Open in VS Code", JavaFXUtils.createIcon("/icons/code-file.png"));
-        openInVSCode.setOnAction(e -> {
+        var openFile = new MenuItem("Open File", JavaFXUtils.createIcon("/icons/code-file.png"));
+        openFile.setOnAction(e -> {
             var selected = filesTableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                openInVSCode(selected.getAbsolutePath(), false);
-            }
-        });
-        var openInActiveVSCode = new MenuItem("Open in Active VS Code", JavaFXUtils.createIcon("/icons/code-file.png"));
-        openInActiveVSCode.setOnAction(e -> {
-            var selected = filesTableView.getSelectionModel().getSelectedItem();
-            if (selected != null) {
-                openInVSCode(selected.getAbsolutePath(), true);
+            	var filesTabPane = SqlBrowserFXAppManager.getFirstActiveFilesTabPane();
+    			if (filesTabPane != null) {
+    				filesTabPane.openNewFileTab(new File(selected.getAbsolutePath()));
+    			}
             }
         });
         
-		filesTableView.setContextMenu(new ContextMenu(menuItemCopy, openInVSCode, openInActiveVSCode));
+		filesTableView.setContextMenu(new ContextMenu(menuItemCopy, openFile));
 	}
 
 	private void selectFile() {
@@ -274,16 +275,16 @@ public class SearchInFilesPopOver extends CustomPopOver {
 
 	private void selectLineMatch(LineMatch selectedItem) {
 		if (selectedItem == null) {
-			return;
+		    return;
 		}
-	    int line = selectedItem.getLineNumber() - 1; // CodeArea lines are 0-based
-	    int position = codeArea.position(line, 0).toOffset();
-	    codeArea.moveTo(position);
+		int line = selectedItem.getLineNumber() - 1; // CodeArea lines are 0-based
+		int position = codeArea.position(line, 0).toOffset();
+		codeArea.moveTo(position);
 
-	    int lineEnd = codeArea.position(line + 1, 0).toOffset();
-	    codeArea.selectRange(position, lineEnd);
-	    
-	    codeArea.requestFollowCaret();
+		int lineEnd = codeArea.position(line + 1, 0).toOffset();
+		codeArea.selectRange(position, lineEnd);
+
+		codeArea.showParagraphAtCenter(line);
 	}
 	
 	
@@ -354,7 +355,9 @@ public class SearchInFilesPopOver extends CustomPopOver {
 	    final var finalPattern = pattern;
 	    final var extension = extensionField.getText();
 	    
-	    executor.schedule(() -> {
+	    executor.shutdownNow();
+	    executor = Executors.newSingleThreadScheduledExecutor();
+	    executor.execute(() -> {
 	        var searchResults = FilesUtils.walkContentsWithLines(rootPath, finalPattern, extension, 10);
 
 	        Platform.runLater(() -> {
@@ -362,7 +365,7 @@ public class SearchInFilesPopOver extends CustomPopOver {
 	            searchField.setDisable(false);
 	            filesTableView.setDisable(false);
 	        });
-	    }, 0, TimeUnit.SECONDS);
+	    });
 	}
 
 }
