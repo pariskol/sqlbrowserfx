@@ -42,7 +42,13 @@ import javafx.scene.input.TransferMode;
 
 public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenuOwner, InputMapOwner {
 
-	private final String rootPath;
+	@FunctionalInterface
+	public interface Action {
+		void run(File selectedFile);
+	}
+
+	private Action action;
+	private String rootPath;
 	private TreeItem<TreeViewFile> rootItem, selectedRootItem;
 
 	private final SimpleBooleanProperty isFileProperty = new SimpleBooleanProperty(false);
@@ -122,13 +128,33 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		});
 		this.setInputMap();
 	}
+	
+	public void setOnFileOpen(Action action) {
+		this.action = action;
+	}
 
 	private void openSelectedFile() {
 		var file = this.getSelectionModel().getSelectedItem().getValue().asFile();
 
 		if (file.isFile()) {
-			var sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
-			sqlConsolePane.openNewFileTab(file);
+			if (action != null) {
+				action.run(file);
+			}
+			else {
+				var sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
+				sqlConsolePane.openNewFileTab(file);
+			}
+		}
+	}
+	
+	private void openSelectedFileAsFile() {
+		var file = this.getSelectionModel().getSelectedItem().getValue().asFile();
+
+		if (file.isFile()) {
+			var filesTabPane = SqlBrowserFXAppManager.getFirstActiveFilesTabPane();
+			if (filesTabPane != null) {
+				filesTabPane.openNewFileTab(file);
+			}
 		}
 	}
 
@@ -346,6 +372,12 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		treeItem.setExpanded(false);
 	}
 
+	public void setRootAndRefresh(String rootPath) {
+		this.rootPath = rootPath;
+		this.refresh();
+		
+	}
+	
 	@Override
 	public void refresh() {
 		this.setRoot(this.fillTreeView(rootPath));
@@ -419,6 +451,10 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		var openFile = new MenuItem("Open", JavaFXUtils.createIcon("/icons/code-file.png"));
 		openFile.disableProperty().bind(this.isFileProperty.not());
 		openFile.setOnAction(event -> this.openSelectedFile());
+		
+		var openAsFile = new MenuItem("Open As File", JavaFXUtils.createIcon("/icons/code-file.png"));
+		openAsFile.disableProperty().bind(this.isFileProperty.not());
+		openAsFile.setOnAction(event -> this.openSelectedFileAsFile());
 
 		var newFile = new MenuItem("New File", JavaFXUtils.createIcon("/icons/add.png"));
 		newFile.disableProperty().bind(this.isFileProperty);
@@ -470,7 +506,7 @@ public class FilesTreeView extends TreeView<TreeViewFile> implements ContextMenu
 		restoreRoot.setOnAction(event -> this.setRoot(this.rootItem));
 		restoreRoot.disableProperty().bind(this.getSelectionModel().selectedItemProperty().isEqualTo(this.rootItem));
 
-		contextMenu.getItems().addAll(openFile, new SeparatorMenuItem(),
+		contextMenu.getItems().addAll(openFile, openAsFile, new SeparatorMenuItem(),
 				newFile, newDir, renameFile, copyFiles, pasteFiles, deleteFile, new SeparatorMenuItem(),
 				search, collapseAll, new SeparatorMenuItem(), setAsRoot, refresh, new SeparatorMenuItem(),
 				restoreRoot);

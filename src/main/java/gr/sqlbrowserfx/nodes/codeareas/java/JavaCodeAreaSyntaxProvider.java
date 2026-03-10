@@ -63,15 +63,8 @@ public class JavaCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String
             + "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")"
     );
     
-	public static void init(String dbType) {
-		init();
-	}
 
-	private static void init() {
-	}
-
-	
-	@Override
+    @Override
 	public Set<Keyword> getKeywords() {
 		return KEYWORDS_lIST;
 	}

@@ -26,7 +26,6 @@ import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.nodes.ContextMenuOwner;
 import gr.sqlbrowserfx.nodes.InputMapOwner;
 import gr.sqlbrowserfx.nodes.SearchAndReplacePopOver;
-import gr.sqlbrowserfx.nodes.SearchInFilesPopOver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SimpleLineNumberFactory;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
 import javafx.application.Platform;
@@ -59,7 +58,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     private ListView<Keyword> suggestionsList;
     private Popup autoCompletePopup;
     protected SearchAndReplacePopOver searchAndReplacePopOver;
-    protected SearchInFilesPopOver searchInFilesPopOver;
     private final SimpleBooleanProperty showLinesProperty = new SimpleBooleanProperty(true);
     private final SimpleBooleanProperty autoCompleteProperty = new SimpleBooleanProperty(true);
     private final SimpleBooleanProperty isTextSelectedProperty = new SimpleBooleanProperty(false);
@@ -110,10 +108,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         return this.autoCompletePopup != null && this.autoCompletePopup.isShowing();
     }
 	
-	protected Boolean isSearchInFilesPopOverShowing() {
-		return this.searchInFilesPopOver != null && this.searchInFilesPopOver.isShowing();
-	}
-
 	protected Boolean isSearchAndReplacePopOverShowing() {
 		return this.searchAndReplacePopOver != null && this.searchAndReplacePopOver.isShowing();
 	}
@@ -124,10 +118,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
             hideAutocompletePopup();
         }
 
-		if (isSearchInFilesPopOverShowing()) {
-			searchInFilesPopOver.hide();
-		}
-		
 		if (isSearchAndReplacePopOverShowing()) {
 			searchAndReplacePopOver.hide();
 		}
@@ -232,15 +222,11 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
                 action -> this.replaceSelection("(" + getSelectedText() + ")"));
         
         
-        var searchInFiles = InputMap.consume(
-                EventPattern.keyPressed(KeyCode.H, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
-                action -> this.showSearchInFilesPopup());
 
         Nodes.addFallbackInputMap(this, addTabs);
         Nodes.addFallbackInputMap(this, removeTabs);
         Nodes.addInputMap(this, autocomplete);
         Nodes.addInputMap(this, searchAndReplace);
-        Nodes.addInputMap(this, searchInFiles);
         Nodes.addInputMap(this, delete);
         Nodes.addInputMap(this, toUpper);
         Nodes.addInputMap(this, toLower);
@@ -267,25 +253,25 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         // FIXME Desired behaviour can't be achieved with input map autocomplete popover
         // does not hide.
 //		 Use traditional javafx way for this specific case
-        this.setOnKeyPressed(keyEvent -> {
-            if (keyEvent.isControlDown() && (keyEvent.getCode() == KeyCode.MINUS || keyEvent.getCode() == KeyCode.EQUALS)) {
-                // do not consume event to enable global zoom in/out (if applied)
-                return;
-            }
-            if (keyEvent.getCode() == KeyCode.LEFT || keyEvent.getCode() == KeyCode.RIGHT) {
-            	this.hideAutocompletePopup();
-            }
-            if (keyEvent.getCode() == KeyCode.BACK_SPACE) {
-                this.hideAutocompletePopup();
-                // uncomment this to activate autocomplete on backspace
-//					this.autoCompleteAction(keyEvent, auoCompletePopup);
-            }
-            // These keycodes must be excluded to delegate event to queries tab pane
-            if (keyEvent.getCode() != KeyCode.ESCAPE && keyEvent.getCode() != KeyCode.N
-                    && keyEvent.getCode() != KeyCode.O) {
-                keyEvent.consume();
-            }
-        });
+//        this.setOnKeyPressed(keyEvent -> {
+//            if (keyEvent.isControlDown() && (keyEvent.getCode() == KeyCode.MINUS || keyEvent.getCode() == KeyCode.EQUALS)) {
+//                // do not consume event to enable global zoom in/out (if applied)
+//                return;
+//            }
+//            if (keyEvent.getCode() == KeyCode.LEFT || keyEvent.getCode() == KeyCode.RIGHT) {
+//            	this.hideAutocompletePopup();
+//            }
+//            if (keyEvent.getCode() == KeyCode.BACK_SPACE) {
+//                this.hideAutocompletePopup();
+//                // uncomment this to activate autocomplete on backspace
+////					this.autoCompleteAction(keyEvent, auoCompletePopup);
+//            }
+//            // These keycodes must be excluded to delegate event to queries tab pane
+//            if (keyEvent.getCode() != KeyCode.ESCAPE && keyEvent.getCode() != KeyCode.N
+//                    && keyEvent.getCode() != KeyCode.O) {
+//                keyEvent.consume();
+//            }
+//        });
         this.setOnKeyTyped(keyEvent -> {
         	if (
     			this.autoCompleteProperty.get() &&
@@ -323,14 +309,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         searchAndReplacePopOver.show(getParent(), boundsInScene.getMaxX() - 400, boundsInScene.getMinY());
     }
     
-    protected void showSearchInFilesPopup() {
-        var boundsInScene = this.localToScreen(this.getBoundsInLocal());
-        if (this.searchInFilesPopOver == null) {
-        	this.searchInFilesPopOver = new SearchInFilesPopOver();
-        }
-        this.searchInFilesPopOver.show(getParent(), boundsInScene.getMinX(), boundsInScene.getMinY());
-    }
-
     // FIXME: we override copy method as it the default method seems broken for strings containing '{' or '}'
     @Override
     public void copy() {
@@ -362,9 +340,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         
         var menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
         menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
-        
-        var menuItemSearchInFiles = new MenuItem("Search In Files...", JavaFXUtils.createIcon("/icons/magnify.png"));
-        menuItemSearchInFiles.setOnAction(action -> this.showSearchInFilesPopup());
 
         var menuItemUperCase = new MenuItem("To Upper Case", JavaFXUtils.createIcon("/icons/uppercase.png"));
         menuItemUperCase.setOnAction(action -> this.convertSelectedTextToUpperCase());
@@ -418,7 +393,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
                 new SeparatorMenuItem(),
                 menuItemFormat, menuItemFormat3,
                 new SeparatorMenuItem(),
-                menuItemSearchAndReplace, menuItemSearchInFiles, menuItemGoToLine, menuItemSuggestions,
+                menuItemSearchAndReplace, menuItemGoToLine, menuItemSuggestions,
                 new SeparatorMenuItem(),
                 menuItemSaveAs);
         return menu;

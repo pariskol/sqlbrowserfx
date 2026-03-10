@@ -71,11 +71,11 @@ public class FileSearchPopOver extends CustomPopOver {
                 }
             }
         });
-		filesListView.setPrefSize(600, 400);
+		filesListView.setPrefSize(800, 500);
 
 		searchField = new TextField();
 //		searchField.setPrefWidth(576);
-		searchField.setPromptText("Search for file...");
+		searchField.setPromptText("Search for file (syntax: <pattern>.<suffix>)...");
 		searchField.setOnKeyPressed(keyEvent -> {
 			if (keyEvent.getCode() == KeyCode.ENTER) {
 				search();
@@ -125,6 +125,10 @@ public class FileSearchPopOver extends CustomPopOver {
 				String filePath = filesListView.getSelectionModel().getSelectedItem();
 				action.run(new File(filePath));
 			}
+			
+			if (keyEvent.getCode() == KeyCode.ESCAPE) {
+				this.hide();
+			}
 		});
 		filesListView.setOnMouseClicked(mouseEvent -> {
 			if (mouseEvent.getClickCount() == 2) {
@@ -148,7 +152,7 @@ public class FileSearchPopOver extends CustomPopOver {
 
 		executor = Executors.newSingleThreadScheduledExecutor();
 		executor.schedule(() -> {
-			Set<String> filesPathsFound = FilesUtils.walk(rootPath, pattern);
+			Set<String> filesPathsFound = FilesUtils.walk(rootPath, pattern, 10);
 			Platform.runLater(() -> {
 				filesListView.setItems(FXCollections.observableArrayList(filesPathsFound));
 				searchField.setDisable(false);
