@@ -26,10 +26,6 @@ public class CSqlCodeArea extends SqlCodeArea {
 
 	private PopOver saveQueryPopOver;
 
-	public CSqlCodeArea() {
-		super();
-	}
-
 	@Override
 	public ContextMenu createContextMenu() {
 		var menu = super.createContextMenu();
