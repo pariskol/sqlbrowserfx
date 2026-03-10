@@ -1,0 +1,768 @@
+.root {
+	/* Core accent & focus */
+	-fx-accent: #7aa2f7;
+	-fx-focus-color: -fx-accent;
+
+	/* Base background 1a1b26 16161e */
+	-fx-base: #16161e;
+
+	/* Code syntax colors (Tokyo Night Dark) */
+	-fx-code-keyword-color: #bb9af7;
+	-fx-code-function-color: #7dcfff;
+	-fx-code-comment-color: #565f89;
+	-fx-code-string-color: #9ece6a;
+
+	/* UI color layers */
+	-fx-primary-color: derive(-fx-base, 12%);
+	-fx-secondary-color: derive(-fx-base, 20%);
+	-fx-secondary-light-color: derive(-fx-base, 85%);
+	-fx-hover-color: derive(-fx-base, 30%);
+	-fx-dark-color: derive(-fx-base, 6%);
+	-fx-diagram-color: -fx-hover-color;
+
+	/* Controls */
+	-fx-control-inner-background: derive(-fx-base, 15%);
+	-fx-control-inner-background-alt: -fx-control-inner-background;
+	-fx-faint-focus-color: transparent;
+
+	/* Typography */
+	-fx-font-size: 11.0pt;
+
+	/* Selection */
+	-fx-selection-bar-non-focused: #414868;
+
+	/* Background */
+	-fx-background: derive(-fx-base, 8%);
+}
+
+.menu-bar {
+	-fx-background-color: transparent;
+	-fx-padding: 0;
+}
+
+.menu {
+	-fx-border-radius: 4px;
+	-fx-background-radius: 4px;
+}
+
+
+.menu-item {
+	-fx-border-radius: 4px;
+	-fx-background-radius: 4px;
+}
+
+.dock-area-indicator {
+	-fx-fill: -fx-selection-bar;
+	-fx-opacity: 0.5;
+	-fx-stroke: rgba(50.0, 50.0, 100.0, 0.4);
+	-fx-stroke-width: 6.0;
+	-fx-stroke-type: inside;
+	-fx-stroke-dash-array: 8.0 4.0;
+	-fx-stroke-line-cap: butt;
+}
+
+.dock-top {
+	-fx-graphic: url(../styles/flat-dark/icons/pin.png);
+}
+
+.dock-right {
+	-fx-graphic: url(../styles/flat-dark/icons/pin.png);
+}
+
+.dock-bottom {
+	-fx-graphic: url(../styles/flat-dark/icons/pin.png);
+}
+
+.dock-left {
+	-fx-graphic: url(../styles/flat-dark/icons/pin.png);
+}
+
+.dock-center {
+	-fx-graphic: url(../styles/flat-dark/icons/pin.png);
+}
+
+.dock-top-root {
+	-fx-graphic: url(../styles/flat-dark/icons/pin.png);
+}
+
+.dock-right-root {
+	-fx-graphic: url(../styles/flat-dark/icons/pin.png);
+}
+
+.dock-bottom-root {
+	-fx-graphic: url(../styles/flat-dark/icons/pin.png);
+}
+
+.dock-left-root {
+	-fx-graphic: url(../styles/flat-dark/icons/pin.png);
+}
+
+/* JavaFX developers really seem to have fat fingers? */
+.dock-pos-indicator .button {
+	-fx-padding: 4.0;
+	-fx-background-color: transparent;
+	-fx-border-color: transparent;
+}
+
+/* This stops the stack pane containing the aligned
+ * root dock position indicators from offsetting
+ * them when one of them is set to the hover style.
+ * It gives them just enough room to breathe from the border.
+ */
+.dock-root-pane {
+	-fx-padding: 5.0;
+}
+
+/* JavaFX developers really seem to have fat fingers? */
+.dock-root-pane .button {
+	-fx-padding: 4.0;
+	-fx-background-color: transparent;
+	-fx-border-color: transparent;
+}
+
+.dock-node-border {
+	-fx-padding: 5.0;
+	-fx-background-color: transparent;
+	-fx-effect: dropshadow(three-pass-box, rgba(0.0, 0.0, 0.0, 0.4), 10.0,
+			0.2, 0.0, 0.0);
+}
+
+.dock-node-border:maximized {
+	-fx-padding: 0.0;
+}
+
+/* It is necessary that dock node's have a background color
+ * because some panes used as content such as TabPane with empty
+ * tabs will be fully transparent.
+ */
+.dock-node {
+	-fx-background-color: -fx-primary-color;
+}
+
+.dock-title-bar .button {
+	-fx-padding: 1.0 4.0 1.0 4.0;
+}
+
+.dock-title-bar {
+	-fx-background-color: -fx-background;
+	-fx-padding: 2.0;
+	-fx-spacing: 3.0;
+	-fx-border-width: 0.0 0.0 0.0 0.0;
+	-fx-border-color: -fx-outer-border;
+}
+
+.dock-title-label {
+	/*-fx-graphic: url(docknode.png);*/
+	-fx-padding: 0.0 0.0 3.0 0.0;
+	-fx-text-fill: -fx-text-base-color;
+	-fx-effect: dropshadow(gaussian, rgba(255.0, 255.0, 255.0, 0.2), 0.0,
+			0.0, 0.0, 1.0);
+}
+
+/* We want small buttons for our dock's title bar
+ * but we have to make sure that the top and bottom
+ * are a good ratio of the left and right padding.
+ * If not we get extra padding on the bottom when the
+ * button is hovered, some factor of the default style's
+ * excessively wide buttons.
+ */
+
+/* Set the icons for the dock title bar's buttons here. */
+.dock-state-button {
+	-fx-graphic: url(../styles/flat-dark/icons/restore-win-w.png);
+	-fx-background-color: transparent;
+}
+
+.dock-node:floating .dock-state-button {
+	-fx-graphic: url(../styles/flat-dark/icons/maximize-win-w.png);
+	-fx-background-color: transparent;
+}
+
+.dock-node:maximized .dock-state-button {
+	-fx-graphic: url(../styles/flat-dark/icons/restore-win-w.png);
+	-fx-background-color: transparent;
+}
+
+.dock-close-button {
+	-fx-graphic: url(../styles/flat-dark/icons/close-win-w.png);
+	-fx-background-color: transparent;
+}
+
+.scene,
+.splitPane {
+	-fx-background-color: -fx-primary-color;
+}
+
+.pane,
+.flow-pane,
+.border-pane,
+.vbox,
+.hbox,
+.scroll-pane {
+	-fx-background-color: -fx-primary-color;
+	-fx-background-radius: 4px;
+	-fx-border-radius: 4px;
+}
+
+.scroll-pane > .viewport {
+   -fx-background-color: -fx-primary-color;
+}
+
+.text-area {
+	-fx-background-color: transparent;
+	-fx-border-color: -fx-secondary-color;
+	-fx-border-width: 2;
+	-fx-prompt-text-fill: -fx-hover-color;
+	-fx-padding: 0.0 4.0 0.0 4.0;
+	-fx-border-radius: 4px;
+}
+
+.text-area:focused {
+	-fx-border-color: -fx-accent;
+	-fx-border-width: 2;
+}
+.text-area .scroll-bar:horizontal {
+	-fx-pref-height: 1.0;
+	-fx-opacity: 0.0;
+}
+
+.text-area .content {
+	-fx-background-color: -fx-primary-color;
+	-fx-border-color: transparent;
+	-fx-border-width: 0;
+	-fx-padding: 0.0 4.0 0.0 4.0;
+}
+
+.text-area:focused .content {
+	-fx-border-color: transparent;
+	-fx-border-width: 0;
+}
+
+.text-field {
+	-fx-background-color: transparent;
+	-fx-border-color: -fx-secondary-color;
+	-fx-border-width: 2;
+	-fx-padding: 0.0 4.0 0.0 4.0;
+	-fx-prompt-text-fill: -fx-hover-color;
+	-fx-border-radius: 4px;
+
+}
+
+.text-field:focused {
+	-fx-border-color: -fx-accent;
+}
+
+.tab-pane {
+	-fx-tab-min-width: 2.0em;
+	-fx-background-color: -fx-primary-color;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+	-fx-background-color: -fx-primary-color;
+}
+
+.tab-pane .tab-header-area .tab:selected {
+	-fx-background-color: -fx-primary-color;
+	-fx-border-color: -fx-accent transparent transparent transparent;
+	-fx-border-width: 2.0px;
+	-fx-border-radius: 4px;
+}
+
+.tab-pane .tab-header-area .tab {
+	-fx-background-color: -fx-secondary-color;
+}
+
+.tab,
+.tab:selected {
+	-fx-background-color: -fx-primary-color;
+	-fx-focus-color: transparent;
+	-fx-faint-focus-color: transparent;
+}
+
+.tab .tab-label {
+	-fx-alignment: CENTER;
+}
+
+.tab:selected .tab-label {
+	-fx-alignment: CENTER;
+}
+
+.tab-content-area {
+	-fx-padding: 4.0;
+	-fx-background-color: transparent;
+}
+
+.scroll-bar {
+	-fx-background-color: transparent;
+}
+
+.separator *.line {
+	-fx-background-color: -fx-secondary-color;
+	-fx-border-style: solid;
+	-fx-border-width: 1.0px;
+}
+
+.scroll-bar:horizontal .track,
+.scroll-bar:vertical .track {
+	-fx-background-color: transparent;
+	-fx-border-color: transparent;
+	-fx-background-radius: 0.0em;
+	-fx-border-radius: 2.0em;
+}
+
+.scroll-bar:horizontal .increment-button,
+.scroll-bar:horizontal .decrement-button {
+	-fx-background-color: transparent;
+	-fx-background-radius: 0.0em;
+	-fx-padding: 0.0 0.0 5.0 0.0;
+}
+
+.scroll-bar:vertical .increment-button,
+.scroll-bar:vertical .decrement-button {
+	-fx-background-color: transparent;
+	-fx-background-radius: 0.0em;
+	-fx-padding: 0.0 5.0 0.0 0.0;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+	-fx-shape: " ";
+	-fx-padding: 0.15em 0.0;
+}
+
+.scroll-bar:vertical .increment-arrow,
+.scroll-bar:vertical .decrement-arrow {
+	-fx-shape: " ";
+	-fx-padding: 0.0 0.15em;
+}
+
+.scroll-bar:horizontal .thumb,
+.scroll-bar:vertical .thumb {
+	-fx-background-color: -fx-secondary-color;
+	-fx-background-insets: 2.0, 0.0, 0.0;
+	-fx-background-radius: 2.0em;
+}
+
+.scroll-bar:horizontal .thumb:hover,
+.scroll-bar:vertical .thumb:hover {
+	-fx-background-color: -fx-hover-color;
+	-fx-background-insets: 2.0;
+	-fx-background-radius: 2.0em;
+}
+
+
+.button {
+	-fx-background-color: transparent;
+	-fx-border-radius: 4px;
+	-fx-border-width: 2.0px;
+	-fx-padding: 2px 4px;
+	-fx-border-color: transparent;
+}
+
+.button:hover {
+	-fx-background-radius: 4px;
+	-fx-background-color: transparent;
+	-fx-border-radius: 4px;
+	-fx-border-width: 2.0px;
+	-fx-border-color: -fx-focus-color;
+}
+
+.button:focused {
+	-fx-background-radius: 4px;
+	-fx-background-color: transparent;
+	-fx-border-radius: 4px;
+	-fx-border-width: 2.0px;
+	-fx-border-color: -fx-focus-color;
+}
+
+.button:default {
+	-fx-base: -fx-accent;
+}
+
+.split-pane {
+	-fx-border-color: transparent;
+	-fx-background-color: transparent;
+}
+
+.split-pane:vertical>.split-pane-divider,
+.split-pane:horizontal>.split-pane-divider {
+	-fx-padding: 2.0;
+	-fx-border-width: 0.0 0.0 0.0 0.0;
+	-fx-background-color: -fx-background;
+}
+
+
+.combo-table-view {
+	/*optional */
+	/*i only use this style when a table-view has to emulate a combo-box or auto-complete look, by making the non focused color same as the focused one*/
+	-fx-selection-bar: -fx-accent;
+}
+
+
+.tree-view {
+	-fx-focus-color: transparent;
+	-fx-faint-focus-color: transparent;
+	-fx-background-color: -fx-primary-color;
+	-fx-control-inner-background: -fx-primary-color;
+	-fx-padding: 0;
+}
+
+.list-view {
+    -fx-background-color: transparent, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 0;
+
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+
+    -fx-border-color: -fx-secondary-color;
+    -fx-border-width: 2;
+    -fx-border-radius: 4;
+}
+
+.list-view .list-cell:odd {
+    -fx-control-inner-background: -fx-primary-color;
+}
+
+.list-view .list-cell:even {
+}
+
+.table-view {
+    -fx-background-color: transparent, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-padding: 1;
+
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+
+    /* Match ListView border */
+    -fx-border-color: -fx-secondary-color;
+    -fx-border-width: 2;
+    -fx-border-radius: 4;
+
+    /* Internal table grid lines */
+    -fx-table-cell-border-color: -fx-secondary-color;
+}
+
+.table-view .column-header-background,
+.table-view .column-header-background .filler,
+.table-view .corner {
+    -fx-background-color: -fx-primary-color;
+    -fx-border-color: transparent;
+}
+
+.table-view .column-header {
+    -fx-background-color: -fx-primary-color;
+    -fx-border-width: 0;
+}
+
+.table-view .column-header .label {
+    -fx-font-weight: normal;
+}
+
+.table-row-cell:odd {
+    -fx-control-inner-background: -fx-primary-color;
+}
+
+.table-row-cell:even {
+    /* default background, no change */
+}
+
+.table-row-cell:empty {
+    -fx-background-color: transparent;
+}
+
+
+
+.combo-box-base {
+	-fx-background-color: transparent;
+	-fx-border-radius: 0.0;
+	-fx-border-width: 0.0 0.0 2.0 0.0;
+	-fx-border-color: -fx-base;
+	-fx-alignment: CENTER;
+	-fx-content-display: LEFT;
+}
+
+.combo-box-base:focused {
+	-fx-background-color: transparent;
+	-fx-border-radius: 0.0;
+	-fx-border-width: 0.0 0.0 2.0 0.0;
+	-fx-border-color: -fx-accent;
+}
+
+.combo-box-popup .list-view .list-cell:filled:hover {
+	-fx-background-color: -fx-accent;
+}
+
+.combo-box .list-view:focused .list-cell:selected {
+	-fx-background-color: -fx-accent;
+	-fx-table-cell-border-color: -fx-accent;
+}
+
+.lineno {
+	-fx-background-color: -fx-primary-color;
+}
+
+.styled-text-area {
+	-fx-padding: 0.0px;
+	-fx-background-color: -fx-primary-color;
+}
+
+.styled-text-area .selection {
+	-fx-fill: -fx-accent;
+}
+
+.styled-text-area .text {
+	-fx-fill: -fx-text-base-color;
+	-fx-font-family: "Noto Sans";
+}
+
+.styled-text-area .text.keyword {
+	-fx-fill: -fx-code-keyword-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.function {
+	-fx-fill: -fx-code-function-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.semicolon {
+	-fx-fill: -fx-code-keyword-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.paren {
+	-fx-fill: -fx-text-base-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.bracket {
+	-fx-fill: -fx-text-base-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.brace {
+	-fx-fill: -fx-text-base-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.string {
+	-fx-fill: -fx-code-string-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.string2 {
+	-fx-fill: -fx-code-string-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.comment {
+	-fx-fill: -fx-code-comment-color;
+}
+
+.styled-text-area .text.annotation {
+	-fx-fill: -fx-code-function-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.todo {
+	-fx-fill: -fx-code-comment-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.warn {
+	-fx-fill: -fx-code-comment-color;
+	-fx-font-weight: bold;
+}
+
+.styled-text-area .text.cast {
+	-fx-fill: -fx-code-comment-color;
+}
+
+.styled-text-area .text.operation {
+	-fx-fill: -fx-text-base-color;
+}
+
+.styled-text-area .text.hex {
+	-fx-fill: -fx-text-base-color;
+}
+
+.styled-text-area .text.number {
+	-fx-fill: -fx-secondary-color;
+}
+
+.styled-text-area .text.method {
+	-fx-fill: -fx-code-function-color;
+}
+
+.styled-text-area .text.diamond {
+	-fx-fill: -fx-code-keyword-color;
+	-fx-font-weight: bold;
+}
+
+.paragraph-box:has-caret {
+	-fx-background-color: -fx-secondary-color;
+}
+
+.ddb-tree-pane {
+}
+
+.caret {
+	-fx-stroke: -fx-text-base-color;
+}
+
+.popover {
+	-fx-background-color: -fx-primary-color;
+	
+}
+
+.popover>.content {
+	-fx-background-color: -fx-primary-color;
+	-fx-padding: 10.0;
+	-fx-border-color: -fx-secondary-color;
+	-fx-border-width: 2px;
+}
+
+.popover>.detached {}
+
+.popover>.content>.title>.text {
+	-fx-padding: 6.0 6.0 0.0 6.0;
+	-fx-text-fill: -fx-text-base-color;
+	-fx-font-weight: bold;
+}
+
+.popover>.content>.title>.icon {
+	-fx-padding: 6.0 0.0 0.0 10.0;
+}
+
+.popover>.content>.title>.icon>.graphics>.circle {
+	-fx-fill: transparent;
+	-fx-effect: innershadow(gaussian, rgba(0.0, 0.0, 0.0, 0.2), 3.0, 0.5, 1.0, 1.0);
+}
+
+.popover>.content>.title>.icon>.graphics>.line {
+	-fx-stroke: -fx-primary-color;
+	-fx-stroke-width: 2.0;
+}
+
+.context-menu {
+	-fx-min-width: 150.0px;
+	-fx-background-radius: 4px;
+	-fx-border-color: -fx-secondary-color;
+	-fx-background-color: -fx-secondary-color;
+	-fx-border-radius: 4px;
+	/* Border width */
+	-fx-border-width: 2.0px;
+	/* Border width */
+}
+
+.context-menu > * > .separator > .line {
+    -fx-border-color: -fx-control-inner-background;
+}
+
+/* Remove the default border and background */
+.check-box {
+	-fx-background-color: transparent;
+	-fx-border-color: transparent;
+}
+
+/* Customize the box for unchecked state */
+.check-box>.box {
+	-fx-background-color: transparent;
+	-fx-border-color: -fx-secondary-color;
+	-fx-border-radius: 4px;
+	-fx-border-width: 2.0px;
+}
+
+/* Customize the check mark for checked state */
+.check-box:selected>.box>.mark {
+	-fx-background-color: -fx-accent;
+	/* Change the color of the check mark when checked */
+}
+
+/* Optional: Change the hover effect color */
+.check-box:hover>.box {
+	-fx-background-color: -fx-hover-color;
+	/* Change the background color on hover */
+}
+
+/* Optional: Add a ripple effect when clicked */
+.check-box:pressed>.box {
+	-fx-background-color: -fx-secondary-color;
+	/* Change the background color on click */
+}
+
+.date-picker {
+	-fx-background-color:  -fx-background;
+	-fx-border-width: 2px;
+	-fx-border-radius: 4px;
+	-fx-border-color: -fx-secondary-color;
+}
+
+.date-picker:focused {
+	-fx-border-width: 2px;
+	-fx-border-radius: 4px;
+}
+
+.date-picker > .text-field {
+    -fx-border-color: transparent;
+}
+
+.date-picker .arrow-button {
+	-fx-background-color: -fx-background;
+	-fx-background-radius: 0.0;
+}
+
+.date-picker .arrow-button:hover {
+	-fx-background-color: -fx-dark-color;
+}
+
+.date-picker .arrow-button .arrow {
+	-fx-background-color: -fx-text-base-color;
+}
+
+.date-picker-popup .day-cell,
+.date-picker .cell {
+	-fx-text-fill: -fx-text-base-color;
+	-fx-background-color: -fx-background;
+	-fx-border-color: -fx-secondary-color;
+}
+
+.date-picker .cell:hover {
+	-fx-background-color: -fx-hover-color;
+}
+
+.date-picker .cell:focused {
+	-fx-background-color: -fx-primary-color;
+}
+
+.date-picker .selected {
+	-fx-background-color: -fx-accent;
+}
+
+.date-picker .selected:focused {
+	-fx-background-color: -fx-accent;
+}
+
+.date-picker-popup {
+	-fx-border-radius: 0.0px;
+	-fx-border-color: -fx-secondary-color;
+}
+
+.date-picker-popup .label,
+.date-picker-popup .month-year-pane {
+	-fx-background-color: -fx-background;
+}
+
+.date-picker-popup .month-year-pane .label {
+}
+
+.date-picker-popup .week-number-cell {
+	-fx-text-fill: -fx-background;
+}
+
+.date-picker-popup .spinner .button .left-arrow,
+.date-picker-popup .spinner .button .right-arrow {
+	-fx-background-color: -fx-text-base-color;
+}
