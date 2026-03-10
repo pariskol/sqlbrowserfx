@@ -12,9 +12,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
-import org.fxmisc.wellbehaved.event.EventPattern;
-import org.fxmisc.wellbehaved.event.InputMap;
-import org.fxmisc.wellbehaved.event.Nodes;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
@@ -49,7 +46,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
@@ -77,8 +73,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
     private boolean popOverIsShowing = false;
     private SplitPane splitPane;
     private Button openButton;
-    private Button searchButton;
-    private CustomPopOver fileSearchPopOver;
 
 
     @SuppressWarnings("unchecked")
@@ -110,9 +104,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
             }
         });
 
-        Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.O, KeyCombination.CONTROL_DOWN),
-                action -> this.showFileSearchPopOver()));
-
         splitPane = new SplitPane(queryTabPane, historyArea);
         splitPane.setOrientation(Orientation.VERTICAL);
         historyArea.prefHeightProperty().bind(splitPane.heightProperty().multiply(0.65));
@@ -122,7 +113,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         autoCompleteOnTypeCheckBox.setSelected(true);
 
         openInNewTableViewCheckBox = new CheckBox("Open in new table");
-        openInNewTableViewCheckBox.setSelected(true);
+        openInNewTableViewCheckBox.setSelected(false);
 
         queryTabPane.getSelectionModel().selectedItemProperty().addListener(
                 (ov, oldTab, newTab) -> {
@@ -195,21 +186,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         }
     }
 
-    private void createFileSearchPopover() {
-        if (this.fileSearchPopOver != null) return;
-
-        this.fileSearchPopOver = new FileSearchPopOver(this::openNewFileTab);
-    }
-
-    private void showFileSearchPopOver() {
-        if (popOverIsShowing) return;
-
-        createFileSearchPopover();
-
-        var boundsInScene = this.localToScreen(this.getBoundsInLocal());
-        fileSearchPopOver.show(toolbar, boundsInScene.getMaxX() - 620,
-                boundsInScene.getMinY());
-    }
 
     private void addTabContextMenu(Tab tab) {
 		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
@@ -346,10 +322,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
         openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
         openButton.setTooltip(new Tooltip("Open file"));
-
-        searchButton = new Button("", JavaFXUtils.createIcon("/icons/magnify.png"));
-        searchButton.setOnMouseClicked(mouseEvent -> this.showFileSearchPopOver());
-        searchButton.setTooltip(new Tooltip("Search file"));
 
         FlowPane toolbar = new CustomFlowPane(executeButton, stopExecutionButton, settingsButton, openButton);
         return toolbar;

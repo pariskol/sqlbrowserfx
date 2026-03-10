@@ -78,6 +78,7 @@ public class DBTreeView extends TreeView<String>
 	private final SimpleBooleanProperty canSelectedOpenProperty = new SimpleBooleanProperty(false);
 	private HBox searchBox;
 	private String currentSearchPattern;
+	private SimpleBooleanProperty isLoadingProperty = new SimpleBooleanProperty(true);
 
 	
 
@@ -190,8 +191,8 @@ public class DBTreeView extends TreeView<String>
 	@Override
 	public void setInputMap() {
 		// enable following line if this view used as standalone
-//		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
-//				action -> this.showSearchPopup()));
+		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
+				action -> this.showSearchPopup()));
 		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.C, KeyCombination.CONTROL_DOWN),
 				action -> this.copyAction()));
 	}
@@ -381,6 +382,7 @@ public class DBTreeView extends TreeView<String>
 				});
 	
 				timeCounter = (System.currentTimeMillis() - timeCounter) / 1000;
+				isLoadingProperty.set(false);
 				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME)
 						.info("Database analysis took " + timeCounter + " seconds");
 				this.changed();
@@ -819,5 +821,9 @@ public class DBTreeView extends TreeView<String>
 
 	public SimpleBooleanProperty canSelectedOpenProperty() {
 		return canSelectedOpenProperty;
+	}
+	
+	public SimpleBooleanProperty isLoadingProperty() {
+		return isLoadingProperty;
 	}
 }
