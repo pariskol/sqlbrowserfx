@@ -15,6 +15,9 @@ import org.dockfx.DockNode;
 import org.dockfx.DockPane;
 import org.dockfx.DockPos;
 import org.dockfx.DockWeights;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import org.slf4j.LoggerFactory;
 
 import com.kodedu.terminalfx.TerminalBuilder;
@@ -35,10 +38,13 @@ import gr.sqlbrowserfx.nodes.CustomHBox;
 import gr.sqlbrowserfx.nodes.CustomVBox;
 import gr.sqlbrowserfx.nodes.DBTreeView;
 import gr.sqlbrowserfx.nodes.DbConfigBox;
+import gr.sqlbrowserfx.nodes.FileSearchPopOver;
+import gr.sqlbrowserfx.nodes.FilesTabPane;
 import gr.sqlbrowserfx.nodes.FilesTreeView;
 import gr.sqlbrowserfx.nodes.HelpTabPane;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.PostgreSqlConfigBox;
+import gr.sqlbrowserfx.nodes.SearchInFilesPopOver;
 import gr.sqlbrowserfx.nodes.SqlConnectorType;
 import gr.sqlbrowserfx.nodes.SqlConsolePane;
 import gr.sqlbrowserfx.nodes.SqlServerConfigBox;
@@ -57,6 +63,7 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
@@ -70,10 +77,10 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -86,20 +93,18 @@ public class SqlBrowserFXApp extends Application {
 
 	private static String DB;
 	private static RESTfulServiceConfig restServiceConfig;
-	private boolean restServiceStarted;
+	private boolean restServiceStarted = false;
 	private boolean isRestConfigurationShowing = false;
+	private boolean isInternalDBShowing = false;
+
 
 	private Scene primaryScene;
-	public static Stage STAGE;
-	private DSqlPane mainSqlPane;
+	private Stage primaryStage;
 
 	private SqlConnector sqlConnector;
-	private DDBTreePane ddbTreePane;
-	private boolean isInternalDBShowing = false;
-	private QueriesMenu queriesMenu;
+	private SearchInFilesPopOver searchInFilesPopOver;
+	private FileSearchPopOver fileSearchpopOver;
 	
-	@SuppressWarnings("unused")
-	private double fontSize;
 
 	public static void main(String[] args) {
 		PropertiesLoader.setLogger(LoggerFactory.getLogger(LoggerConf.LOGGER_NAME));
@@ -110,9 +115,7 @@ public class SqlBrowserFXApp extends Application {
 
 	@Override
 	public void start(Stage primaryStage) {
-		var defaultFont = Font.getDefault();
-		fontSize = defaultFont.getSize();
-		SqlBrowserFXApp.STAGE = primaryStage;
+		this.primaryStage = primaryStage;
 		primaryStage.setTitle("SqlBrowserFX");
 
 		if (DB == null)
@@ -263,7 +266,7 @@ public class SqlBrowserFXApp extends Application {
 			SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
 			primaryScene.setRoot(new SqlConsolePane(sqliteConnector));
 			JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
-			STAGE.setScene(primaryScene);
+			primaryStage.setScene(primaryScene);
 		}
 		else
 			createAppView(sqliteConnector);
@@ -305,7 +308,7 @@ public class SqlBrowserFXApp extends Application {
 						SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
 						primaryScene.setRoot(new SqlConsolePane(sqlConnector));
 						JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
-						STAGE.setScene(primaryScene);
+						primaryStage.setScene(primaryScene);
 					}
 					else {
 						createAppView(sqlConnector);
@@ -330,20 +333,20 @@ public class SqlBrowserFXApp extends Application {
 		SqlBrowserFXAppManager.setDBtype(determineDBType(sqlConnector));
 		SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
 		
-		STAGE.setMaximized(true);
+		primaryStage.setMaximized(true);
 		var dockPane = new DockPane();
 		var menuBar = createMenu(dockPane);
 
 		dockPane.getStylesheets().add(CSS_THEME);
 
-		mainSqlPane = new DSqlPane(sqlConnector);
+		var mainSqlPane = new DSqlPane(sqlConnector);
 		SqlBrowserFXAppManager.registerDSqlPane(mainSqlPane);
 		mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
 		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, DockWeights.asDoubleArrray(0.8f));
 		mainSqlPane.asDockNode().setClosable(false);
 		mainSqlPane.showConsole();
 
-		ddbTreePane = new DDBTreePane(DB, sqlConnector);
+		var ddbTreePane = new DDBTreePane(DB, sqlConnector);
 		SqlBrowserFXAppManager.registerDDBTreeView(ddbTreePane.getDBTreeView());
 		ddbTreePane.getDBTreeView().asDockNode().setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
 		
@@ -359,15 +362,26 @@ public class SqlBrowserFXApp extends Application {
 		mainPane.setCenter(dockPane);
 		
 		JavaFXUtils.addZoomInOutSupport(mainPane);
+		Nodes.addInputMap(mainPane,
+			InputMap.consume(EventPattern.keyPressed(KeyCode.H, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN), action -> {
+				showSearchInFilesPopup(mainPane);
+			})
+		);
+		
+		Nodes.addInputMap(mainPane,
+			InputMap.consume(EventPattern.keyPressed(KeyCode.R, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN), action -> {
+				showFileSearchPopOver(mainPane);
+			})
+		);
 
 		if (primaryScene == null) {
 			primaryScene = new Scene(mainPane);
-			STAGE.setScene(primaryScene);
+			primaryStage.setScene(primaryScene);
 			primaryScene.getStylesheets().add(CSS_THEME);
 		}
 
 		primaryScene.setRoot(mainPane);
-		STAGE.heightProperty().addListener((obs, oldVal, newVal) -> {
+		primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> {
 			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.TRUE);
 			for (SplitPane split : dockPane.getSplitPanes()) {
 			    double[] positions = split.getDividerPositions(); // record the current ratio
@@ -375,7 +389,7 @@ public class SqlBrowserFXApp extends Application {
 			}
 			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
 		});
-		
+		DialogFactory.setStage(primaryStage);
 	}
 
 	private MenuBar createMenu(DockPane dockPane) {
@@ -428,6 +442,13 @@ public class SqlBrowserFXApp extends Application {
                     new DockNode(dockPane, filesTreeView, "File Explorer : " + selectedDir.getName(), JavaFXUtils.createIcon("/icons/folder.png")));
         });
 		
+		var filesTabViewItem = new MenuItem("Open Files Tabs View", JavaFXUtils.createIcon("/icons/code-file.png"));
+		filesTabViewItem.setOnAction(event -> {
+			var tabs =  new FilesTabPane();
+			SqlBrowserFXAppManager.registerFilesTabPane(tabs);
+            JavaFXUtils.zoomToCurrentFactor(
+                    new DockNode(dockPane, tabs, "Files", JavaFXUtils.createIcon("/icons/code-file.png")));
+        });
 		
 		var logViewItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
 		logViewItem.setOnAction(actionEvent -> JavaFXUtils.zoomToCurrentFactor(new DLogConsolePane(dockPane).asDockNode()));
@@ -443,7 +464,8 @@ public class SqlBrowserFXApp extends Application {
 				sqlPaneViewItem, 
 				dbDiagramViewItem, 
 				new SeparatorMenuItem(),
-				filesTreeViewItem, 
+				filesTreeViewItem,
+				filesTabViewItem,
 				new SeparatorMenuItem(),
 				terminalViewItem,
 				logViewItem);
@@ -528,7 +550,7 @@ public class SqlBrowserFXApp extends Application {
 		});
 
 		var menuBar = new MenuBar();
-		queriesMenu = new QueriesMenu();
+		var queriesMenu = new QueriesMenu();
 		menuBar.getMenus().addAll(menu1, menu2, queriesMenu, menu4, menu3, menu5);
 
 		return menuBar;
@@ -574,6 +596,67 @@ public class SqlBrowserFXApp extends Application {
 			} catch (SQLException e) {
 				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
 			}
+		});
+	}
+	
+	private void showSearchInFilesPopup(Node node) {
+		if (searchInFilesPopOver != null && searchInFilesPopOver.isShowing()) {
+			return;
+		}
+
+		if (searchInFilesPopOver == null) {
+			searchInFilesPopOver = new SearchInFilesPopOver();
+		}
+		
+		var scene = node.getScene();
+		var centerX = scene.getWindow().getX() + scene.getX() + scene.getWidth() / 2;
+		var centerY = scene.getWindow().getY() + scene.getHeight() / 2;
+		
+		// Show off-screen first
+		searchInFilesPopOver.show(node, -10000, -10000);
+
+		Platform.runLater(() -> {
+			double popOverWidth = searchInFilesPopOver.getWidth();
+			double popOverHeight = searchInFilesPopOver.getHeight();
+			double adjustedX = centerX - popOverWidth / 2;
+			double adjustedY = centerY - popOverHeight / 2;
+			searchInFilesPopOver.setX(adjustedX);
+			searchInFilesPopOver.setY(adjustedY);
+		});
+	}
+    
+	private void showFileSearchPopOver(Node node) {
+		if (fileSearchpopOver != null && fileSearchpopOver.isShowing()) {
+			return;
+		}
+
+		if (fileSearchpopOver == null) {
+			fileSearchpopOver = new FileSearchPopOver(file -> {
+				var filesTabsPane = SqlBrowserFXAppManager.getFirstActiveFilesTabPane();
+				if (filesTabsPane != null) {
+					filesTabsPane.openNewFileTab(file);
+				}
+				var sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
+				if (sqlConsolePane != null) {
+					sqlConsolePane.openNewFileTab(file);
+				}
+			});
+		}
+		
+		var scene = node.getScene();
+		var centerX = scene.getWindow().getX() + scene.getX() + scene.getWidth() / 2;
+		var centerY = scene.getWindow().getY() + scene.getHeight() / 2;
+
+		// Show off-screen first
+		fileSearchpopOver.show(node, -10000, -10000);
+
+		Platform.runLater(() -> {
+			double popOverWidth = fileSearchpopOver.getWidth();
+			double popOverHeight = fileSearchpopOver.getHeight();
+			double adjustedX = centerX - popOverWidth / 2;
+			double adjustedY = centerY - popOverHeight / 2;
+			fileSearchpopOver.setX(adjustedX);
+			fileSearchpopOver.setY(adjustedY);
 		});
 	}
 

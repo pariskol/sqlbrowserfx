@@ -10,6 +10,7 @@ import gr.sqlbrowserfx.conn.SqliteConnector;
 import gr.sqlbrowserfx.dock.nodes.DDBTreeView;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
+import gr.sqlbrowserfx.nodes.FilesTabPane;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 
 public class SqlBrowserFXAppManager {
@@ -19,6 +20,7 @@ public class SqlBrowserFXAppManager {
 	private static final SqlConnector SQL_CONNECTOR = new SqliteConnector(INTERNAL_DB_PATH);
 	private static final List<DSqlPane> DSQL_PANES = new ArrayList<>();
 	private static final List<SqlPane> SQL_PANES = new ArrayList<>();
+	private static final List<FilesTabPane> FILES_TAB_PANES = new ArrayList<>();
 	private static final List<DDBTreeView> DB_TREE_VIEWS = new ArrayList<>();
 	private static String DB_TYPE = "sqlite";
 	
@@ -29,6 +31,10 @@ public class SqlBrowserFXAppManager {
 	public static void registerDSqlPane(DSqlPane sqlPane) {
 		DSQL_PANES.add(sqlPane);
 		DB_TREE_VIEWS.forEach(DDBTreeView::populateSqlPanesMenu);
+	}
+	
+	public static void registerFilesTabPane(FilesTabPane tabPane) {
+		FILES_TAB_PANES.add(tabPane);
 	}
 	
 	public static void registerSqlPane(SqlPane sqlPane) {
@@ -47,7 +53,7 @@ public class SqlBrowserFXAppManager {
 	}
 	
 	public static DSqlConsolePane getFirstActiveDSqlConsolePane() {
-		DSqlPane activeSqlPane = DSQL_PANES.stream()
+		var activeSqlPane = DSQL_PANES.stream()
 				.filter(sqlPane -> sqlPane.getSqlConsolePane() != null)
 				.findFirst()
 				.orElse(null);
@@ -57,6 +63,12 @@ public class SqlBrowserFXAppManager {
 		}
 		
 		return null;
+	}
+	
+	public static FilesTabPane getFirstActiveFilesTabPane() {
+		return FILES_TAB_PANES.stream()
+				.findFirst()
+				.orElse(null);
 	}
 	
 	public static void unregisterDSqlPane(DSqlPane sqlPane) {
