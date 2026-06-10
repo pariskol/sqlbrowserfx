@@ -11,3 +11,6 @@ dist
 .idea/
 sqlbrowserfx.iml
 sqlbrowser.db
+amarildo/
+amarildo*
+javaidefx/
