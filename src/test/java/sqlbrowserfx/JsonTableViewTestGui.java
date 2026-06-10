@@ -20,7 +20,7 @@ public class JsonTableViewTestGui extends Application{
 	public void start(Stage primaryStage) {
 		try {
 			primaryStage.setTitle("SqlBrowser");
-			JSONArray jsonArray = new JSONArray(HttpClient.GET("<your url>"));
+			JSONArray jsonArray = new JSONArray(new HttpClient().get("<your url>"));
 			JSONTableView tableView = new JSONTableView();
 			tableView.setItemsLater(jsonArray);
 			primaryStage.setScene(new Scene(new VBox(new TextField(), tableView)));

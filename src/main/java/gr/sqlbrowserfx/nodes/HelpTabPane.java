@@ -15,12 +15,13 @@ import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 
-public class HelpTabPane extends TabPane{
+public class HelpTabPane extends TabPane {
+	private HttpClient httpClient = new HttpClient();
 
 	public HelpTabPane() throws IOException, InterruptedException, URISyntaxException {
 		super();
-		String desc = HttpClient.GET("https://raw.githubusercontent.com/pariskol/sqlbrowserfx/master/README.md");
-		String license = HttpClient.GET("https://raw.githubusercontent.com/pariskol/sqlbrowserfx/master/LICENSE");
+		String desc = httpClient.get("https://raw.githubusercontent.com/pariskol/sqlbrowserfx/master/README.md");
+		String license = httpClient.get("https://raw.githubusercontent.com/pariskol/sqlbrowserfx/master/LICENSE");
 		
 		TextArea descTextArea = new TextArea(desc);
 		descTextArea.setEditable(false);
