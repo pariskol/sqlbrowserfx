@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
+import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.DbCash;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -598,11 +599,31 @@ public class DBTreeView extends TreeView<String>
 		restoreRoot.setOnAction(event -> this.setRoot(this.rootItem));
 		restoreRoot.disableProperty().bind(this.getSelectionModel().selectedItemProperty().isEqualTo(this.rootItem));
 
+		var menuItemExplainSql = new MenuItem("(AI) Explain Sql", JavaFXUtils.createIcon("/icons/suggestion.png"));
+		menuItemExplainSql.setOnAction(action -> {
+			if (this.getSelectionModel().getSelectedItem() == null)
+				return;
+			
+			SqlBrowserFXAppManager.getOllamaPane().explainSql(this.copyScemaAction());
+		});
+		menuItemExplainSql.disableProperty().bind(SqlBrowserFXAppManager.aiAvailableProperty().not());
+		
+		var menuItemFeedScema = new MenuItem("(AI) Feed Schema", JavaFXUtils.createIcon("/icons/suggestion.png"));
+		menuItemFeedScema.setOnAction(action -> {
+			if (this.getSelectionModel().getSelectedItem() == null)
+				return;
+			
+			SqlBrowserFXAppManager.getOllamaPane().feedSchema(this.copyScemaAction());
+		});
+		menuItemFeedScema.disableProperty().bind(SqlBrowserFXAppManager.aiAvailableProperty().not());
+		
 		contextMenu.getItems().addAll(
 			copy, copySchema, new SeparatorMenuItem(), 
 			collapseAll, showSchema, new SeparatorMenuItem(), 
 			setAsRoot, restoreRoot, new SeparatorMenuItem(), 
-			drop
+			drop, new SeparatorMenuItem(),
+			menuItemExplainSql,
+			menuItemFeedScema
 	    );
 
 		return contextMenu;

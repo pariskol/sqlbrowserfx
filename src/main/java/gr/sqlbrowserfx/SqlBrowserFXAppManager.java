@@ -11,7 +11,10 @@ import gr.sqlbrowserfx.dock.nodes.DDBTreeView;
 import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.nodes.FilesTabPane;
+import gr.sqlbrowserfx.nodes.ollama.OllamaChatPane;
+import gr.sqlbrowserfx.nodes.ollama.OllamaHandler;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
+import javafx.beans.property.SimpleBooleanProperty;
 
 public class SqlBrowserFXAppManager {
 
@@ -22,7 +25,9 @@ public class SqlBrowserFXAppManager {
 	private static final List<SqlPane> SQL_PANES = new ArrayList<>();
 	private static final List<FilesTabPane> FILES_TAB_PANES = new ArrayList<>();
 	private static final List<DDBTreeView> DB_TREE_VIEWS = new ArrayList<>();
+	private static OllamaChatPane OLLAMA;
 	private static String DB_TYPE = "sqlite";
+	private static SimpleBooleanProperty aiAvailableProperty = new SimpleBooleanProperty(false); 
 	
 	public static SqlConnector getConfigSqlConnector() {
 		return SQL_CONNECTOR;
@@ -92,4 +97,22 @@ public class SqlBrowserFXAppManager {
 		DB_TREE_VIEWS.remove(treeView);
 	}
 
+	public static void registerOllamaPane(OllamaChatPane chatPane) {
+		OLLAMA = chatPane;
+		SqlBrowserFXAppManager.aiAvailableProperty.set(true);
+	}
+	
+	public static void unregisterOllamaPane() {
+		OLLAMA = null;
+		SqlBrowserFXAppManager.aiAvailableProperty.set(false);
+	}
+
+	public static OllamaChatPane getOllamaPane() {
+		return OLLAMA;
+	}
+
+	public static SimpleBooleanProperty aiAvailableProperty() {
+		return aiAvailableProperty;
+	}
+	
 }

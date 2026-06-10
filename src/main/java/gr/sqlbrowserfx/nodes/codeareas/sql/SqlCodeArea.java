@@ -418,8 +418,21 @@ public class SqlCodeArea extends AutoCompleteCodeArea<SqlCodeAreaSyntaxProvider>
 		var menuItemShowSchema = new MenuItem("Show Schema", JavaFXUtils.createIcon("/icons/script.png"));
 		menuItemShowSchema.setOnAction(action -> SqlCodeArea.this.showSchemaPopOver());
         
+		var menuItemCheckSyntax = new MenuItem("(AI) Check Syntax", JavaFXUtils.createIcon("/icons/suggestion.png"));
+		menuItemCheckSyntax.setOnAction(action -> SqlBrowserFXAppManager.getOllamaPane().reportSqlSyntaxErrors(getText().isEmpty() ? getSelectedText() : getText()));
+		menuItemCheckSyntax.disableProperty().bind(SqlBrowserFXAppManager.aiAvailableProperty().not());
+		
+		var menuItemExplainSql = new MenuItem("(AI) Explain Sql", JavaFXUtils.createIcon("/icons/suggestion.png"));
+		menuItemExplainSql.setOnAction(action -> SqlBrowserFXAppManager.getOllamaPane().explainSql(getText().isEmpty() ? getSelectedText() : getText()));
+		menuItemExplainSql.disableProperty().bind(SqlBrowserFXAppManager.aiAvailableProperty().not());
+		
+		var menuItemSqlSuggestions = new MenuItem("(AI) Sql Suggestions", JavaFXUtils.createIcon("/icons/suggestion.png"));
+		menuItemSqlSuggestions.setOnAction(action -> SqlBrowserFXAppManager.getOllamaPane().suggestSql(getText().isEmpty() ? getSelectedText() : getText()));
+		menuItemSqlSuggestions.disableProperty().bind(SqlBrowserFXAppManager.aiAvailableProperty().not());
+
 		menu.getItems().addAll(
-			new SeparatorMenuItem(), menuItemHistory, menuItemShowSchema
+			new SeparatorMenuItem(), menuItemHistory, menuItemShowSchema, 
+			new SeparatorMenuItem(), menuItemCheckSyntax, menuItemExplainSql, menuItemSqlSuggestions
 		);
 
 		return menu;

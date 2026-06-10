@@ -104,24 +104,23 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
     abstract protected T initSyntaxProvider();
 
-	protected Boolean isAutoCompletePopupShowing() {
+    protected Boolean isAutoCompletePopupShowing() {
         return this.autoCompletePopup != null && this.autoCompletePopup.isShowing();
     }
-	
-	protected Boolean isSearchAndReplacePopOverShowing() {
-		return this.searchAndReplacePopOver != null && this.searchAndReplacePopOver.isShowing();
-	}
-	
-	
+
+    protected Boolean isSearchAndReplacePopOverShowing() {
+        return this.searchAndReplacePopOver != null && this.searchAndReplacePopOver.isShowing();
+    }
+
     protected void onMouseClicked() {
         if (isAutoCompletePopupShowing()) {
             hideAutocompletePopup();
         }
 
-		if (isSearchAndReplacePopOverShowing()) {
-			searchAndReplacePopOver.hide();
-		}
-		
+        if (isSearchAndReplacePopOverShowing()) {
+            searchAndReplacePopOver.hide();
+        }
+
         if (goToLinePopOver != null) {
             goToLinePopOver.hide();
         }
@@ -168,7 +167,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
                 });
         var autocomplete = InputMap.consume(
                 EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN), action -> this.autoCompleteAction(
-                        new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, false, true, false, false)));
+                new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, false, true, false, false)));
 
         var searchAndReplace = InputMap.consume(
                 EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
@@ -176,10 +175,11 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         var delete = InputMap.consume(EventPattern.keyPressed(KeyCode.D, KeyCombination.CONTROL_DOWN),
                 action -> {
                     boolean hasInitialSelectedText = false;
-                    if (this.getSelectedText().isEmpty())
+                    if (this.getSelectedText().isEmpty()) {
                         this.selectLine();
-                    else
+                    } else {
                         hasInitialSelectedText = true;
+                    }
 
                     this.replaceSelection("");
 
@@ -199,17 +199,18 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 //				action -> {
 //					this.hideAutocompletePopup();
 //					// uncomment this to activate autocomplete on backspace
-////					this.autoCompleteAction(keyEvent, auoCompletePopup);
+        ////					this.autoCompleteAction(keyEvent, auoCompletePopup);
 //				}
 //        );
 
         var format = InputMap.consume(
                 EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN), action -> {
-                    if (this.getSelectedText().isEmpty())
-                        this.replaceText(syntaxProvider.format(this.getText()));
-                    else
-                        this.replaceSelection(syntaxProvider.format(this.getSelectedText()));
-                });
+            if (this.getSelectedText().isEmpty()) {
+                this.replaceText(syntaxProvider.format(this.getText()));
+            } else {
+                this.replaceSelection(syntaxProvider.format(this.getSelectedText()));
+            }
+        });
         var goToLine = InputMap.consume(EventPattern.keyPressed(KeyCode.L, KeyCombination.CONTROL_DOWN),
                 action -> this.showGoToLinePopOver());
 
@@ -220,8 +221,6 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         var parentesisfy = InputMap.consume(
                 EventPattern.keyPressed(KeyCode.DIGIT9, KeyCombination.CONTROL_DOWN),
                 action -> this.replaceSelection("(" + getSelectedText() + ")"));
-        
-        
 
         Nodes.addFallbackInputMap(this, addTabs);
         Nodes.addFallbackInputMap(this, removeTabs);
@@ -264,7 +263,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 //            if (keyEvent.getCode() == KeyCode.BACK_SPACE) {
 //                this.hideAutocompletePopup();
 //                // uncomment this to activate autocomplete on backspace
-////					this.autoCompleteAction(keyEvent, auoCompletePopup);
+        ////					this.autoCompleteAction(keyEvent, auoCompletePopup);
 //            }
 //            // These keycodes must be excluded to delegate event to queries tab pane
 //            if (keyEvent.getCode() != KeyCode.ESCAPE && keyEvent.getCode() != KeyCode.N
@@ -273,15 +272,13 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 //            }
 //        });
         this.setOnKeyTyped(keyEvent -> {
-        	if (
-    			this.autoCompleteProperty.get() &&
-    			!keyEvent.isControlDown() &&
-    			!keyEvent.isShiftDown() && 
-    			!keyEvent.isAltDown() &&
-    			(Character.isLetterOrDigit(keyEvent.getCharacter().charAt(0)) || keyEvent.getCharacter().equals("."))
-			) {
-            	this.autoCompleteAction(keyEvent);
-        	}
+            if (this.autoCompleteProperty.get()
+                    && !keyEvent.isControlDown()
+                    && !keyEvent.isShiftDown()
+                    && !keyEvent.isAltDown()
+                    && (Character.isLetterOrDigit(keyEvent.getCharacter().charAt(0)) || keyEvent.getCharacter().equals("."))) {
+                this.autoCompleteAction(keyEvent);
+            }
         });
         this.setInputMap();
     }
@@ -297,9 +294,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     }
 
     protected void showSearchAndReplacePopup() {
-		if (searchAndReplacePopOver == null) {
-			searchAndReplacePopOver = new SearchAndReplacePopOver(this);
-		}
+        if (searchAndReplacePopOver == null) {
+            searchAndReplacePopOver = new SearchAndReplacePopOver(this);
+        }
         if (!this.getSelectedText().isEmpty()) {
             searchAndReplacePopOver.getFindField().setText(this.getSelectedText());
             searchAndReplacePopOver.getFindField().selectAll();
@@ -308,18 +305,18 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         searchAndReplacePopOver.getFindField().requestFocus();
         searchAndReplacePopOver.show(getParent(), boundsInScene.getMaxX() - 400, boundsInScene.getMinY());
     }
-    
+
     // FIXME: we override copy method as it the default method seems broken for strings containing '{' or '}'
     @Override
     public void copy() {
         var selection = getSelection();
-        if(selection.getLength() > 0) {
+        if (selection.getLength() > 0) {
             var content = new ClipboardContent();
             content.putString(getSelectedText());
             Clipboard.getSystemClipboard().setContent(content);
         }
     }
-    
+
     @Override
     public ContextMenu createContextMenu() {
         var menu = new ContextMenu();
@@ -337,7 +334,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
         var menuItemSuggestions = new MenuItem("Suggestions", JavaFXUtils.createIcon("/icons/suggestion.png"));
         menuItemSuggestions.setOnAction(event -> this.autoCompleteAction(this.simulateControlSpaceEvent()));
-        
+
         var menuItemSearchAndReplace = new MenuItem("Search...", JavaFXUtils.createIcon("/icons/magnify.png"));
         menuItemSearchAndReplace.setOnAction(action -> this.showSearchAndReplacePopup());
 
@@ -351,26 +348,29 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
         var menuItemFormat = new MenuItem("Format", JavaFXUtils.createIcon("/icons/format.png"));
         menuItemFormat.setOnAction(action -> {
-            if (this.getSelectedText().isEmpty())
+            if (this.getSelectedText().isEmpty()) {
                 this.replaceText(syntaxProvider.format(this.getText()));
-            else
+            } else {
                 this.replaceSelection(syntaxProvider.format(this.getSelectedText()));
+            }
         });
 
         var menuItemFormat2 = new MenuItem("Format Default", JavaFXUtils.createIcon("/icons/format.png"));
         menuItemFormat2.setOnAction(action -> {
-            if (this.getSelectedText().isEmpty())
+            if (this.getSelectedText().isEmpty()) {
                 this.replaceText(syntaxProvider.format(this.getText(), FormatterMode.DEFAULT));
-            else
+            } else {
                 this.replaceSelection(syntaxProvider.format(this.getText(), FormatterMode.DEFAULT));
+            }
         });
 
         var menuItemFormat3 = new MenuItem("Format Alternate", JavaFXUtils.createIcon("/icons/format.png"));
         menuItemFormat3.setOnAction(action -> {
-            if (this.getSelectedText().isEmpty())
+            if (this.getSelectedText().isEmpty()) {
                 this.replaceText(syntaxProvider.format(this.getText(), FormatterMode.ALTERNATE));
-            else
+            } else {
                 this.replaceSelection(syntaxProvider.format(this.getText(), FormatterMode.ALTERNATE));
+            }
         });
 
         var menuItemGoToLine = new MenuItem("Go To Line...", JavaFXUtils.createIcon("/icons/next.png"));
@@ -379,16 +379,16 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         var menuItemSaveAs = new MenuItem("Save File As...", JavaFXUtils.createIcon("/icons/save.png"));
         menuItemSaveAs.setOnAction(action -> this.saveAsFileAction());
 
-		if (hasSimpleContextMenu) {
-			menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste,
-				new SeparatorMenuItem(),
-				menuItemSearchAndReplace, menuItemGoToLine,
-				new SeparatorMenuItem(),
-                menuItemSaveAs
-			);
-			return menu;
-		}
-		
+        if (hasSimpleContextMenu) {
+            menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste,
+                    new SeparatorMenuItem(),
+                    menuItemSearchAndReplace, menuItemGoToLine,
+                    new SeparatorMenuItem(),
+                    menuItemSaveAs
+            );
+            return menu;
+        }
+
         menu.getItems().addAll(menuItemCopy, menuItemCut, menuItemPaste, menuItemUperCase, menuItemLowerCase,
                 new SeparatorMenuItem(),
                 menuItemFormat, menuItemFormat3,
@@ -400,8 +400,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     }
 
     protected void showGoToLinePopOver() {
-        if (goToLinePopOver != null)
+        if (goToLinePopOver != null) {
             return;
+        }
 
         goToLinePopOver = createGoToLinePopOver();
         var boundsInScene = this.localToScreen(this.getBoundsInLocal());
@@ -410,10 +411,10 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
     @SuppressWarnings("unused")
     private void hideGoToLinePopOver() {
-    	if (goToLinePopOver == null) {
-    		return;
-    	}
-    	
+        if (goToLinePopOver == null) {
+            return;
+        }
+
         goToLinePopOver.hide();
         goToLinePopOver = null;
     }
@@ -429,9 +430,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
                 int targetParagraph = Integer.parseInt(textField.getText()) - 1;
                 if (targetParagraph < 0 || targetParagraph >= this.getParagraphs().size()) {
-                	return;
+                    return;
                 }
-                
+
                 this.moveTo(targetParagraph, 0);
                 this.requestFollowCaret();
                 this.hideAutocompletePopup();
@@ -450,10 +451,10 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     }
 
     private void convertSelectedTextToUpperCase() {
-    	if (this.getSelectedText().isEmpty()) {
-    		return;
-    	}
-    	
+        if (this.getSelectedText().isEmpty()) {
+            return;
+        }
+
         var toUpperCase = this.getSelectedText().toUpperCase();
         if (!toUpperCase.equals(this.getSelectedText())) {
             this.replaceSelection(toUpperCase);
@@ -461,10 +462,10 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     }
 
     private void convertSelectedTextToLowerCase() {
-    	if (this.getSelectedText().isEmpty()) {
-    		return;
-    	}
-    	
+        if (this.getSelectedText().isEmpty()) {
+            return;
+        }
+
         var toLowerCase = this.getSelectedText().toLowerCase();
         if (!toLowerCase.equals(this.getSelectedText())) {
             this.replaceSelection(toLowerCase);
@@ -495,8 +496,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         }
 
         try {
-            if (!Files.exists(Paths.get(selectedFile.getPath())))
+            if (!Files.exists(Paths.get(selectedFile.getPath()))) {
                 Files.createFile(Paths.get(selectedFile.getPath()));
+            }
 
             Files.write(Paths.get(selectedFile.getPath()), this.getText().getBytes(),
                     StandardOpenOption.TRUNCATE_EXISTING);
@@ -507,36 +509,36 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     }
 
     protected void autoCompleteAction(KeyEvent event) {
-		var caretPosition = this.getCaretPosition();
-		var query = this.calculateQuery(caretPosition);
-		
-		if (query.isEmpty()) {
-			this.hideAutocompletePopup();
-			return;
-		}
-		
-		var suggestions = this.getQuerySuggestions(query);
-		
-		if (suggestions == null || suggestions.isEmpty()) {
-			this.hideAutocompletePopup();
-			return;
-		}
-		
-		this.showSuggestionsList(suggestions, query, caretPosition);
-		event.consume();
+        var caretPosition = this.getCaretPosition();
+        var query = this.calculateQuery(caretPosition);
+
+        if (query.isEmpty()) {
+            this.hideAutocompletePopup();
+            return;
+        }
+
+        var suggestions = this.getQuerySuggestions(query);
+
+        if (suggestions == null || suggestions.isEmpty()) {
+            this.hideAutocompletePopup();
+            return;
+        }
+
+        this.showSuggestionsList(suggestions, query, caretPosition);
+        event.consume();
     }
 
-	protected void showSuggestionsList(List<Keyword> suggestions, String query, int caretPosition) {
-		suggestionsList = this.createSuggestionsListView(suggestions);
-		
-		if (suggestionsList.getItems().isEmpty()) {
-			return;
-		}
-		
-		this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
-		this.showAutoCompletePopup();
-	}
-	
+    protected void showSuggestionsList(List<Keyword> suggestions, String query, int caretPosition) {
+        suggestionsList = this.createSuggestionsListView(suggestions);
+
+        if (suggestionsList.getItems().isEmpty()) {
+            return;
+        }
+
+        this.setOnSuggestionListKeyPressed(suggestionsList, query, caretPosition);
+        this.showAutoCompletePopup();
+    }
+
     protected void hideAutocompletePopup() {
         if (isAutoCompletePopupShowing()) {
             autoCompletePopup.hide();
@@ -544,7 +546,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     }
 
     protected void setOnSuggestionListKeyPressed(ListView<Keyword> suggestionsList, final String query,
-                                                 final int caretPosition) {
+            final int caretPosition) {
 
         suggestionsList.setOnKeyPressed(keyEvent -> {
             if (keyEvent.getCode() == KeyCode.ENTER) {
@@ -559,7 +561,7 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     }
 
     protected void listViewOnEnterAction(ListView<Keyword> suggestionsList, final String query, final int oldCurrentPosition,
-                                         KeyEvent keyEvent) {
+            KeyEvent keyEvent) {
         final var word = (suggestionsList.getSelectionModel().getSelectedItem() != null)
                 ? suggestionsList.getSelectionModel().getSelectedItem().getKeyword()
                 : suggestionsList.getItems().get(0).getKeyword();
@@ -586,12 +588,12 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     }
 
     protected void showAutoCompletePopup() {
-		if (autoCompletePopup == null) {
-			autoCompletePopup = this.createAutoCompletePopup();
-		}
-		
-		autoCompletePopup.getContent().setAll(suggestionsList);
-		
+        if (autoCompletePopup == null) {
+            autoCompletePopup = this.createAutoCompletePopup();
+        }
+
+        autoCompletePopup.getContent().setAll(suggestionsList);
+
         var pointer = this.caretBoundsProperty().getValue().get();
         if (!isAutoCompletePopupShowing()) {
             autoCompletePopup.show(this, pointer.getMaxX(), pointer.getMinY() + Y_OFFSET);
@@ -611,26 +613,26 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
             return false;
         }
     }
-    
+
     @Override
     public StyleSpans<Collection<String>> computeHighlighting(String text) {
         var matcher = syntaxProvider.getPatternMatcher(text);
         var lastKwEnd = 0;
         var spansBuilder = new StyleSpansBuilder<Collection<String>>();
         while (matcher.find()) {
-        	var styleClass =
-        		      hasGroup(matcher, "COMMENT")    ? "comment"      // highest priority
-        		    : hasGroup(matcher, "STRING")     ? "string"
-        		    : hasGroup(matcher, "STRING2")    ? "string"
-        		    : hasGroup(matcher, "STRING3")    ? "string"
-        		    : hasGroup(matcher, "DIAMOND")    ? "diamond"      // DIAMOND after strings/comments
-        		    : hasGroup(matcher, "ANNOTATION") ? "annotation"
-        		    : hasGroup(matcher, "METHOD")     ? "method"
-        		    : hasGroup(matcher, "FUNCTION")   ? "function"
-        		    : hasGroup(matcher, "KEYWORD")    ? "keyword"
-        		    : hasGroup(matcher, "PAREN")      ? "paren"
-        		    : hasGroup(matcher, "SEMICOLON")  ? "semicolon"
-        		    : null;
+            var styleClass
+                    = hasGroup(matcher, "COMMENT") ? "comment" // highest priority
+                    : hasGroup(matcher, "STRING") ? "string"
+                    : hasGroup(matcher, "STRING2") ? "string"
+                    : hasGroup(matcher, "STRING3") ? "string"
+                    : hasGroup(matcher, "DIAMOND") ? "diamond" // DIAMOND after strings/comments
+                    : hasGroup(matcher, "ANNOTATION") ? "annotation"
+                    : hasGroup(matcher, "METHOD") ? "method"
+                    : hasGroup(matcher, "FUNCTION") ? "function"
+                    : hasGroup(matcher, "KEYWORD") ? "keyword"
+                    : hasGroup(matcher, "PAREN") ? "paren"
+                    : hasGroup(matcher, "SEMICOLON") ? "semicolon"
+                    : null;
 
             /* never happens */
             assert styleClass != null;
@@ -645,8 +647,9 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
     private static final int WORD_LENGTH_LIMIT = 45;
 
     protected String calculateQuery(int position) {
-        if (position > 0 && !this.getText().isEmpty() && this.getText().charAt(position - 1) == '\n')
+        if (position > 0 && !this.getText().isEmpty() && this.getText().charAt(position - 1) == '\n') {
             return "";
+        }
 
         var limit = Math.min(position, WORD_LENGTH_LIMIT);
         var query = this.getText().substring(position - limit, position);
@@ -658,10 +661,10 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
     @SuppressWarnings({"unchecked"})
     protected List<Keyword> getQuerySuggestions(String query) {
-		if (query.isEmpty()) {
-			return null;
-		}
-		
+        if (query.isEmpty()) {
+            return null;
+        }
+
         return syntaxProvider.getKeywords().stream()
                 .filter(keyword -> keyword != null && ((Keyword) keyword).getKeyword().startsWith(query))
                 .toList();
@@ -669,10 +672,11 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
 
     @Override
     public void enableShowLineNumbers(boolean enable) {
-        if (enable)
+        if (enable) {
             this.setParagraphGraphicFactory(new SimpleLineNumberFactory(this));
-        else
+        } else {
             this.setParagraphGraphicFactory(null);
+        }
     }
 
     public SimpleBooleanProperty showLinesProperty() {
@@ -695,18 +699,17 @@ public abstract class AutoCompleteCodeArea<T extends CodeAreaSyntaxProvider> ext
         this.insertMode = enable;
     }
 
-	public T getSyntaxProvider() {
-		return syntaxProvider;
-	}
+    public T getSyntaxProvider() {
+        return syntaxProvider;
+    }
 
-	public boolean hasSimpleContextMenu() {
-		return hasSimpleContextMenu;
-	}
+    public boolean hasSimpleContextMenu() {
+        return hasSimpleContextMenu;
+    }
 
-	public void setHasSimpleContextMenu(boolean hasSimpleContextMenu) {
-		this.hasSimpleContextMenu = hasSimpleContextMenu;
-		this.setContextMenu(this.createContextMenu());
-	}
-	
-	
+    public void setHasSimpleContextMenu(boolean hasSimpleContextMenu) {
+        this.hasSimpleContextMenu = hasSimpleContextMenu;
+        this.setContextMenu(this.createContextMenu());
+    }
+
 }

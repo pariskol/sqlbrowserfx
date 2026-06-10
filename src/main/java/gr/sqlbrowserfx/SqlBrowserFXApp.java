@@ -51,6 +51,7 @@ import gr.sqlbrowserfx.nodes.SqlServerConfigBox;
 import gr.sqlbrowserfx.nodes.codeareas.Keyword;
 import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
+import gr.sqlbrowserfx.nodes.ollama.OllamaChatPane;
 import gr.sqlbrowserfx.nodes.queriesmenu.QueriesMenu;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import gr.sqlbrowserfx.nodes.tableviews.HistorySqlTableView;
@@ -460,12 +461,27 @@ public class SqlBrowserFXApp extends Application {
 			dbDiagramPane.asDockNode().setFloating(true);
 		});
 
+		var aiChatItem = new MenuItem(
+		        "Open AI Chat",
+		        JavaFXUtils.createIcon("/icons/suggestion.png")
+		);
+		aiChatItem.setDisable(PropertiesLoader.getProperty("ollama.ip", String.class) == null);
+
+		aiChatItem.setOnAction(event -> {
+		    var chatPane = new OllamaChatPane();
+		    var dockNode = new DockNode(dockPane, chatPane, "AI Chat", JavaFXUtils.createIcon("/icons/suggestion.png"));
+			SqlBrowserFXAppManager.registerOllamaPane(chatPane);
+//		            JavaFXUtils.createIcon("/icons/ai.png"));
+		    dockNode.setOnClose(() -> SqlBrowserFXAppManager.unregisterOllamaPane());
+		});
+		
 		menu1.getItems().addAll(
 				sqlPaneViewItem, 
 				dbDiagramViewItem, 
 				new SeparatorMenuItem(),
 				filesTreeViewItem,
 				filesTabViewItem,
+				aiChatItem,
 				new SeparatorMenuItem(),
 				terminalViewItem,
 				logViewItem);
