@@ -17,13 +17,9 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 
-/**
- *
- * @author paris
- */
 public class OllamaCodeBlocksCodeArea extends CodeArea implements HighLighter, ContextMenuOwner {
 
-    private static final Pattern SQL_BLOCK = Pattern.compile("(?s)```sql\\R(.*?)\\R```");
+    private static final Pattern SQL_BLOCK_PATTERN = Pattern.compile("(?s)```sql\\R(.*?)\\R```");
     private static final String CHAT_PATTERN = "(?m)^\\s*(user:|assistant:)";
     private static final Pattern CHAT_HIGHLIGHT_PATTERN = Pattern.compile("(?<CHAT>" + CHAT_PATTERN + ")");
     private final SqlCodeAreaSyntaxProvider syntaxProvider = new SqlCodeAreaSyntaxProvider();
@@ -52,7 +48,7 @@ public class OllamaCodeBlocksCodeArea extends CodeArea implements HighLighter, C
         var spansBuilder = new StyleSpansBuilder<Collection<String>>();
 
         while (matcher.find()) {
-            var styleClass = hasGroup(matcher, "CHAT") ? "method" : null;
+            var styleClass = hasGroup(matcher, "CHAT") ? "string" : null;
             spansBuilder.add(Collections.emptyList(), matcher.start() - lastEnd);
             spansBuilder.add(Collections.singleton(styleClass), matcher.end() - matcher.start());
             lastEnd = matcher.end();
@@ -72,7 +68,7 @@ public class OllamaCodeBlocksCodeArea extends CodeArea implements HighLighter, C
     }
 
     public StyleSpans<Collection<String>> computeSqlBlockHighlighting(String text) {
-        var sqlMatcher = SQL_BLOCK.matcher(text);
+        var sqlMatcher = SQL_BLOCK_PATTERN.matcher(text);
         var spansBuilder = new StyleSpansBuilder<Collection<String>>();
         var lastEnd = 0;
 

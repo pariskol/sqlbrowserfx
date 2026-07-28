@@ -22,6 +22,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import org.fxmisc.flowless.VirtualizedScrollPane;
@@ -31,7 +32,6 @@ public class OllamaChatPane extends BorderPane {
     private final OllamaCodeBlocksCodeArea chatArea = new OllamaCodeBlocksCodeArea();
     private final TextArea inputArea = new TextArea();
     private final Button sendBtn = new Button("Generate", JavaFXUtils.createIcon("/icons/play.png"));
-    private final Button newBtn = new Button("New", JavaFXUtils.createIcon("/icons/add.png"));
     private final ComboBox<Conversation> conversationComboBox = new ComboBox<>();
     private final SqlConnector sqlConnector = SqlBrowserFXAppManager.getConfigSqlConnector();
     private final ProgressIndicator progressIndicator = new ProgressIndicator();
@@ -88,13 +88,22 @@ public class OllamaChatPane extends BorderPane {
         inputArea.prefHeightProperty().bind(vbox.heightProperty());
 
         var refreshBtn = new Button("", JavaFXUtils.createIcon("/icons/refresh.png"));
+        refreshBtn.setTooltip(new Tooltip("Reload Conversation"));
         refreshBtn.setOnAction(e -> setRecentConversations());
 
-        var topHBox = new CustomHBox(conversationComboBox, refreshBtn);
+        var newBtn = new Button("", JavaFXUtils.createIcon("/icons/add.png"));
+        newBtn.setTooltip(new Tooltip("New Conversation"));
+        newBtn.setOnAction(e -> {
+            conversationId = null;
+            chatArea.clear();
+            setRecentConversations();
+        });
+        
+        var topHBox = new CustomHBox(newBtn, refreshBtn, conversationComboBox);
         this.setTop(topHBox);
         conversationComboBox.prefWidthProperty().bind(topHBox.widthProperty());
         this.setCenter(split);
-        this.bottomHBox = new CustomHBox(sendBtn, newBtn);
+        this.bottomHBox = new CustomHBox(sendBtn);
         this.setBottom(this.bottomHBox);
 
         inputArea.setOnKeyPressed(e -> {
@@ -103,12 +112,7 @@ public class OllamaChatPane extends BorderPane {
             }
         });
         sendBtn.setOnAction(e -> sendMessage());
-        newBtn.setOnAction(e -> {
-            conversationId = null;
-            chatArea.clear();
-            setRecentConversations();
-        });
-
+        
         setRecentConversations();
 
         conversationComboBox.setPromptText("Select Conversation");
