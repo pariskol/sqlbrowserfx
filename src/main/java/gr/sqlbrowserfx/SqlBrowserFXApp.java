@@ -465,7 +465,7 @@ public class SqlBrowserFXApp extends Application {
 		        "Open AI Chat",
 		        JavaFXUtils.createIcon("/icons/suggestion.png")
 		);
-		aiChatItem.setDisable(PropertiesLoader.getProperty("ollama.ip", String.class) == null);
+		aiChatItem.setDisable(PropertiesLoader.getProperty("ollama.url", String.class) == null);
 
 		aiChatItem.setOnAction(event -> {
 		    var chatPane = new OllamaChatPane();

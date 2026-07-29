@@ -16,20 +16,11 @@ import gr.sqlbrowserfx.utils.HttpClient;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
 
 public class OllamaClient {
-
-    private static String ip = PropertiesLoader.getProperty("ollama.ip", String.class, "localhost");
-    private static Integer port = PropertiesLoader.getProperty("ollama.port", Integer.class, 11434);
     private static final Gson GSON = new Gson();
-
-    private final String baseUrl;
+    private final String baseUrl = PropertiesLoader.getProperty("ollama.url", String.class, "http://localhost:11434");
     private final HttpClient httpClient;
 
     public OllamaClient() {
-
-        this.baseUrl = new StringBuilder("http://")
-                .append(ip).append(":").append(port)
-                .toString();
-
         this.httpClient = new HttpClient();
     }
 
@@ -96,6 +87,7 @@ public class OllamaClient {
             var req = new JSONObject()
                     .put("model", model)
                     .put("messages", ollamaMessages)
+                    .put("keep_alive", -1)
                     .put("stream", true)
                     .put("options", options);
 
@@ -106,8 +98,7 @@ public class OllamaClient {
     }
 
     public String generate(String model, String prompt) throws URISyntaxException, IOException, InterruptedException {
-        String url = new StringBuilder("http://")
-                .append(ip).append(":").append(port)
+        String url = new StringBuilder(baseUrl)
                 .append("/api/generate")
                 .toString();
 
