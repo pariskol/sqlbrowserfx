@@ -30,132 +30,133 @@ import javafx.scene.layout.HBox;
 
 public class ColumnCreationBox extends HBox {
 
-	private final Button deleteButton;
-	private final ComboBox<String> typeComboBox;
-	private final ComboBox<String> columnsComboBox;
-	private final ComboBox<String> tablesComboBox;
-	private final TextField columnNameField;
-	private final CheckBox fkCheckBox;
-	private final CheckBox nnCheckBox;
-	private final CheckBox pkCheckBox;
-	private final CheckBox uCheckBox;
-	private final CheckBox aiCheckBox;
-	private final SqlConnector sqlConnector;
-	
-	public ColumnCreationBox(SqlConnector sqlConnector, ListView<ColumnCreationBox> parent) {
-		this.sqlConnector = sqlConnector;
-		List<String> types = this.getTypes();
-		typeComboBox = new ComboBox<>();
-		typeComboBox.setItems(FXCollections.observableArrayList(types));
-		typeComboBox.setPromptText("Column type...");
-		
-		List<String> tables = null;
-		try {
-			tables = sqlConnector.getTables();
-		} catch (SQLException e) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
-		}
-		columnsComboBox = new ComboBox<>();
-		tablesComboBox = new ComboBox<>();
-		tablesComboBox.setPromptText("Referenced table...");
-		columnsComboBox.setPromptText("Referenced column...");
-		tablesComboBox.setItems(FXCollections.observableArrayList(tables));
-		tablesComboBox.setOnAction(actionEvent -> {
-			sqlConnector.executeQueryRawAsync("select * from " + tablesComboBox.getSelectionModel().getSelectedItem() + " where 1=2",
-					rset -> {
-						ResultSetMetaData rsmd = rset.getMetaData();
-						SqlTable sqlTable = new SqlTable(rsmd);
-						Platform.runLater(() -> {
-							columnsComboBox.getSelectionModel().clearSelection();
-							columnsComboBox.setItems(FXCollections.observableArrayList(sqlTable.getColumns()));
-						});	
-					});
-		});
-		fkCheckBox = new CheckBox("FK");
-		tablesComboBox.disableProperty().bind(fkCheckBox.selectedProperty().not());
-		columnsComboBox.disableProperty().bind(fkCheckBox.selectedProperty().not());
-		
-		columnNameField = new TextField();
-		columnNameField.setPromptText("Column name...");
-		pkCheckBox = new CheckBox("PK");
-		nnCheckBox = new CheckBox("NN");
-		uCheckBox = new CheckBox("U");
-		aiCheckBox = new CheckBox("AI");
-		
-		deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
-		deleteButton.setOnAction(event -> parent.getItems().remove(this));
-		
-		this.getChildren().addAll(deleteButton, columnNameField, typeComboBox, 
-				pkCheckBox, fkCheckBox, tablesComboBox, columnsComboBox,  nnCheckBox, uCheckBox, aiCheckBox);
-		this.setSpacing(10);
-		this.setAlignment(Pos.BASELINE_LEFT);
-	}
-	
-	private List<String> getTypes() {
-		String category = "types";
-		Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
-		List<String> list = new ArrayList<>();
-		try {
-			final String dbType = determineDBType();
-			SqlBrowserFXAppManager.getConfigSqlConnector()
-								  .executeQuery("select name from autocomplete where category= ? and type = ? order by name", 
-										  Arrays.asList(category, dbType), rset -> {
-											try {
-												HashMap<String, Object> dto = DTOMapper.map(rset);
-												list.add((String)dto.get("name"));
-											} catch (Exception e) {
-												logger.error(e.getMessage(), e);
-											}
-			});
-		} catch (SQLException e) {
-			logger.error(e.getMessage(), e);
-		}
-		
-		return list;
-	}
-	
-	private String determineDBType() {
-		String dbType = null;
-		if (sqlConnector instanceof SqliteConnector)
-			dbType = "sqlite";
-		else if (sqlConnector instanceof MysqlConnector)
-			dbType = "mysql";
-		return dbType;
-	}
+    private final Button deleteButton;
+    private final ComboBox<String> typeComboBox;
+    private final ComboBox<String> columnsComboBox;
+    private final ComboBox<String> tablesComboBox;
+    private final TextField columnNameField;
+    private final CheckBox fkCheckBox;
+    private final CheckBox nnCheckBox;
+    private final CheckBox pkCheckBox;
+    private final CheckBox uCheckBox;
+    private final CheckBox aiCheckBox;
+    private final SqlConnector sqlConnector;
 
-	public String getColumnName() {
-		return columnNameField.getText();
-	}
-	
-	public String getColumnType() {
-		return typeComboBox.getSelectionModel().getSelectedItem();
-	}
-	
-	public Boolean isColumnPrimaryKey() {
-		return pkCheckBox.isSelected();
-	}
-	
-	public Boolean isColumnForeignKey() {
-		return fkCheckBox.isSelected();
-	}
-	
-	public String getReferencedTable() {
-		return tablesComboBox.getSelectionModel().getSelectedItem();
-	}
-	
-	public String getReferencedColumn() {
-		return columnsComboBox.getSelectionModel().getSelectedItem();
-	}
-	
-	public Boolean isNotNull() {
-		return nnCheckBox.isSelected();
-	}
-	
-	public Boolean isUnique() {
-		return uCheckBox.isSelected();
-	}
+    public ColumnCreationBox(SqlConnector sqlConnector, ListView<ColumnCreationBox> parent) {
+        this.sqlConnector = sqlConnector;
+        List<String> types = this.getTypes();
+        typeComboBox = new ComboBox<>();
+        typeComboBox.setItems(FXCollections.observableArrayList(types));
+        typeComboBox.setPromptText("Column type...");
 
-	public Boolean isAutoIncrement() {
-		return aiCheckBox.isSelected();
-	}
+        List<String> tables = null;
+        try {
+            tables = sqlConnector.getTables();
+        } catch (SQLException e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
+        }
+        columnsComboBox = new ComboBox<>();
+        tablesComboBox = new ComboBox<>();
+        tablesComboBox.setPromptText("Referenced table...");
+        columnsComboBox.setPromptText("Referenced column...");
+        tablesComboBox.setItems(FXCollections.observableArrayList(tables));
+        tablesComboBox.setOnAction(actionEvent -> {
+            sqlConnector.executeQueryRawAsync("select * from " + tablesComboBox.getSelectionModel().getSelectedItem() + " where 1=2",
+                    rset -> {
+                        ResultSetMetaData rsmd = rset.getMetaData();
+                        SqlTable sqlTable = new SqlTable(rsmd);
+                        Platform.runLater(() -> {
+                            columnsComboBox.getSelectionModel().clearSelection();
+                            columnsComboBox.setItems(FXCollections.observableArrayList(sqlTable.getColumns()));
+                        });
+                    });
+        });
+        fkCheckBox = new CheckBox("FK");
+        tablesComboBox.disableProperty().bind(fkCheckBox.selectedProperty().not());
+        columnsComboBox.disableProperty().bind(fkCheckBox.selectedProperty().not());
+
+        columnNameField = new TextField();
+        columnNameField.setPromptText("Column name...");
+        pkCheckBox = new CheckBox("PK");
+        nnCheckBox = new CheckBox("NN");
+        uCheckBox = new CheckBox("U");
+        aiCheckBox = new CheckBox("AI");
+
+        deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
+        deleteButton.setOnAction(event -> parent.getItems().remove(this));
+
+        this.getChildren().addAll(deleteButton, columnNameField, typeComboBox,
+                pkCheckBox, fkCheckBox, tablesComboBox, columnsComboBox, nnCheckBox, uCheckBox, aiCheckBox);
+        this.setSpacing(10);
+        this.setAlignment(Pos.BASELINE_LEFT);
+    }
+
+    private List<String> getTypes() {
+        String category = "types";
+        Logger logger = LoggerFactory.getLogger(LoggerConf.LOGGER_NAME);
+        List<String> list = new ArrayList<>();
+        try {
+            final String dbType = determineDBType();
+            SqlBrowserFXAppManager.getConfigSqlConnector()
+                    .executeQuery("select name from autocomplete where category= ? and type = ? order by name",
+                            Arrays.asList(category, dbType), rset -> {
+                        try {
+                            HashMap<String, Object> dto = DTOMapper.map(rset);
+                            list.add((String) dto.get("name"));
+                        } catch (Exception e) {
+                            logger.error(e.getMessage(), e);
+                        }
+                    });
+        } catch (SQLException e) {
+            logger.error(e.getMessage(), e);
+        }
+
+        return list;
+    }
+
+    private String determineDBType() {
+        String dbType = null;
+        if (sqlConnector instanceof SqliteConnector) {
+            dbType = "sqlite";
+        } else if (sqlConnector instanceof MysqlConnector) {
+            dbType = "mysql";
+        }
+        return dbType;
+    }
+
+    public String getColumnName() {
+        return columnNameField.getText();
+    }
+
+    public String getColumnType() {
+        return typeComboBox.getSelectionModel().getSelectedItem();
+    }
+
+    public Boolean isColumnPrimaryKey() {
+        return pkCheckBox.isSelected();
+    }
+
+    public Boolean isColumnForeignKey() {
+        return fkCheckBox.isSelected();
+    }
+
+    public String getReferencedTable() {
+        return tablesComboBox.getSelectionModel().getSelectedItem();
+    }
+
+    public String getReferencedColumn() {
+        return columnsComboBox.getSelectionModel().getSelectedItem();
+    }
+
+    public Boolean isNotNull() {
+        return nnCheckBox.isSelected();
+    }
+
+    public Boolean isUnique() {
+        return uCheckBox.isSelected();
+    }
+
+    public Boolean isAutoIncrement() {
+        return aiCheckBox.isSelected();
+    }
 }

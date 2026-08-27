@@ -49,11 +49,11 @@ public class FilesTabPane extends TabPane {
     private CustomPopOver fileSearchPopOver;
     private SqlConnector sqlConnector;
 
-	public FilesTabPane() {
-		super();
-		var draggingSupport = new DraggingTabPaneSupport("/icons/file.png");
+    public FilesTabPane() {
+        super();
+        var draggingSupport = new DraggingTabPaneSupport("/icons/file.png");
         draggingSupport.addSupport(this);
-        
+
         this.setOnDragOver(event -> {
             if (event.getGestureSource() != this && event.getDragboard().hasFiles()) {
                 /* allow for both copying and moving, whatever user chooses */
@@ -63,10 +63,10 @@ public class FilesTabPane extends TabPane {
         });
 
         this.setOnDragDropped(event -> {
-        	var db = event.getDragboard();
-        	var success = false;
+            var db = event.getDragboard();
+            var success = false;
             if (db.hasFiles()) {
-            	var file = db.getFiles().get(0);
+                var file = db.getFiles().get(0);
                 this.openNewFileTab(file);
                 success = true;
             }
@@ -77,16 +77,16 @@ public class FilesTabPane extends TabPane {
 
             event.consume();
         });
-        
+
         Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.O, KeyCombination.CONTROL_DOWN),
                 action -> this.showFileSearchPopOver()));
-	}
-	
-    public void setSqlConnector(SqlConnector sqlConnector) {
-		this.sqlConnector = sqlConnector;
-	}
+    }
 
-	private String fixQuery(String query) {
+    public void setSqlConnector(SqlConnector sqlConnector) {
+        this.sqlConnector = sqlConnector;
+    }
+
+    private String fixQuery(String query) {
         int spacesNum = 0;
         query = query.trim().replaceAll("\t", "    ");
         for (int i = 0; i < query.length(); i++) {
@@ -101,47 +101,48 @@ public class FilesTabPane extends TabPane {
         query = query.replaceAll("--.*\n", "");
         return query;
     }
-    
-	public void openQueryTabArea() {
-		var sqlCodeArea = new CSqlCodeArea();
-    	var tableView = new SqlTableView(this.sqlConnector);
-    	var split = new SplitPane(sqlCodeArea, tableView);
-    	split.setOrientation(Orientation.VERTICAL);
-    	var bPane = new BorderPane(split);
-    	
-    	Nodes.addInputMap(tableView, InputMap.consume(EventPattern.keyPressed(KeyCode.C, KeyCombination.CONTROL_DOWN),
-                 action -> {
-					if (tableView.getSelectionModel().getSelectedCells().isEmpty()) {
-						return;
-					}
-					var selectedItems = tableView.getSelectionModel().getSelectedItems();
-					if (selectedItems != null) {
-						var joined = StringUtils.join(selectedItems.stream().map(i -> i.toString()).toList(), "\n");
-						var stringSelection = new StringSelection(joined);
-						var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-						clipboard.setContents(stringSelection, null);
-					}
-                 }));
-    	 
-    	var popOver =new CustomPopOver();
-    	tableView.setOnMouseClicked(event -> {
-    		if (event.getClickCount() < 2) {
-    			return;
-    		}
-    		
-    		var sqlTableRow = tableView.getSelectionModel().getSelectedItem();
-    		if (sqlTableRow == null)
-    			return;
 
-    		var editBox = new SqlTableRowEditBox(tableView, sqlTableRow, false);
-    		var sp = new ScrollPane(editBox);
-    		sp.setMaxHeight(800);
-    		sp.setFitToWidth(true);
-    		
-    		popOver.setContentNode(sp);
-    		popOver.show(tableView, event.getScreenX(), event.getScreenY());
-    	});
-    	
+    public void openQueryTabArea() {
+        var sqlCodeArea = new CSqlCodeArea();
+        var tableView = new SqlTableView(this.sqlConnector);
+        var split = new SplitPane(sqlCodeArea, tableView);
+        split.setOrientation(Orientation.VERTICAL);
+        var bPane = new BorderPane(split);
+
+        Nodes.addInputMap(tableView, InputMap.consume(EventPattern.keyPressed(KeyCode.C, KeyCombination.CONTROL_DOWN),
+                action -> {
+                    if (tableView.getSelectionModel().getSelectedCells().isEmpty()) {
+                        return;
+                    }
+                    var selectedItems = tableView.getSelectionModel().getSelectedItems();
+                    if (selectedItems != null) {
+                        var joined = StringUtils.join(selectedItems.stream().map(i -> i.toString()).toList(), "\n");
+                        var stringSelection = new StringSelection(joined);
+                        var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                        clipboard.setContents(stringSelection, null);
+                    }
+                }));
+
+        var popOver = new CustomPopOver();
+        tableView.setOnMouseClicked(event -> {
+            if (event.getClickCount() < 2) {
+                return;
+            }
+
+            var sqlTableRow = tableView.getSelectionModel().getSelectedItem();
+            if (sqlTableRow == null) {
+                return;
+            }
+
+            var editBox = new SqlTableRowEditBox(tableView, sqlTableRow, false);
+            var sp = new ScrollPane(editBox);
+            sp.setMaxHeight(800);
+            sp.setFitToWidth(true);
+
+            popOver.setContentNode(sp);
+            popOver.show(tableView, event.getScreenX(), event.getScreenY());
+        });
+
         var stopBtn = new Button("", JavaFXUtils.createIcon("/icons/stop.png"));
 
         var sqlQueryRunning = new AtomicBoolean(false);
@@ -160,9 +161,9 @@ public class FilesTabPane extends TabPane {
                             queryDuration.set(System.currentTimeMillis() - queryDuration.get());
                             LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("\n" + fixedQuery + "\n execution took  " + queryDuration.get() + "ms");
                             DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration.get() + "ms", 1);
-							tableView.setItemsLater(rset);
+                            tableView.setItemsLater(rset);
                         }, stmt -> {
-                        	stopBtn.setOnAction(action -> {
+                            stopBtn.setOnAction(action -> {
                                 try {
                                     stmt.cancel();
                                 } catch (SQLException e) {
@@ -176,70 +177,68 @@ public class FilesTabPane extends TabPane {
                     } finally {
                         sqlQueryRunning.set(false);
                         Platform.runLater(() -> {
-                        	sqlCodeArea.setDisable(false);
-                        	tableView.setDisable(false);
-                        	bPane.setBottom(new Label(tableView.getSqlTableRows().size() + " rows"));
+                            sqlCodeArea.setDisable(false);
+                            tableView.setDisable(false);
+                            bPane.setBottom(new Label(tableView.getSqlTableRows().size() + " rows"));
                         });
                     }
                 });
-            }
-            else if (!fixedQuery.isEmpty()) {
+            } else if (!fixedQuery.isEmpty()) {
                 sqlConnector.executeAsync(() -> {
                     sqlQueryRunning.set(true);
                     try {
                         int rowsAffected = sqlConnector.executeUpdate(fixedQuery);
                         queryDuration.set(System.currentTimeMillis() - queryDuration.get());
                         LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("\n" + fixedQuery + "\n execution took  " + queryDuration.get() + "ms");
-                        DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration.get() + "ms\n(" + rowsAffected + ") rows affected" , 3);
+                        DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration.get() + "ms\n(" + rowsAffected + ") rows affected", 3);
 
                     } catch (SQLException e) {
                         DialogFactory.createErrorDialog(e);
                     } finally {
-                    	Platform.runLater(() -> sqlCodeArea.setDisable(false));
+                        Platform.runLater(() -> sqlCodeArea.setDisable(false));
                         sqlQueryRunning.set(false);
                     }
                 });
             }
         });
-        
-        
-    	var tab = new Tab("Sql Query", bPane);
-    	tab.setGraphic(JavaFXUtils.createIcon("/icons/thunder.png"));
-    	addTabContextMenu(tab);
+
+        var tab = new Tab("Sql Query", bPane);
+        tab.setGraphic(JavaFXUtils.createIcon("/icons/thunder.png"));
+        addTabContextMenu(tab);
         this.getTabs().add(tab);
         this.getSelectionModel().select(tab);
-	}
-	
-    private void addTabContextMenu(Tab tab) {
-		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
-		closeTabItem.setOnAction(event -> tab.getTabPane().getTabs().remove(tab));
-		
-		var renameTabItem = new MenuItem("Rename Tab", JavaFXUtils.createIcon("/icons/edit.png"));
-		renameTabItem.setOnAction(event -> {
-			var tabGraphic = tab.getGraphic();
-			var textField = new TextField();
-			textField.setPromptText("Enter new name");
-			textField.setOnKeyPressed(keyEvent -> {
-				if (keyEvent.getCode() == KeyCode.ENTER) {
-					// graphic is label because we are using DragTabPaneSupport util
-					var label = (Label) tabGraphic;
-					label.setText(textField.getText());
-					tab.setGraphic(tabGraphic);
-				}
-				if (keyEvent.getCode() == KeyCode.ESCAPE) {
-					tab.setGraphic(tabGraphic);
-				}
-				
-				keyEvent.consume();
-			});
-			tab.setGraphic(textField);
-			textField.requestFocus();
-		});
-		
-		tab.setContextMenu(new ContextMenu(closeTabItem, renameTabItem));
     }
-	
-	public void openNewFileTab(File selectedFile) {
+
+    private void addTabContextMenu(Tab tab) {
+        var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
+        closeTabItem.setOnAction(event -> tab.getTabPane().getTabs().remove(tab));
+
+        var renameTabItem = new MenuItem("Rename Tab", JavaFXUtils.createIcon("/icons/edit.png"));
+        renameTabItem.setOnAction(event -> {
+            var tabGraphic = tab.getGraphic();
+            var textField = new TextField();
+            textField.setPromptText("Enter new name");
+            textField.setOnKeyPressed(keyEvent -> {
+                if (keyEvent.getCode() == KeyCode.ENTER) {
+                    // graphic is label because we are using DragTabPaneSupport util
+                    var label = (Label) tabGraphic;
+                    label.setText(textField.getText());
+                    tab.setGraphic(tabGraphic);
+                }
+                if (keyEvent.getCode() == KeyCode.ESCAPE) {
+                    tab.setGraphic(tabGraphic);
+                }
+
+                keyEvent.consume();
+            });
+            tab.setGraphic(textField);
+            textField.requestFocus();
+        });
+
+        tab.setContextMenu(new ContextMenu(closeTabItem, renameTabItem));
+    }
+
+    public void openNewFileTab(File selectedFile) {
         var tab = new Tab(selectedFile.getName());
 
         AutoCompleteCodeArea<?> codeArea;
@@ -251,7 +250,6 @@ public class FilesTabPane extends TabPane {
             codeArea = new SimpleFileCodeArea(selectedFile);
         }
 
-
         var vsp = new VirtualizedScrollPane<>(codeArea);
         tab.setContent(vsp);
         var fileCodeArea = (FileCodeArea) codeArea;
@@ -262,41 +260,39 @@ public class FilesTabPane extends TabPane {
 
                 if (DialogFactory.createConfirmationDialog(
                         "Unsaved work",
-                        "Do you want to discard changes ?")
-                ) {
+                        "Do you want to discard changes ?")) {
                     this.getTabs().remove(tab);
                 }
             }
         });
-		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
-		closeTabItem.setOnAction(event -> {
+        var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
+        closeTabItem.setOnAction(event -> {
             if (fileCodeArea.isTextDirty()) {
                 event.consume();
 
                 if (DialogFactory.createConfirmationDialog(
                         "Unsaved work",
-                        "Do you want to discard changes ?")
-                ) {
+                        "Do you want to discard changes ?")) {
                     this.getTabs().remove(tab);
                 }
             }
-		});
-		tab.setContextMenu(new ContextMenu(closeTabItem));
-		
+        });
+        tab.setContextMenu(new ContextMenu(closeTabItem));
+
         tab.setGraphic(JavaFXUtils.createIcon("/icons/code-file.png"));
         this.getTabs().add(tab);
         this.getSelectionModel().select(tab);
 
         codeArea.requestFocus();
     }
-	
+
     private void showFileSearchPopOver() {
-    	if (this.fileSearchPopOver == null) {
+        if (this.fileSearchPopOver == null) {
             this.fileSearchPopOver = new FileSearchPopOver(this::openNewFileTab);
-    	}
-    	
+        }
+
         if (this.fileSearchPopOver.isShowing()) {
-        	return;
+            return;
         }
 
         var boundsInScene = this.localToScreen(this.getBoundsInLocal());

@@ -9,31 +9,32 @@ import javafx.application.Platform;
 
 public class CodeAreaTailerListener implements TailerListener {
 
-	private final CodeArea codeArea;
+    private final CodeArea codeArea;
 
-	public CodeAreaTailerListener(CodeArea codeArea) {
-		this.codeArea = codeArea;
-	}
-	@Override
-	public void init(Tailer tailer) {
-	}
+    public CodeAreaTailerListener(CodeArea codeArea) {
+        this.codeArea = codeArea;
+    }
 
-	@Override
-	public void fileNotFound() {
-	}
+    @Override
+    public void init(Tailer tailer) {
+    }
 
-	@Override
-	public void fileRotated() {
-	}
+    @Override
+    public void fileNotFound() {
+    }
 
-	@Override
-	public void handle(String line) {
-		Platform.runLater(() -> codeArea.appendText(line + "\n"));
-	}
+    @Override
+    public void fileRotated() {
+    }
 
-	@Override
-	public void handle(Exception ex) {
-		DialogFactory.createErrorDialog(ex);
-	}
+    @Override
+    public void handle(String line) {
+        Platform.runLater(() -> codeArea.appendText(line + "\n"));
+    }
+
+    @Override
+    public void handle(Exception ex) {
+        DialogFactory.createErrorDialog(ex);
+    }
 
 }

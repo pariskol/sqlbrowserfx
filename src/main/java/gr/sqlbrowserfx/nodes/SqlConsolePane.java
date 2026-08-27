@@ -74,7 +74,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
     private SplitPane splitPane;
     private Button openButton;
 
-
     @SuppressWarnings("unchecked")
     public SqlConsolePane(SqlConnector sqlConnector) {
         this.sqlConnector = sqlConnector;
@@ -118,8 +117,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         queryTabPane.getSelectionModel().selectedItemProperty().addListener(
                 (ov, oldTab, newTab) -> {
                     if (newTab.getContent() != null) {
-                    	var codeArea = (oldTab.getContent() != null) ? ((VirtualizedScrollPane<CodeArea>) oldTab.getContent()).getContent()
-                                : null;
+                        var codeArea = (oldTab.getContent() != null) ? ((VirtualizedScrollPane<CodeArea>) oldTab.getContent()).getContent()
+                        : null;
 
                         if (codeArea instanceof TextAnalyzer) {
                             ((TextAnalyzer) codeArea).stopTextAnalyzerDaemon();
@@ -153,10 +152,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         });
 
         this.setOnDragDropped(event -> {
-        	var db = event.getDragboard();
-        	var success = false;
+            var db = event.getDragboard();
+            var success = false;
             if (db.hasFiles()) {
-            	var file = db.getFiles().get(0);
+                var file = db.getFiles().get(0);
                 SqlConsolePane.this.openNewFileTab(file);
                 success = true;
             }
@@ -175,49 +174,48 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
     @SuppressWarnings("unchecked")
     private void addTab() {
-    	var selectedTab = queryTabPane.getSelectionModel().getSelectedItem();
+        var selectedTab = queryTabPane.getSelectionModel().getSelectedItem();
         if (selectedTab == newConsoleTab) {
             this.openNewSqlConsoleTab();
         } else {
-        	var codeArea = ((VirtualizedScrollPane<CodeArea>) selectedTab.getContent()).getContent();
+            var codeArea = ((VirtualizedScrollPane<CodeArea>) selectedTab.getContent()).getContent();
             if (codeArea instanceof CSqlCodeArea) {
                 codeAreaRef = (CSqlCodeArea) codeArea;
             }
         }
     }
 
-
     private void addTabContextMenu(Tab tab) {
-		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
-		closeTabItem.setOnAction(event -> tab.getTabPane().getTabs().remove(tab));
-		
-		var renameTabItem = new MenuItem("Rename Tab", JavaFXUtils.createIcon("/icons/edit.png"));
-		renameTabItem.setOnAction(event -> {
-			var tabGraphic = tab.getGraphic();
-			var textField = new TextField();
-			textField.setPromptText("Enter new name");
-			textField.setOnKeyPressed(keyEvent -> {
-				if (keyEvent.getCode() == KeyCode.ENTER) {
-					// graphic is label because we are using DragTabPaneSupport util
-					var label = (Label) tabGraphic;
-					label.setText(textField.getText());
-					tab.setGraphic(tabGraphic);
-				}
-				if (keyEvent.getCode() == KeyCode.ESCAPE) {
-					tab.setGraphic(tabGraphic);
-				}
-				
-				keyEvent.consume();
-			});
-			tab.setGraphic(textField);
-			textField.requestFocus();
-		});
-		
-		tab.setContextMenu(new ContextMenu(closeTabItem, renameTabItem));
+        var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
+        closeTabItem.setOnAction(event -> tab.getTabPane().getTabs().remove(tab));
+
+        var renameTabItem = new MenuItem("Rename Tab", JavaFXUtils.createIcon("/icons/edit.png"));
+        renameTabItem.setOnAction(event -> {
+            var tabGraphic = tab.getGraphic();
+            var textField = new TextField();
+            textField.setPromptText("Enter new name");
+            textField.setOnKeyPressed(keyEvent -> {
+                if (keyEvent.getCode() == KeyCode.ENTER) {
+                    // graphic is label because we are using DragTabPaneSupport util
+                    var label = (Label) tabGraphic;
+                    label.setText(textField.getText());
+                    tab.setGraphic(tabGraphic);
+                }
+                if (keyEvent.getCode() == KeyCode.ESCAPE) {
+                    tab.setGraphic(tabGraphic);
+                }
+
+                keyEvent.consume();
+            });
+            tab.setGraphic(textField);
+            textField.requestFocus();
+        });
+
+        tab.setContextMenu(new ContextMenu(closeTabItem, renameTabItem));
     }
-    
+
     private void openNewSqlConsoleTab() {
-    	var sqlCodeArea = new CSqlCodeArea();
+        var sqlCodeArea = new CSqlCodeArea();
         sqlCodeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
         sqlCodeArea.showLinesProperty().bind(this.showLinesCheckBox.selectedProperty());
         sqlCodeArea.autoCompleteProperty().bind(this.autoCompleteOnTypeCheckBox.selectedProperty());
@@ -228,7 +226,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         var scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
         var newTab = new Tab("query " + queryTabPane.getTabs().size(), scrollPane);
         addTabContextMenu(newTab);
-		newTab.setOnClosed(event -> sqlCodeArea.stopTextAnalyzerDaemon());
+        newTab.setOnClosed(event -> sqlCodeArea.stopTextAnalyzerDaemon());
 
         queryTabPane.getTabs().add(newTab);
         queryTabPane.getSelectionModel().select(newTab);
@@ -261,27 +259,25 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
                 if (DialogFactory.createConfirmationDialog(
                         "Unsaved work",
-                        "Do you want to discard changes ?")
-                ) {
+                        "Do you want to discard changes ?")) {
                     queryTabPane.getTabs().remove(tab);
                 }
             }
         });
-		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
-		closeTabItem.setOnAction(event -> {
+        var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
+        closeTabItem.setOnAction(event -> {
             if (fileCodeArea.isTextDirty()) {
                 event.consume();
 
                 if (DialogFactory.createConfirmationDialog(
                         "Unsaved work",
-                        "Do you want to discard changes ?")
-                ) {
+                        "Do you want to discard changes ?")) {
                     queryTabPane.getTabs().remove(tab);
                 }
             }
-		});
-		tab.setContextMenu(new ContextMenu(closeTabItem));
-		
+        });
+        tab.setContextMenu(new ContextMenu(closeTabItem));
+
         tab.setGraphic(JavaFXUtils.createIcon("/icons/code-file.png"));
         queryTabPane.getTabs().add(tab);
         queryTabPane.getSelectionModel().select(tab);
@@ -310,7 +306,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
         settingsButton = new Button("", JavaFXUtils.createIcon("/icons/settings.png"));
         settingsButton.setOnMouseClicked(mouseEvent -> {
-            if (popOverIsShowing) return;
+            if (popOverIsShowing) {
+                return;
+            }
 
             popOverIsShowing = true;
             CustomPopOver popOver = new CustomPopOver(new CustomVBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox, showLinesCheckBox));
@@ -394,33 +392,29 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
                     SqlConsolePane.this.saveHistory(fixedQuery, queryDuration.get());
                     Platform.runLater(() -> {
                         executeButton.setDisable(false);
-                        if (splitPane != null)
+                        if (splitPane != null) {
                             this.setCenter(splitPane);
-                        else
+                        } else {
                             this.setCenter(queryTabPane);
+                        }
                         getSelectedSqlCodeArea().requestFocus();
                     });
                     sqlQueryRunning.set(false);
                 }
 
                 String queryToLowerCase = fixedQuery.toLowerCase();
-                if (
-                    //------------------------------------------
-                        (queryToLowerCase.startsWith("drop") ||
-                                queryToLowerCase.startsWith("create") ||
-                                queryToLowerCase.startsWith("alter")
-                        )
-                                //------------------------------------------
-                                &&
-                                //------------------------------------------
-                                (queryToLowerCase.contains("table") ||
-                                        queryToLowerCase.contains("view") ||
-                                        queryToLowerCase.contains("trigger") ||
-                                        queryToLowerCase.contains("procedure") ||
-                                        queryToLowerCase.contains("function")
-                                )
-                    //------------------------------------------
-                ) {
+                if ( //------------------------------------------
+                        (queryToLowerCase.startsWith("drop")
+                        || queryToLowerCase.startsWith("create")
+                        || queryToLowerCase.startsWith("alter"))
+                        //------------------------------------------
+                        && //------------------------------------------
+                        (queryToLowerCase.contains("table")
+                        || queryToLowerCase.contains("view")
+                        || queryToLowerCase.contains("trigger")
+                        || queryToLowerCase.contains("procedure")
+                        || queryToLowerCase.contains("function")) //------------------------------------------
+                        ) {
                     this.changed(fixedQuery);
                 }
             });
@@ -465,8 +459,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
             ResultSetMetaData rsmd = rset.getMetaData();
             for (int i = 1; i <= rsmd.getColumnCount(); i++) {
                 line.append(rsmd.getColumnLabel(i)).append(" : ");
-                if (rset.getObject(rsmd.getColumnLabel(i)) != null)
+                if (rset.getObject(rsmd.getColumnLabel(i)) != null) {
                     line.append(rset.getObject(rsmd.getColumnLabel(i)).toString()).append(", ");
+                }
             }
             line = new StringBuilder(line.substring(0, line.length() - ", ".length()));
             lines.append(line).append("\n");
@@ -518,6 +513,5 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
     public List<SimpleObserver<String>> getListeners() {
         return listeners;
     }
-
 
 }

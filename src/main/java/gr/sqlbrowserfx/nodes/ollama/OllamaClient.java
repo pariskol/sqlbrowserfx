@@ -16,6 +16,7 @@ import gr.sqlbrowserfx.utils.HttpClient;
 import gr.sqlbrowserfx.utils.PropertiesLoader;
 
 public class OllamaClient {
+
     private static final Gson GSON = new Gson();
     private final String baseUrl = PropertiesLoader.getProperty("ollama.url", String.class, "http://localhost:11434");
     private final HttpClient httpClient;

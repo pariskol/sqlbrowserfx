@@ -62,7 +62,7 @@ public class OllamaChatPane extends BorderPane {
                     inputArea.setDisable(false);
                     setBottom(bottomHBox);
                 }
-                
+
                 if (autoScrollCheckBox.isSelected()) {
                     chatArea.requestFollowCaret();
                 }
@@ -80,8 +80,8 @@ public class OllamaChatPane extends BorderPane {
 
         var vbox = new CustomVBox(autoScrollCheckBox, inputArea);
         var split = new SplitPane(
-            new VirtualizedScrollPane<>(chatArea), 
-            vbox
+                new VirtualizedScrollPane<>(chatArea),
+                vbox
         );
         split.setOrientation(Orientation.VERTICAL);
         split.setDividerPositions(0.8, 0.2);
@@ -98,7 +98,7 @@ public class OllamaChatPane extends BorderPane {
             chatArea.clear();
             setRecentConversations();
         });
-        
+
         var topHBox = new CustomHBox(newBtn, refreshBtn, conversationComboBox);
         this.setTop(topHBox);
         conversationComboBox.prefWidthProperty().bind(topHBox.widthProperty());
@@ -112,7 +112,7 @@ public class OllamaChatPane extends BorderPane {
             }
         });
         sendBtn.setOnAction(e -> sendMessage());
-        
+
         setRecentConversations();
 
         conversationComboBox.setPromptText("Select Conversation");

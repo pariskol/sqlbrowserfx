@@ -60,10 +60,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+public final class FilterPanel<T, R> extends VBox {
 
-public final class FilterPanel<T,R> extends VBox {
-
-    private final ColumnFilter<T,R> columnFilter;
+    private final ColumnFilter<T, R> columnFilter;
 
     private final FilteredList<FilterValue> filterList;
     private final TextField searchBox = new TextField();
@@ -71,7 +70,7 @@ public final class FilterPanel<T,R> extends VBox {
     private boolean bumpedWidth = false;
 
     private final ListView<FilterValue> checkListView;
-	
+
     // This collection will reference column header listeners. References must be kept locally because weak listeners are registered
     private final Collection<InvalidationListener> columnHeadersChangeListeners = new ArrayList();
 
@@ -98,26 +97,28 @@ public final class FilterPanel<T,R> extends VBox {
         checkListView.getItems()
                 .forEach(item -> item.selectedProperty().set(true));
     }
+
     void unSelectAllValues() {
         checkListView.getItems()
                 .forEach(item -> item.selectedProperty().set(false));
     }
+
     void selectValue(Object value) {
-        checkListView.getItems().stream().filter(item ->
-                (item.getValue() == null && value == null) ||
-                        (item.getValue() != null && value != null) && item.getValue().equals(value)
-                    )
+        checkListView.getItems().stream().filter(item
+                -> (item.getValue() == null && value == null)
+                || (item.getValue() != null && value != null) && item.getValue().equals(value)
+        )
                 .forEach(item -> item.selectedProperty().set(true));
     }
+
     void unSelectValue(Object value) {
-        checkListView.getItems().stream().filter(item ->
-                (item.getValue() == null && value == null) ||
-                        (item.getValue() != null && value != null) && item.getValue().equals(value)
+        checkListView.getItems().stream().filter(item
+                -> (item.getValue() == null && value == null)
+                || (item.getValue() != null && value != null) && item.getValue().equals(value)
         ).forEach(item -> item.selectedProperty().set(false));
     }
 
-
-    FilterPanel(ColumnFilter<T,R> columnFilter, ContextMenu contextMenu) {
+    FilterPanel(ColumnFilter<T, R> columnFilter, ContextMenu contextMenu) {
         columnFilter.setFilterPanel(this);
         this.columnFilter = columnFilter;
         getStyleClass().add("filter-panel");
@@ -129,7 +130,6 @@ public final class FilterPanel<T,R> extends VBox {
         getChildren().add(searchBox);
 
         //initialize checklist view
-
         filterList = new FilteredList<>(new SortedList<>(columnFilter.getFilterValues()), t -> true);
         checkListView = new ListView<>();
         checkListView.setItems(new SortedList<>(filterList, FilterValue::compareTo));
@@ -143,23 +143,23 @@ public final class FilterPanel<T,R> extends VBox {
         HBox.setHgrow(applyBttn, Priority.ALWAYS);
 
         applyBttn.setOnAction(e -> {
-                    if (columnFilter.getTableFilter().isDirty()) {
-                        columnFilter.applyFilter();
-                        columnFilter.getTableFilter().getColumnFilters().stream().map(ColumnFilter::getFilterPanel)
-                                .forEach(fp -> {
-                                    if (!fp.columnFilter.hasUnselections()) {
+            if (columnFilter.getTableFilter().isDirty()) {
+                columnFilter.applyFilter();
+                columnFilter.getTableFilter().getColumnFilters().stream().map(ColumnFilter::getFilterPanel)
+                        .forEach(fp -> {
+                            if (!fp.columnFilter.hasUnselections()) {
 //                                        fp.columnFilter.getTableColumn().setGraphic(null);
-                                    } else {
+                            } else {
 //                                        fp.columnFilter.getTableColumn().setGraphic(filterImageView.get());
-                                        if (!bumpedWidth) {
-                                            fp.columnFilter.getTableColumn().setPrefWidth(columnFilter.getTableColumn().getWidth() + 20);
-                                            bumpedWidth = true;
-                                        }
-                                    }
-                                });
-                    }
-                contextMenu.hide();
-                });
+                                if (!bumpedWidth) {
+                                    fp.columnFilter.getTableColumn().setPrefWidth(columnFilter.getTableColumn().getWidth() + 20);
+                                    bumpedWidth = true;
+                                }
+                            }
+                        });
+            }
+            contextMenu.hide();
+        });
 
         buttonBox.getChildren().add(applyBttn);
 
@@ -192,18 +192,18 @@ public final class FilterPanel<T,R> extends VBox {
 
         buttonBox.setAlignment(Pos.BASELINE_CENTER);
 
-
         getChildren().add(buttonBox);
-        
+
     }
 
     public void resetSearchFilter() {
         this.filterList.setPredicate(t -> true);
         searchBox.clear();
     }
-    public static <T,R> CustomMenuItem getInMenuItem(ColumnFilter<T,R> columnFilter, ContextMenu contextMenu) {
 
-        FilterPanel<T,R> filterPanel = new FilterPanel<>(columnFilter, contextMenu);
+    public static <T, R> CustomMenuItem getInMenuItem(ColumnFilter<T, R> columnFilter, ContextMenu contextMenu) {
+
+        FilterPanel<T, R> filterPanel = new FilterPanel<>(columnFilter, contextMenu);
 
         CustomMenuItem menuItem = new CustomMenuItem();
 
@@ -216,13 +216,14 @@ public final class FilterPanel<T,R> extends VBox {
         menuItem.setHideOnClick(false);
         return menuItem;
     }
+
     private void initializeListeners() {
         searchBox.textProperty().addListener(l -> {
             searchMode = !searchBox.getText().isEmpty();
 
             //filter scope based on search text
-            filterList.setPredicate(val -> searchBox.getText().isEmpty() ||
-                    columnFilter.getSearchStrategy().test(searchBox.getText(), Optional.ofNullable(val.getValue()).map(Object::toString).orElse("")));
+            filterList.setPredicate(val -> searchBox.getText().isEmpty()
+                    || columnFilter.getSearchStrategy().test(searchBox.getText(), Optional.ofNullable(val.getValue()).map(Object::toString).orElse("")));
 
             //unselect items out of scope
             columnFilter.getFilterValues().stream()
@@ -238,7 +239,7 @@ public final class FilterPanel<T,R> extends VBox {
 
     /* Methods below helps will anchor the context menu under the column */
     private static void checkChangeContextMenu(TableViewSkin<?> skin, TableColumn<?, ?> column, FilterPanel filterPanel) {
-    	//uncomment for java 8
+        //uncomment for java 8
 //        NestedTableColumnHeader header = skin.getTableHeaderRow().getRootHeader();
 //        InvalidationListener listener = filterPanel.getOrCreateChangeListener(header, column);
 //        header.getColumnHeaders().addListener(new WeakInvalidationListener(listener));
@@ -268,7 +269,7 @@ public final class FilterPanel<T,R> extends VBox {
     }
 
     private static TableColumnHeader scan(TableColumn<?, ?> search,
-                                          TableColumnHeader header) {
+            TableColumnHeader header) {
         // firstly test that the parent isn't what we are looking for
         if (search.equals(header.getTableColumn())) {
             return header;
@@ -288,7 +289,7 @@ public final class FilterPanel<T,R> extends VBox {
         return null;
     }
 
-    public ColumnFilter<T,R> getColumnFilter() {
+    public ColumnFilter<T, R> getColumnFilter() {
         return columnFilter;
     }
 }

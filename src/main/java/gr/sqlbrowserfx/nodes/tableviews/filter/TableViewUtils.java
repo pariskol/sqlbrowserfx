@@ -44,53 +44,48 @@ import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.control.skin.TableViewSkinBase;
 
 /**
- * A utility class for API revolving around the JavaFX {@link TableView} and
- * {@link TreeTableView} controls.
+ * A utility class for API revolving around the JavaFX {@link TableView} and {@link TreeTableView} controls.
  */
 // not public as not ready for 8.20.7
 final class TableViewUtils {
 
     /**
-     * Call this method to be able to programatically manipulate the 
-     * {@link TableView#tableMenuButtonVisibleProperty() TableView menu button}
-     * (assuming it is visible). This allows developers to, for example, add in
-     * new {@link MenuItem}.
+     * Call this method to be able to programatically manipulate the {@link TableView#tableMenuButtonVisibleProperty() TableView menu button} (assuming it is visible). This allows developers to, for example, add in new {@link MenuItem}.
      */
     public static void modifyTableMenu(final TableView<?> tableView, final Consumer<ContextMenu> consumer) {
-        modifyTableMenu((Control)tableView, consumer);
+        modifyTableMenu((Control) tableView, consumer);
     }
-    
+
     /**
-     * Call this method to be able to programatically manipulate the 
-     * {@link TreeTableView#tableMenuButtonVisibleProperty() TreeTableView menu button}
-     * (assuming it is visible). This allows developers to, for example, add in
-     * new {@link MenuItem}.
+     * Call this method to be able to programatically manipulate the {@link TreeTableView#tableMenuButtonVisibleProperty() TreeTableView menu button} (assuming it is visible). This allows developers to, for example, add in new {@link MenuItem}.
      */
     public static void modifyTableMenu(final TreeTableView<?> treeTableView, final Consumer<ContextMenu> consumer) {
-        modifyTableMenu((Control)treeTableView, consumer);
+        modifyTableMenu((Control) treeTableView, consumer);
     }
-    
+
     private static void modifyTableMenu(final Control control, final Consumer<ContextMenu> consumer) {
         if (control.getScene() == null) {
             control.sceneProperty().addListener(new InvalidationListener() {
-                @Override public void invalidated(Observable o) {
+                @Override
+                public void invalidated(Observable o) {
                     control.sceneProperty().removeListener(this);
                     modifyTableMenu(control, consumer);
                 }
             });
-            
+
             return;
         }
-        
+
         Skin<?> skin = control.getSkin();
         if (skin == null) {
             control.skinProperty().addListener(new InvalidationListener() {
-                @Override public void invalidated(Observable o) {
+                @Override
+                public void invalidated(Observable o) {
                     control.skinProperty().removeListener(this);
                     modifyTableMenu(control, consumer);
                 }
             });
-            
+
             return;
         }
 
@@ -98,21 +93,27 @@ final class TableViewUtils {
     }
 
     private static void doModify(Skin<?> skin, Consumer<ContextMenu> consumer) {
-        if (! (skin instanceof TableViewSkinBase)) return;
+        if (!(skin instanceof TableViewSkinBase)) {
+            return;
+        }
 
-        TableViewSkin<?> tableSkin = (TableViewSkin<?>)skin;
+        TableViewSkin<?> tableSkin = (TableViewSkin<?>) skin;
         TableHeaderRow headerRow = getHeaderRow(tableSkin);
-        if (headerRow == null) return;
+        if (headerRow == null) {
+            return;
+        }
 
         ContextMenu contextMenu = getContextMenu(headerRow);
-        consumer.accept(contextMenu);        
+        consumer.accept(contextMenu);
     }
 
     private static TableHeaderRow getHeaderRow(TableViewSkin<?> tableSkin) {
         ObservableList<Node> children = tableSkin.getChildren();
         for (int i = 0, max = children.size(); i < max; i++) {
             Node child = children.get(i);
-            if (child instanceof TableHeaderRow) return (TableHeaderRow) child;
+            if (child instanceof TableHeaderRow) {
+                return (TableHeaderRow) child;
+            }
         }
         return null;
     }

@@ -2,96 +2,95 @@ package gr.sqlbrowserfx.nodes.codeareas;
 
 public class Keyword {
 
-	private String keyword;
-	private String description;
-	private KeywordType type;
+    private String keyword;
+    private String description;
+    private KeywordType type;
 
-	public Keyword(String keyword, KeywordType type) {
-		super();
-		this.keyword = keyword;
-		this.type = type;
-	}
-	
-	public Keyword(String keyword, String description, KeywordType type) {
-		this(keyword, type);
-		this.description = description;
-	}
+    public Keyword(String keyword, KeywordType type) {
+        super();
+        this.keyword = keyword;
+        this.type = type;
+    }
 
-	public Keyword() {
-	}
+    public Keyword(String keyword, String description, KeywordType type) {
+        this(keyword, type);
+        this.description = description;
+    }
 
-	public String getKeyword() {
-		return keyword;
-	}
+    public Keyword() {
+    }
 
-	public void setKeyword(String keyword) {
-		this.keyword = keyword;
-	}
+    public String getKeyword() {
+        return keyword;
+    }
 
-	public KeywordType getType() {
-		return type;
-	}
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
+    }
 
-	public void setType(KeywordType type) {
-		this.type = type;
-	}
+    public KeywordType getType() {
+        return type;
+    }
 
-	public String getDescription() {
-		return description;
-	}
-	
+    public void setType(KeywordType type) {
+        this.type = type;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public boolean isFunction() {
-		return this.type == KeywordType.FUNCTION;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	public boolean isKeyword() {
-		return this.type == KeywordType.KEYWORD;
-	}
+    public boolean isFunction() {
+        return this.type == KeywordType.FUNCTION;
+    }
 
-	public boolean isType() {
-		return this.type == KeywordType.TYPE;
-	}
+    public boolean isKeyword() {
+        return this.type == KeywordType.KEYWORD;
+    }
 
-	public boolean isTable() {
-		return this.type == KeywordType.TABLE;
-	}
+    public boolean isType() {
+        return this.type == KeywordType.TYPE;
+    }
 
-	public boolean isQuery() {
-		return this.type == KeywordType.QUERY;
-	}
+    public boolean isTable() {
+        return this.type == KeywordType.TABLE;
+    }
 
-	public boolean isColumn() {
-		return this.type == KeywordType.COLUMN;
+    public boolean isQuery() {
+        return this.type == KeywordType.QUERY;
+    }
 
-	}
+    public boolean isColumn() {
+        return this.type == KeywordType.COLUMN;
 
-	public boolean isVariable() {
-		return this.type == KeywordType.VARIABLE;
-	}
+    }
 
-	public boolean isAlias() {
-		return this.type == KeywordType.ALIAS;
-	}
+    public boolean isVariable() {
+        return this.type == KeywordType.VARIABLE;
+    }
 
-	@Override
-	public int hashCode() {
-		// return always 0 to always invoke equals in sets
-		return 0;
-	}
+    public boolean isAlias() {
+        return this.type == KeywordType.ALIAS;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Keyword) {
-			Keyword keyword = (Keyword) obj;
-			return this.getKeyword().equals(keyword.getKeyword()) && this.getType() == keyword.getType();
-		} else {
-			return super.equals(obj);
-		}
-	}
+    @Override
+    public int hashCode() {
+        // return always 0 to always invoke equals in sets
+        return 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Keyword) {
+            Keyword keyword = (Keyword) obj;
+            return this.getKeyword().equals(keyword.getKeyword()) && this.getType() == keyword.getType();
+        } else {
+            return super.equals(obj);
+        }
+    }
 
 }

@@ -18,113 +18,113 @@ import gr.sqlbrowserfx.LoggerConf;
 
 public class SqlServerConnector extends SqlConnector {
 
-	private final String database;
+    private final String database;
 
-	public SqlServerConnector(String database, String user, String password) {
-		super("com.microsoft.sqlserver.jdbc.SQLServerDriver",
-				"jdbc:sqlserver://localhost:1433;encrypt=false;databaseName=" + database ,
-				user, password);
-		this.database = database;
-	}
-	
-	public SqlServerConnector(String url, String database, String user, String password) {
-		super("com.microsoft.sqlserver.jdbc.SQLServerDriver", url, user, password);
-		this.database = database;
-	}
+    public SqlServerConnector(String database, String user, String password) {
+        super("com.microsoft.sqlserver.jdbc.SQLServerDriver",
+                "jdbc:sqlserver://localhost:1433;encrypt=false;databaseName=" + database,
+                user, password);
+        this.database = database;
+    }
 
-	
-	@Override
-	protected DataSource initDatasource() {
-		BasicDataSource dbcp2DataSource = new BasicDataSource();
-		dbcp2DataSource.setDriverClassName(this.getDriver());
-		dbcp2DataSource.setUrl(this.getUrl());
-		dbcp2DataSource.setUsername(this.getUser());
-		dbcp2DataSource.setPassword(this.getPassword());
-		dbcp2DataSource.setInitialSize(4);
-		dbcp2DataSource.setMaxTotal(4);
-		
-		return dbcp2DataSource;
-	}
+    public SqlServerConnector(String url, String database, String user, String password) {
+        super("com.microsoft.sqlserver.jdbc.SQLServerDriver", url, user, password);
+        this.database = database;
+    }
 
-	/**
-	 * MySql has type checking return value as is.
-	 */
-	@Override
-	public Object castToDBType(SqlTable sqlTable, String columnName, String text) {
-		if ("true".equals(text)) {
-			return 1;
-		}
-		else if ("false".equals(text)) {
-			return 0;
-		}
-		return text;
-	}
+    @Override
+    protected DataSource initDatasource() {
+        BasicDataSource dbcp2DataSource = new BasicDataSource();
+        dbcp2DataSource.setDriverClassName(this.getDriver());
+        dbcp2DataSource.setUrl(this.getUrl());
+        dbcp2DataSource.setUsername(this.getUser());
+        dbcp2DataSource.setPassword(this.getPassword());
+        dbcp2DataSource.setInitialSize(4);
+        dbcp2DataSource.setMaxTotal(4);
 
-	@Override
-	public void setAutoCommitModeEnabled(boolean isAutoCommitModeEnabled) {
-		super.setAutoCommitModeEnabled(isAutoCommitModeEnabled);
-		if (!isAutoCommitModeEnabled && this.getDataSource() instanceof BasicDataSource basicDataSource) {
-			basicDataSource.setAutoCommitOnReturn(false);
-			basicDataSource.setDefaultAutoCommit(false);
-			basicDataSource.setRollbackOnReturn(false);
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Detected Apache BasicDataSource");
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Disable autoCommit for all connections");
-		}
-	}
-	
-	@Override
-	public void commitAll() {
-		BasicDataSource dataSource = (BasicDataSource) this.getDataSource();
-		List<Connection> connections = new ArrayList<>();
-		Connection conn = null;
-		try {
-			int activeConnections = dataSource.getNumIdle();
-			for (int i = 0; i < activeConnections; i++) {
-					conn = dataSource.getConnection();
-					conn.commit();
-					connections.add(conn);
-			}
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug(activeConnections + " connections commited");
-		} catch (SQLException e) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
-			this.rollbackQuietly(conn);
-		}
-		for (Connection conn2 : connections)
-			this.closeQuietly(conn2);
-	}
+        return dbcp2DataSource;
+    }
 
-	@Override
-	public void rollbackAll() {
-		BasicDataSource dataSource = (BasicDataSource) this.getDataSource();
-		List<Connection> connections = new ArrayList<>();
-		Connection conn = null;
-		try {
-			int activeConnections = dataSource.getNumIdle();
-			for (int i = 0; i < activeConnections; i++) {
-					conn = dataSource.getConnection();
-					conn.rollback();
-					connections.add(conn);
-			}
-		} catch (SQLException e) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to rollback changes", e);
-		}
-		for (Connection conn2 : connections)
-			this.closeQuietly(conn2);
-	}
-	
-	@Override
-	public String getContentsQuery() {
-		return """
+    /**
+     * MySql has type checking return value as is.
+     */
+    @Override
+    public Object castToDBType(SqlTable sqlTable, String columnName, String text) {
+        if ("true".equals(text)) {
+            return 1;
+        } else if ("false".equals(text)) {
+            return 0;
+        }
+        return text;
+    }
+
+    @Override
+    public void setAutoCommitModeEnabled(boolean isAutoCommitModeEnabled) {
+        super.setAutoCommitModeEnabled(isAutoCommitModeEnabled);
+        if (!isAutoCommitModeEnabled && this.getDataSource() instanceof BasicDataSource basicDataSource) {
+            basicDataSource.setAutoCommitOnReturn(false);
+            basicDataSource.setDefaultAutoCommit(false);
+            basicDataSource.setRollbackOnReturn(false);
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Detected Apache BasicDataSource");
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("Disable autoCommit for all connections");
+        }
+    }
+
+    @Override
+    public void commitAll() {
+        BasicDataSource dataSource = (BasicDataSource) this.getDataSource();
+        List<Connection> connections = new ArrayList<>();
+        Connection conn = null;
+        try {
+            int activeConnections = dataSource.getNumIdle();
+            for (int i = 0; i < activeConnections; i++) {
+                conn = dataSource.getConnection();
+                conn.commit();
+                connections.add(conn);
+            }
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug(activeConnections + " connections commited");
+        } catch (SQLException e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
+            this.rollbackQuietly(conn);
+        }
+        for (Connection conn2 : connections) {
+            this.closeQuietly(conn2);
+        }
+    }
+
+    @Override
+    public void rollbackAll() {
+        BasicDataSource dataSource = (BasicDataSource) this.getDataSource();
+        List<Connection> connections = new ArrayList<>();
+        Connection conn = null;
+        try {
+            int activeConnections = dataSource.getNumIdle();
+            for (int i = 0; i < activeConnections; i++) {
+                conn = dataSource.getConnection();
+                conn.rollback();
+                connections.add(conn);
+            }
+        } catch (SQLException e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to rollback changes", e);
+        }
+        for (Connection conn2 : connections) {
+            this.closeQuietly(conn2);
+        }
+    }
+
+    @Override
+    public String getContentsQuery() {
+        return """
 				SELECT table_name, table_type
 				FROM information_schema.tables
 				ORDER BY table_name ASC;
 				""";
-	}
-	
-	@Override
-	public void getTableSchema(String name, ResultSetAction action) throws SQLException {
-		this.executeQuery(
-				"""
+    }
+
+    @Override
+    public void getTableSchema(String name, ResultSetAction action) throws SQLException {
+        this.executeQuery(
+                """
 				SELECT 
 				    'CREATE TABLE [' + s.name + '].[' + t.name + '] (' + CHAR(13) +
 				    STRING_AGG(
@@ -171,14 +171,14 @@ public class SqlServerConnector extends SqlConnector {
 				WHERE t.name = ?
 				GROUP BY s.name, t.name, pk.pkdef;
 				""",
-				Arrays.asList(name),
-				action);
-	}
-	
-	@Override
-	public void getViewSchema(String name, ResultSetAction action) throws SQLException {
-		this.executeQuery(
-			"""
+                Arrays.asList(name),
+                action);
+    }
+
+    @Override
+    public void getViewSchema(String name, ResultSetAction action) throws SQLException {
+        this.executeQuery(
+                """
 			SELECT 
 			    m.definition AS create_statement
 			FROM sys.views v
@@ -186,15 +186,15 @@ public class SqlServerConnector extends SqlConnector {
 			JOIN sys.sql_modules m ON v.object_id = m.object_id
 			WHERE v.name = ?
 			""",
-			Arrays.asList(name),
-			action
-		);
-	}
+                Arrays.asList(name),
+                action
+        );
+    }
 
-	@Override
-	public void getIndexSchema(String name, ResultSetAction action) throws SQLException {
-		this.executeQuery(
-				"""
+    @Override
+    public void getIndexSchema(String name, ResultSetAction action) throws SQLException {
+        this.executeQuery(
+                """
 				SELECT 
 				    'CREATE ' + 
 				    CASE WHEN i.is_unique = 1 THEN 'UNIQUE ' ELSE '' END + 
@@ -212,44 +212,44 @@ public class SqlServerConnector extends SqlConnector {
 				  AND t.name = ?
 				GROUP BY s.name, t.name, i.name, i.is_unique;
 				""",
-				Arrays.asList(name),
-				action
-			);
-	}
+                Arrays.asList(name),
+                action
+        );
+    }
 
-	@Override
-	public String findPrimaryKey(String tableName) throws SQLException {
-		StringBuilder primaryKeyBuilder = new StringBuilder();
+    @Override
+    public String findPrimaryKey(String tableName) throws SQLException {
+        StringBuilder primaryKeyBuilder = new StringBuilder();
 
-		this.executeQuery(
-			"""
+        this.executeQuery(
+                """
 			SELECT c.name AS COLUMN_NAME 
 			FROM sys.indexes i 
 			INNER JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id 
 			INNER JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id 
 			INNER JOIN sys.tables t ON i.object_id = t.object_id 
 			WHERE i.is_primary_key = 1 AND t.name = ?	
-			""", 
-			Arrays.asList(tableName), 
-			rset -> {
-				primaryKeyBuilder.append(rset.getString("COLUMN_NAME"));
-				primaryKeyBuilder.append(",");
-			}
-		);
+			""",
+                Arrays.asList(tableName),
+                rset -> {
+                    primaryKeyBuilder.append(rset.getString("COLUMN_NAME"));
+                    primaryKeyBuilder.append(",");
+                }
+        );
 
-		String primaryKey = primaryKeyBuilder.toString();
-		if (!primaryKey.isEmpty()) {
-			primaryKey = primaryKey.substring(0, primaryKey.length() - 1);
-		}
+        String primaryKey = primaryKeyBuilder.toString();
+        if (!primaryKey.isEmpty()) {
+            primaryKey = primaryKey.substring(0, primaryKey.length() - 1);
+        }
 
-		return primaryKey.isEmpty() ? null : primaryKey;
-	}
+        return primaryKey.isEmpty() ? null : primaryKey;
+    }
 
-	@Override
-	public List<Map<String, String>> findForeignKeyReferences(String tableName) throws SQLException {
-		List<Map<String, String>> foreignKeys = new ArrayList<>();
-		this.executeQuery(
-			"""
+    @Override
+    public List<Map<String, String>> findForeignKeyReferences(String tableName) throws SQLException {
+        List<Map<String, String>> foreignKeys = new ArrayList<>();
+        this.executeQuery(
+                """
 			SELECT COL_NAME(fc.parent_object_id, fc.parent_column_id) AS COLUMN_NAME, 
 			OBJECT_NAME(f.referenced_object_id) AS REFERENCED_TABLE_NAME, 
 			COL_NAME(fc.referenced_object_id, fc.referenced_column_id) AS REFERENCED_COLUMN_NAME 
@@ -257,80 +257,80 @@ public class SqlServerConnector extends SqlConnector {
 			INNER JOIN sys.foreign_key_columns AS fc ON f.object_id = fc.constraint_object_id 
 			INNER JOIN sys.tables t ON t.object_id = fc.parent_object_id 
 			WHERE t.name = ?
-			""", 
-			Arrays.asList(tableName), 
-			rset -> {
-				Map<String, String> map = new HashMap<>();
-				map.put(REFERENCED_KEY, rset.getString("REFERENCED_COLUMN_NAME"));
-				map.put(REFERENCED_TABLE, rset.getString("REFERENCED_TABLE_NAME"));
-				map.put(FOREIGN_KEY, rset.getString("COLUMN_NAME"));
-				foreignKeys.add(map);
-			}
-		);
+			""",
+                Arrays.asList(tableName),
+                rset -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put(REFERENCED_KEY, rset.getString("REFERENCED_COLUMN_NAME"));
+                    map.put(REFERENCED_TABLE, rset.getString("REFERENCED_TABLE_NAME"));
+                    map.put(FOREIGN_KEY, rset.getString("COLUMN_NAME"));
+                    foreignKeys.add(map);
+                }
+        );
 
-		return foreignKeys;
-	}
-	
-	@Override
-	public String getDbSchema() {
-		return database;
-	}
+        return foreignKeys;
+    }
 
-	@Override
-	public void getTriggers(String table, ResultSetAction action) throws SQLException {
-		this.executeQuery(
-			"""
+    @Override
+    public String getDbSchema() {
+        return database;
+    }
+
+    @Override
+    public void getTriggers(String table, ResultSetAction action) throws SQLException {
+        this.executeQuery(
+                """
 			SELECT name AS TRIGGER_NAME, OBJECT_DEFINITION(object_id) AS ACTION_STATEMENT 
 			FROM sys.triggers WHERE parent_id = OBJECT_ID(?)
 			""",
-			Arrays.asList(table), action);
-	}
-	
-	@Override
-	public List<String> getTables() throws SQLException {
-		List<String> tables = new ArrayList<>();
-		this.executeQuery(
-			"""
+                Arrays.asList(table), action);
+    }
+
+    @Override
+    public List<String> getTables() throws SQLException {
+        List<String> tables = new ArrayList<>();
+        this.executeQuery(
+                """
 			SELECT table_name, table_type
 			FROM information_schema.tables
 			WHERE table_type = 'BASE TABLE'
 			""",
-			rset -> {
-				try {
-					tables.add(rset.getString(1));
-				} catch (Exception e) {
-					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
-				}
-			}
-		);
-		return tables;
-	}
-	
-	@Override
-	public List<String> getViews() throws SQLException {
-		List<String> tables = new ArrayList<>();
-		this.executeQuery(
-    	"""
+                rset -> {
+                    try {
+                        tables.add(rset.getString(1));
+                    } catch (Exception e) {
+                        LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+                    }
+                }
+        );
+        return tables;
+    }
+
+    @Override
+    public List<String> getViews() throws SQLException {
+        List<String> tables = new ArrayList<>();
+        this.executeQuery(
+                """
 				SELECT table_name, table_type
 				FROM information_schema.tables
 				WHERE table_type = 'VIEW'
 			""",
-			rset -> {
-				try {
-					tables.add(rset.getString(1));
-				} catch (Exception e) {
-					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
-				}
-			}
-		);
-		return tables;
-	}
-	
-	@Override
-	public Integer getLastGeneratedId() throws SQLException {
-		AtomicInteger lastId = new AtomicInteger();
-		this.executeQuery("SELECT CAST(SCOPE_IDENTITY() AS INT)", rset -> lastId.set(rset.getInt(1)));
-		return lastId.get();
-	}
+                rset -> {
+                    try {
+                        tables.add(rset.getString(1));
+                    } catch (Exception e) {
+                        LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+                    }
+                }
+        );
+        return tables;
+    }
+
+    @Override
+    public Integer getLastGeneratedId() throws SQLException {
+        AtomicInteger lastId = new AtomicInteger();
+        this.executeQuery("SELECT CAST(SCOPE_IDENTITY() AS INT)", rset -> lastId.set(rset.getInt(1)));
+        return lastId.get();
+    }
 
 }

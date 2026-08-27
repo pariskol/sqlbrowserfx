@@ -32,106 +32,106 @@ import javafx.scene.layout.FlowPane;
 
 public class DDBTreePane extends BorderPane implements Dockable, ToolbarOwner, InputMapOwner {
 
-	private final FlowPane toolBar;
-	private final DDBTreeView dbTreeView;
-	private DockNode thisDockNode = null;
-	private final SqlConnector sqlConnector;
-	private Button searchButton;
+    private final FlowPane toolBar;
+    private final DDBTreeView dbTreeView;
+    private DockNode thisDockNode = null;
+    private final SqlConnector sqlConnector;
+    private Button searchButton;
 
-	public DDBTreePane(String dbPath, SqlConnector sqlConnector) {
-		super();
-		this.sqlConnector = sqlConnector;
-		// when dbTreeView is ready fires a simple event 
-		this.dbTreeView = new DDBTreeView(dbPath, sqlConnector, this);
-		this.dbTreeView.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> Platform.runLater(() -> this.setCenter(this.dbTreeView)));
-		this.toolBar = this.createToolbar();
+    public DDBTreePane(String dbPath, SqlConnector sqlConnector) {
+        super();
+        this.sqlConnector = sqlConnector;
+        // when dbTreeView is ready fires a simple event 
+        this.dbTreeView = new DDBTreeView(dbPath, sqlConnector, this);
+        this.dbTreeView.addEventHandler(SimpleEvent.EVENT_TYPE, simpleEvent -> Platform.runLater(() -> this.setCenter(this.dbTreeView)));
+        this.toolBar = this.createToolbar();
 
-		this.setInputMap();
+        this.setInputMap();
 
-		this.setTop(toolBar);
-		this.setLoading(true);
-	}
-	
-	public void setLoading(boolean loading) {
-		if (loading) {
-			ProgressIndicator progressIndicator = new ProgressIndicator();
-			progressIndicator.setMaxHeight(40);
-			progressIndicator.setMaxWidth(40);
-			this.setCenter(progressIndicator);
-		}
-		else {
-			Platform.runLater(() -> this.setCenter(this.dbTreeView));
-		}
-	}
-	
-	@Override
-	public FlowPane createToolbar() {
-		searchButton = new Button("", JavaFXUtils.createIcon("/icons/magnify.png"));
-		searchButton.setTooltip(new Tooltip("Search in tree"));
-		searchButton.setOnAction(actionEvent -> this.dbTreeView.showSearchPopup(searchButton));
-		
-		Button addButton = new Button("", JavaFXUtils.createIcon("/icons/add.png"));
-		addButton.setOnAction(actionEvent -> {
-			TableCreationPane tableCreationPane = new TableCreationPane(this.sqlConnector);
-			tableCreationPane.addObserver(this.dbTreeView);
-			new DockNode(asDockNode().getDockPane(), tableCreationPane, "Create New Table", JavaFXUtils.createIcon("/icons/add.png"), 1200.0, 600.0);
-			
-		});
-		addButton.setTooltip(new Tooltip("Open table creator"));
+        this.setTop(toolBar);
+        this.setLoading(true);
+    }
 
-		Button deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
-		deleteButton.setTooltip(new Tooltip("Drop"));
-		deleteButton.setOnAction(action -> this.dbTreeView.dropAction());
-		
-		Button scemaDetailsButton = new Button("", JavaFXUtils.createIcon("/icons/details.png"));
-		scemaDetailsButton.setTooltip(new Tooltip("Show schema"));
-		scemaDetailsButton.setOnAction(actionEvent -> {
-			SqlCodeArea codeArea = new SqlCodeArea(this.dbTreeView.copyScemaAction(), false, false, isUsingMysql());
-			VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
-			scrollPane.setPrefSize(600, 400);
+    public void setLoading(boolean loading) {
+        if (loading) {
+            ProgressIndicator progressIndicator = new ProgressIndicator();
+            progressIndicator.setMaxHeight(40);
+            progressIndicator.setMaxWidth(40);
+            this.setCenter(progressIndicator);
+        } else {
+            Platform.runLater(() -> this.setCenter(this.dbTreeView));
+        }
+    }
 
-			PopOver popOver = new PopOver(scrollPane);
-			popOver.setArrowSize(0);
-			popOver.setDetachable(false);
-			popOver.show(scemaDetailsButton);
-		});
-		
-		Button refreshButton = new Button("", JavaFXUtils.createIcon("/icons/refresh.png"));
-		refreshButton.setOnAction(event -> {
-			try {
-				dbTreeView.refreshItems();
-				if (!(sqlConnector instanceof SqliteConnector))
-					dbTreeView.refreshFunctionAndProcedures();
-			} catch (SQLException e) {
-				DialogFactory.createErrorDialog(e);
-			}
-		});
-		refreshButton.setTooltip(new Tooltip("Refresh"));
-		
-		FlowPane toolbar =  new CustomFlowPane(dbTreeView.getSearchBox(), addButton, refreshButton);
-		toolbar.setPrefWidth(addButton.getWidth());
-		return toolbar;
-	}
+    @Override
+    public FlowPane createToolbar() {
+        searchButton = new Button("", JavaFXUtils.createIcon("/icons/magnify.png"));
+        searchButton.setTooltip(new Tooltip("Search in tree"));
+        searchButton.setOnAction(actionEvent -> this.dbTreeView.showSearchPopup(searchButton));
 
-	@Override
-	public void setInputMap() {
-		Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
-				action -> dbTreeView.getSearchField().requestFocus()));
-	}
-	
-	@Override
-	public DockNode asDockNode() {
-		if (thisDockNode == null) {
-			thisDockNode = new DockNode(this, "Structure", JavaFXUtils.createIcon("/icons/structure.png"));
-		}
-		return thisDockNode;
-	}
-	
-	public DDBTreeView getDBTreeView() {
-		return dbTreeView;
-	}
+        Button addButton = new Button("", JavaFXUtils.createIcon("/icons/add.png"));
+        addButton.setOnAction(actionEvent -> {
+            TableCreationPane tableCreationPane = new TableCreationPane(this.sqlConnector);
+            tableCreationPane.addObserver(this.dbTreeView);
+            new DockNode(asDockNode().getDockPane(), tableCreationPane, "Create New Table", JavaFXUtils.createIcon("/icons/add.png"), 1200.0, 600.0);
 
-	private boolean isUsingMysql() {
-		return sqlConnector instanceof MysqlConnector;
-	}
+        });
+        addButton.setTooltip(new Tooltip("Open table creator"));
+
+        Button deleteButton = new Button("", JavaFXUtils.createIcon("/icons/minus.png"));
+        deleteButton.setTooltip(new Tooltip("Drop"));
+        deleteButton.setOnAction(action -> this.dbTreeView.dropAction());
+
+        Button scemaDetailsButton = new Button("", JavaFXUtils.createIcon("/icons/details.png"));
+        scemaDetailsButton.setTooltip(new Tooltip("Show schema"));
+        scemaDetailsButton.setOnAction(actionEvent -> {
+            SqlCodeArea codeArea = new SqlCodeArea(this.dbTreeView.copyScemaAction(), false, false, isUsingMysql());
+            VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
+            scrollPane.setPrefSize(600, 400);
+
+            PopOver popOver = new PopOver(scrollPane);
+            popOver.setArrowSize(0);
+            popOver.setDetachable(false);
+            popOver.show(scemaDetailsButton);
+        });
+
+        Button refreshButton = new Button("", JavaFXUtils.createIcon("/icons/refresh.png"));
+        refreshButton.setOnAction(event -> {
+            try {
+                dbTreeView.refreshItems();
+                if (!(sqlConnector instanceof SqliteConnector)) {
+                    dbTreeView.refreshFunctionAndProcedures();
+                }
+            } catch (SQLException e) {
+                DialogFactory.createErrorDialog(e);
+            }
+        });
+        refreshButton.setTooltip(new Tooltip("Refresh"));
+
+        FlowPane toolbar = new CustomFlowPane(dbTreeView.getSearchBox(), addButton, refreshButton);
+        toolbar.setPrefWidth(addButton.getWidth());
+        return toolbar;
+    }
+
+    @Override
+    public void setInputMap() {
+        Nodes.addInputMap(this, InputMap.consume(EventPattern.keyPressed(KeyCode.F, KeyCombination.CONTROL_DOWN),
+                action -> dbTreeView.getSearchField().requestFocus()));
+    }
+
+    @Override
+    public DockNode asDockNode() {
+        if (thisDockNode == null) {
+            thisDockNode = new DockNode(this, "Structure", JavaFXUtils.createIcon("/icons/structure.png"));
+        }
+        return thisDockNode;
+    }
+
+    public DDBTreeView getDBTreeView() {
+        return dbTreeView;
+    }
+
+    private boolean isUsingMysql() {
+        return sqlConnector instanceof MysqlConnector;
+    }
 }

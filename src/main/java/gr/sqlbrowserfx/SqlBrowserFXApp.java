@@ -1,4 +1,3 @@
-
 package gr.sqlbrowserfx;
 
 import java.io.File;
@@ -89,591 +88,594 @@ import javafx.stage.Stage;
 
 public class SqlBrowserFXApp extends Application {
 
-	private static final String CSS_THEME = "/styles/" + PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark") + ".css";
-	private static final Boolean AUTO_COMMIT_IS_ENABLED = PropertiesLoader.getProperty("sqlconnector.enable.autocommit", Boolean.class, true);
+    private static final String CSS_THEME = "/styles/" + PropertiesLoader.getProperty("sqlbrowserfx.css.theme", String.class, "flat-dark") + ".css";
+    private static final Boolean AUTO_COMMIT_IS_ENABLED = PropertiesLoader.getProperty("sqlconnector.enable.autocommit", Boolean.class, true);
 
-	private static String DB;
-	private static RESTfulServiceConfig restServiceConfig;
-	private boolean restServiceStarted = false;
-	private boolean isRestConfigurationShowing = false;
-	private boolean isInternalDBShowing = false;
+    private static String DB;
+    private static RESTfulServiceConfig restServiceConfig;
+    private boolean restServiceStarted = false;
+    private boolean isRestConfigurationShowing = false;
+    private boolean isInternalDBShowing = false;
 
+    private Scene primaryScene;
+    private Stage primaryStage;
 
-	private Scene primaryScene;
-	private Stage primaryStage;
+    private SqlConnector sqlConnector;
+    private SearchInFilesPopOver searchInFilesPopOver;
+    private FileSearchPopOver fileSearchpopOver;
 
-	private SqlConnector sqlConnector;
-	private SearchInFilesPopOver searchInFilesPopOver;
-	private FileSearchPopOver fileSearchpopOver;
-	
+    public static void main(String[] args) {
+        PropertiesLoader.setLogger(LoggerFactory.getLogger(LoggerConf.LOGGER_NAME));
+        DialogFactory.setDialogStyleSheet(CSS_THEME);
+        DB = args.length > 0 && args[0] != null ? args[0] : null;
+        launch(args);
+    }
 
-	public static void main(String[] args) {
-		PropertiesLoader.setLogger(LoggerFactory.getLogger(LoggerConf.LOGGER_NAME));
-		DialogFactory.setDialogStyleSheet(CSS_THEME);
-		DB = args.length > 0 && args[0] != null ? args[0] : null;
-		launch(args);
-	}
+    @Override
+    public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
+        primaryStage.setTitle("SqlBrowserFX");
 
-	@Override
-	public void start(Stage primaryStage) {
-		this.primaryStage = primaryStage;
-		primaryStage.setTitle("SqlBrowserFX");
+        if (DB == null) {
+            createDBselectBox();
+        } else {
+            dbSelectionAction(DB);
+        }
 
-		if (DB == null)
-			createDBselectBox();
-		else
-			dbSelectionAction(DB);
-		
-		primaryStage.setScene(primaryScene);
-		primaryStage.sizeToScene();
-		primaryStage.getIcons().add(JavaFXUtils.createImage("/icons/sqlbrowser-fx.png"));
-		primaryStage.show();
+        primaryStage.setScene(primaryScene);
+        primaryStage.sizeToScene();
+        primaryStage.getIcons().add(JavaFXUtils.createImage("/icons/sqlbrowser-fx.png"));
+        primaryStage.show();
 
-		primaryStage.setOnCloseRequest(closeEvent -> {
-			if (sqlConnector instanceof SqliteConnector) {
-				saveConnectionToHistory();
-			}
-			
-			Platform.exit();
-			System.exit(0);
-		});
+        primaryStage.setOnCloseRequest(closeEvent -> {
+            if (sqlConnector instanceof SqliteConnector) {
+                saveConnectionToHistory();
+            }
 
-	}
+            Platform.exit();
+            System.exit(0);
+        });
 
-	private void createDBselectBox() {
-		var selectedDBtext = new Label("No database selected");
-		var openButton = new Button("Open", JavaFXUtils.createIcon("/icons/database.png"));
-		openButton.setOnAction(actionEvent -> dbSelectionAction(selectedDBtext.getText()));
-		var bottomBox = new CustomHBox(selectedDBtext, openButton);
-		bottomBox.setPadding(new Insets(5));
-		bottomBox.setSpacing(5);
-		bottomBox.setAlignment(Pos.CENTER_RIGHT);
+    }
 
-		var rightBox = new CustomVBox();
-		var text = new Label("Browse system for database...");
-		var fileChooserButton = new Button("Search", JavaFXUtils.createIcon("/icons/magnify.png"));
-		fileChooserButton.setOnAction(actionEvent -> {
-			FileChooser fileChooser = new FileChooser();
-			File selectedFile = fileChooser.showOpenDialog(null);
+    private void createDBselectBox() {
+        var selectedDBtext = new Label("No database selected");
+        var openButton = new Button("Open", JavaFXUtils.createIcon("/icons/database.png"));
+        openButton.setOnAction(actionEvent -> dbSelectionAction(selectedDBtext.getText()));
+        var bottomBox = new CustomHBox(selectedDBtext, openButton);
+        bottomBox.setPadding(new Insets(5));
+        bottomBox.setSpacing(5);
+        bottomBox.setAlignment(Pos.CENTER_RIGHT);
 
-			if (selectedFile != null) {
-				selectedDBtext.setText(selectedFile.getAbsolutePath());
-			}
-		});
-		rightBox.getChildren().addAll(text, fileChooserButton);
-		rightBox.setAlignment(Pos.CENTER);
-		rightBox.setSpacing(5);
+        var rightBox = new CustomVBox();
+        var text = new Label("Browse system for database...");
+        var fileChooserButton = new Button("Search", JavaFXUtils.createIcon("/icons/magnify.png"));
+        fileChooserButton.setOnAction(actionEvent -> {
+            FileChooser fileChooser = new FileChooser();
+            File selectedFile = fileChooser.showOpenDialog(null);
 
-		var recentDBsText = new Label("History");
-		recentDBsText.setTextAlignment(TextAlignment.CENTER);
+            if (selectedFile != null) {
+                selectedDBtext.setText(selectedFile.getAbsolutePath());
+            }
+        });
+        rightBox.getChildren().addAll(text, fileChooserButton);
+        rightBox.setAlignment(Pos.CENTER);
+        rightBox.setSpacing(5);
 
-		var recentDBsTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
-		
-		SqlBrowserFXAppManager
-			.getConfigSqlConnector()
-			.executeQueryRawAsync("select database, timestamp, id from connections_history_localtime where database_type = 'sqlite' order by timestamp desc",
-					recentDBsTableView::setItemsLater
-		);
+        var recentDBsText = new Label("History");
+        recentDBsText.setTextAlignment(TextAlignment.CENTER);
 
-		recentDBsTableView.setOnMouseClicked(
-			mouseEvent -> {
-				if (recentDBsTableView.getSelectionModel().getSelectedItem() != null) {
-					selectedDBtext.setText(recentDBsTableView.getSelectionModel().getSelectedItem().get("database").toString());
-					if (mouseEvent.getClickCount() == 2)
-						dbSelectionAction(selectedDBtext.getText());
-				}
-			});
-		var leftBox = new CustomVBox(recentDBsText, recentDBsTableView);
-		leftBox.setAlignment(Pos.CENTER);
+        var recentDBsTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
 
-		var borderPane = new BorderPane();
-		borderPane.setCenter(rightBox);
-		borderPane.setLeft(leftBox);
-		borderPane.setBottom(bottomBox);
+        SqlBrowserFXAppManager
+                .getConfigSqlConnector()
+                .executeQueryRawAsync("select database, timestamp, id from connections_history_localtime where database_type = 'sqlite' order by timestamp desc",
+                        recentDBsTableView::setItemsLater
+                );
 
-		var sqliteTab = new Tab("Sqlite", borderPane);
-		sqliteTab.setGraphic(JavaFXUtils.createImageView("/icons/sqlite.png", 28.0, 28.0));
-		sqliteTab.setClosable(false);
-		
-		var mySqlConfigBox = new MySqlConfigBox();
-		mySqlConfigBox.getConnectButton().setOnAction(actionEvent -> {
-			mySqlConfigBox.showLoader(true);
-			dbSelectionAction(mySqlConfigBox);
-		});
-		var mysqlTab = new Tab("MySQL", mySqlConfigBox);
-		mysqlTab.setGraphic(JavaFXUtils.createImageView("/icons/mysql.png", 28.0, 28.0));
-		mysqlTab.setClosable(false);
-		
-		var mariadbConfigBox = new MySqlConfigBox();
-		mariadbConfigBox.getConnectButton().setOnAction(actionEvent -> {
-			mariadbConfigBox.showLoader(true);
-			dbSelectionAction(mariadbConfigBox);
-		});
-		var mariadbTab = new Tab("MariaDB", mariadbConfigBox);
-		mariadbTab.setGraphic(JavaFXUtils.createImageView("/icons/mariadb.png", 28.0, 28.0));
-		mariadbTab.setClosable(false);
-		
-		
-		var postgreSqlConfigBox = new PostgreSqlConfigBox();
-		postgreSqlConfigBox.getConnectButton().setOnAction(actionEvent -> {
-			postgreSqlConfigBox.showLoader(true);
-			dbSelectionAction(postgreSqlConfigBox);
-		});
-		var postgresqlTab = new Tab("PostgreSQL", postgreSqlConfigBox);
-		postgresqlTab.setGraphic(JavaFXUtils.createImageView("/icons/postgre.png", 28.0, 28.0));
-		postgresqlTab.setClosable(false);
-		
-		var sqlServerConfigBox = new SqlServerConfigBox();
-		sqlServerConfigBox.getConnectButton().setOnAction(actionEvent -> {
-			sqlServerConfigBox.showLoader(true);
-			dbSelectionAction(sqlServerConfigBox);
-		});
-		var sqlServerTab = new Tab("SQL Server", sqlServerConfigBox);
-		sqlServerTab.setGraphic(JavaFXUtils.createImageView("/icons/sqlserver.png", 28.0, 28.0));
-		sqlServerTab.setClosable(false);
-		
-		var dbTabPane = new TabPane(sqliteTab, mysqlTab, postgresqlTab, sqlServerTab);
-		
-		primaryScene = new Scene(dbTabPane, 800, 500);
-		leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
-		leftBox.prefWidthProperty().bind(primaryScene.widthProperty().divide(2));
-		primaryScene.getStylesheets().add(CSS_THEME);
-		primaryScene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
-			if (event.getCode() == KeyCode.ENTER) {
-				if (primaryScene.getFocusOwner() instanceof Button
-						&& ((Button) primaryScene.getFocusOwner()).getOnAction() != null) {
-					((Button) primaryScene.getFocusOwner()).getOnAction().handle(new ActionEvent());
-				}
-			}
-		});
+        recentDBsTableView.setOnMouseClicked(
+                mouseEvent -> {
+                    if (recentDBsTableView.getSelectionModel().getSelectedItem() != null) {
+                        selectedDBtext.setText(recentDBsTableView.getSelectionModel().getSelectedItem().get("database").toString());
+                        if (mouseEvent.getClickCount() == 2) {
+                            dbSelectionAction(selectedDBtext.getText());
+                        }
+                    }
+                });
+        var leftBox = new CustomVBox(recentDBsText, recentDBsTableView);
+        leftBox.setAlignment(Pos.CENTER);
 
-	}
+        var borderPane = new BorderPane();
+        borderPane.setCenter(rightBox);
+        borderPane.setLeft(leftBox);
+        borderPane.setBottom(bottomBox);
 
-	private void dbSelectionAction(String dbPath) {
-		if (dbPath.equals("No database selected"))
-			return;
+        var sqliteTab = new Tab("Sqlite", borderPane);
+        sqliteTab.setGraphic(JavaFXUtils.createImageView("/icons/sqlite.png", 28.0, 28.0));
+        sqliteTab.setClosable(false);
 
-		if (Files.notExists(Paths.get(dbPath), LinkOption.NOFOLLOW_LINKS)) {
-			DialogFactory.createErrorDialog(new FileNotFoundException("File does not exists"));
-			return;
-		}
-		DB = dbPath;
-		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
+        var mySqlConfigBox = new MySqlConfigBox();
+        mySqlConfigBox.getConnectButton().setOnAction(actionEvent -> {
+            mySqlConfigBox.showLoader(true);
+            dbSelectionAction(mySqlConfigBox);
+        });
+        var mysqlTab = new Tab("MySQL", mySqlConfigBox);
+        mysqlTab.setGraphic(JavaFXUtils.createImageView("/icons/mysql.png", 28.0, 28.0));
+        mysqlTab.setClosable(false);
 
-		var sqliteConnector = new SqliteConnector(dbPath);
-		sqliteConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
-		this.sqlConnector = sqliteConnector;
-		if (System.getProperty("sqlbrowserfx.mode", "advanced").equals("simple")) {
-			SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
-			primaryScene.setRoot(new SqlConsolePane(sqliteConnector));
-			JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
-			primaryStage.setScene(primaryScene);
-		}
-		else
-			createAppView(sqliteConnector);
+        var mariadbConfigBox = new MySqlConfigBox();
+        mariadbConfigBox.getConnectButton().setOnAction(actionEvent -> {
+            mariadbConfigBox.showLoader(true);
+            dbSelectionAction(mariadbConfigBox);
+        });
+        var mariadbTab = new Tab("MariaDB", mariadbConfigBox);
+        mariadbTab.setGraphic(JavaFXUtils.createImageView("/icons/mariadb.png", 28.0, 28.0));
+        mariadbTab.setClosable(false);
 
-	}
+        var postgreSqlConfigBox = new PostgreSqlConfigBox();
+        postgreSqlConfigBox.getConnectButton().setOnAction(actionEvent -> {
+            postgreSqlConfigBox.showLoader(true);
+            dbSelectionAction(postgreSqlConfigBox);
+        });
+        var postgresqlTab = new Tab("PostgreSQL", postgreSqlConfigBox);
+        postgresqlTab.setGraphic(JavaFXUtils.createImageView("/icons/postgre.png", 28.0, 28.0));
+        postgresqlTab.setClosable(false);
 
-	private void dbSelectionAction(DbConfigBox configBox) {
-		configBox.getConnectButton().setDisable(true);
-		DB = configBox.getDatabaseField().getText();
-		restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
-			if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.MYSQL.toString())) {
-				this.sqlConnector = new MysqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
-						configBox.getUserField().getText(), configBox.getPasswordField().getText());
-			}
-			else if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.POSTGRESQL.toString())) {
-				this.sqlConnector = new PostgreSqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
-						configBox.getUserField().getText(), configBox.getPasswordField().getText());
-			}
-			else if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.SQLSERVER.toString())) {
-				this.sqlConnector = new SqlServerConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
-						configBox.getUserField().getText(), configBox.getPasswordField().getText());
-			}
-			
-			Executors.newSingleThreadExecutor().execute(() -> {
-				try {
-					sqlConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
-					sqlConnector.checkConnection();
-				} catch (SQLException e) {
-					LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
-					configBox.showLoader(false);
-					DialogFactory.createErrorDialog(e);
-					configBox.getConnectButton().setDisable(false);
-					return;
-				}
-				
-				configBox.saveToHistory();
-				Platform.runLater(() -> {
-					if (System.getProperty("mode", "normal").equals("simple")) {
-						SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
-						primaryScene.setRoot(new SqlConsolePane(sqlConnector));
-						JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
-						primaryStage.setScene(primaryScene);
-					}
-					else {
-						createAppView(sqlConnector);
-					}
-				});
-			});
-	}
+        var sqlServerConfigBox = new SqlServerConfigBox();
+        sqlServerConfigBox.getConnectButton().setOnAction(actionEvent -> {
+            sqlServerConfigBox.showLoader(true);
+            dbSelectionAction(sqlServerConfigBox);
+        });
+        var sqlServerTab = new Tab("SQL Server", sqlServerConfigBox);
+        sqlServerTab.setGraphic(JavaFXUtils.createImageView("/icons/sqlserver.png", 28.0, 28.0));
+        sqlServerTab.setClosable(false);
 
-	private String determineDBType(SqlConnector sqlConnector) {
-		String dbType = null;
-		if (sqlConnector instanceof SqliteConnector)
-			dbType = "sqlite";
-		else if (sqlConnector instanceof MysqlConnector)
-			dbType = "mysql";
-		else if (sqlConnector instanceof PostgreSqlConnector)
-			dbType = "mysql";
-		return dbType;
-	}
-	
-	private void createAppView(SqlConnector sqlConnector) {
-		
-		SqlBrowserFXAppManager.setDBtype(determineDBType(sqlConnector));
-		SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
-		
-		primaryStage.setMaximized(true);
-		var dockPane = new DockPane();
-		var menuBar = createMenu(dockPane);
+        var dbTabPane = new TabPane(sqliteTab, mysqlTab, postgresqlTab, sqlServerTab);
 
-		dockPane.getStylesheets().add(CSS_THEME);
+        primaryScene = new Scene(dbTabPane, 800, 500);
+        leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
+        leftBox.prefWidthProperty().bind(primaryScene.widthProperty().divide(2));
+        primaryScene.getStylesheets().add(CSS_THEME);
+        primaryScene.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                if (primaryScene.getFocusOwner() instanceof Button
+                        && ((Button) primaryScene.getFocusOwner()).getOnAction() != null) {
+                    ((Button) primaryScene.getFocusOwner()).getOnAction().handle(new ActionEvent());
+                }
+            }
+        });
 
-		var mainSqlPane = new DSqlPane(sqlConnector);
-		SqlBrowserFXAppManager.registerDSqlPane(mainSqlPane);
-		mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
-		mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, DockWeights.asDoubleArrray(0.8f));
-		mainSqlPane.asDockNode().setClosable(false);
-		mainSqlPane.showConsole();
+    }
 
-		var ddbTreePane = new DDBTreePane(DB, sqlConnector);
-		SqlBrowserFXAppManager.registerDDBTreeView(ddbTreePane.getDBTreeView());
-		ddbTreePane.getDBTreeView().asDockNode().setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
-		
-		ddbTreePane.getDBTreeView().addObserver(value -> SqlCodeAreaSyntaxProvider.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(kw -> new Keyword(kw, KeywordType.TABLE)).collect(Collectors.toList())));
-		mainSqlPane.getSqlConsolePane().addObserver(ddbTreePane.getDBTreeView());
-		ddbTreePane.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
-		ddbTreePane.asDockNode().setClosable(false);
-		// fixed size 
-		SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
-		
-		var mainPane = new BorderPane();
-		mainPane.setTop(menuBar);
-		mainPane.setCenter(dockPane);
-		
-		JavaFXUtils.addZoomInOutSupport(mainPane);
-		Nodes.addInputMap(mainPane,
-			InputMap.consume(EventPattern.keyPressed(KeyCode.H, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN), action -> {
-				showSearchInFilesPopup(mainPane);
-			})
-		);
-		
-		Nodes.addInputMap(mainPane,
-			InputMap.consume(EventPattern.keyPressed(KeyCode.R, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN), action -> {
-				showFileSearchPopOver(mainPane);
-			})
-		);
+    private void dbSelectionAction(String dbPath) {
+        if (dbPath.equals("No database selected")) {
+            return;
+        }
 
-		if (primaryScene == null) {
-			primaryScene = new Scene(mainPane);
-			primaryStage.setScene(primaryScene);
-			primaryScene.getStylesheets().add(CSS_THEME);
-		}
+        if (Files.notExists(Paths.get(dbPath), LinkOption.NOFOLLOW_LINKS)) {
+            DialogFactory.createErrorDialog(new FileNotFoundException("File does not exists"));
+            return;
+        }
+        DB = dbPath;
+        restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
 
-		primaryScene.setRoot(mainPane);
-		primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> {
-			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.TRUE);
-			for (SplitPane split : dockPane.getSplitPanes()) {
-			    double[] positions = split.getDividerPositions(); // record the current ratio
-			    Platform.runLater(() -> split.setDividerPositions(positions)); // apply the now former ratio
-			}
-			SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
-		});
-		DialogFactory.setStage(primaryStage);
-	}
+        var sqliteConnector = new SqliteConnector(dbPath);
+        sqliteConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
+        this.sqlConnector = sqliteConnector;
+        if (System.getProperty("sqlbrowserfx.mode", "advanced").equals("simple")) {
+            SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
+            primaryScene.setRoot(new SqlConsolePane(sqliteConnector));
+            JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
+            primaryStage.setScene(primaryScene);
+        } else {
+            createAppView(sqliteConnector);
+        }
 
-	private MenuBar createMenu(DockPane dockPane) {
-		final var menu1 = new Menu("Views", JavaFXUtils.createIcon("/icons/open-view.png"));
-		
-		var sqlPaneViewItem = new MenuItem("Open Table View", JavaFXUtils.createIcon("/icons/database.png"));
-		sqlPaneViewItem.setOnAction(event -> {
-			Platform.runLater(() -> {
-				var newSqlPane = new DSqlPane(sqlConnector);
-				newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + (SqlBrowserFXAppManager.getActiveSqlPanes().size() + 1));
-				newSqlPane.asDockNode().setDockPane(dockPane);
-				newSqlPane.asDockNode().setFloating(true);
-				JavaFXUtils.zoomToCurrentFactor(newSqlPane);
-				SqlBrowserFXAppManager.registerDSqlPane(newSqlPane);
-			});
-		});
-		
-		var terminalViewItem = new MenuItem("Open Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
-		terminalViewItem.setOnAction(event -> {
-			TerminalConfig darkConfig = new TerminalConfig();
-			darkConfig.setBackgroundColor(Color.rgb(16, 16, 16));
-			darkConfig.setForegroundColor(Color.rgb(240, 240, 240));
-			darkConfig.setCursorColor(Color.rgb(255, 0, 0, 0.5));
+    }
 
-			TerminalBuilder terminalBuilder = new TerminalBuilder(darkConfig);
-			TerminalTab terminal = terminalBuilder.newTerminal();
-			TabPane tabPane = new TabPane();
-			tabPane.getTabs().add(terminal);
-			
-			JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, tabPane,
-					"Terminal", JavaFXUtils.createIcon("/icons/console.png")));
-		});
-		
-		var tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.createIcon("/icons/details.png"));
-		tablesTreeViewItem.setOnAction(event -> {
-			var treeView = new DDBTreePane(DB, sqlConnector);
-			var dockNode = new DockNode(treeView, "Structure", JavaFXUtils.createIcon("/icons/details.png"));
-			dockNode.dock(dockPane, DockPos.RIGHT);	
-		});
-		
-		var filesTreeViewItem = new MenuItem("Open Files Tree View", JavaFXUtils.createIcon("/icons/folder.png"));
-		filesTreeViewItem.setOnAction(event -> {
-			var chooser = new DirectoryChooser();
-			var selectedDir = chooser.showDialog(null);
-			
-			if (selectedDir == null) return;
-			
-			var filesTreeView = new FilesTreeView(selectedDir.getAbsolutePath());
+    private void dbSelectionAction(DbConfigBox configBox) {
+        configBox.getConnectButton().setDisable(true);
+        DB = configBox.getDatabaseField().getText();
+        restServiceConfig = new RESTfulServiceConfig("localhost", 8080, DB);
+        if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.MYSQL.toString())) {
+            this.sqlConnector = new MysqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
+                    configBox.getUserField().getText(), configBox.getPasswordField().getText());
+        } else if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.POSTGRESQL.toString())) {
+            this.sqlConnector = new PostgreSqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
+                    configBox.getUserField().getText(), configBox.getPasswordField().getText());
+        } else if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.SQLSERVER.toString())) {
+            this.sqlConnector = new SqlServerConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
+                    configBox.getUserField().getText(), configBox.getPasswordField().getText());
+        }
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            try {
+                sqlConnector.setAutoCommitModeEnabled(AUTO_COMMIT_IS_ENABLED);
+                sqlConnector.checkConnection();
+            } catch (SQLException e) {
+                LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
+                configBox.showLoader(false);
+                DialogFactory.createErrorDialog(e);
+                configBox.getConnectButton().setDisable(false);
+                return;
+            }
+
+            configBox.saveToHistory();
+            Platform.runLater(() -> {
+                if (System.getProperty("mode", "normal").equals("simple")) {
+                    SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
+                    primaryScene.setRoot(new SqlConsolePane(sqlConnector));
+                    JavaFXUtils.addZoomInOutSupport(primaryScene.getRoot());
+                    primaryStage.setScene(primaryScene);
+                } else {
+                    createAppView(sqlConnector);
+                }
+            });
+        });
+    }
+
+    private String determineDBType(SqlConnector sqlConnector) {
+        String dbType = null;
+        if (sqlConnector instanceof SqliteConnector) {
+            dbType = "sqlite";
+        } else if (sqlConnector instanceof MysqlConnector) {
+            dbType = "mysql";
+        } else if (sqlConnector instanceof PostgreSqlConnector) {
+            dbType = "mysql";
+        }
+        return dbType;
+    }
+
+    private void createAppView(SqlConnector sqlConnector) {
+
+        SqlBrowserFXAppManager.setDBtype(determineDBType(sqlConnector));
+        SqlCodeAreaSyntaxProvider.init(SqlBrowserFXAppManager.getDBtype());
+
+        primaryStage.setMaximized(true);
+        var dockPane = new DockPane();
+        var menuBar = createMenu(dockPane);
+
+        dockPane.getStylesheets().add(CSS_THEME);
+
+        var mainSqlPane = new DSqlPane(sqlConnector);
+        SqlBrowserFXAppManager.registerDSqlPane(mainSqlPane);
+        mainSqlPane.asDockNode().setTitle(mainSqlPane.asDockNode().getTitle() + " " + SqlBrowserFXAppManager.getActiveSqlPanes().size());
+        mainSqlPane.asDockNode().dock(dockPane, DockPos.CENTER, DockWeights.asDoubleArrray(0.8f));
+        mainSqlPane.asDockNode().setClosable(false);
+        mainSqlPane.showConsole();
+
+        var ddbTreePane = new DDBTreePane(DB, sqlConnector);
+        SqlBrowserFXAppManager.registerDDBTreeView(ddbTreePane.getDBTreeView());
+        ddbTreePane.getDBTreeView().asDockNode().setOnClose(() -> SqlBrowserFXAppManager.unregisterDDBTreeView(ddbTreePane.getDBTreeView()));
+
+        ddbTreePane.getDBTreeView().addObserver(value -> SqlCodeAreaSyntaxProvider.bind(ddbTreePane.getDBTreeView().getContentNames().stream().map(kw -> new Keyword(kw, KeywordType.TABLE)).collect(Collectors.toList())));
+        mainSqlPane.getSqlConsolePane().addObserver(ddbTreePane.getDBTreeView());
+        ddbTreePane.asDockNode().dock(dockPane, DockPos.LEFT, DockWeights.asDoubleArrray(0.2f));
+        ddbTreePane.asDockNode().setClosable(false);
+        // fixed size 
+        SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
+
+        var mainPane = new BorderPane();
+        mainPane.setTop(menuBar);
+        mainPane.setCenter(dockPane);
+
+        JavaFXUtils.addZoomInOutSupport(mainPane);
+        Nodes.addInputMap(mainPane,
+                InputMap.consume(EventPattern.keyPressed(KeyCode.H, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN), action -> {
+                    showSearchInFilesPopup(mainPane);
+                })
+        );
+
+        Nodes.addInputMap(mainPane,
+                InputMap.consume(EventPattern.keyPressed(KeyCode.R, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN), action -> {
+                    showFileSearchPopOver(mainPane);
+                })
+        );
+
+        if (primaryScene == null) {
+            primaryScene = new Scene(mainPane);
+            primaryStage.setScene(primaryScene);
+            primaryScene.getStylesheets().add(CSS_THEME);
+        }
+
+        primaryScene.setRoot(mainPane);
+        primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> {
+            SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.TRUE);
+            for (SplitPane split : dockPane.getSplitPanes()) {
+                double[] positions = split.getDividerPositions(); // record the current ratio
+                Platform.runLater(() -> split.setDividerPositions(positions)); // apply the now former ratio
+            }
+            SplitPane.setResizableWithParent(ddbTreePane.asDockNode(), Boolean.FALSE);
+        });
+        DialogFactory.setStage(primaryStage);
+    }
+
+    private MenuBar createMenu(DockPane dockPane) {
+        final var menu1 = new Menu("Views", JavaFXUtils.createIcon("/icons/open-view.png"));
+
+        var sqlPaneViewItem = new MenuItem("Open Table View", JavaFXUtils.createIcon("/icons/database.png"));
+        sqlPaneViewItem.setOnAction(event -> {
+            Platform.runLater(() -> {
+                var newSqlPane = new DSqlPane(sqlConnector);
+                newSqlPane.asDockNode().setTitle(newSqlPane.asDockNode().getTitle() + " " + (SqlBrowserFXAppManager.getActiveSqlPanes().size() + 1));
+                newSqlPane.asDockNode().setDockPane(dockPane);
+                newSqlPane.asDockNode().setFloating(true);
+                JavaFXUtils.zoomToCurrentFactor(newSqlPane);
+                SqlBrowserFXAppManager.registerDSqlPane(newSqlPane);
+            });
+        });
+
+        var terminalViewItem = new MenuItem("Open Terminal View", JavaFXUtils.createIcon("/icons/console.png"));
+        terminalViewItem.setOnAction(event -> {
+            TerminalConfig darkConfig = new TerminalConfig();
+            darkConfig.setBackgroundColor(Color.rgb(16, 16, 16));
+            darkConfig.setForegroundColor(Color.rgb(240, 240, 240));
+            darkConfig.setCursorColor(Color.rgb(255, 0, 0, 0.5));
+
+            TerminalBuilder terminalBuilder = new TerminalBuilder(darkConfig);
+            TerminalTab terminal = terminalBuilder.newTerminal();
+            TabPane tabPane = new TabPane();
+            tabPane.getTabs().add(terminal);
+
+            JavaFXUtils.zoomToCurrentFactor(new DockNode(dockPane, tabPane,
+                    "Terminal", JavaFXUtils.createIcon("/icons/console.png")));
+        });
+
+        var tablesTreeViewItem = new MenuItem("Open structure tree view", JavaFXUtils.createIcon("/icons/details.png"));
+        tablesTreeViewItem.setOnAction(event -> {
+            var treeView = new DDBTreePane(DB, sqlConnector);
+            var dockNode = new DockNode(treeView, "Structure", JavaFXUtils.createIcon("/icons/details.png"));
+            dockNode.dock(dockPane, DockPos.RIGHT);
+        });
+
+        var filesTreeViewItem = new MenuItem("Open Files Tree View", JavaFXUtils.createIcon("/icons/folder.png"));
+        filesTreeViewItem.setOnAction(event -> {
+            var chooser = new DirectoryChooser();
+            var selectedDir = chooser.showDialog(null);
+
+            if (selectedDir == null) {
+                return;
+            }
+
+            var filesTreeView = new FilesTreeView(selectedDir.getAbsolutePath());
             JavaFXUtils.zoomToCurrentFactor(
                     new DockNode(dockPane, filesTreeView, "File Explorer : " + selectedDir.getName(), JavaFXUtils.createIcon("/icons/folder.png")));
         });
-		
-		var filesTabViewItem = new MenuItem("Open Files Tabs View", JavaFXUtils.createIcon("/icons/code-file.png"));
-		filesTabViewItem.setOnAction(event -> {
-			var tabs =  new FilesTabPane();
-			SqlBrowserFXAppManager.registerFilesTabPane(tabs);
+
+        var filesTabViewItem = new MenuItem("Open Files Tabs View", JavaFXUtils.createIcon("/icons/code-file.png"));
+        filesTabViewItem.setOnAction(event -> {
+            var tabs = new FilesTabPane();
+            SqlBrowserFXAppManager.registerFilesTabPane(tabs);
             JavaFXUtils.zoomToCurrentFactor(
                     new DockNode(dockPane, tabs, "Files", JavaFXUtils.createIcon("/icons/code-file.png")));
         });
-		
-		var logViewItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
-		logViewItem.setOnAction(actionEvent -> JavaFXUtils.zoomToCurrentFactor(new DLogConsolePane(dockPane).asDockNode()));
 
-		var dbDiagramViewItem = new MenuItem("Open DB Diagram View", JavaFXUtils.createIcon("/icons/diagram.png"));
-		dbDiagramViewItem.setOnAction(event -> {
-			var dbDiagramPane = new DDbDiagramPane(sqlConnector);
-			dbDiagramPane.asDockNode().setDockPane(dockPane);
-			dbDiagramPane.asDockNode().setFloating(true);
-		});
+        var logViewItem = new MenuItem("Open Log View", JavaFXUtils.createIcon("/icons/monitor.png"));
+        logViewItem.setOnAction(actionEvent -> JavaFXUtils.zoomToCurrentFactor(new DLogConsolePane(dockPane).asDockNode()));
 
-		var aiChatItem = new MenuItem(
-		        "Open AI Chat",
-		        JavaFXUtils.createIcon("/icons/suggestion.png")
-		);
-		aiChatItem.setDisable(PropertiesLoader.getProperty("ollama.url", String.class) == null);
+        var dbDiagramViewItem = new MenuItem("Open DB Diagram View", JavaFXUtils.createIcon("/icons/diagram.png"));
+        dbDiagramViewItem.setOnAction(event -> {
+            var dbDiagramPane = new DDbDiagramPane(sqlConnector);
+            dbDiagramPane.asDockNode().setDockPane(dockPane);
+            dbDiagramPane.asDockNode().setFloating(true);
+        });
 
-		aiChatItem.setOnAction(event -> {
-		    var chatPane = new OllamaChatPane();
-		    var dockNode = new DockNode(dockPane, chatPane, "AI Chat", JavaFXUtils.createIcon("/icons/suggestion.png"));
-			SqlBrowserFXAppManager.registerOllamaPane(chatPane);
+        var aiChatItem = new MenuItem(
+                "Open AI Chat",
+                JavaFXUtils.createIcon("/icons/suggestion.png")
+        );
+        aiChatItem.setDisable(PropertiesLoader.getProperty("ollama.url", String.class) == null);
+
+        aiChatItem.setOnAction(event -> {
+            var chatPane = new OllamaChatPane();
+            var dockNode = new DockNode(dockPane, chatPane, "AI Chat", JavaFXUtils.createIcon("/icons/suggestion.png"));
+            SqlBrowserFXAppManager.registerOllamaPane(chatPane);
 //		            JavaFXUtils.createIcon("/icons/ai.png"));
-		    dockNode.setOnClose(() -> SqlBrowserFXAppManager.unregisterOllamaPane());
-		});
-		
-		menu1.getItems().addAll(
-				sqlPaneViewItem, 
-				dbDiagramViewItem, 
-				new SeparatorMenuItem(),
-				filesTreeViewItem,
-				filesTabViewItem,
-				aiChatItem,
-				new SeparatorMenuItem(),
-				terminalViewItem,
-				logViewItem);
+            dockNode.setOnClose(() -> SqlBrowserFXAppManager.unregisterOllamaPane());
+        });
 
-		final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
-		var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
-		restServiceStartItem.setOnAction(actionEvent -> {
-			if (!restServiceStarted) {
-				try {
-					RESTfulService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
-					RESTfulService.init(sqlConnector);
-					RESTfulService.start();
-					restServiceStartItem.setGraphic(JavaFXUtils.createIcon("/icons/stop.png"));
-					restServiceStartItem.setText("Stop Restful Service");
-					restServiceStarted = true;
-					DialogFactory.createNotification("Restful Service", "Restful Service started !");
-				} catch(Exception e) {
-					DialogFactory.createErrorNotification(e);
-				}
-			} else {
-				RESTfulService.stop();
-				restServiceStarted = false;
-				DialogFactory.createNotification("Restful Service", "Restful Service stopped !");
-				restServiceStartItem.setGraphic(JavaFXUtils.createIcon("/icons/play.png"));
-				restServiceStartItem.setText("Start Restful Service");
-			}
-		});
+        menu1.getItems().addAll(
+                sqlPaneViewItem,
+                dbDiagramViewItem,
+                new SeparatorMenuItem(),
+                filesTreeViewItem,
+                filesTabViewItem,
+                aiChatItem,
+                new SeparatorMenuItem(),
+                terminalViewItem,
+                logViewItem);
 
-		var restServiceConfigItem = new MenuItem("Configure Restful Service", JavaFXUtils.createIcon("/icons/settings.png"));
-		restServiceConfigItem.setOnAction(actionEvent -> createRestServiceConfigBox());
-		
-		menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
+        final var menu2 = new Menu("Restful Service", JavaFXUtils.createIcon("/icons/web.png"));
+        var restServiceStartItem = new MenuItem("Start Restful Service", JavaFXUtils.createIcon("/icons/play.png"));
+        restServiceStartItem.setOnAction(actionEvent -> {
+            if (!restServiceStarted) {
+                try {
+                    RESTfulService.configure(restServiceConfig.getIp(), restServiceConfig.getPort());
+                    RESTfulService.init(sqlConnector);
+                    RESTfulService.start();
+                    restServiceStartItem.setGraphic(JavaFXUtils.createIcon("/icons/stop.png"));
+                    restServiceStartItem.setText("Stop Restful Service");
+                    restServiceStarted = true;
+                    DialogFactory.createNotification("Restful Service", "Restful Service started !");
+                } catch (Exception e) {
+                    DialogFactory.createErrorNotification(e);
+                }
+            } else {
+                RESTfulService.stop();
+                restServiceStarted = false;
+                DialogFactory.createNotification("Restful Service", "Restful Service stopped !");
+                restServiceStartItem.setGraphic(JavaFXUtils.createIcon("/icons/play.png"));
+                restServiceStartItem.setText("Start Restful Service");
+            }
+        });
 
-		var menu3 = new Menu();
-		var customGraphic = new CustomHBox(JavaFXUtils.createIcon("/icons/settings.png"), new Label("Internal DB"));
-		customGraphic.setSpacing(5);
-		menu3.setGraphic(customGraphic);
-		menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
-			if (!isInternalDBShowing) {
-				var sqlPane = new SqlPane(SqlBrowserFXAppManager.getConfigSqlConnector());
-				sqlPane.createSqlTableTabWithDataUnsafe("connections_history");
-				sqlPane.createSqlTableTabWithDataUnsafe("saved_queries");
-				isInternalDBShowing  = true;
-				
-				var dbTreeView = new DBTreeView(SqlBrowserFXAppManager.INTERNAL_DB_PATH, SqlBrowserFXAppManager.getConfigSqlConnector());
-				var openTable = new MenuItem("Open");
-				openTable.setOnAction(event -> {
-					var table = dbTreeView.getSelectionModel().getSelectedItem().getValue();
-					sqlPane.createSqlTableTabWithData(table);
+        var restServiceConfigItem = new MenuItem("Configure Restful Service", JavaFXUtils.createIcon("/icons/settings.png"));
+        restServiceConfigItem.setOnAction(actionEvent -> createRestServiceConfigBox());
 
-				});
-				dbTreeView.setContextMenu(new ContextMenu(openTable));
-				var splitPane = new SplitPane(dbTreeView, sqlPane);
-				splitPane.setDividerPositions(0.25f, 0.75f);
-				var dockNode = new DockNode(dockPane, splitPane, "SqlBrowserFX Internal Database", JavaFXUtils.createIcon("/icons/table.png"));
-				
-				dockNode.setOnClose(() -> isInternalDBShowing = false);
-			}
-		});
-		
-		var menu4 = new Menu("Transactions", JavaFXUtils.createIcon("/icons/transaction.png"));
-		var commitAllItem = new MenuItem("Commit all", JavaFXUtils.createIcon("/icons/check.png"));
-		commitAllItem.setOnAction(actionEvent -> sqlConnector.commitAll());
-		
-		var rollbackAllItem = new MenuItem("Rollback all", JavaFXUtils.createIcon("/icons/refresh.png"));
-		rollbackAllItem.setOnAction(actionEvent -> sqlConnector.rollbackAll());
-		
-		menu4.getItems().addAll(commitAllItem, rollbackAllItem);
-		if (sqlConnector.isAutoCommitModeEnabled())
-			menu4.setDisable(true);
-		
-		var menu5 = new Menu();
-		customGraphic = new CustomHBox(JavaFXUtils.createIcon("/icons/help.png"), new Label("Help"));
-		customGraphic.setSpacing(5);
-		menu5.setGraphic(customGraphic);
-		menu5.getGraphic().setOnMouseClicked(mouseEvent -> {
-			try {
-				new DockNode(dockPane, new HelpTabPane(), "Help", null);
-			} catch (Exception e) {
-				DialogFactory.createErrorDialog(e);
-			}
-		});
+        menu2.getItems().addAll(restServiceStartItem, restServiceConfigItem);
 
-		var menuBar = new MenuBar();
-		var queriesMenu = new QueriesMenu();
-		menuBar.getMenus().addAll(menu1, menu2, queriesMenu, menu4, menu3, menu5);
+        var menu3 = new Menu();
+        var customGraphic = new CustomHBox(JavaFXUtils.createIcon("/icons/settings.png"), new Label("Internal DB"));
+        customGraphic.setSpacing(5);
+        menu3.setGraphic(customGraphic);
+        menu3.getGraphic().setOnMouseClicked(mouseEvent -> {
+            if (!isInternalDBShowing) {
+                var sqlPane = new SqlPane(SqlBrowserFXAppManager.getConfigSqlConnector());
+                sqlPane.createSqlTableTabWithDataUnsafe("connections_history");
+                sqlPane.createSqlTableTabWithDataUnsafe("saved_queries");
+                isInternalDBShowing = true;
 
-		return menuBar;
-	}
+                var dbTreeView = new DBTreeView(SqlBrowserFXAppManager.INTERNAL_DB_PATH, SqlBrowserFXAppManager.getConfigSqlConnector());
+                var openTable = new MenuItem("Open");
+                openTable.setOnAction(event -> {
+                    var table = dbTreeView.getSelectionModel().getSelectedItem().getValue();
+                    sqlPane.createSqlTableTabWithData(table);
 
-	private void createRestServiceConfigBox() {
-		if (isRestConfigurationShowing)
-			return;
-		
-		var bottleLogo = JavaFXUtils.createImageView("/icons/javalin-logo.png", 0.0, 200.0);
-		var ipLabel = new Label("Ip address");
-		var ipField = new TextField(restServiceConfig.getIp());
-		var portLabel = new Label("Port");
-		var portField = new TextField(restServiceConfig.getPort().toString());
-		var saveButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
+                });
+                dbTreeView.setContextMenu(new ContextMenu(openTable));
+                var splitPane = new SplitPane(dbTreeView, sqlPane);
+                splitPane.setDividerPositions(0.25f, 0.75f);
+                var dockNode = new DockNode(dockPane, splitPane, "SqlBrowserFX Internal Database", JavaFXUtils.createIcon("/icons/table.png"));
 
-		var vBox = new CustomVBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
+                dockNode.setOnClose(() -> isInternalDBShowing = false);
+            }
+        });
 
-		var stage = new Stage();
-		var scene = new Scene(vBox);
-		for (String styleSheet : primaryScene.getStylesheets())
-			scene.getStylesheets().add(styleSheet);
-		stage.setTitle("Rest service configuration");
-		stage.setScene(scene);
-		stage.show();
-		
-		saveButton.setOnAction(actionEvent -> {
-			restServiceConfig.setIp(ipField.getText());
-			restServiceConfig.setPort(Integer.parseInt(portField.getText()));
-			isRestConfigurationShowing  = false;
-			stage.close();
-		});
-		isRestConfigurationShowing = true;
-		stage.setOnCloseRequest(windowEvent -> isRestConfigurationShowing  = false);
-	}
-	
-	private void saveConnectionToHistory() {
-		SqlBrowserFXAppManager.getConfigSqlConnector().executeAsync(() -> {
-			try {
-				var query = "insert into connections_history (database, database_type) values (?, ?)";
-				SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
-						Arrays.asList(DB, "sqlite"));
-			} catch (SQLException e) {
-				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
-			}
-		});
-	}
-	
-	private void showSearchInFilesPopup(Node node) {
-		if (searchInFilesPopOver != null && searchInFilesPopOver.isShowing()) {
-			return;
-		}
+        var menu4 = new Menu("Transactions", JavaFXUtils.createIcon("/icons/transaction.png"));
+        var commitAllItem = new MenuItem("Commit all", JavaFXUtils.createIcon("/icons/check.png"));
+        commitAllItem.setOnAction(actionEvent -> sqlConnector.commitAll());
 
-		if (searchInFilesPopOver == null) {
-			searchInFilesPopOver = new SearchInFilesPopOver();
-		}
-		
-		var scene = node.getScene();
-		var centerX = scene.getWindow().getX() + scene.getX() + scene.getWidth() / 2;
-		var centerY = scene.getWindow().getY() + scene.getHeight() / 2;
-		
-		// Show off-screen first
-		searchInFilesPopOver.show(node, -10000, -10000);
+        var rollbackAllItem = new MenuItem("Rollback all", JavaFXUtils.createIcon("/icons/refresh.png"));
+        rollbackAllItem.setOnAction(actionEvent -> sqlConnector.rollbackAll());
 
-		Platform.runLater(() -> {
-			double popOverWidth = searchInFilesPopOver.getWidth();
-			double popOverHeight = searchInFilesPopOver.getHeight();
-			double adjustedX = centerX - popOverWidth / 2;
-			double adjustedY = centerY - popOverHeight / 2;
-			searchInFilesPopOver.setX(adjustedX);
-			searchInFilesPopOver.setY(adjustedY);
-		});
-	}
-    
-	private void showFileSearchPopOver(Node node) {
-		if (fileSearchpopOver != null && fileSearchpopOver.isShowing()) {
-			return;
-		}
+        menu4.getItems().addAll(commitAllItem, rollbackAllItem);
+        if (sqlConnector.isAutoCommitModeEnabled()) {
+            menu4.setDisable(true);
+        }
 
-		if (fileSearchpopOver == null) {
-			fileSearchpopOver = new FileSearchPopOver(file -> {
-				var filesTabsPane = SqlBrowserFXAppManager.getFirstActiveFilesTabPane();
-				if (filesTabsPane != null) {
-					filesTabsPane.openNewFileTab(file);
-				}
-				var sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
-				if (sqlConsolePane != null) {
-					sqlConsolePane.openNewFileTab(file);
-				}
-			});
-		}
-		
-		var scene = node.getScene();
-		var centerX = scene.getWindow().getX() + scene.getX() + scene.getWidth() / 2;
-		var centerY = scene.getWindow().getY() + scene.getHeight() / 2;
+        var menu5 = new Menu();
+        customGraphic = new CustomHBox(JavaFXUtils.createIcon("/icons/help.png"), new Label("Help"));
+        customGraphic.setSpacing(5);
+        menu5.setGraphic(customGraphic);
+        menu5.getGraphic().setOnMouseClicked(mouseEvent -> {
+            try {
+                new DockNode(dockPane, new HelpTabPane(), "Help", null);
+            } catch (Exception e) {
+                DialogFactory.createErrorDialog(e);
+            }
+        });
 
-		// Show off-screen first
-		fileSearchpopOver.show(node, -10000, -10000);
+        var menuBar = new MenuBar();
+        var queriesMenu = new QueriesMenu();
+        menuBar.getMenus().addAll(menu1, menu2, queriesMenu, menu4, menu3, menu5);
 
-		Platform.runLater(() -> {
-			double popOverWidth = fileSearchpopOver.getWidth();
-			double popOverHeight = fileSearchpopOver.getHeight();
-			double adjustedX = centerX - popOverWidth / 2;
-			double adjustedY = centerY - popOverHeight / 2;
-			fileSearchpopOver.setX(adjustedX);
-			fileSearchpopOver.setY(adjustedY);
-		});
-	}
+        return menuBar;
+    }
+
+    private void createRestServiceConfigBox() {
+        if (isRestConfigurationShowing) {
+            return;
+        }
+
+        var bottleLogo = JavaFXUtils.createImageView("/icons/javalin-logo.png", 0.0, 200.0);
+        var ipLabel = new Label("Ip address");
+        var ipField = new TextField(restServiceConfig.getIp());
+        var portLabel = new Label("Port");
+        var portField = new TextField(restServiceConfig.getPort().toString());
+        var saveButton = new Button("Save", JavaFXUtils.createIcon("/icons/check.png"));
+
+        var vBox = new CustomVBox(bottleLogo, ipLabel, ipField, portLabel, portField, saveButton);
+
+        var stage = new Stage();
+        var scene = new Scene(vBox);
+        for (String styleSheet : primaryScene.getStylesheets()) {
+            scene.getStylesheets().add(styleSheet);
+        }
+        stage.setTitle("Rest service configuration");
+        stage.setScene(scene);
+        stage.show();
+
+        saveButton.setOnAction(actionEvent -> {
+            restServiceConfig.setIp(ipField.getText());
+            restServiceConfig.setPort(Integer.parseInt(portField.getText()));
+            isRestConfigurationShowing = false;
+            stage.close();
+        });
+        isRestConfigurationShowing = true;
+        stage.setOnCloseRequest(windowEvent -> isRestConfigurationShowing = false);
+    }
+
+    private void saveConnectionToHistory() {
+        SqlBrowserFXAppManager.getConfigSqlConnector().executeAsync(() -> {
+            try {
+                var query = "insert into connections_history (database, database_type) values (?, ?)";
+                SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdate(query,
+                        Arrays.asList(DB, "sqlite"));
+            } catch (SQLException e) {
+                LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
+            }
+        });
+    }
+
+    private void showSearchInFilesPopup(Node node) {
+        if (searchInFilesPopOver != null && searchInFilesPopOver.isShowing()) {
+            return;
+        }
+
+        if (searchInFilesPopOver == null) {
+            searchInFilesPopOver = new SearchInFilesPopOver();
+        }
+
+        var scene = node.getScene();
+        var centerX = scene.getWindow().getX() + scene.getX() + scene.getWidth() / 2;
+        var centerY = scene.getWindow().getY() + scene.getHeight() / 2;
+
+        // Show off-screen first
+        searchInFilesPopOver.show(node, -10000, -10000);
+
+        Platform.runLater(() -> {
+            double popOverWidth = searchInFilesPopOver.getWidth();
+            double popOverHeight = searchInFilesPopOver.getHeight();
+            double adjustedX = centerX - popOverWidth / 2;
+            double adjustedY = centerY - popOverHeight / 2;
+            searchInFilesPopOver.setX(adjustedX);
+            searchInFilesPopOver.setY(adjustedY);
+        });
+    }
+
+    private void showFileSearchPopOver(Node node) {
+        if (fileSearchpopOver != null && fileSearchpopOver.isShowing()) {
+            return;
+        }
+
+        if (fileSearchpopOver == null) {
+            fileSearchpopOver = new FileSearchPopOver(file -> {
+                var filesTabsPane = SqlBrowserFXAppManager.getFirstActiveFilesTabPane();
+                if (filesTabsPane != null) {
+                    filesTabsPane.openNewFileTab(file);
+                }
+                var sqlConsolePane = SqlBrowserFXAppManager.getFirstActiveDSqlConsolePane();
+                if (sqlConsolePane != null) {
+                    sqlConsolePane.openNewFileTab(file);
+                }
+            });
+        }
+
+        var scene = node.getScene();
+        var centerX = scene.getWindow().getX() + scene.getX() + scene.getWidth() / 2;
+        var centerY = scene.getWindow().getY() + scene.getHeight() / 2;
+
+        // Show off-screen first
+        fileSearchpopOver.show(node, -10000, -10000);
+
+        Platform.runLater(() -> {
+            double popOverWidth = fileSearchpopOver.getWidth();
+            double popOverHeight = fileSearchpopOver.getHeight();
+            double adjustedX = centerX - popOverWidth / 2;
+            double adjustedY = centerY - popOverHeight / 2;
+            fileSearchpopOver.setX(adjustedX);
+            fileSearchpopOver.setY(adjustedY);
+        });
+    }
 
 }

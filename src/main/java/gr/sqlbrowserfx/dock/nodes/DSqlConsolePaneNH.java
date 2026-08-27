@@ -6,15 +6,15 @@ import javafx.scene.layout.FlowPane;
 
 public class DSqlConsolePaneNH extends DSqlConsolePane {
 
-	public DSqlConsolePaneNH(SqlConnector sqlConnector, SqlPane sqlPane) {
-		super(sqlConnector, sqlPane);
-	}
-	
-	@Override
-	public FlowPane createToolbar() {
-		FlowPane toolbar = super.createToolbar();
-		toolbar.getChildren().remove(historyButton);
-		return toolbar;
-	}
+    public DSqlConsolePaneNH(SqlConnector sqlConnector, SqlPane sqlPane) {
+        super(sqlConnector, sqlPane);
+    }
+
+    @Override
+    public FlowPane createToolbar() {
+        FlowPane toolbar = super.createToolbar();
+        toolbar.getChildren().remove(historyButton);
+        return toolbar;
+    }
 
 }

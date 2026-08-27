@@ -8,16 +8,16 @@ import javafx.stage.Stage;
 
 public class SqlPaneTestGui extends Application {
 
-	@Override
-	public void start(Stage primaryStage) throws Exception {
-		Scene scene = new Scene(new SqlPane(new SqliteConnector("/home/paris/sqlite-dbs/chinook.db")), 800, 600);
-		scene.getStylesheets().add("/styles/flat-dark.css");
-		primaryStage.setScene(scene);
-		primaryStage.show();
-	}
-	
-	public static void main(String[] args) {
-		launch(args);
-	}
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        Scene scene = new Scene(new SqlPane(new SqliteConnector("/home/paris/sqlite-dbs/chinook.db")), 800, 600);
+        scene.getStylesheets().add("/styles/flat-dark.css");
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 
 }

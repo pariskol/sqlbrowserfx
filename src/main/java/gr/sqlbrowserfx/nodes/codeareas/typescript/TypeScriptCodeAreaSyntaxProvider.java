@@ -13,51 +13,42 @@ import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 
 public class TypeScriptCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<String> {
 
+    private static final String[] FUNCTIONS = new String[]{};
+    private static final String[] KEYWORDS = new String[]{
+        // JavaScript keywords
+        "break", "case", "catch", "class", "const",
+        "continue", "debugger", "default", "delete", "do",
+        "else", "export", "extends", "finally", "for",
+        "function", "if", "import", "in", "instanceof",
+        "new", "return", "super", "switch", "this",
+        "throw", "try", "typeof", "var", "void",
+        "while", "with", "yield",
+        // Strict mode / future reserved (JS)
+        "enum", "implements", "interface", "let",
+        "package", "private", "protected", "public",
+        "static", "await", "async",
+        // Literals
+        "true", "false", "null",
+        // TypeScript keywords
+        "any", "boolean", "constructor", "declare",
+        "get", "module", "namespace", "number",
+        "readonly", "require", "set", "string",
+        "symbol", "type", "from", "of",
+        // TypeScript type system / modifiers
+        "abstract", "as", "asserts", "bigint",
+        "infer", "is", "keyof", "never",
+        "object", "override", "readonly",
+        "unknown", "unique", "using",
+        // TS access & class modifiers
+        "protected", "private", "public",
+        // TS utility / contextual
+        "global", "implements", "interface",
+        // JSX / TSX (often included)
+        "jsx", "intrinsic"
+    };
 
-	private static final String[] FUNCTIONS = new String[] {};
-	private static final String[] KEYWORDS = new String[] {
-		    // JavaScript keywords
-		    "break", "case", "catch", "class", "const",
-		    "continue", "debugger", "default", "delete", "do",
-		    "else", "export", "extends", "finally", "for",
-		    "function", "if", "import", "in", "instanceof",
-		    "new", "return", "super", "switch", "this",
-		    "throw", "try", "typeof", "var", "void",
-		    "while", "with", "yield",
-
-		    // Strict mode / future reserved (JS)
-		    "enum", "implements", "interface", "let",
-		    "package", "private", "protected", "public",
-		    "static", "await", "async",
-
-		    // Literals
-		    "true", "false", "null",
-
-		    // TypeScript keywords
-		    "any", "boolean", "constructor", "declare",
-		    "get", "module", "namespace", "number",
-		    "readonly", "require", "set", "string",
-		    "symbol", "type", "from", "of",
-
-		    // TypeScript type system / modifiers
-		    "abstract", "as", "asserts", "bigint",
-		    "infer", "is", "keyof", "never",
-		    "object", "override", "readonly",
-		    "unknown", "unique", "using",
-
-		    // TS access & class modifiers
-		    "protected", "private", "public",
-
-		    // TS utility / contextual
-		    "global", "implements", "interface",
-
-		    // JSX / TSX (often included)
-		    "jsx", "intrinsic"
-		};
-
-	
-	private static final Set<Keyword> KEYWORDS_lIST = new LinkedHashSet<>(
-			Arrays.asList(KEYWORDS).stream().map(word -> new Keyword(word, KeywordType.KEYWORD)).toList());
+    private static final Set<Keyword> KEYWORDS_lIST = new LinkedHashSet<>(
+            Arrays.asList(KEYWORDS).stream().map(word -> new Keyword(word, KeywordType.KEYWORD)).toList());
 
     private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
     private static final String ANNOTATION_PATTERN = "@.[a-zA-Z0-9]+";
@@ -66,62 +57,61 @@ public class TypeScriptCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<
     private static final String BRACKET_PATTERN = "\\[|\\]";
     private static final String SEMICOLON_PATTERN = "\\;";
     private static final String STRING_PATTERN = "\"([^\"\\\\]|\\\\.)*\"";
-	private static final String STRING_PATTERN_2 = "'([^'\\\\]|\\\\.)*'";
-	private static final String STRING_PATTERN_3 = "(?s)`.*?`";
-    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/"   // for whole text processing (text blocks)
-    		                          + "|" + "/\\*[^\\v]*" + "|" + "^\\h*\\*([^\\v]*|/)";  // for visible paragraph processing (line by line)
+    private static final String STRING_PATTERN_2 = "'([^'\\\\]|\\\\.)*'";
+    private static final String STRING_PATTERN_3 = "(?s)`.*?`";
+    private static final String COMMENT_PATTERN = "//[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/" // for whole text processing (text blocks)
+            + "|" + "/\\*[^\\v]*" + "|" + "^\\h*\\*([^\\v]*|/)";  // for visible paragraph processing (line by line)
     private static final String FUNCTIONS_PATTERN = "\\b(" + String.join("|", FUNCTIONS) + ")\\b";
-	private static final String METHOD_PATTERN = "\\.[a-zA-Z_][a-zA-Z0-9_]*";
-	// Match <tag ...> but only outside quotes
-	private static final String DIAMOND_PATTERN = "</?|>";
-	
-	private static final Pattern PATTERN = Pattern.compile(
-	        "(?<COMMENT>" + COMMENT_PATTERN + ")"
-	      + "|(?<STRING>" + STRING_PATTERN + ")"
-	      + "|(?<STRING2>" + STRING_PATTERN_2 + ")"
-	      + "|(?<STRING3>" + STRING_PATTERN_3 + ")"
-	      + "|(?<KEYWORD>" + KEYWORD_PATTERN + ")"
-	      + "|(?<METHOD>" + METHOD_PATTERN + ")"
-	      + "|(?<ANNOTATION>" + ANNOTATION_PATTERN + ")"
-	      + "|(?<PAREN>" + PAREN_PATTERN + ")"
-	      + "|(?<BRACE>" + BRACE_PATTERN + ")"
-	      + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
-	      + "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")"
-	      + "|(?<DIAMOND>" + DIAMOND_PATTERN + ")"
-	      + "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")"
-	);
-    
-	public static void init(String dbType) {
-		init();
-	}
+    private static final String METHOD_PATTERN = "\\.[a-zA-Z_][a-zA-Z0-9_]*";
+    // Match <tag ...> but only outside quotes
+    private static final String DIAMOND_PATTERN = "</?|>";
 
-	private static void init() {
-	}
+    private static final Pattern PATTERN = Pattern.compile(
+            "(?<COMMENT>" + COMMENT_PATTERN + ")"
+            + "|(?<STRING>" + STRING_PATTERN + ")"
+            + "|(?<STRING2>" + STRING_PATTERN_2 + ")"
+            + "|(?<STRING3>" + STRING_PATTERN_3 + ")"
+            + "|(?<KEYWORD>" + KEYWORD_PATTERN + ")"
+            + "|(?<METHOD>" + METHOD_PATTERN + ")"
+            + "|(?<ANNOTATION>" + ANNOTATION_PATTERN + ")"
+            + "|(?<PAREN>" + PAREN_PATTERN + ")"
+            + "|(?<BRACE>" + BRACE_PATTERN + ")"
+            + "|(?<BRACKET>" + BRACKET_PATTERN + ")"
+            + "|(?<SEMICOLON>" + SEMICOLON_PATTERN + ")"
+            + "|(?<DIAMOND>" + DIAMOND_PATTERN + ")"
+            + "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")"
+    );
 
-	
-	@Override
-	public Set<Keyword> getKeywords() {
-		return KEYWORDS_lIST;
-	}
-	
-	@Override
-	public Set<Keyword> getKeywords(KeywordType type, String tableAlias) {
-		return getKeywords();
-	}
-	
-	@Override
-	public Matcher getPatternMatcher(String text) {
-		return PATTERN.matcher(text);
-	}
-	
-	@Override
-	public String format(String text) {
-		return this.format(text, FormatterMode.DEFAULT);
-	}
-	
-	@Override
-	public String format(String text, FormatterMode mode) {
-		var out = new StringBuilder();
+    public static void init(String dbType) {
+        init();
+    }
+
+    private static void init() {
+    }
+
+    @Override
+    public Set<Keyword> getKeywords() {
+        return KEYWORDS_lIST;
+    }
+
+    @Override
+    public Set<Keyword> getKeywords(KeywordType type, String tableAlias) {
+        return getKeywords();
+    }
+
+    @Override
+    public Matcher getPatternMatcher(String text) {
+        return PATTERN.matcher(text);
+    }
+
+    @Override
+    public String format(String text) {
+        return this.format(text, FormatterMode.DEFAULT);
+    }
+
+    @Override
+    public String format(String text, FormatterMode mode) {
+        var out = new StringBuilder();
         var indentLevel = 0;
 
         var inSingleQuote = false;
@@ -212,9 +202,9 @@ public class TypeScriptCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider<
         }
 
         return out.toString().trim();
-	}
-	
-	private void appendIndent(StringBuilder out, int level) {
+    }
+
+    private void appendIndent(StringBuilder out, int level) {
         for (int i = 0; i < level; i++) {
             out.append("    "); // 4 spaces per indent level
         }

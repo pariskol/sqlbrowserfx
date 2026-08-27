@@ -71,13 +71,12 @@ public abstract class OllamaHandler {
         );
 
         try (
-            var reader = new BufferedReader(
-                    new InputStreamReader(
-                            client.generateStream(model, messages).body(),
-                            StandardCharsets.UTF_8
-                    )
-            )
-        ) {
+                var reader = new BufferedReader(
+                        new InputStreamReader(
+                                client.generateStream(model, messages).body(),
+                                StandardCharsets.UTF_8
+                        )
+                )) {
 
             String line;
             var full = new StringBuilder();

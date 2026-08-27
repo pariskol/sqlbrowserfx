@@ -13,33 +13,33 @@ import javafx.scene.control.MenuItem;
 
 public class HistorySqlTableView extends SqlTableView implements ContextMenuOwner {
 
-	public HistorySqlTableView(SqlConnector sqlConnector) {
-		super(sqlConnector);
-		this.setContextMenu(createContextMenu());
-		this.enableColumnFiltering(true);
-	}
+    public HistorySqlTableView(SqlConnector sqlConnector) {
+        super(sqlConnector);
+        this.setContextMenu(createContextMenu());
+        this.enableColumnFiltering(true);
+    }
 
-	@Override
-	public ContextMenu createContextMenu() {
-		MenuItem menuItemDelete = new MenuItem("Delete", JavaFXUtils.createIcon("/icons/minus.png"));
-		menuItemDelete.setOnAction(event -> {
+    @Override
+    public ContextMenu createContextMenu() {
+        MenuItem menuItemDelete = new MenuItem("Delete", JavaFXUtils.createIcon("/icons/minus.png"));
+        menuItemDelete.setOnAction(event -> {
             sqlConnector.executeAsync(() -> {
                 var selectedRows = this.getSelectionModel().getSelectedItems();
                 selectedRows.forEach(this::deleteRecord);
                 Platform.runLater(() -> this.getSqlTableRows().removeAll(selectedRows));
             });
-		});
+        });
 
-		MenuItem menuItemCopy = new MenuItem("Copy row", JavaFXUtils.createIcon("/icons/copy.png"));
-		menuItemCopy.setOnAction(actionEvent -> {
-			StringBuilder content = new StringBuilder();
+        MenuItem menuItemCopy = new MenuItem("Copy row", JavaFXUtils.createIcon("/icons/copy.png"));
+        menuItemCopy.setOnAction(actionEvent -> {
+            StringBuilder content = new StringBuilder();
 
-			this.getSelectionModel().getSelectedItems().forEach(row -> content.append(row.toString()).append("\n"));
+            this.getSelectionModel().getSelectedItems().forEach(row -> content.append(row.toString()).append("\n"));
 
-			StringSelection stringSelection = new StringSelection(content.toString());
-			Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-			clipboard.setContents(stringSelection, null);
-		});
-		return new ContextMenu(menuItemDelete, menuItemCopy);
-	}
+            StringSelection stringSelection = new StringSelection(content.toString());
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(stringSelection, null);
+        });
+        return new ContextMenu(menuItemDelete, menuItemCopy);
+    }
 }

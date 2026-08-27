@@ -110,12 +110,12 @@ public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, Inpu
                         currentDirectory = newPath.toString();
                         var finalDir = currentDirectory;
 
-                        Platform.runLater(() ->
-                                historyArea.appendText("Directory changed to: " + finalDir + "\n"));
+                        Platform.runLater(()
+                                -> historyArea.appendText("Directory changed to: " + finalDir + "\n"));
                     } else {
                         var finalNewDirectory = newDirectory;
-                        Platform.runLater(() ->
-                                historyArea.appendText("Directory not found: " + finalNewDirectory + "\n"));
+                        Platform.runLater(()
+                                -> historyArea.appendText("Directory not found: " + finalNewDirectory + "\n"));
                     }
 
                 } else {
@@ -133,7 +133,7 @@ public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, Inpu
                             .lines()
                             .map(line -> "[ERROR] " + line)
                             .collect(Collectors.joining(System.lineSeparator()));
-                    
+
                     process.waitFor();
 
                     if (!output.isEmpty()) {
@@ -159,18 +159,18 @@ public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, Inpu
             }
         });
     }
-    
+
     private String[] createProcessArguments() {
         var isWindows = SystemUtils.OS_NAME.toLowerCase().contains("windows");
 
         if (isWindows) {
-            return new String[] {
+            return new String[]{
                 "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
                 "-Command",
                 commandLineField.getText()
             };
         } else {
-            return new String[] {
+            return new String[]{
                 "/bin/bash",
                 "-c",
                 commandLineField.getText()
@@ -217,8 +217,7 @@ public class SimpleTerminalPane extends BorderPane implements ToolbarOwner, Inpu
         toggleHistoryListButton.setOnAction(event -> {
             if (historyListView.getParent() == null) {
                 setRight(historyListView);
-            }
-            else {
+            } else {
                 setRight(null);
             }
         });
