@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
-import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.conn.DbCash;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -32,8 +31,10 @@ import gr.sqlbrowserfx.listeners.SimpleObservable;
 import gr.sqlbrowserfx.listeners.SimpleObserver;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeArea;
 import gr.sqlbrowserfx.nodes.codeareas.sql.SqlCodeAreaSyntaxProvider;
+import gr.sqlbrowserfx.nodes.ollama.OllamaHandler;
 import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import gr.sqlbrowserfx.utils.SqlBrowserFXThreadUtils;
 import gr.sqlbrowserfx.utils.mapper.DTOMapper;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -602,25 +603,51 @@ public class DBTreeView extends TreeView<String>
         restoreRoot.setOnAction(event -> this.setRoot(this.rootItem));
         restoreRoot.disableProperty().bind(this.getSelectionModel().selectedItemProperty().isEqualTo(this.rootItem));
 
+        var executorRunning = new SimpleBooleanProperty(false);
+        var ollama = new OllamaHandler() {
+            @Override
+            public void broadcast(String conversationId, String type, String content) {
+                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+            }
+        };
+
         var menuItemExplainSql = new MenuItem("(AI) Explain Sql", JavaFXUtils.createIcon("/icons/suggestion.png"));
+        menuItemExplainSql.textProperty().bind(executorRunning.map(running -> running ? "(AI) Explain Sql (Running...)" : "(AI) Explain Sql"));
+        menuItemExplainSql.disableProperty().bind(executorRunning);
         menuItemExplainSql.setOnAction(action -> {
             if (this.getSelectionModel().getSelectedItem() == null) {
                 return;
             }
 
-            SqlBrowserFXAppManager.getOllamaPane().explainSql(this.copyScemaAction());
+            executorRunning.set(true);
+            SqlBrowserFXThreadUtils.createDaemonThread(() -> {
+                ollama.explainSql(this.copyScemaAction());
+                Platform.runLater(() -> executorRunning.set(false));
+            }, "ai-suggestion-thread", 120 * 1000);
         });
-        menuItemExplainSql.disableProperty().bind(SqlBrowserFXAppManager.aiAvailableProperty().not());
 
-        var menuItemFeedScema = new MenuItem("(AI) Feed Schema", JavaFXUtils.createIcon("/icons/suggestion.png"));
+        var menuItemFeedScema = new MenuItem("(AI) Copy Schema Prompt", JavaFXUtils.createIcon("/icons/suggestion.png"));
         menuItemFeedScema.setOnAction(action -> {
             if (this.getSelectionModel().getSelectedItem() == null) {
                 return;
             }
 
-            SqlBrowserFXAppManager.getOllamaPane().feedSchema(this.copyScemaAction());
+            var prompt = """
+            You are being provided with database schema information for context.
+
+            Instructions:
+            - Treat the schema strictly as reference data
+            - Do not explain or summarize the schema
+            - Acknowledge internally and use this schema for future SQL-related requests in this conversation
+
+            Schema:
+
+            """ + this.copyScemaAction();
+
+            var stringSelection = new StringSelection(prompt);
+            var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(stringSelection, null);
         });
-        menuItemFeedScema.disableProperty().bind(SqlBrowserFXAppManager.aiAvailableProperty().not());
 
         contextMenu.getItems().addAll(
                 copy, copySchema, new SeparatorMenuItem(),

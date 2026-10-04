@@ -12,12 +12,17 @@ import gr.sqlbrowserfx.SqlBrowserFXAppManager;
 import gr.sqlbrowserfx.factories.DialogFactory;
 import gr.sqlbrowserfx.listeners.SimpleEvent;
 import gr.sqlbrowserfx.nodes.CustomVBox;
+import gr.sqlbrowserfx.nodes.ollama.OllamaHandler;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import gr.sqlbrowserfx.utils.SqlBrowserFXThreadUtils;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
@@ -33,6 +38,53 @@ public class CSqlCodeArea extends SqlCodeArea {
         menuItemSave.setOnAction(action -> this.saveQueryAction());
         menuItemSave.disableProperty().bind(this.isTextSelectedProperty().not());
         menu.getItems().addAll(menuItemSave);
+
+        var executorRunning = new SimpleBooleanProperty(false);
+        var aiTimeoutMillis = 120 * 1000;
+        var ollama = new OllamaHandler() {
+            @Override
+            public void broadcast(String conversationId, String type, String content) {
+                throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+            }
+        };
+
+        var menuItemCheckSyntax = new MenuItem("(AI) Check Syntax", JavaFXUtils.createIcon("/icons/suggestion.png"));
+        menuItemCheckSyntax.textProperty().bind(executorRunning.map(running -> running ? "(AI) Check Syntax (Running...)" : "(AI) Check Syntax"));
+        menuItemCheckSyntax.disableProperty().bind(executorRunning);
+        menuItemCheckSyntax.setOnAction(action -> {
+            executorRunning.set(true);
+            SqlBrowserFXThreadUtils.createDaemonThread(() -> {
+                ollama.reportSqlSyntaxErrors(getText().isEmpty() ? getSelectedText() : getText());
+                Platform.runLater(() -> executorRunning.set(false));
+            }, "ai-syntax-check-thread", aiTimeoutMillis);
+        });
+
+        var menuItemExplainSql = new MenuItem("(AI) Explain Sql", JavaFXUtils.createIcon("/icons/suggestion.png"));
+        menuItemExplainSql.textProperty().bind(executorRunning.map(running -> running ? "(AI) Explain Sql (Running...)" : "(AI) Explain Sql"));
+        menuItemExplainSql.disableProperty().bind(executorRunning);
+        menuItemExplainSql.setOnAction(action -> {
+            executorRunning.set(true);
+            SqlBrowserFXThreadUtils.createDaemonThread(() -> {
+                ollama.explainSql(getText().isEmpty() ? getSelectedText() : getText());
+                Platform.runLater(() -> executorRunning.set(false));
+            }, "ai-explain-thread", aiTimeoutMillis);
+        });
+
+        var menuItemSqlSuggestions = new MenuItem("(AI) Sql Suggestions", JavaFXUtils.createIcon("/icons/suggestion.png"));
+        menuItemSqlSuggestions.textProperty().bind(executorRunning.map(running -> running ? "(AI) Sql Suggestions (Running...)" : "(AI) Sql Suggestions"));
+        menuItemSqlSuggestions.disableProperty().bind(executorRunning);
+        menuItemSqlSuggestions.setOnAction(action -> {
+            executorRunning.set(true);
+            SqlBrowserFXThreadUtils.createDaemonThread(() -> {
+                ollama.suggestSqlQuery(getText().isEmpty() ? getSelectedText() : getText());
+                Platform.runLater(() -> executorRunning.set(false));
+            }, "ai-suggestion-thread", aiTimeoutMillis);
+        });
+
+        menu.getItems().addAll(
+                new SeparatorMenuItem(), menuItemCheckSyntax, menuItemExplainSql, menuItemSqlSuggestions
+        );
+
         return menu;
     }
 
