@@ -143,6 +143,10 @@ public abstract class OllamaHandler {
         }
     }
 
+    public void reportSqlSyntaxErrors(String sql) {
+        reportSqlSyntaxErrors(null, sql);
+    }
+
     public void reportSqlSyntaxErrors(String conversationId, String sql) {
         var prompt = TEMPORARY_SCOPE + """
             You are a SQL syntax validator.
@@ -169,7 +173,22 @@ public abstract class OllamaHandler {
 
             """ + sql;
 
-        executePrompt(conversationId, prompt);
+        if (conversationId != null) {
+            executePrompt(conversationId, prompt);
+            return;
+        }
+
+        try {
+            var result = client.generate(model, prompt);
+            DialogFactory.createScrollableInfoDialog("AI Syntax Check", result);
+        } catch (Exception e) {
+            DialogFactory.createErrorNotification(e);
+        }
+
+    }
+
+    public void suggestSqlQuery(String description) {
+        suggestSqlQuery(null, description);
     }
 
     public void suggestSqlQuery(String conversationId, String description) {
@@ -199,7 +218,21 @@ public abstract class OllamaHandler {
 
             """ + description;
 
-        executePrompt(conversationId, prompt);
+        if (conversationId != null) {
+            executePrompt(conversationId, prompt);
+            return;
+        }
+
+        try {
+            var result = client.generate(model, prompt);
+            DialogFactory.createScrollableInfoDialog("AI Syntax Check", result);
+        } catch (Exception e) {
+            DialogFactory.createErrorNotification(e);
+        }
+    }
+
+    public void explainSql(String sql) {
+        explainSql(null, sql);
     }
 
     public void explainSql(String conversationId, String sql) {
@@ -226,7 +259,17 @@ public abstract class OllamaHandler {
 
             """ + sql;
 
-        executePrompt(conversationId, prompt);
+        if (conversationId != null) {
+            executePrompt(conversationId, prompt);
+            return;
+        }
+
+        try {
+            var result = client.generate(model, prompt);
+            DialogFactory.createScrollableInfoDialog("AI Syntax Check", result);
+        } catch (Exception e) {
+            DialogFactory.createErrorNotification(e);
+        }
     }
 
     public void feedSchema(String conversationId, String schema) {
