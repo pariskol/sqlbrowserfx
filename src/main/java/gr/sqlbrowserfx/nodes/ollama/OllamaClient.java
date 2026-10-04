@@ -20,6 +20,15 @@ public class OllamaClient {
     private static final Gson GSON = new Gson();
     private final String baseUrl = PropertiesLoader.getProperty("ollama.url", String.class, "http://localhost:11434");
     private final HttpClient httpClient;
+    private final JSONObject options = new JSONObject()
+            .put("temperature", 0.7)
+            .put("top_p", 0.9)
+            // Performance-related
+            // set it to 2048 for 8gb cards
+            .put("num_ctx", 2048)
+            .put("num_batch", 256)
+            // CPU thread count (ignored on some GPU setups)
+            .put("num_thread", Runtime.getRuntime().availableProcessors());
 
     public OllamaClient() {
         this.httpClient = new HttpClient();
@@ -106,6 +115,7 @@ public class OllamaClient {
         String body = new JSONObject().put("model", model)
                 .put("prompt", prompt)
                 .put("stream", false)
+                .put("keep_alive", -1)
                 .toString();
 
         return new JSONObject(httpClient.post(url, body)).getString("response");
