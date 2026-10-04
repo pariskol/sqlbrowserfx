@@ -16,19 +16,19 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
 
-public class MysqlConnector extends SqlConnector {
+public class MariaDbConnector extends SqlConnector {
 
     private final String database;
 
-    public MysqlConnector(String database, String user, String password) {
-        super("com.mysql.cj.jdbc.Driver",
-                "jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
+    public MariaDbConnector(String database, String user, String password) {
+        super("org.mariadb.jdbc.Driver",
+                "jdbc:mariadb://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
                 user, password);
         this.database = database;
     }
 
-    public MysqlConnector(String url, String database, String user, String password) {
-        super("com.mysql.cj.jdbc.Driver", url, user, password);
+    public MariaDbConnector(String url, String database, String user, String password) {
+        super("org.mariadb.jdbc.Driver", url, user, password);
         this.database = database;
     }
 

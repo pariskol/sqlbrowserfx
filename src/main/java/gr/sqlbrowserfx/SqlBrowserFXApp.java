@@ -23,6 +23,7 @@ import com.kodedu.terminalfx.TerminalBuilder;
 import com.kodedu.terminalfx.TerminalTab;
 import com.kodedu.terminalfx.config.TerminalConfig;
 
+import gr.sqlbrowserfx.conn.MariaDbConnector;
 import gr.sqlbrowserfx.conn.MysqlConnector;
 import gr.sqlbrowserfx.conn.PostgreSqlConnector;
 import gr.sqlbrowserfx.conn.SqlConnector;
@@ -41,6 +42,7 @@ import gr.sqlbrowserfx.nodes.FileSearchPopOver;
 import gr.sqlbrowserfx.nodes.FilesTabPane;
 import gr.sqlbrowserfx.nodes.FilesTreeView;
 import gr.sqlbrowserfx.nodes.HelpTabPane;
+import gr.sqlbrowserfx.nodes.MariaDbConfigBox;
 import gr.sqlbrowserfx.nodes.MySqlConfigBox;
 import gr.sqlbrowserfx.nodes.PostgreSqlConfigBox;
 import gr.sqlbrowserfx.nodes.SearchInFilesPopOver;
@@ -203,7 +205,7 @@ public class SqlBrowserFXApp extends Application {
         mysqlTab.setGraphic(JavaFXUtils.createImageView("/icons/mysql.png", 28.0, 28.0));
         mysqlTab.setClosable(false);
 
-        var mariadbConfigBox = new MySqlConfigBox();
+        var mariadbConfigBox = new MariaDbConfigBox();
         mariadbConfigBox.getConnectButton().setOnAction(actionEvent -> {
             mariadbConfigBox.showLoader(true);
             dbSelectionAction(mariadbConfigBox);
@@ -230,7 +232,7 @@ public class SqlBrowserFXApp extends Application {
         sqlServerTab.setGraphic(JavaFXUtils.createImageView("/icons/sqlserver.png", 28.0, 28.0));
         sqlServerTab.setClosable(false);
 
-        var dbTabPane = new TabPane(sqliteTab, mysqlTab, postgresqlTab, sqlServerTab);
+        var dbTabPane = new TabPane(sqliteTab, mysqlTab, mariadbTab, postgresqlTab, sqlServerTab);
 
         primaryScene = new Scene(dbTabPane, 800, 500);
         leftBox.prefHeightProperty().bind(primaryScene.heightProperty());
@@ -280,6 +282,9 @@ public class SqlBrowserFXApp extends Application {
         if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.MYSQL.toString())) {
             this.sqlConnector = new MysqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
                     configBox.getUserField().getText(), configBox.getPasswordField().getText());
+        } else if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.MARIADB.toString())) {
+            this.sqlConnector = new MariaDbConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
+                    configBox.getUserField().getText(), configBox.getPasswordField().getText());
         } else if (configBox.getSqlConnectorType().equalsIgnoreCase(SqlConnectorType.POSTGRESQL.toString())) {
             this.sqlConnector = new PostgreSqlConnector(configBox.getUrl(), configBox.getDatabaseField().getText(),
                     configBox.getUserField().getText(), configBox.getPasswordField().getText());
@@ -318,8 +323,8 @@ public class SqlBrowserFXApp extends Application {
         String dbType = null;
         if (sqlConnector instanceof SqliteConnector) {
             dbType = "sqlite";
-        } else if (sqlConnector instanceof MysqlConnector) {
-            dbType = "mysql";
+        } else if (sqlConnector instanceof MariaDbConnector) {
+            dbType = "mariadb";
         } else if (sqlConnector instanceof PostgreSqlConnector) {
             dbType = "mysql";
         }

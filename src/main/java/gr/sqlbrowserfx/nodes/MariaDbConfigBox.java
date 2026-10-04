@@ -1,6 +1,6 @@
 package gr.sqlbrowserfx.nodes;
 
-public class MySqlConfigBox extends DbConfigBox {
+public class MariaDbConfigBox extends DbConfigBox {
 
     public String getHistoryQuery() {
         return "select url, user, database, timestamp, id from connections_history_localtime"
@@ -9,7 +9,7 @@ public class MySqlConfigBox extends DbConfigBox {
 
     @Override
     public String getSqlConnectorType() {
-        return SqlConnectorType.MYSQL.toString().toLowerCase();
+        return SqlConnectorType.MARIADB.toString().toLowerCase();
     }
 
 }
