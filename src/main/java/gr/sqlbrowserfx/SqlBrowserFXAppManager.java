@@ -12,7 +12,6 @@ import gr.sqlbrowserfx.dock.nodes.DSqlConsolePane;
 import gr.sqlbrowserfx.dock.nodes.DSqlPane;
 import gr.sqlbrowserfx.nodes.FilesTabPane;
 import gr.sqlbrowserfx.nodes.ollama.OllamaChatPane;
-import gr.sqlbrowserfx.nodes.ollama.OllamaHandler;
 import gr.sqlbrowserfx.nodes.sqlpane.SqlPane;
 import javafx.beans.property.SimpleBooleanProperty;
 
