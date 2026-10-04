@@ -28,6 +28,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -198,6 +199,37 @@ public class DialogFactory {
         dialog.setScene(dialogScene);
         dialog.showAndWait();
         return result.get();
+    }
+
+    public static void createScrollableInfoDialog(String title, String longText) {
+        Platform.runLater(() -> {
+            var alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(title);
+            alert.setHeaderText(title);
+            alert.setContentText(null);
+
+            var textArea = new TextArea(longText);
+            textArea.setEditable(false);
+            textArea.setWrapText(true);
+
+            textArea.setMaxWidth(Double.MAX_VALUE);
+            textArea.setMaxHeight(Double.MAX_VALUE);
+            GridPane.setVgrow(textArea, Priority.ALWAYS);
+            GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+            var expContent = new GridPane();
+            expContent.setMaxWidth(Double.MAX_VALUE);
+            expContent.add(textArea, 0, 1);
+
+            alert.getDialogPane().setExpandableContent(expContent);
+            alert.getDialogPane().expandedProperty().setValue(true);
+            
+            if (DEFAULT_STYLESHEET != null) {
+                alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+            }
+            
+            alert.showAndWait();
+        });
     }
 
     public static void createNotification(String title, String message) {
