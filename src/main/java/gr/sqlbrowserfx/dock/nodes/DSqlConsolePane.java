@@ -186,7 +186,7 @@ public class DSqlConsolePane extends SqlConsolePane implements Dockable {
     }
 
     @Override
-    public void hanldeException(SQLException e) {
+    public void handleException(SQLException e) {
         if (e.getErrorCode() == 9 || e.getErrorCode() == MemoryGuard.SQL_MEMORY_ERROR_CODE) {
             String message = "Not enough memory. Try to limit the result set";
             e = new SQLException(message, e);
