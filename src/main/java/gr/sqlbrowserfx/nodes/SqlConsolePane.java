@@ -361,7 +361,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
                 var duration = System.currentTimeMillis() - start;
                 saveHistory(fixedQuery, duration);
             } catch (SQLException e) {
-                hanldeException(e);
+                handleException(e);
             } finally {
                 sqlQueryRunning.set(false);
                 Platform.runLater(() -> {
@@ -370,7 +370,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
                 });
             }
         });
-        
+
         return fixedQuery;
     }
 
@@ -393,17 +393,21 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
     }
 
     private boolean isReadQuery(String fixedQuery) {
-        return fixedQuery.toLowerCase().matches("^\\s*(select|with|show|desc).*");
+        var trimmed = fixedQuery.toLowerCase().trim();
+        return trimmed.startsWith("select")
+                || trimmed.startsWith("with")
+                || trimmed.startsWith("show")
+                || trimmed.startsWith("describe")
+                || trimmed.startsWith("desc");
     }
 
     private boolean isSchemaChangeQuery(String query) {
-        var lowerCaseQuery = query.toLowerCase();
-        return (lowerCaseQuery.matches("^\\s*(drop|create|alter).*"))
-                && (lowerCaseQuery.contains("table")
-                || lowerCaseQuery.contains("view")
-                || lowerCaseQuery.contains("trigger")
-                || lowerCaseQuery.contains("procedure")
-                || lowerCaseQuery.contains("function"));
+        var trimmed = query.toLowerCase().trim();
+        return trimmed.startsWith("drop")
+                || trimmed.startsWith("create")
+                || trimmed.startsWith("alter")
+                || trimmed.startsWith("grant")
+                || trimmed.startsWith("revoke");
     }
 
     private void cancelQuery(Statement stmt) {
@@ -462,7 +466,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         historyArea.setText(lines.toString());
     }
 
-    public void hanldeException(SQLException e) {
+    public void handleException(SQLException e) {
         historyArea.appendText(e.getMessage() + "\n");
     }
 
