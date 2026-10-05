@@ -39,13 +39,32 @@ public abstract class DbConfigBox extends VBox {
         databaseField = new TextField();
         urlField = new TextField();
         urlField.setPromptText("Enter url <ip>:<port>/<database>?<optional options>...");
+        // this is a dirty way NEEDS plishing
         urlField.textProperty()
-                .addListener((observable, oldValue, newValue) -> {
-                    String[] split = urlField.getText().split("/");
-                    if (split.length > 3) {
-                        databaseField.setText(split[split.length - 1].replaceAll("\\?.*", ""));
-                    }
-                });
+        .addListener((observable, oldValue, newValue) -> {
+            String url = urlField.getText();
+            String dbName;
+            
+            if (url.startsWith("jdbc:")) {
+                // Handle jdbc urls like jdbc:mariadb://<ip>:<port>/<db>
+                String[] split = url.split("/");
+                if (split.length > 3) {
+                    dbName = split[split.length - 1].replaceAll("\\?.*", "");
+                } else {
+                    return;
+                }
+            } else {
+                // Handle non-jdbc urls like <ip>:<port>/<db>
+                String[] split = url.split("/");
+                if (split.length > 0) {
+                    dbName = split[split.length - 1].replaceAll("\\?.*", "");
+                } else {
+                    return;
+                }
+            }
+            
+            databaseField.setText(dbName);
+        });
         userField = new TextField();
         this.getChildren().add(urlField);
         this.getChildren().add(new Label("Username"));
