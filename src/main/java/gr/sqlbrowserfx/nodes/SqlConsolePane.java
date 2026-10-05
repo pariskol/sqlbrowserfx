@@ -2,13 +2,11 @@ package gr.sqlbrowserfx.nodes;
 
 import java.io.File;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
@@ -31,6 +29,7 @@ import gr.sqlbrowserfx.nodes.codeareas.sql.FileSqlCodeArea;
 import gr.sqlbrowserfx.nodes.sqlpane.CustomPopOver;
 import gr.sqlbrowserfx.nodes.sqlpane.DraggingTabPaneSupport;
 import gr.sqlbrowserfx.utils.JavaFXUtils;
+import java.sql.Statement;
 import javafx.application.Platform;
 import javafx.geometry.Orientation;
 import javafx.scene.control.Button;
@@ -49,7 +48,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 
 public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleObservable<String> {
@@ -73,7 +71,6 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
     private boolean popOverIsShowing = false;
     private SplitPane splitPane;
     private Button openButton;
-
 
     @SuppressWarnings("unchecked")
     public SqlConsolePane(SqlConnector sqlConnector) {
@@ -118,8 +115,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         queryTabPane.getSelectionModel().selectedItemProperty().addListener(
                 (ov, oldTab, newTab) -> {
                     if (newTab.getContent() != null) {
-                    	var codeArea = (oldTab.getContent() != null) ? ((VirtualizedScrollPane<CodeArea>) oldTab.getContent()).getContent()
-                                : null;
+                        var codeArea = (oldTab.getContent() != null) ? ((VirtualizedScrollPane<CodeArea>) oldTab.getContent()).getContent()
+                        : null;
 
                         if (codeArea instanceof TextAnalyzer) {
                             ((TextAnalyzer) codeArea).stopTextAnalyzerDaemon();
@@ -153,10 +150,10 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         });
 
         this.setOnDragDropped(event -> {
-        	var db = event.getDragboard();
-        	var success = false;
+            var db = event.getDragboard();
+            var success = false;
             if (db.hasFiles()) {
-            	var file = db.getFiles().get(0);
+                var file = db.getFiles().get(0);
                 SqlConsolePane.this.openNewFileTab(file);
                 success = true;
             }
@@ -175,49 +172,48 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
     @SuppressWarnings("unchecked")
     private void addTab() {
-    	var selectedTab = queryTabPane.getSelectionModel().getSelectedItem();
+        var selectedTab = queryTabPane.getSelectionModel().getSelectedItem();
         if (selectedTab == newConsoleTab) {
             this.openNewSqlConsoleTab();
         } else {
-        	var codeArea = ((VirtualizedScrollPane<CodeArea>) selectedTab.getContent()).getContent();
+            var codeArea = ((VirtualizedScrollPane<CodeArea>) selectedTab.getContent()).getContent();
             if (codeArea instanceof CSqlCodeArea) {
                 codeAreaRef = (CSqlCodeArea) codeArea;
             }
         }
     }
 
-
     private void addTabContextMenu(Tab tab) {
-		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
-		closeTabItem.setOnAction(event -> tab.getTabPane().getTabs().remove(tab));
-		
-		var renameTabItem = new MenuItem("Rename Tab", JavaFXUtils.createIcon("/icons/edit.png"));
-		renameTabItem.setOnAction(event -> {
-			var tabGraphic = tab.getGraphic();
-			var textField = new TextField();
-			textField.setPromptText("Enter new name");
-			textField.setOnKeyPressed(keyEvent -> {
-				if (keyEvent.getCode() == KeyCode.ENTER) {
-					// graphic is label because we are using DragTabPaneSupport util
-					var label = (Label) tabGraphic;
-					label.setText(textField.getText());
-					tab.setGraphic(tabGraphic);
-				}
-				if (keyEvent.getCode() == KeyCode.ESCAPE) {
-					tab.setGraphic(tabGraphic);
-				}
-				
-				keyEvent.consume();
-			});
-			tab.setGraphic(textField);
-			textField.requestFocus();
-		});
-		
-		tab.setContextMenu(new ContextMenu(closeTabItem, renameTabItem));
+        var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
+        closeTabItem.setOnAction(event -> tab.getTabPane().getTabs().remove(tab));
+
+        var renameTabItem = new MenuItem("Rename Tab", JavaFXUtils.createIcon("/icons/edit.png"));
+        renameTabItem.setOnAction(event -> {
+            var tabGraphic = tab.getGraphic();
+            var textField = new TextField();
+            textField.setPromptText("Enter new name");
+            textField.setOnKeyPressed(keyEvent -> {
+                if (keyEvent.getCode() == KeyCode.ENTER) {
+                    // graphic is label because we are using DragTabPaneSupport util
+                    var label = (Label) tabGraphic;
+                    label.setText(textField.getText());
+                    tab.setGraphic(tabGraphic);
+                }
+                if (keyEvent.getCode() == KeyCode.ESCAPE) {
+                    tab.setGraphic(tabGraphic);
+                }
+
+                keyEvent.consume();
+            });
+            tab.setGraphic(textField);
+            textField.requestFocus();
+        });
+
+        tab.setContextMenu(new ContextMenu(closeTabItem, renameTabItem));
     }
-    
+
     private void openNewSqlConsoleTab() {
-    	var sqlCodeArea = new CSqlCodeArea();
+        var sqlCodeArea = new CSqlCodeArea();
         sqlCodeArea.wrapTextProperty().bind(this.wrapTextCheckBox.selectedProperty());
         sqlCodeArea.showLinesProperty().bind(this.showLinesCheckBox.selectedProperty());
         sqlCodeArea.autoCompleteProperty().bind(this.autoCompleteOnTypeCheckBox.selectedProperty());
@@ -228,7 +224,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         var scrollPane = new VirtualizedScrollPane<>(sqlCodeArea);
         var newTab = new Tab("query " + queryTabPane.getTabs().size(), scrollPane);
         addTabContextMenu(newTab);
-		newTab.setOnClosed(event -> sqlCodeArea.stopTextAnalyzerDaemon());
+        newTab.setOnClosed(event -> sqlCodeArea.stopTextAnalyzerDaemon());
 
         queryTabPane.getTabs().add(newTab);
         queryTabPane.getSelectionModel().select(newTab);
@@ -250,9 +246,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         codeArea.showLinesProperty().bind(this.showLinesCheckBox.selectedProperty());
         codeArea.autoCompleteProperty().bind(this.autoCompleteOnTypeCheckBox.selectedProperty());
 
-        VirtualizedScrollPane<CodeArea> vsp = new VirtualizedScrollPane<>(codeArea);
+        var vsp = new VirtualizedScrollPane<>(codeArea);
 
-        FileCodeArea fileCodeArea = (FileCodeArea) codeArea;
+        var fileCodeArea = (FileCodeArea) codeArea;
 
         Tab tab = new Tab(selectedFile.getName(), vsp);
         tab.setOnCloseRequest((event) -> {
@@ -261,27 +257,25 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
                 if (DialogFactory.createConfirmationDialog(
                         "Unsaved work",
-                        "Do you want to discard changes ?")
-                ) {
+                        "Do you want to discard changes ?")) {
                     queryTabPane.getTabs().remove(tab);
                 }
             }
         });
-		var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
-		closeTabItem.setOnAction(event -> {
+        var closeTabItem = new MenuItem("Close Tab", JavaFXUtils.createIcon("/icons/minus.png"));
+        closeTabItem.setOnAction(event -> {
             if (fileCodeArea.isTextDirty()) {
                 event.consume();
 
                 if (DialogFactory.createConfirmationDialog(
                         "Unsaved work",
-                        "Do you want to discard changes ?")
-                ) {
+                        "Do you want to discard changes ?")) {
                     queryTabPane.getTabs().remove(tab);
                 }
             }
-		});
-		tab.setContextMenu(new ContextMenu(closeTabItem));
-		
+        });
+        tab.setContextMenu(new ContextMenu(closeTabItem));
+
         tab.setGraphic(JavaFXUtils.createIcon("/icons/code-file.png"));
         queryTabPane.getTabs().add(tab);
         queryTabPane.getSelectionModel().select(tab);
@@ -294,8 +288,8 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
     }
 
     private void openFileAction() {
-        FileChooser fileChooser = new FileChooser();
-        File selectedFile = fileChooser.showOpenDialog(null);
+        var fileChooser = new FileChooser();
+        var selectedFile = fileChooser.showOpenDialog(null);
         openNewFileTab(selectedFile);
     }
 
@@ -310,7 +304,9 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
 
         settingsButton = new Button("", JavaFXUtils.createIcon("/icons/settings.png"));
         settingsButton.setOnMouseClicked(mouseEvent -> {
-            if (popOverIsShowing) return;
+            if (popOverIsShowing) {
+                return;
+            }
 
             popOverIsShowing = true;
             CustomPopOver popOver = new CustomPopOver(new CustomVBox(autoCompleteOnTypeCheckBox, openInNewTableViewCheckBox, wrapTextCheckBox, showLinesCheckBox));
@@ -323,7 +319,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
         openButton.setTooltip(new Tooltip("Open file"));
 
-        FlowPane toolbar = new CustomFlowPane(executeButton, stopExecutionButton, settingsButton, openButton);
+        var toolbar = new CustomFlowPane(executeButton, stopExecutionButton, settingsButton, openButton);
         return toolbar;
     }
 
@@ -332,105 +328,99 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         return ((VirtualizedScrollPane<CodeArea>) queryTabPane.getSelectionModel().getSelectedItem().getContent()).getContent();
     }
 
-    // TODO: needs polishing
     public String executeButtonAction() {
         if (sqlQueryRunning.get()) {
             DialogFactory.createNotification("Query execution in progress", "A query is already running!\n You must wait to finish or cancel it, in order to run a new one!");
             return null;
         }
 
-        CodeArea sqlConsoleArea = this.getSelectedSqlCodeArea();
-        String query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
-        final String fixedQuery = this.fixQuery(query);
+        var sqlConsoleArea = this.getSelectedSqlCodeArea();
+        var query = !sqlConsoleArea.getSelectedText().isEmpty() ? sqlConsoleArea.getSelectedText() : sqlConsoleArea.getText();
+        final var fixedQuery = fixQuery(query);
 
-        AtomicLong queryDuration = new AtomicLong(System.currentTimeMillis());
-        if (fixedQuery.toLowerCase().startsWith("select")
-                || fixedQuery.toLowerCase().startsWith("show")) {
-            sqlConnector.executeAsync(() -> {
-                sqlQueryRunning.set(true);
-                Platform.runLater(() -> executeButton.setDisable(true));
-                try {
-                    sqlConnector.executeCancelableQuery(fixedQuery, rset -> {
-                        queryDuration.set(System.currentTimeMillis() - queryDuration.get());
-                        LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("\n" + fixedQuery + "\n execution took  " + queryDuration.get() + "ms");
-                        DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration.get() + "ms", 1);
-                        handleSelectResult(fixedQuery, rset);
-                    }, stmt -> stopExecutionButton.setOnAction(action -> {
-                        try {
-                            stmt.cancel();
-                        } catch (SQLException e) {
-                            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
-                        }
-                    }));
-
-                } catch (SQLException e) {
-                    hanldeException(e);
-                } finally {
-                    SqlConsolePane.this.saveHistory(fixedQuery, queryDuration.get());
-                    Platform.runLater(() -> {
-                        executeButton.setDisable(false);
-                        getSelectedSqlCodeArea().requestFocus();
-                    });
-                    sqlQueryRunning.set(false);
-                }
-            });
-        } else if (!fixedQuery.isEmpty()) {
-            sqlConnector.executeAsync(() -> {
-                sqlQueryRunning.set(true);
-                Platform.runLater(() -> {
-                    executeButton.setDisable(true);
-                    this.setCenter(new StackPane(progressIndicator));
-                });
-                try {
-                    int rowsAffected = sqlConnector.executeUpdate(fixedQuery);
-                    queryDuration.set(System.currentTimeMillis() - queryDuration.get());
-                    LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).debug("\n" + fixedQuery + "\n execution took  " + queryDuration.get() + "ms");
-                    DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration.get() + "ms", 1);
-                    handleUpdateResult(rowsAffected);
-
-                } catch (SQLException e) {
-                    hanldeException(e);
-                } finally {
-                    SqlConsolePane.this.saveHistory(fixedQuery, queryDuration.get());
-                    Platform.runLater(() -> {
-                        executeButton.setDisable(false);
-                        if (splitPane != null)
-                            this.setCenter(splitPane);
-                        else
-                            this.setCenter(queryTabPane);
-                        getSelectedSqlCodeArea().requestFocus();
-                    });
-                    sqlQueryRunning.set(false);
-                }
-
-                String queryToLowerCase = fixedQuery.toLowerCase();
-                if (
-                    //------------------------------------------
-                        (queryToLowerCase.startsWith("drop") ||
-                                queryToLowerCase.startsWith("create") ||
-                                queryToLowerCase.startsWith("alter")
-                        )
-                                //------------------------------------------
-                                &&
-                                //------------------------------------------
-                                (queryToLowerCase.contains("table") ||
-                                        queryToLowerCase.contains("view") ||
-                                        queryToLowerCase.contains("trigger") ||
-                                        queryToLowerCase.contains("procedure") ||
-                                        queryToLowerCase.contains("function")
-                                )
-                    //------------------------------------------
-                ) {
-                    this.changed(fixedQuery);
-                }
-            });
+        // fast exit on empty query
+        if (fixedQuery.isEmpty()) {
+            return null;
         }
+
+        // execute on different thread
+        sqlConnector.executeAsync(() -> {
+            var start = System.currentTimeMillis();
+
+            sqlQueryRunning.set(true);
+            Platform.runLater(() -> executeButton.setDisable(true));
+
+            try {
+
+                if (isReadQuery(fixedQuery)) {
+                    handleSelectQuery(fixedQuery);
+                } else {
+                    handleActionQuery(fixedQuery);
+                }
+
+                var duration = System.currentTimeMillis() - start;
+                saveHistory(fixedQuery, duration);
+            } catch (SQLException e) {
+                handleException(e);
+            } finally {
+                sqlQueryRunning.set(false);
+                Platform.runLater(() -> {
+                    executeButton.setDisable(false);
+                    getSelectedSqlCodeArea().requestFocus();
+                });
+            }
+        });
 
         return fixedQuery;
     }
 
+    private void handleSelectQuery(String fixedQuery) throws SQLException {
+        sqlConnector.executeCancelableQuery(fixedQuery,
+                rset -> {
+                    handleSelectResult(fixedQuery, rset);
+                },
+                stmt -> stopExecutionButton.setOnAction(action -> cancelQuery(stmt))
+        );
+    }
+
+    private void handleActionQuery(String fixedQuery) throws SQLException {
+        var rowsAffected = sqlConnector.executeUpdate(fixedQuery);
+        handleUpdateResult(rowsAffected);
+
+        if (isSchemaChangeQuery(fixedQuery)) {
+            changed(fixedQuery);
+        }
+    }
+
+    private boolean isReadQuery(String fixedQuery) {
+        var trimmed = fixedQuery.toLowerCase().trim();
+        return trimmed.startsWith("select")
+                || trimmed.startsWith("with")
+                || trimmed.startsWith("show")
+                || trimmed.startsWith("describe")
+                || trimmed.startsWith("desc");
+    }
+
+    private boolean isSchemaChangeQuery(String query) {
+        var trimmed = query.toLowerCase().trim();
+        return trimmed.startsWith("drop")
+                || trimmed.startsWith("create")
+                || trimmed.startsWith("alter")
+                || trimmed.startsWith("grant")
+                || trimmed.startsWith("revoke");
+    }
+
+    private void cancelQuery(Statement stmt) {
+        try {
+            stmt.cancel();
+        } catch (SQLException e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+        }
+    }
+
     private void saveHistory(final String fixedQuery, long queryDuration) {
         try {
+            DialogFactory.createNotification("Query executed", "Query execution took " + queryDuration + "ms", 1);
             SqlBrowserFXAppManager.getConfigSqlConnector().executeUpdateAsync("insert into queries_history (query, duration) values (?, ?)",
                     Arrays.asList(fixedQuery, queryDuration));
         } catch (SQLException e) {
@@ -439,18 +429,19 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
     }
 
     private String fixQuery(String query) {
-        int spacesNum = 0;
-        query = query.trim().replaceAll("\t", "    ");
-        for (int i = 0; i < query.length(); i++) {
-            if (query.charAt(i) == ' ' || query.charAt(i) == '\n') {
-                spacesNum++;
-            } else {
-                break;
-            }
+        // remove leading/trailing whitespace and replace tabs with spaces
+        query = query.trim().replaceAll("\t", " ");
+
+        // remove leading spaces after trim
+        var spacesNum = 0;
+        while (spacesNum < query.length() && (query.charAt(spacesNum) == ' ' || query.charAt(spacesNum) == '\n')) {
+            spacesNum++;
         }
         query = query.substring(spacesNum);
-        //FIXME find right pattern to ignore comments
-        query = query.replaceAll("--.*\n", "");
+
+        // remove sql comments
+        query = query.replaceAll("--.*\n", "").replaceAll("/\\*.*?\\*/", "");
+
         return query;
     }
 
@@ -459,14 +450,15 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
     }
 
     protected void handleSelectResult(String query, ResultSet rset) throws SQLException {
-        StringBuilder lines = new StringBuilder();
+        var lines = new StringBuilder();
         while (rset.next()) {
-            StringBuilder line = new StringBuilder();
-            ResultSetMetaData rsmd = rset.getMetaData();
-            for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+            var line = new StringBuilder();
+            var rsmd = rset.getMetaData();
+            for (var i = 1; i <= rsmd.getColumnCount(); i++) {
                 line.append(rsmd.getColumnLabel(i)).append(" : ");
-                if (rset.getObject(rsmd.getColumnLabel(i)) != null)
+                if (rset.getObject(rsmd.getColumnLabel(i)) != null) {
                     line.append(rset.getObject(rsmd.getColumnLabel(i)).toString()).append(", ");
+                }
             }
             line = new StringBuilder(line.substring(0, line.length() - ", ".length()));
             lines.append(line).append("\n");
@@ -474,7 +466,7 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
         historyArea.setText(lines.toString());
     }
 
-    public void hanldeException(SQLException e) {
+    public void handleException(SQLException e) {
         historyArea.appendText(e.getMessage() + "\n");
     }
 
@@ -518,6 +510,5 @@ public class SqlConsolePane extends BorderPane implements ToolbarOwner, SimpleOb
     public List<SimpleObserver<String>> getListeners() {
         return listeners;
     }
-
 
 }

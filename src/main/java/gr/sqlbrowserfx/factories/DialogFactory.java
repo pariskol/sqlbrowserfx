@@ -28,6 +28,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -39,120 +40,123 @@ import javafx.util.Duration;
 
 public class DialogFactory {
 
-	private static final Pos NOTIFICATION_POS = Pos.TOP_RIGHT;
-	private static String DEFAULT_STYLESHEET;
-	private static Stage STAGE;
-	
-	public static void setStage(Stage stage) {
-		STAGE = stage;
-	}
-	
-	public static void createErrorDialog(Throwable e) {
-		createErrorDialog(e, null);
-	}
-	
-	public static void createErrorDialog(Throwable e, String stylesheet) {
+    private static final Pos NOTIFICATION_POS = Pos.TOP_RIGHT;
+    private static String DEFAULT_STYLESHEET;
+    private static Stage STAGE;
 
-		Platform.runLater(() -> {
-			Alert alert = new Alert(AlertType.ERROR);
+    public static void setStage(Stage stage) {
+        STAGE = stage;
+    }
+
+    public static void createErrorDialog(Throwable e) {
+        createErrorDialog(e, null);
+    }
+
+    public static void createErrorDialog(Throwable e, String stylesheet) {
+
+        Platform.runLater(() -> {
+            Alert alert = new Alert(AlertType.ERROR);
 //			alert.setTitle("SQL Exception");
-			alert.setHeaderText(e.getClass().getSimpleName());
-			alert.setContentText(e.getMessage());
+            alert.setHeaderText(e.getClass().getSimpleName());
+            alert.setContentText(e.getMessage());
 
-			// Create expandable Exception.
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			e.printStackTrace(pw);
-			String exceptionText = sw.toString();
+            // Create expandable Exception.
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String exceptionText = sw.toString();
 
-			Label label = new Label("The exception stacktrace was:");
+            Label label = new Label("The exception stacktrace was:");
 
-			TextArea textArea = new TextArea(exceptionText);
-			textArea.setEditable(false);
-			textArea.setWrapText(true);
+            TextArea textArea = new TextArea(exceptionText);
+            textArea.setEditable(false);
+            textArea.setWrapText(true);
 
-			VBox.setVgrow(textArea, Priority.ALWAYS);
-			VBox expContent = new CustomVBox(label,textArea);
+            VBox.setVgrow(textArea, Priority.ALWAYS);
+            VBox expContent = new CustomVBox(label, textArea);
 
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
-			alert.getDialogPane().setExpandableContent(expContent);
-			alert.getDialogPane().setExpanded(true);
-			if (stylesheet != null)
-				alert.getDialogPane().getStylesheets().add(stylesheet);
-			else if (DEFAULT_STYLESHEET != null)
-				alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
-			
-			alert.showAndWait();
-		});
-	}
-	
-	public static boolean createConfirmationDialog(String title, String message) {
-		return createConfirmationDialog(title, message, null);
-	}
-	
-	public static boolean createConfirmationDialog(String title, String message, String stylesheet) {
-		AtomicBoolean result = new AtomicBoolean(false);
-		
-		Alert alert = new Alert(AlertType.CONFIRMATION);
-		alert.setTitle(title);
-		alert.setResizable(true);
-		alert.setHeaderText(null);
-		alert.setContentText(message);
-		if (stylesheet != null)
-			alert.getDialogPane().getStylesheets().add(stylesheet);
-		else if (DEFAULT_STYLESHEET != null)
-			alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
-		
-		Optional<ButtonType> res = alert.showAndWait();
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
+            alert.getDialogPane().setExpandableContent(expContent);
+            alert.getDialogPane().setExpanded(true);
+            if (stylesheet != null) {
+                alert.getDialogPane().getStylesheets().add(stylesheet);
+            } else if (DEFAULT_STYLESHEET != null) {
+                alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+            }
+
+            alert.showAndWait();
+        });
+    }
+
+    public static boolean createConfirmationDialog(String title, String message) {
+        return createConfirmationDialog(title, message, null);
+    }
+
+    public static boolean createConfirmationDialog(String title, String message, String stylesheet) {
+        AtomicBoolean result = new AtomicBoolean(false);
+
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle(title);
+        alert.setResizable(true);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        if (stylesheet != null) {
+            alert.getDialogPane().getStylesheets().add(stylesheet);
+        } else if (DEFAULT_STYLESHEET != null) {
+            alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+        }
+
+        Optional<ButtonType> res = alert.showAndWait();
         result.set(ButtonType.OK == res.get());
-		
-		return result.get();
-	}
-	
-	public static String createTextInputDialog(String title, String message) {
-		TextInputDialog td = new TextInputDialog();
-		td.setTitle(title);
-		td.setHeaderText(message);
-		if (DEFAULT_STYLESHEET != null) {
-			td.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
-		}
-		td.showAndWait();
-		return td.getEditor().getText();
-	}
-	
-	public static void createInfoDialog(String title, String message) {
-		createInfoDialog(title, message, null);
-	}
-	
-	public static void createInfoDialog(String title, String message, String stylesheet) {
-		Platform.runLater(() -> {
-			Alert alert = new Alert(AlertType.INFORMATION);
-			alert.setTitle(title);
-			alert.setHeaderText(null);
-			alert.setContentText(message);
-			if (stylesheet != null)
-				alert.getDialogPane().getStylesheets().add(stylesheet);
-			else if (DEFAULT_STYLESHEET != null)
-				alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
-			
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).info(message);
-			alert.showAndWait();
-		});
-	}
-	
-	public static int createDeleteDialog(Node owner, ObservableList<MapTableViewRow> rows, String message) {
-		return createDeleteDialog(owner, rows, message, null);
-	}
-	
-	public static int createDeleteDialog(Node owner, ObservableList<MapTableViewRow> rows, String message, String stylesheet) {
-		SqlTableView sqlTableView = new SqlTableView();
-		sqlTableView.createColumns(rows.get(0).getColumns());
-		sqlTableView.setItems(rows);
-		
-		return createDialogWithContent(owner, sqlTableView, message, stylesheet);
-	}
-	
-	public static int createDialogWithContent(Node owner, Node content, String message, String stylesheet) {
+
+        return result.get();
+    }
+
+    public static String createTextInputDialog(String title, String message) {
+        TextInputDialog td = new TextInputDialog();
+        td.setTitle(title);
+        td.setHeaderText(message);
+        if (DEFAULT_STYLESHEET != null) {
+            td.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+        }
+        td.showAndWait();
+        return td.getEditor().getText();
+    }
+
+    public static void createInfoDialog(String title, String message) {
+        createInfoDialog(title, message, null);
+    }
+
+    public static void createInfoDialog(String title, String message, String stylesheet) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            if (stylesheet != null) {
+                alert.getDialogPane().getStylesheets().add(stylesheet);
+            } else if (DEFAULT_STYLESHEET != null) {
+                alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+            }
+
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).info(message);
+            alert.showAndWait();
+        });
+    }
+
+    public static int createDeleteDialog(Node owner, ObservableList<MapTableViewRow> rows, String message) {
+        return createDeleteDialog(owner, rows, message, null);
+    }
+
+    public static int createDeleteDialog(Node owner, ObservableList<MapTableViewRow> rows, String message, String stylesheet) {
+        SqlTableView sqlTableView = new SqlTableView();
+        sqlTableView.createColumns(rows.get(0).getColumns());
+        sqlTableView.setItems(rows);
+
+        return createDialogWithContent(owner, sqlTableView, message, stylesheet);
+    }
+
+    public static int createDialogWithContent(Node owner, Node content, String message, String stylesheet) {
 
         final Stage dialog = new Stage();
         dialog.setTitle("Confirmation");
@@ -171,8 +175,7 @@ public class DialogFactory {
         VBox dialogVbox = new CustomVBox();
         dialogVbox.setAlignment(Pos.CENTER);
 
-
-        buttonBox.getChildren().addAll(yes,no);
+        buttonBox.getChildren().addAll(yes, no);
         dialogVbox.getChildren().addAll(displayLabel, content, buttonBox);
 
         AtomicInteger result = new AtomicInteger(0);
@@ -188,99 +191,130 @@ public class DialogFactory {
                 });
 
         Scene dialogScene = new Scene(dialogVbox, 400, 200);
-        if (stylesheet != null)
-        	dialogScene.getStylesheets().add(stylesheet);
-        else if (DEFAULT_STYLESHEET != null)
-        	dialogScene.getStylesheets().add(DEFAULT_STYLESHEET);
+        if (stylesheet != null) {
+            dialogScene.getStylesheets().add(stylesheet);
+        } else if (DEFAULT_STYLESHEET != null) {
+            dialogScene.getStylesheets().add(DEFAULT_STYLESHEET);
+        }
         dialog.setScene(dialogScene);
         dialog.showAndWait();
         return result.get();
     }
 
-	public static void createNotification(String title, String message) {
-		createNotification(title, message, 3);
-	}
-	
-	private static void checkStage() {
+    public static void createScrollableInfoDialog(String title, String longText) {
+        Platform.runLater(() -> {
+            var alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(title);
+            alert.setHeaderText(title);
+            alert.setContentText(null);
+
+            var textArea = new TextArea(longText);
+            textArea.setEditable(false);
+            textArea.setWrapText(true);
+
+            textArea.setMaxWidth(Double.MAX_VALUE);
+            textArea.setMaxHeight(Double.MAX_VALUE);
+            GridPane.setVgrow(textArea, Priority.ALWAYS);
+            GridPane.setHgrow(textArea, Priority.ALWAYS);
+
+            var expContent = new GridPane();
+            expContent.setMaxWidth(Double.MAX_VALUE);
+            expContent.add(textArea, 0, 1);
+
+            alert.getDialogPane().setExpandableContent(expContent);
+            alert.getDialogPane().expandedProperty().setValue(true);
+            
+            if (DEFAULT_STYLESHEET != null) {
+                alert.getDialogPane().getStylesheets().add(DEFAULT_STYLESHEET);
+            }
+            
+            alert.showAndWait();
+        });
+    }
+
+    public static void createNotification(String title, String message) {
+        createNotification(title, message, 3);
+    }
+
+    private static void checkStage() {
         if (STAGE == null) {
             throw new RuntimeException("Stage not set for DialogFactory. Please set it before using notifications. You must call DialogFactory.setStage(stage) in the start method of your JavaFX application.");
         }
     }
-	
-	public static void createNotification(String title, String message, int durationInSecs) {
-		checkStage();
-		
-		if (STAGE == null) {
-			createInfoDialog(title, message);
-			return;
-		}
-		
-		Platform.runLater(() -> {
-			Notifications.create()
-					.title(title)
-					.text(message)
-					.darkStyle()
-					.hideAfter(Duration.seconds(durationInSecs))
-					.position(NOTIFICATION_POS)
-					.onAction(actionEvent -> createInfoDialog(title, message))
-					.owner(STAGE)
-					.showInformation();
-			
-		});
-	}
-	
-	public static void createErrorNotification(String title, String message) {
-		createErrorNotification(title, message, null);
-	}
-	
-	public static void createErrorNotification(String title, String message, Throwable throwable) {
-		LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(message);
-		StringBuilder formattedMessage = new StringBuilder(message);
-		int splitSize = 40;
-		if (message.length() > splitSize) {
-			formattedMessage = new StringBuilder();
-			while (message.length() > splitSize) {
-				int spacePos = message.indexOf(" ", splitSize);
-				spacePos = spacePos != -1 ? spacePos : splitSize;
-				formattedMessage.append(message, 0, spacePos).append("\n");
-				message = message.substring(spacePos);
-			}
-			formattedMessage.append(message);
-		}
-		final String finalMessage = formattedMessage.toString();
-		
-		checkStage();
 
-		if (STAGE == null && throwable != null) {
-			createErrorDialog(throwable, null);
-			return;
-		}
-		
-		Platform.runLater(() -> {
-			Notifications.create()
-					.title(title)
-					.text(finalMessage)
-					.darkStyle()
-					.hideAfter(Duration.seconds(2))
-					.position(NOTIFICATION_POS)
-					.onAction(actionEvent -> {
-						if (throwable != null ) {
-							createErrorDialog(throwable, null);
-						}
-					})
-					.owner(STAGE)
-					.showError();
-			
-		});
-	}
-	
-	public static void createErrorNotification(Throwable t) {
-		createErrorNotification(t.getClass().getSimpleName(), t.getMessage(), t);
-	}
-	
-	public static void setDialogStyleSheet(String dialogStyleSheet) {
-		DialogFactory.DEFAULT_STYLESHEET = dialogStyleSheet;
-	}
-	
-	
+    public static void createNotification(String title, String message, int durationInSecs) {
+        checkStage();
+
+        if (STAGE == null) {
+            createInfoDialog(title, message);
+            return;
+        }
+
+        Platform.runLater(() -> {
+            Notifications.create()
+                    .title(title)
+                    .text(message)
+                    .darkStyle()
+                    .hideAfter(Duration.seconds(durationInSecs))
+                    .position(NOTIFICATION_POS)
+                    .onAction(actionEvent -> createInfoDialog(title, message))
+                    .owner(STAGE)
+                    .showInformation();
+
+        });
+    }
+
+    public static void createErrorNotification(String title, String message) {
+        createErrorNotification(title, message, null);
+    }
+
+    public static void createErrorNotification(String title, String message, Throwable throwable) {
+        LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(message);
+        StringBuilder formattedMessage = new StringBuilder(message);
+        int splitSize = 40;
+        if (message.length() > splitSize) {
+            formattedMessage = new StringBuilder();
+            while (message.length() > splitSize) {
+                int spacePos = message.indexOf(" ", splitSize);
+                spacePos = spacePos != -1 ? spacePos : splitSize;
+                formattedMessage.append(message, 0, spacePos).append("\n");
+                message = message.substring(spacePos);
+            }
+            formattedMessage.append(message);
+        }
+        final String finalMessage = formattedMessage.toString();
+
+        checkStage();
+
+        if (STAGE == null && throwable != null) {
+            createErrorDialog(throwable, null);
+            return;
+        }
+
+        Platform.runLater(() -> {
+            Notifications.create()
+                    .title(title)
+                    .text(finalMessage)
+                    .darkStyle()
+                    .hideAfter(Duration.seconds(2))
+                    .position(NOTIFICATION_POS)
+                    .onAction(actionEvent -> {
+                        if (throwable != null) {
+                            createErrorDialog(throwable, null);
+                        }
+                    })
+                    .owner(STAGE)
+                    .showError();
+
+        });
+    }
+
+    public static void createErrorNotification(Throwable t) {
+        createErrorNotification(t.getClass().getSimpleName(), t.getMessage(), t);
+    }
+
+    public static void setDialogStyleSheet(String dialogStyleSheet) {
+        DialogFactory.DEFAULT_STYLESHEET = dialogStyleSheet;
+    }
+
 }

@@ -1,6 +1,7 @@
 package gr.sqlbrowserfx.utils;
 
-public  class LineMatch {
+public class LineMatch {
+
     private final int lineNumber;
     private final String content;
 
@@ -22,4 +23,3 @@ public  class LineMatch {
         return lineNumber + ": " + content;
     }
 }
-

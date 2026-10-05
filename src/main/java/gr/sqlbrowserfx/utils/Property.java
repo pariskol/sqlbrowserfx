@@ -8,6 +8,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.LOCAL_VARIABLE, ElementType.FIELD})
 public @interface Property {
-	String file();
-	String property();
+
+    String file();
+
+    String property();
 }

@@ -14,23 +14,23 @@ import javafx.scene.input.TransferMode;
 
 public class DraggingTabPaneSupport {
 
-    private Tab currentDraggingTab ;
+    private Tab currentDraggingTab;
 
     private static final AtomicLong idGenerator = new AtomicLong();
 
-    private final String draggingID = "DraggingTabPaneSupport-"+idGenerator.incrementAndGet() ;
+    private final String draggingID = "DraggingTabPaneSupport-" + idGenerator.incrementAndGet();
 
-	private String dragIconUrl;
+    private String dragIconUrl;
 
-	public DraggingTabPaneSupport() {
-	}
-	
-	public DraggingTabPaneSupport(String dragIconUrl) {
-		this();
-		this.dragIconUrl = dragIconUrl;
-	}
-	
-	public void addSupport(TabPane tabPane) {
+    public DraggingTabPaneSupport() {
+    }
+
+    public DraggingTabPaneSupport(String dragIconUrl) {
+        this();
+        this.dragIconUrl = dragIconUrl;
+    }
+
+    public void addSupport(TabPane tabPane) {
         tabPane.getTabs().forEach(this::addDragHandlers);
 
         tabPane.getTabs().addListener((Change<? extends Tab> c) -> {
@@ -46,16 +46,16 @@ public class DraggingTabPaneSupport {
 
         // if we drag onto a tab pane (but not onto the tab graphic), add the tab to the end of the list of tabs:
         tabPane.setOnDragOver(e -> {
-            if (draggingID.equals(e.getDragboard().getString()) && 
-                    currentDraggingTab != null &&
-                    currentDraggingTab.getTabPane() != tabPane) {
+            if (draggingID.equals(e.getDragboard().getString())
+                    && currentDraggingTab != null
+                    && currentDraggingTab.getTabPane() != tabPane) {
                 e.acceptTransferModes(TransferMode.MOVE);
             }
         });
         tabPane.setOnDragDropped(e -> {
-            if (draggingID.equals(e.getDragboard().getString()) && 
-                    currentDraggingTab != null &&
-                    currentDraggingTab.getTabPane() != tabPane) {
+            if (draggingID.equals(e.getDragboard().getString())
+                    && currentDraggingTab != null
+                    && currentDraggingTab.getTabPane() != tabPane) {
 
                 currentDraggingTab.getTabPane().getTabs().remove(currentDraggingTab);
                 tabPane.getTabs().add(currentDraggingTab);
@@ -63,9 +63,9 @@ public class DraggingTabPaneSupport {
             }
         });
     }
-	
+
     public void addSupport(SqlPane sqlPane) {
-    	TabPane tabPane = sqlPane.getTablesTabPane();
+        TabPane tabPane = sqlPane.getTablesTabPane();
         tabPane.getTabs().forEach(tab -> addDragHandlers(tab, sqlPane));
         tabPane.getTabs().addListener((Change<? extends Tab> c) -> {
             while (c.next()) {
@@ -80,16 +80,16 @@ public class DraggingTabPaneSupport {
 
         // if we drag onto a tab pane (but not onto the tab graphic), add the tab to the end of the list of tabs:
         tabPane.setOnDragOver(e -> {
-            if (draggingID.equals(e.getDragboard().getString()) && 
-                    currentDraggingTab != null &&
-                    currentDraggingTab.getTabPane() != tabPane) {
+            if (draggingID.equals(e.getDragboard().getString())
+                    && currentDraggingTab != null
+                    && currentDraggingTab.getTabPane() != tabPane) {
                 e.acceptTransferModes(TransferMode.MOVE);
             }
         });
         tabPane.setOnDragDropped(e -> {
-            if (draggingID.equals(e.getDragboard().getString()) && 
-                    currentDraggingTab != null &&
-                    currentDraggingTab.getTabPane() != tabPane) {
+            if (draggingID.equals(e.getDragboard().getString())
+                    && currentDraggingTab != null
+                    && currentDraggingTab.getTabPane() != tabPane) {
 
                 currentDraggingTab.getTabPane().getTabs().remove(currentDraggingTab);
                 tabPane.getTabs().add(currentDraggingTab);
@@ -101,14 +101,14 @@ public class DraggingTabPaneSupport {
     private void addDragHandlers(Tab tab) {
 
         // move text to label graphic:
-        if (tab.getText() != null && ! tab.getText().isEmpty()) {
-        	Node graphic = tab.getGraphic() != null ? tab.getGraphic() : dragIconUrl != null ? JavaFXUtils.createIcon(dragIconUrl) : null;
+        if (tab.getText() != null && !tab.getText().isEmpty()) {
+            Node graphic = tab.getGraphic() != null ? tab.getGraphic() : dragIconUrl != null ? JavaFXUtils.createIcon(dragIconUrl) : null;
             Label label = new Label(tab.getText(), graphic);
-            
+
             tab.setText(null);
             tab.setGraphic(label);
         }
-        
+
         Node graphic = tab.getGraphic();
         graphic.setOnDragDetected(e -> {
             Dragboard dragboard = graphic.startDragAndDrop(TransferMode.MOVE);
@@ -118,21 +118,21 @@ public class DraggingTabPaneSupport {
             content.putString(draggingID);
             dragboard.setContent(content);
             dragboard.setDragView(graphic.snapshot(null, null));
-            currentDraggingTab = tab ;
+            currentDraggingTab = tab;
         });
         graphic.setOnDragOver(e -> {
-            if (draggingID.equals(e.getDragboard().getString()) && 
-                    currentDraggingTab != null &&
-                    currentDraggingTab.getGraphic() != graphic) {
+            if (draggingID.equals(e.getDragboard().getString())
+                    && currentDraggingTab != null
+                    && currentDraggingTab.getGraphic() != graphic) {
                 e.acceptTransferModes(TransferMode.MOVE);
             }
         });
         graphic.setOnDragDropped(e -> {
-            if (draggingID.equals(e.getDragboard().getString()) && 
-                    currentDraggingTab != null &&
-                    currentDraggingTab.getGraphic() != graphic) {
+            if (draggingID.equals(e.getDragboard().getString())
+                    && currentDraggingTab != null
+                    && currentDraggingTab.getGraphic() != graphic) {
 
-                int index = tab.getTabPane().getTabs().indexOf(tab) ;
+                int index = tab.getTabPane().getTabs().indexOf(tab);
                 currentDraggingTab.getTabPane().getTabs().remove(currentDraggingTab);
                 tab.getTabPane().getTabs().add(index, currentDraggingTab);
                 currentDraggingTab.getTabPane().getSelectionModel().select(currentDraggingTab);
@@ -140,13 +140,13 @@ public class DraggingTabPaneSupport {
         });
         graphic.setOnDragDone(e -> currentDraggingTab = null);
     }
-    
+
     private void addDragHandlers(Tab tab, SqlPane sqlPane) {
 
         // move text to label graphic:
-        if (tab.getText() != null && ! tab.getText().isEmpty() && !tab.getText().equals("Add")) {
-        	Node graphic = tab.getGraphic() != null ? tab.getGraphic() : JavaFXUtils.createIcon(dragIconUrl);
-        	tab.setGraphic(graphic);
+        if (tab.getText() != null && !tab.getText().isEmpty() && !tab.getText().equals("Add")) {
+            Node graphic = tab.getGraphic() != null ? tab.getGraphic() : JavaFXUtils.createIcon(dragIconUrl);
+            tab.setGraphic(graphic);
         }
 
         Node graphic = tab.getGraphic();
@@ -158,21 +158,21 @@ public class DraggingTabPaneSupport {
             content.putString(draggingID);
             dragboard.setContent(content);
             dragboard.setDragView(graphic.snapshot(null, null));
-            currentDraggingTab = tab ;
+            currentDraggingTab = tab;
         });
         graphic.setOnDragOver(e -> {
-            if (draggingID.equals(e.getDragboard().getString()) && 
-                    currentDraggingTab != null &&
-                    currentDraggingTab.getGraphic() != graphic) {
+            if (draggingID.equals(e.getDragboard().getString())
+                    && currentDraggingTab != null
+                    && currentDraggingTab.getGraphic() != graphic) {
                 e.acceptTransferModes(TransferMode.MOVE);
             }
         });
         graphic.setOnDragDropped(e -> {
-            if (draggingID.equals(e.getDragboard().getString()) && 
-                    currentDraggingTab != null &&
-                    currentDraggingTab.getGraphic() != graphic) {
+            if (draggingID.equals(e.getDragboard().getString())
+                    && currentDraggingTab != null
+                    && currentDraggingTab.getGraphic() != graphic) {
 
-                int index = tab.getTabPane().getTabs().indexOf(tab) ;
+                int index = tab.getTabPane().getTabs().indexOf(tab);
                 currentDraggingTab.getTabPane().getTabs().remove(currentDraggingTab);
                 tab.getTabPane().getTabs().add(index, currentDraggingTab);
                 currentDraggingTab.getTabPane().getSelectionModel().select(currentDraggingTab);

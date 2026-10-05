@@ -3,30 +3,32 @@ package gr.sqlbrowserfx.nodes.tableviews.filter;
 import java.util.HashMap;
 import java.util.Optional;
 
-
 final class DupeCounter<T> {
 
-    private final HashMap<T,Integer> counts = new HashMap<>();
+    private final HashMap<T, Integer> counts = new HashMap<>();
     private final boolean enforceFloor;
 
     public DupeCounter(boolean enforceFloor) {
         this.enforceFloor = enforceFloor;
     }
+
     public int add(T value) {
         Integer prev = counts.get(value);
         int newVal;
         if (prev == null) {
             newVal = 1;
             counts.put(value, newVal);
-        }  else {
+        } else {
             newVal = prev + 1;
             counts.put(value, newVal);
         }
         return newVal;
     }
+
     public int get(T value) {
         return Optional.ofNullable(counts.get(value)).orElse(0);
     }
+
     public int remove(T value) {
         Integer prev = counts.get(value);
         if (prev != null && prev > 0) {
@@ -37,11 +39,9 @@ final class DupeCounter<T> {
                 counts.put(value, newVal);
             }
             return newVal;
-        }
-        else if (enforceFloor) {
+        } else if (enforceFloor) {
             throw new IllegalStateException();
-        }
-        else {
+        } else {
             return 0;
         }
     }

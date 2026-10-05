@@ -579,7 +579,8 @@
 	-fx-padding: 10.0;
 }
 
-.popover>.detached {}
+.popover>.detached {
+}
 
 .popover>.content>.title>.text {
 	-fx-padding: 6.0 6.0 0.0 6.0;

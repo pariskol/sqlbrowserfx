@@ -20,80 +20,80 @@ import gr.sqlbrowserfx.LoggerConf;
 
 public class FilesUtils {
 
-	public static List<FileInfo> walkContentsWithLines(String dir, String regex, String extension, int depth) {
-	    var pattern = Pattern.compile(regex);
-	    var results = new ArrayList<FileInfo>();
+    public static List<FileInfo> walkContentsWithLines(String dir, String regex, String extension, int depth) {
+        var pattern = Pattern.compile(regex);
+        var results = new ArrayList<FileInfo>();
 
-	    try (var stream = Files.walk(Paths.get(dir), depth)) {
-	        stream
-		        .filter(file -> {
-		            try {
-		                // Skip hidden files and any files inside hidden directories
-		                Path current = file;
-		                while (current != null && !current.equals(Paths.get(dir))) {
-		                    if (Files.isHidden(current)) {
-		                        return false;
-		                    }
-		                    current = current.getParent();
-		                }
-		                return true;
-		            } catch (IOException e) {
-		                return false;
-		            }
-		        })
-	            .filter(Files::isRegularFile) // skip directories
-	            .filter(file -> extension.isEmpty() ? true : file.getFileName().toString().toLowerCase().endsWith(extension.toLowerCase()))
-	            .forEach(file -> {
-	                var matchingLines = new ArrayList<LineMatch>();
-	                try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
-	                    String line;
-	                    int lineNumber = 1;
-	                    while ((line = reader.readLine()) != null) {
-	                        if (pattern.matcher(line).find()) {
-	                            matchingLines.add(
-                            		new LineMatch(
-                        				lineNumber, 
-                        				line.trim()
-									)
-	                            );
-	                        }
-	                        lineNumber++;
-	                    }
-	                } catch (IOException | UncheckedIOException e) {
-	                    // skip unreadable/binary files
-	                }
+        try (var stream = Files.walk(Paths.get(dir), depth)) {
+            stream
+                    .filter(file -> {
+                        try {
+                            // Skip hidden files and any files inside hidden directories
+                            Path current = file;
+                            while (current != null && !current.equals(Paths.get(dir))) {
+                                if (Files.isHidden(current)) {
+                                    return false;
+                                }
+                                current = current.getParent();
+                            }
+                            return true;
+                        } catch (IOException e) {
+                            return false;
+                        }
+                    })
+                    .filter(Files::isRegularFile) // skip directories
+                    .filter(file -> extension.isEmpty() ? true : file.getFileName().toString().toLowerCase().endsWith(extension.toLowerCase()))
+                    .forEach(file -> {
+                        var matchingLines = new ArrayList<LineMatch>();
+                        try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+                            String line;
+                            int lineNumber = 1;
+                            while ((line = reader.readLine()) != null) {
+                                if (pattern.matcher(line).find()) {
+                                    matchingLines.add(
+                                            new LineMatch(
+                                                    lineNumber,
+                                                    line.trim()
+                                            )
+                                    );
+                                }
+                                lineNumber++;
+                            }
+                        } catch (IOException | UncheckedIOException e) {
+                            // skip unreadable/binary files
+                        }
 
-	                if (!matchingLines.isEmpty()) {
-							results.add(
-								new FileInfo(
-									dir,
-									file.getFileName().toString(), 
-									file.toAbsolutePath().toString(),
-									matchingLines
-								)
-							);
-	                }
-	            });
-	    } catch (Exception e) {
-	        LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("File search failed", e);
-	    }
+                        if (!matchingLines.isEmpty()) {
+                            results.add(
+                                    new FileInfo(
+                                            dir,
+                                            file.getFileName().toString(),
+                                            file.toAbsolutePath().toString(),
+                                            matchingLines
+                                    )
+                            );
+                        }
+                    });
+        } catch (Exception e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("File search failed", e);
+        }
 
-	    return results;
-	}
+        return results;
+    }
 
-	public static Set<String> walk(String dir, String pattern, int depth) {
-		var split = pattern.split("\\.", 2);
-		var actualPattern = split[0];
-		var fileEnding = split.length > 1 ? split[1] : "";
-	    try (var stream = Files.walk(Paths.get(dir), depth)) {
-	        return stream
-	          .filter(file -> !Files.isDirectory(file) && (fileEnding.isEmpty() || file.getFileName().toString().endsWith(fileEnding)) && file.getFileName().toString().toLowerCase().contains(actualPattern.toLowerCase()))
-	          .map(Path::toAbsolutePath)
-	          .map(Path::toString)
-	          .collect(Collectors.toSet());
-	    } catch(Exception e) {
-	    	LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("File search failed", e);
-	    	return new HashSet<>();
-	    }
-	}
+    public static Set<String> walk(String dir, String pattern, int depth) {
+        var split = pattern.split("\\.", 2);
+        var actualPattern = split[0];
+        var fileEnding = split.length > 1 ? split[1] : "";
+        try (var stream = Files.walk(Paths.get(dir), depth)) {
+            return stream
+                    .filter(file -> !Files.isDirectory(file) && (fileEnding.isEmpty() || file.getFileName().toString().endsWith(fileEnding)) && file.getFileName().toString().toLowerCase().contains(actualPattern.toLowerCase()))
+                    .map(Path::toAbsolutePath)
+                    .map(Path::toString)
+                    .collect(Collectors.toSet());
+        } catch (Exception e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("File search failed", e);
+            return new HashSet<>();
+        }
+    }
 }

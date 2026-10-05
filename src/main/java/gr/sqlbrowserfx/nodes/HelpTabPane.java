@@ -16,26 +16,27 @@ import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 
 public class HelpTabPane extends TabPane {
-	private HttpClient httpClient = new HttpClient();
 
-	public HelpTabPane() throws IOException, InterruptedException, URISyntaxException {
-		super();
-		String desc = httpClient.get("https://raw.githubusercontent.com/pariskol/sqlbrowserfx/master/README.md");
-		String license = httpClient.get("https://raw.githubusercontent.com/pariskol/sqlbrowserfx/master/LICENSE");
-		
-		TextArea descTextArea = new TextArea(desc);
-		descTextArea.setEditable(false);
-		descTextArea.setWrapText(true);
-		
-		TextArea licenseTextArea = new TextArea(license);
-		licenseTextArea.setEditable(false);
-		Tab tab = new Tab("Description", descTextArea);
-		tab.setClosable(false);
-		this.getTabs().add(tab);
-		tab = new Tab("Shortcuts", new HelpShortcutsTabPane());
-		tab.setClosable(false);
-		this.getTabs().add(tab);
-		TextArea restTextArea = new TextArea("""
+    private HttpClient httpClient = new HttpClient();
+
+    public HelpTabPane() throws IOException, InterruptedException, URISyntaxException {
+        super();
+        String desc = httpClient.get("https://raw.githubusercontent.com/pariskol/sqlbrowserfx/master/README.md");
+        String license = httpClient.get("https://raw.githubusercontent.com/pariskol/sqlbrowserfx/master/LICENSE");
+
+        TextArea descTextArea = new TextArea(desc);
+        descTextArea.setEditable(false);
+        descTextArea.setWrapText(true);
+
+        TextArea licenseTextArea = new TextArea(license);
+        licenseTextArea.setEditable(false);
+        Tab tab = new Tab("Description", descTextArea);
+        tab.setClosable(false);
+        this.getTabs().add(tab);
+        tab = new Tab("Shortcuts", new HelpShortcutsTabPane());
+        tab.setClosable(false);
+        this.getTabs().add(tab);
+        TextArea restTextArea = new TextArea("""
                 SqlBrowserFX provides a simple rest api for fast prototyping
 
                 Available Endpoints:
@@ -45,36 +46,36 @@ public class HelpTabPane extends TabPane {
                 /api/save/:table (with json body with keys matching table columns)
                 /api/delete/:table (with json body with keys matching table columns)
                 """);
-		restTextArea.setEditable(false);
-		tab = new Tab("Rest Api", restTextArea);
-		tab.setClosable(false);
-		this.getTabs().add(tab);
-		tab = new Tab("License", licenseTextArea);
-		tab.setClosable(false);
-		this.getTabs().add(tab);
-		
-		TextArea contactTextArea = new TextArea(
+        restTextArea.setEditable(false);
+        tab = new Tab("Rest Api", restTextArea);
+        tab.setClosable(false);
+        this.getTabs().add(tab);
+        tab = new Tab("License", licenseTextArea);
+        tab.setClosable(false);
+        this.getTabs().add(tab);
+
+        TextArea contactTextArea = new TextArea(
                 """
                         GitHub Page: https://github.com/pariskol/sqlbrowserfx
 
                         Email: pariskolovos@live.com""");
-		contactTextArea.setEditable(false);
-		tab = new Tab("Contact", contactTextArea);
-		tab.setClosable(false);
-		this.getTabs().add(tab);
-		
-		TextArea propsArea;
-		try(var lines = Files.lines(Paths.get("./sqlbrowserfx.properties"))) {
-			String propsStr = StringUtils.join(lines.collect(Collectors.toList()), "\n");
-			propsArea = new TextArea(propsStr);
-			propsArea.setEditable(false);
-			tab = new Tab("Properties", propsArea);
-			tab.setClosable(false);
-			this.getTabs().add(tab);
-		} catch (IOException e) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
-		}
-		
-	}
-	
+        contactTextArea.setEditable(false);
+        tab = new Tab("Contact", contactTextArea);
+        tab.setClosable(false);
+        this.getTabs().add(tab);
+
+        TextArea propsArea;
+        try (var lines = Files.lines(Paths.get("./sqlbrowserfx.properties"))) {
+            String propsStr = StringUtils.join(lines.collect(Collectors.toList()), "\n");
+            propsArea = new TextArea(propsStr);
+            propsArea.setEditable(false);
+            tab = new Tab("Properties", propsArea);
+            tab.setClosable(false);
+            this.getTabs().add(tab);
+        } catch (IOException e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage());
+        }
+
+    }
+
 }

@@ -4,5 +4,5 @@ import javafx.scene.layout.FlowPane;
 
 public interface ToolbarOwner {
 
-	FlowPane createToolbar();
+    FlowPane createToolbar();
 }

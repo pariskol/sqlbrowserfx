@@ -25,29 +25,30 @@ import javafx.stage.FileChooser;
 
 public class FileSearchPopOver extends CustomPopOver {
 
-	@FunctionalInterface
-	public interface Action {
-		void run(File selectedFile);
-	}
+    @FunctionalInterface
+    public interface Action {
 
-	private final Action action;
-	private ScheduledExecutorService executor;
-	private final TextField searchField;
-	private final ListView<String> filesListView;
-	private String rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
-			.replaceAll("\"", "");
-	private Label descLabel;
+        void run(File selectedFile);
+    }
 
-	public FileSearchPopOver(Action action) {
-		super();
+    private final Action action;
+    private ScheduledExecutorService executor;
+    private final TextField searchField;
+    private final ListView<String> filesListView;
+    private String rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
+            .replaceAll("\"", "");
+    private Label descLabel;
 
-		this.action = action;
-		Button openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
-		openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
-		openButton.setTooltip(new Tooltip("Open file"));
-		
-		filesListView = new ListView<>();
-		filesListView.setCellFactory(param -> new ListCell<>() {
+    public FileSearchPopOver(Action action) {
+        super();
+
+        this.action = action;
+        Button openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
+        openButton.setOnMouseClicked(mouseEvent -> this.openFileAction());
+        openButton.setTooltip(new Tooltip("Open file"));
+
+        filesListView = new ListView<>();
+        filesListView.setCellFactory(param -> new ListCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -71,93 +72,93 @@ public class FileSearchPopOver extends CustomPopOver {
                 }
             }
         });
-		filesListView.setPrefSize(800, 500);
+        filesListView.setPrefSize(800, 500);
 
-		searchField = new TextField();
+        searchField = new TextField();
 //		searchField.setPrefWidth(576);
-		searchField.setPromptText("Search for file (syntax: <pattern>.<suffix>)...");
-		searchField.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				search();
-			}
-			
-			if (keyEvent.getCode() != KeyCode.ESCAPE) {
-				keyEvent.consume();
-			}
-		});
+        searchField.setPromptText("Search for file (syntax: <pattern>.<suffix>)...");
+        searchField.setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER) {
+                search();
+            }
 
-		// TODO: add open button if has any value
-		ImageView descIcon = JavaFXUtils.createIcon("/icons/settings.png");
-		
-		descLabel = new Label("File Search in: " + rootPath, descIcon);
-		descLabel.setOnMouseClicked(event -> {
-			this.hide();
-			var dirChooser = new DirectoryChooser();
-			var initialDir = new File(this.rootPath);
-			dirChooser.setInitialDirectory(initialDir);
-			var selectedDir = dirChooser.showDialog(this.getOwnerWindow());
-			if (selectedDir != null) {
-				this.rootPath = selectedDir.getAbsolutePath();
-				descLabel.setText("File Search in: " + rootPath);
-				PropertiesLoader.storeProperty("./sqlbrowserfx.properties", "sqlbrowserfx.root.path", this.rootPath);
-			}
-		});
-		descLabel.setTooltip(new Tooltip("Click to change root path"));
-		
-		this.setContentNode(new CustomVBox(descLabel, searchField, filesListView));
+            if (keyEvent.getCode() != KeyCode.ESCAPE) {
+                keyEvent.consume();
+            }
+        });
 
-		this.setOnShowing(event -> {
-			PropertiesLoader.loadProperties();
-			rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
-					.replaceAll("\"", "");
-			this.descLabel.setText("File Search in: " + rootPath);
-		});
-		this.setOnShown(event -> searchField.requestFocus());
-		this.setHideOnEscape(true);
-		this.setOnHidden(event -> {
-			if (executor != null) {
-				executor.shutdownNow();
-			}
-		});
-		
-		filesListView.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				String filePath = filesListView.getSelectionModel().getSelectedItem();
-				action.run(new File(filePath));
-			}
-			
-			if (keyEvent.getCode() == KeyCode.ESCAPE) {
-				this.hide();
-			}
-		});
-		filesListView.setOnMouseClicked(mouseEvent -> {
-			if (mouseEvent.getClickCount() == 2) {
-				String filePath = filesListView.getSelectionModel().getSelectedItem();
-				action.run(new File(filePath));
-			}
-		});
-	}
+        // TODO: add open button if has any value
+        ImageView descIcon = JavaFXUtils.createIcon("/icons/settings.png");
 
-	private void openFileAction() {
-		FileChooser fileChooser = new FileChooser();
-		File selectedFile = fileChooser.showOpenDialog(null);
-		action.run(selectedFile);
-	}
-	
-	private void search() {
-		searchField.setDisable(true);
-		filesListView.setDisable(true);
-		
-		String pattern = searchField.getText();
+        descLabel = new Label("File Search in: " + rootPath, descIcon);
+        descLabel.setOnMouseClicked(event -> {
+            this.hide();
+            var dirChooser = new DirectoryChooser();
+            var initialDir = new File(this.rootPath);
+            dirChooser.setInitialDirectory(initialDir);
+            var selectedDir = dirChooser.showDialog(this.getOwnerWindow());
+            if (selectedDir != null) {
+                this.rootPath = selectedDir.getAbsolutePath();
+                descLabel.setText("File Search in: " + rootPath);
+                PropertiesLoader.storeProperty("./sqlbrowserfx.properties", "sqlbrowserfx.root.path", this.rootPath);
+            }
+        });
+        descLabel.setTooltip(new Tooltip("Click to change root path"));
 
-		executor = Executors.newSingleThreadScheduledExecutor();
-		executor.schedule(() -> {
-			Set<String> filesPathsFound = FilesUtils.walk(rootPath, pattern, 10);
-			Platform.runLater(() -> {
-				filesListView.setItems(FXCollections.observableArrayList(filesPathsFound));
-				searchField.setDisable(false);
-				filesListView.setDisable(false);
-			});
-		}, 0, TimeUnit.SECONDS);
-	}
+        this.setContentNode(new CustomVBox(descLabel, searchField, filesListView));
+
+        this.setOnShowing(event -> {
+            PropertiesLoader.loadProperties();
+            rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
+                    .replaceAll("\"", "");
+            this.descLabel.setText("File Search in: " + rootPath);
+        });
+        this.setOnShown(event -> searchField.requestFocus());
+        this.setHideOnEscape(true);
+        this.setOnHidden(event -> {
+            if (executor != null) {
+                executor.shutdownNow();
+            }
+        });
+
+        filesListView.setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER) {
+                String filePath = filesListView.getSelectionModel().getSelectedItem();
+                action.run(new File(filePath));
+            }
+
+            if (keyEvent.getCode() == KeyCode.ESCAPE) {
+                this.hide();
+            }
+        });
+        filesListView.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getClickCount() == 2) {
+                String filePath = filesListView.getSelectionModel().getSelectedItem();
+                action.run(new File(filePath));
+            }
+        });
+    }
+
+    private void openFileAction() {
+        FileChooser fileChooser = new FileChooser();
+        File selectedFile = fileChooser.showOpenDialog(null);
+        action.run(selectedFile);
+    }
+
+    private void search() {
+        searchField.setDisable(true);
+        filesListView.setDisable(true);
+
+        String pattern = searchField.getText();
+
+        executor = Executors.newSingleThreadScheduledExecutor();
+        executor.schedule(() -> {
+            Set<String> filesPathsFound = FilesUtils.walk(rootPath, pattern, 10);
+            Platform.runLater(() -> {
+                filesListView.setItems(FXCollections.observableArrayList(filesPathsFound));
+                searchField.setDisable(false);
+                filesListView.setDisable(false);
+            });
+        }, 0, TimeUnit.SECONDS);
+    }
 }

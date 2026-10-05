@@ -49,250 +49,245 @@ import javafx.stage.DirectoryChooser;
 
 public class SearchInFilesPopOver extends CustomPopOver {
 
-	private String rootPath = "~/";
-	
-	private CodeArea codeArea = new CodeArea();
-	TextField searchField;
-	private TextField extensionField;
-	private TableView<FileInfo> filesTableView;
-	private ListView<LineMatch> linesListView;	
-	private CheckBox wholeWordCheckBox;
-	private CheckBox caseInsensitiveCheckBox;
-	private SplitPane vSplit;
-	
-	private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private String rootPath = "~/";
 
-	private Label descLabel;
+    private CodeArea codeArea = new CodeArea();
+    TextField searchField;
+    private TextField extensionField;
+    private TableView<FileInfo> filesTableView;
+    private ListView<LineMatch> linesListView;
+    private CheckBox wholeWordCheckBox;
+    private CheckBox caseInsensitiveCheckBox;
+    private SplitPane vSplit;
 
-	
-	public SearchInFilesPopOver() {
-		var fileSearchBox = this.createFileSearchBox();
-		var linesListBox = this.createLinesListBox();
-		var hSplit = new SplitPane(fileSearchBox, linesListBox);
-		hSplit.setOrientation(Orientation.HORIZONTAL);
-		hSplit.setDividerPositions(0.7f, 0.3f); 
-		
+    private ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-		vSplit = new SplitPane(hSplit, new VirtualizedScrollPane<CodeArea>(codeArea));
-		vSplit.setOrientation(Orientation.VERTICAL);
-		
-		var borderPane = new BorderPane(vSplit);
-		this.setContentNode(borderPane);
-		this.setMaxSize(1280, 720);
-		this.setHideOnEscape(true);
-		this.setOnShowing(event -> {
-			PropertiesLoader.loadProperties();
-			rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
-					.replaceAll("\"", "");
-			this.descLabel.setText("File Search in: " + rootPath);
-		});
-		this.setOnHidden(event -> {
-			if (executor != null) {
-				executor.shutdownNow();
-			}
-		});
-	}
+    private Label descLabel;
 
-	
-	private VBox createLinesListBox() {
-		this.createLinesListView();
-		
-		var nextBtn = new Button("Next >");
-		nextBtn.setOnAction(evetn -> {
-			var idx = linesListView.getSelectionModel().getSelectedIndex();
-			if (idx < linesListView.getItems().size() - 1) {
-				idx++;
-			}
-			
-			linesListView.getSelectionModel().select(idx);
-			selectLineMatch(linesListView.getSelectionModel().getSelectedItem());
-		});
-		
-		var prevBtn = new Button("< Prev");
-		prevBtn.setOnAction(evetn -> {
-			var idx = linesListView.getSelectionModel().getSelectedIndex();
-			if (idx > 0) {
-				idx--;
-			}
-			
-			linesListView.getSelectionModel().select(idx);
-			selectLineMatch(linesListView.getSelectionModel().getSelectedItem());
-		});
-		
-		var label = new Label("Lines Matches");
-		label.setPadding(new Insets(3, 0, 3, 0));
-		var vbox = new CustomVBox(label, new CustomHBox(prevBtn, nextBtn), linesListView);
-		linesListView.prefHeightProperty().bind(filesTableView.heightProperty());
-		return vbox;
-	}
+    public SearchInFilesPopOver() {
+        var fileSearchBox = this.createFileSearchBox();
+        var linesListBox = this.createLinesListBox();
+        var hSplit = new SplitPane(fileSearchBox, linesListBox);
+        hSplit.setOrientation(Orientation.HORIZONTAL);
+        hSplit.setDividerPositions(0.7f, 0.3f);
 
-	private VBox createFileSearchBox() {
-		var vbox = new CustomVBox();
-		var openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
-		openButton.setTooltip(new Tooltip("Open file"));
-		
-		extensionField = new TextField();
-		extensionField.setPromptText("File Extension...");
-		searchField = new TextField();
-//		searchField.setPrefWidth(576);
-		searchField.setPromptText("Pattern...");
-		searchField.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER) {
-				search();
-			}
-			
-			if (keyEvent.getCode() != KeyCode.ESCAPE) {
-				keyEvent.consume();
-			}
-		});
-		wholeWordCheckBox = new CheckBox("ww");
-		wholeWordCheckBox.setTooltip(new Tooltip("Whole Word"));
-		wholeWordCheckBox.setFocusTraversable(false);
-		caseInsensitiveCheckBox = new CheckBox("ci");
-		caseInsensitiveCheckBox.setTooltip(new Tooltip("Case Insensitive"));
-		caseInsensitiveCheckBox.setFocusTraversable(false);
+        vSplit = new SplitPane(hSplit, new VirtualizedScrollPane<CodeArea>(codeArea));
+        vSplit.setOrientation(Orientation.VERTICAL);
 
-		descLabel = new Label("File Search in: " + rootPath);
-
-		var settingsButton = new Button("", JavaFXUtils.createIcon("/icons/settings.png"));
-		settingsButton.setOnMouseClicked(event -> {
-			var dirChooser = new DirectoryChooser();
-			var initialDir = new File(this.rootPath);
-			dirChooser.setInitialDirectory(initialDir);
-			var selectedDir = dirChooser.showDialog(this.getOwnerWindow());
-			if (selectedDir != null) {
-				this.rootPath = selectedDir.getAbsolutePath();
-				descLabel.setText("File Search in: " + rootPath);
-				PropertiesLoader.storeProperty("./sqlbrowserfx.properties", "sqlbrowserfx.root.path", this.rootPath);
-			}
-		});
-		settingsButton.setTooltip(new Tooltip("Click to change root path"));
-		
-		this.createFilesTableView();
-		
-		var searchButton = new Button("Search", JavaFXUtils.createIcon("/icons/magnify.png"));
-		searchButton.setOnAction(event -> this.search());
-		
-		vbox.getChildren().addAll(
-			new CustomHBox(settingsButton, descLabel),
-			new CustomHBox(
-				searchField, 
-				caseInsensitiveCheckBox,
-				wholeWordCheckBox,
-				extensionField,
-				searchButton
-			), 
-			filesTableView);
-		return vbox;
-	}
-
-	private void createLinesListView() {
-		linesListView = new ListView<>();
-		linesListView.setOnMouseClicked(event -> {
-		    if (event.getClickCount() == 1) {
-		        var selectedItem = linesListView.getSelectionModel().getSelectedItem();
-		        this.selectLineMatch(selectedItem);
-		    }
-		});
-		
-	    
-		linesListView.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER
-			        || keyEvent.getCode() == KeyCode.UP
-			        || keyEvent.getCode() == KeyCode.DOWN) {
-				var selectedItem = linesListView.getSelectionModel().getSelectedItem();
-				this.selectLineMatch(selectedItem);
-			}
-		});
-		
-		VBox.setVgrow(linesListView, Priority.ALWAYS);
-	}
-
-	private void createFilesTableView() {
-		filesTableView = new TableView<>();
-		var nameColumn = new TableColumn<FileInfo, String>("File");
-		nameColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getName()));
-		filesTableView.getColumns().add(nameColumn);
-		nameColumn.setPrefWidth(400);
-
-		var countColumn = new TableColumn<FileInfo, String>("Matches");
-		countColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getMatchCount().toString()));
-		filesTableView.getColumns().add(countColumn);
-
-		var pathColumn = new TableColumn<FileInfo, String>("Relative Path");
-		pathColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getRelativePath()));
-		filesTableView.getColumns().add(pathColumn);
-		pathColumn.setPrefWidth(400);
-		filesTableView.setMaxHeight(Double.MAX_VALUE);
-		VBox.setVgrow(filesTableView, Priority.ALWAYS);
-		
-		filesTableView.setOnKeyPressed(keyEvent -> {
-			if (keyEvent.getCode() == KeyCode.ENTER
-			        || keyEvent.getCode() == KeyCode.UP
-			        || keyEvent.getCode() == KeyCode.DOWN) {
-				this.selectFile();
-			}
-		});
-		filesTableView.setOnMouseClicked(mouseEvent -> {
-			if (mouseEvent.getButton() == MouseButton.PRIMARY) {
-				this.selectFile();
-			}
-		});
-		
-		var menuItemCopy = new MenuItem("Copy Absolute Path", JavaFXUtils.createIcon("/icons/copy.png"));
-        menuItemCopy.setOnAction(event -> {
-			var selectedItem = filesTableView.getSelectionModel().getSelectedItem();
-			if (selectedItem != null) {
-				var content = new ClipboardContent();
-	            content.putString(selectedItem.getAbsolutePath());
-	            Clipboard.getSystemClipboard().setContent(content);
-			}
+        var borderPane = new BorderPane(vSplit);
+        this.setContentNode(borderPane);
+        this.setMaxSize(1280, 720);
+        this.setHideOnEscape(true);
+        this.setOnShowing(event -> {
+            PropertiesLoader.loadProperties();
+            rootPath = ((String) PropertiesLoader.getProperty("sqlbrowserfx.root.path", String.class, "~/"))
+                    .replaceAll("\"", "");
+            this.descLabel.setText("File Search in: " + rootPath);
         });
-        
+        this.setOnHidden(event -> {
+            if (executor != null) {
+                executor.shutdownNow();
+            }
+        });
+    }
+
+    private VBox createLinesListBox() {
+        this.createLinesListView();
+
+        var nextBtn = new Button("Next >");
+        nextBtn.setOnAction(evetn -> {
+            var idx = linesListView.getSelectionModel().getSelectedIndex();
+            if (idx < linesListView.getItems().size() - 1) {
+                idx++;
+            }
+
+            linesListView.getSelectionModel().select(idx);
+            selectLineMatch(linesListView.getSelectionModel().getSelectedItem());
+        });
+
+        var prevBtn = new Button("< Prev");
+        prevBtn.setOnAction(evetn -> {
+            var idx = linesListView.getSelectionModel().getSelectedIndex();
+            if (idx > 0) {
+                idx--;
+            }
+
+            linesListView.getSelectionModel().select(idx);
+            selectLineMatch(linesListView.getSelectionModel().getSelectedItem());
+        });
+
+        var label = new Label("Lines Matches");
+        label.setPadding(new Insets(3, 0, 3, 0));
+        var vbox = new CustomVBox(label, new CustomHBox(prevBtn, nextBtn), linesListView);
+        linesListView.prefHeightProperty().bind(filesTableView.heightProperty());
+        return vbox;
+    }
+
+    private VBox createFileSearchBox() {
+        var vbox = new CustomVBox();
+        var openButton = new Button("", JavaFXUtils.createIcon("/icons/code-file.png"));
+        openButton.setTooltip(new Tooltip("Open file"));
+
+        extensionField = new TextField();
+        extensionField.setPromptText("File Extension...");
+        searchField = new TextField();
+//		searchField.setPrefWidth(576);
+        searchField.setPromptText("Pattern...");
+        searchField.setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER) {
+                search();
+            }
+
+            if (keyEvent.getCode() != KeyCode.ESCAPE) {
+                keyEvent.consume();
+            }
+        });
+        wholeWordCheckBox = new CheckBox("ww");
+        wholeWordCheckBox.setTooltip(new Tooltip("Whole Word"));
+        wholeWordCheckBox.setFocusTraversable(false);
+        caseInsensitiveCheckBox = new CheckBox("ci");
+        caseInsensitiveCheckBox.setTooltip(new Tooltip("Case Insensitive"));
+        caseInsensitiveCheckBox.setFocusTraversable(false);
+
+        descLabel = new Label("File Search in: " + rootPath);
+
+        var settingsButton = new Button("", JavaFXUtils.createIcon("/icons/settings.png"));
+        settingsButton.setOnMouseClicked(event -> {
+            var dirChooser = new DirectoryChooser();
+            var initialDir = new File(this.rootPath);
+            dirChooser.setInitialDirectory(initialDir);
+            var selectedDir = dirChooser.showDialog(this.getOwnerWindow());
+            if (selectedDir != null) {
+                this.rootPath = selectedDir.getAbsolutePath();
+                descLabel.setText("File Search in: " + rootPath);
+                PropertiesLoader.storeProperty("./sqlbrowserfx.properties", "sqlbrowserfx.root.path", this.rootPath);
+            }
+        });
+        settingsButton.setTooltip(new Tooltip("Click to change root path"));
+
+        this.createFilesTableView();
+
+        var searchButton = new Button("Search", JavaFXUtils.createIcon("/icons/magnify.png"));
+        searchButton.setOnAction(event -> this.search());
+
+        vbox.getChildren().addAll(
+                new CustomHBox(settingsButton, descLabel),
+                new CustomHBox(
+                        searchField,
+                        caseInsensitiveCheckBox,
+                        wholeWordCheckBox,
+                        extensionField,
+                        searchButton
+                ),
+                filesTableView);
+        return vbox;
+    }
+
+    private void createLinesListView() {
+        linesListView = new ListView<>();
+        linesListView.setOnMouseClicked(event -> {
+            if (event.getClickCount() == 1) {
+                var selectedItem = linesListView.getSelectionModel().getSelectedItem();
+                this.selectLineMatch(selectedItem);
+            }
+        });
+
+        linesListView.setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER
+                    || keyEvent.getCode() == KeyCode.UP
+                    || keyEvent.getCode() == KeyCode.DOWN) {
+                var selectedItem = linesListView.getSelectionModel().getSelectedItem();
+                this.selectLineMatch(selectedItem);
+            }
+        });
+
+        VBox.setVgrow(linesListView, Priority.ALWAYS);
+    }
+
+    private void createFilesTableView() {
+        filesTableView = new TableView<>();
+        var nameColumn = new TableColumn<FileInfo, String>("File");
+        nameColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getName()));
+        filesTableView.getColumns().add(nameColumn);
+        nameColumn.setPrefWidth(400);
+
+        var countColumn = new TableColumn<FileInfo, String>("Matches");
+        countColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getMatchCount().toString()));
+        filesTableView.getColumns().add(countColumn);
+
+        var pathColumn = new TableColumn<FileInfo, String>("Relative Path");
+        pathColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getRelativePath()));
+        filesTableView.getColumns().add(pathColumn);
+        pathColumn.setPrefWidth(400);
+        filesTableView.setMaxHeight(Double.MAX_VALUE);
+        VBox.setVgrow(filesTableView, Priority.ALWAYS);
+
+        filesTableView.setOnKeyPressed(keyEvent -> {
+            if (keyEvent.getCode() == KeyCode.ENTER
+                    || keyEvent.getCode() == KeyCode.UP
+                    || keyEvent.getCode() == KeyCode.DOWN) {
+                this.selectFile();
+            }
+        });
+        filesTableView.setOnMouseClicked(mouseEvent -> {
+            if (mouseEvent.getButton() == MouseButton.PRIMARY) {
+                this.selectFile();
+            }
+        });
+
+        var menuItemCopy = new MenuItem("Copy Absolute Path", JavaFXUtils.createIcon("/icons/copy.png"));
+        menuItemCopy.setOnAction(event -> {
+            var selectedItem = filesTableView.getSelectionModel().getSelectedItem();
+            if (selectedItem != null) {
+                var content = new ClipboardContent();
+                content.putString(selectedItem.getAbsolutePath());
+                Clipboard.getSystemClipboard().setContent(content);
+            }
+        });
+
         var openFile = new MenuItem("Open File", JavaFXUtils.createIcon("/icons/code-file.png"));
         openFile.setOnAction(e -> {
             var selected = filesTableView.getSelectionModel().getSelectedItem();
             if (selected != null) {
-            	var filesTabPane = SqlBrowserFXAppManager.getFirstActiveFilesTabPane();
-    			if (filesTabPane != null) {
-    				filesTabPane.openNewFileTab(new File(selected.getAbsolutePath()));
-    			}
+                var filesTabPane = SqlBrowserFXAppManager.getFirstActiveFilesTabPane();
+                if (filesTabPane != null) {
+                    filesTabPane.openNewFileTab(new File(selected.getAbsolutePath()));
+                }
             }
         });
-        
-		filesTableView.setContextMenu(new ContextMenu(menuItemCopy, openFile));
-	}
 
-	private void selectFile() {
-		var fileInfo = filesTableView.getSelectionModel().getSelectedItem();
-		if (fileInfo == null) {
-			return;
-		}
-		this.openFile(fileInfo.getAbsolutePath());
-		this.linesListView.setItems(FXCollections.observableArrayList(fileInfo.getLineMatches()));
-		this.selectLineMatch(this.linesListView.getItems().get(0));
-	}
+        filesTableView.setContextMenu(new ContextMenu(menuItemCopy, openFile));
+    }
 
-	private void selectLineMatch(LineMatch selectedItem) {
-		if (selectedItem == null) {
-		    return;
-		}
-		int line = selectedItem.getLineNumber() - 1; // CodeArea lines are 0-based
-		int position = codeArea.position(line, 0).toOffset();
-		codeArea.moveTo(position);
+    private void selectFile() {
+        var fileInfo = filesTableView.getSelectionModel().getSelectedItem();
+        if (fileInfo == null) {
+            return;
+        }
+        this.openFile(fileInfo.getAbsolutePath());
+        this.linesListView.setItems(FXCollections.observableArrayList(fileInfo.getLineMatches()));
+        this.selectLineMatch(this.linesListView.getItems().get(0));
+    }
 
-		int lineEnd = codeArea.position(line + 1, 0).toOffset();
-		codeArea.selectRange(position, lineEnd);
+    private void selectLineMatch(LineMatch selectedItem) {
+        if (selectedItem == null) {
+            return;
+        }
+        int line = selectedItem.getLineNumber() - 1; // CodeArea lines are 0-based
+        int position = codeArea.position(line, 0).toOffset();
+        codeArea.moveTo(position);
 
-		codeArea.showParagraphAtCenter(line);
-	}
-	
-	
-	private void openFile(String absolutePath) {
-		if (codeArea instanceof FileCodeArea && absolutePath.equals(((FileCodeArea) this.codeArea).getPath())) {
-			return;
-		}
-		
+        int lineEnd = codeArea.position(line + 1, 0).toOffset();
+        codeArea.selectRange(position, lineEnd);
+
+        codeArea.showParagraphAtCenter(line);
+    }
+
+    private void openFile(String absolutePath) {
+        if (codeArea instanceof FileCodeArea && absolutePath.equals(((FileCodeArea) this.codeArea).getPath())) {
+            return;
+        }
+
         var file = new File(absolutePath);
         if (file.getName().endsWith(".java")) {
             this.codeArea = new FileJavaCodeArea(file);
@@ -302,70 +297,69 @@ public class SearchInFilesPopOver extends CustomPopOver {
             this.codeArea = new FileTypeScriptCodeArea(file);
         } else if (file.getName().endsWith(".html")) {
             this.codeArea = new FileTypeScriptCodeArea(file);
-        } 
-        else {
+        } else {
             this.codeArea = new SimpleFileCodeArea(file);
         }
-        
+
         this.vSplit.getItems().remove(1);
         this.vSplit.getItems().add(new VirtualizedScrollPane<CodeArea>(codeArea));
-	}
-	
-	private void openInVSCode(String filePath, boolean reuseWindow) {
-	    try {
-	        var command = new ArrayList<String>();
-	        command.add("codium");
+    }
 
-	        if (reuseWindow) {
-	            command.add("-r"); // reuse active window
-	        }
+    private void openInVSCode(String filePath, boolean reuseWindow) {
+        try {
+            var command = new ArrayList<String>();
+            command.add("codium");
 
-	        command.add(filePath);
+            if (reuseWindow) {
+                command.add("-r"); // reuse active window
+            }
 
-	        new ProcessBuilder(command)
-	                .redirectErrorStream(true)
-	                .start();
+            command.add(filePath);
 
-	    } catch (IOException ex) {
-	    	System.err.println("Failed to open file in VS Code: " + ex.getMessage());
-	    }
-	}
+            new ProcessBuilder(command)
+                    .redirectErrorStream(true)
+                    .start();
 
-	private void search() {
-	    searchField.setDisable(true);
-	    filesTableView.setDisable(true);
+        } catch (IOException ex) {
+            System.err.println("Failed to open file in VS Code: " + ex.getMessage());
+        }
+    }
 
-	    var rawPattern = searchField.getText();
-	    if (rawPattern.isEmpty()) {
-	        searchField.setDisable(false);
-	        filesTableView.setDisable(false);
-	        return;
-	    }
+    private void search() {
+        searchField.setDisable(true);
+        filesTableView.setDisable(true);
 
-	    // Build regex safely
-	    var pattern = Pattern.quote(rawPattern);
-	    if (wholeWordCheckBox.isSelected() && rawPattern.matches("\\w+")) {
-	        pattern = "\\b" + pattern + "\\b";
-	    }
+        var rawPattern = searchField.getText();
+        if (rawPattern.isEmpty()) {
+            searchField.setDisable(false);
+            filesTableView.setDisable(false);
+            return;
+        }
 
-	    if (caseInsensitiveCheckBox.isSelected()) {
-	        pattern = "(?i)" + pattern;
-	    }
+        // Build regex safely
+        var pattern = Pattern.quote(rawPattern);
+        if (wholeWordCheckBox.isSelected() && rawPattern.matches("\\w+")) {
+            pattern = "\\b" + pattern + "\\b";
+        }
 
-	    final var finalPattern = pattern;
-	    final var extension = extensionField.getText();
-	    
-	    executor.shutdownNow();
-	    executor = Executors.newSingleThreadScheduledExecutor();
-	    executor.execute(() -> {
-	        var searchResults = FilesUtils.walkContentsWithLines(rootPath, finalPattern, extension, 10);
+        if (caseInsensitiveCheckBox.isSelected()) {
+            pattern = "(?i)" + pattern;
+        }
 
-	        Platform.runLater(() -> {
-	            filesTableView.setItems(FXCollections.observableArrayList(searchResults));
-	            searchField.setDisable(false);
-	            filesTableView.setDisable(false);
-	        });
-	    });
-	}
+        final var finalPattern = pattern;
+        final var extension = extensionField.getText();
+
+        executor.shutdownNow();
+        executor = Executors.newSingleThreadScheduledExecutor();
+        executor.execute(() -> {
+            var searchResults = FilesUtils.walkContentsWithLines(rootPath, finalPattern, extension, 10);
+
+            Platform.runLater(() -> {
+                filesTableView.setItems(FXCollections.observableArrayList(searchResults));
+                searchField.setDisable(false);
+                filesTableView.setDisable(false);
+            });
+        });
+    }
 
 }

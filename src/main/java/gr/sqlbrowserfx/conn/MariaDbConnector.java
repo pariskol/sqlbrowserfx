@@ -16,14 +16,14 @@ import org.slf4j.LoggerFactory;
 
 import gr.sqlbrowserfx.LoggerConf;
 
-public class MysqlConnector extends SqlConnector {
+public class MariaDbConnector extends SqlConnector {
 
     private final String database;
 
-    public MysqlConnector(String url, String database, String user, String password) {
-        var prefix = "jdbc:mysql://";
+    public MariaDbConnector(String url, String database, String user, String password) {
+        var prefix = "jdbc:mariadb://";
         url = url.startsWith(prefix) ? url : prefix + url;
-        super("com.mysql.cj.jdbc.Driver", url, user, password);
+        super("org.mariadb.jdbc.Driver", url, user, password);
         this.database = database;
     }
 

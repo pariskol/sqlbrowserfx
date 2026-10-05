@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch4jConfig>
-  <dontWrapJar>true</dontWrapJar>
-  <headerType>gui</headerType>
-  <jar>./sqlbrowserfx.jar</jar>
-  <outfile>./SqlBrowserFX.exe</outfile>
-  <errTitle></errTitle>
-  <cmdLine></cmdLine>
-  <chdir>.</chdir>
-  <priority>high</priority>
-  <downloadUrl></downloadUrl>
-  <supportUrl></supportUrl>
-  <stayAlive>false</stayAlive>
-  <restartOnCrash>false</restartOnCrash>
-  <manifest></manifest>
-  <icon>./sqlbrowser-fx.ico</icon>
-  <classPath>
-    <mainClass>gr.sqlbrowserfx.GUIStarter</mainClass>
-    <cp>./lib/*</cp>
-  </classPath>
-  <jre>
-    <path>jre</path>
-    <requiresJdk>false</requiresJdk>
-    <requires64Bit>true</requires64Bit>
-    <minVersion>21</minVersion>
-    <maxVersion></maxVersion>
-    <opt>-Xmx512m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 </opt>
-  </jre>
+    <dontWrapJar>true</dontWrapJar>
+    <headerType>gui</headerType>
+    <jar>./sqlbrowserfx.jar</jar>
+    <outfile>./SqlBrowserFX.exe</outfile>
+    <errTitle></errTitle>
+    <cmdLine></cmdLine>
+    <chdir>.</chdir>
+    <priority>high</priority>
+    <downloadUrl></downloadUrl>
+    <supportUrl></supportUrl>
+    <stayAlive>false</stayAlive>
+    <restartOnCrash>false</restartOnCrash>
+    <manifest></manifest>
+    <icon>./sqlbrowser-fx.ico</icon>
+    <classPath>
+        <mainClass>gr.sqlbrowserfx.GUIStarter</mainClass>
+        <cp>./lib/*</cp>
+    </classPath>
+    <jre>
+        <path>jre</path>
+        <requiresJdk>false</requiresJdk>
+        <requires64Bit>true</requires64Bit>
+        <minVersion>21</minVersion>
+        <maxVersion></maxVersion>
+        <opt>-Xmx512m -Xms128m -XX:+UseG1GC -XX:MaxGCPauseMillis=100 </opt>
+    </jre>
 </launch4jConfig>

@@ -5,30 +5,32 @@ import gr.sqlbrowserfx.utils.mapper.DTO;
 @DTO
 public class Model {
 
-	public class Details {
+    public class Details {
 
-	    private String parameterSize;
+        private String parameterSize;
 
-	    public Details() {}
+        public Details() {
+        }
 
-	    public Details(String parameterSize) {
-	        this.parameterSize = parameterSize;
-	    }
+        public Details(String parameterSize) {
+            this.parameterSize = parameterSize;
+        }
 
-	    public String getParameterSize() {
-	        return parameterSize;
-	    }
+        public String getParameterSize() {
+            return parameterSize;
+        }
 
-	    public void setParameterSize(String parameterSize) {
-	        this.parameterSize = parameterSize;
-	    }
-	}
-	
+        public void setParameterSize(String parameterSize) {
+            this.parameterSize = parameterSize;
+        }
+    }
+
     private String name;
     private String model;
     private Details details;
 
-    public Model() {}
+    public Model() {
+    }
 
     public Model(String name, String model, Details details) {
         this.name = name;

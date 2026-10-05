@@ -14,49 +14,48 @@ import gr.sqlbrowserfx.nodes.codeareas.KeywordType;
 @SuppressWarnings("rawtypes")
 public class LogCodeAreaSyntaxProvider implements CodeAreaSyntaxProvider {
 
-	private static final String[] FUNCTIONS = {"INFO", "DEBUG"};
-	private static final String[] KEYWORDS = {"ERROR", "FATAL"};
-	private static final Set<Keyword> KEYWORDS_lIST = new LinkedHashSet<>();
-	
-	private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
-	private static final String FUNCTIONS_PATTERN = "\\b(" + String.join("|", FUNCTIONS) + ")\\b";
+    private static final String[] FUNCTIONS = {"INFO", "DEBUG"};
+    private static final String[] KEYWORDS = {"ERROR", "FATAL"};
+    private static final Set<Keyword> KEYWORDS_lIST = new LinkedHashSet<>();
 
-	private static final Pattern PATTERN = Pattern
-			.compile("(?<KEYWORD>" + KEYWORD_PATTERN + ")" + 
-					 "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
-	
-	static {
-		KEYWORDS_lIST.addAll(Arrays.stream(KEYWORDS)
-				.map(kw -> new Keyword(kw, KeywordType.KEYWORD)).toList());
-		KEYWORDS_lIST.addAll(Arrays.stream(FUNCTIONS)
-				.map(kw -> new Keyword(kw, KeywordType.FUNCTION)).toList());
+    private static final String KEYWORD_PATTERN = "\\b(" + String.join("|", KEYWORDS) + ")\\b";
+    private static final String FUNCTIONS_PATTERN = "\\b(" + String.join("|", FUNCTIONS) + ")\\b";
 
-	}
+    private static final Pattern PATTERN = Pattern
+            .compile("(?<KEYWORD>" + KEYWORD_PATTERN + ")"
+                    + "|(?<FUNCTION>" + FUNCTIONS_PATTERN + ")");
 
-	@Override
-	public Set<Keyword> getKeywords() {
-		return KEYWORDS_lIST;
-	}
+    static {
+        KEYWORDS_lIST.addAll(Arrays.stream(KEYWORDS)
+                .map(kw -> new Keyword(kw, KeywordType.KEYWORD)).toList());
+        KEYWORDS_lIST.addAll(Arrays.stream(FUNCTIONS)
+                .map(kw -> new Keyword(kw, KeywordType.FUNCTION)).toList());
 
-	@Override
-	public Set<Keyword> getKeywords(KeywordType type, Object data) {
-		throw new RuntimeException("Method 'getKeywords' not implemented");
-	}
-	
-	@Override
-	public Matcher getPatternMatcher(String text) {
-		return PATTERN.matcher(text);
-	}
-	
-	@Override
-	public String format(String text) {
-		throw new RuntimeException("Method 'format' not implemented");
-	}
-	
-	@Override
-	public String format(String text, FormatterMode mode) {
-		throw new RuntimeException("Method 'format' not implemented");
-	}
-	
+    }
+
+    @Override
+    public Set<Keyword> getKeywords() {
+        return KEYWORDS_lIST;
+    }
+
+    @Override
+    public Set<Keyword> getKeywords(KeywordType type, Object data) {
+        throw new RuntimeException("Method 'getKeywords' not implemented");
+    }
+
+    @Override
+    public Matcher getPatternMatcher(String text) {
+        return PATTERN.matcher(text);
+    }
+
+    @Override
+    public String format(String text) {
+        throw new RuntimeException("Method 'format' not implemented");
+    }
+
+    @Override
+    public String format(String text, FormatterMode mode) {
+        throw new RuntimeException("Method 'format' not implemented");
+    }
+
 }
-

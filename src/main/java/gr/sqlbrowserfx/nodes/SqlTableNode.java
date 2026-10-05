@@ -19,86 +19,86 @@ import javafx.scene.shape.Line;
 
 public class SqlTableNode extends VBox {
 
-	private final SqlTable table;
-	private final String color;
-	private final List<Line> lines = new ArrayList<>();
+    private final SqlTable table;
+    private final String color;
+    private final List<Line> lines = new ArrayList<>();
 
-	public SqlTableNode(SqlTable table) {
-		// restore this line to have colorful lines
-		this.color = "-fx-diagram-color";
+    public SqlTableNode(SqlTable table) {
+        // restore this line to have colorful lines
+        this.color = "-fx-diagram-color";
 
-		this.table = table;
-		this.setMinWidth(150);
-		var titleLabel = new Label(table.getName(), JavaFXUtils.createIcon("/icons/table.png"));
-		titleLabel.setPadding(new Insets(0, 0, 6, 0));
-		titleLabel.setAlignment(Pos.CENTER);
-		configureTitleBorder(titleLabel);
-		var columnsVbox = new CustomVBox();
-		table.getColumns().forEach(col -> {
-			if (table.isPrimaryKey(col)) {
-				columnsVbox.getChildren()
-						.add(new Label(table.getPrimaryKey(), JavaFXUtils.createIcon("/icons/primary-key.png")));
-			} else if (table.isForeignKey(col)) {
-				columnsVbox.getChildren().add(new Label(col, JavaFXUtils.createIcon("/icons/foreign-key.png")));
-			} else {
-				columnsVbox.getChildren().add(new Label(col));
-			}
-		});
+        this.table = table;
+        this.setMinWidth(150);
+        var titleLabel = new Label(table.getName(), JavaFXUtils.createIcon("/icons/table.png"));
+        titleLabel.setPadding(new Insets(0, 0, 6, 0));
+        titleLabel.setAlignment(Pos.CENTER);
+        configureTitleBorder(titleLabel);
+        var columnsVbox = new CustomVBox();
+        table.getColumns().forEach(col -> {
+            if (table.isPrimaryKey(col)) {
+                columnsVbox.getChildren()
+                        .add(new Label(table.getPrimaryKey(), JavaFXUtils.createIcon("/icons/primary-key.png")));
+            } else if (table.isForeignKey(col)) {
+                columnsVbox.getChildren().add(new Label(col, JavaFXUtils.createIcon("/icons/foreign-key.png")));
+            } else {
+                columnsVbox.getChildren().add(new Label(col));
+            }
+        });
 
-		columnsVbox.setPadding(new Insets(6));
+        columnsVbox.setPadding(new Insets(6));
 
-		this.getChildren().addAll(titleLabel, columnsVbox);
+        this.getChildren().addAll(titleLabel, columnsVbox);
 
-		titleLabel.prefWidthProperty().bind(columnsVbox.widthProperty());
-		configureBorder(this);
-	}
-	
-	public void showSchemaPopup() {
-		var schema = DbCash.getSchemaFor(table.getName());
-		SqlCodeArea codeArea = new SqlCodeArea(schema, false, false, true);
-		VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
-		scrollPane.setPrefSize(600, 400);
+        titleLabel.prefWidthProperty().bind(columnsVbox.widthProperty());
+        configureBorder(this);
+    }
 
-		PopOver popOver = new PopOver(scrollPane);
-		popOver.setArrowSize(0);
-		popOver.setDetachable(false);
-		popOver.show(this);
-	}
+    public void showSchemaPopup() {
+        var schema = DbCash.getSchemaFor(table.getName());
+        SqlCodeArea codeArea = new SqlCodeArea(schema, false, false, true);
+        VirtualizedScrollPane<SqlCodeArea> scrollPane = new VirtualizedScrollPane<>(codeArea);
+        scrollPane.setPrefSize(600, 400);
 
-	public SqlTable getSqlTable() {
-		return this.table;
-	}
+        PopOver popOver = new PopOver(scrollPane);
+        popOver.setArrowSize(0);
+        popOver.setDetachable(false);
+        popOver.show(this);
+    }
 
-	public String getColor() {
-		return this.color;
-	}
+    public SqlTable getSqlTable() {
+        return this.table;
+    }
 
-	public List<Line> getLines() {
-		return lines;
-	}
+    public String getColor() {
+        return this.color;
+    }
 
-	public void highlight() {
-		configureSelectedBorder(this);
-	}
+    public List<Line> getLines() {
+        return lines;
+    }
 
-	public void unhighlight() {
-		configureBorder(this);
-	}
+    public void highlight() {
+        configureSelectedBorder(this);
+    }
 
-	private void configureBorder(final Region region) {
-		region.setStyle(
-//		"-fx-border-color: " + color + ";" + 
-		"""
+    public void unhighlight() {
+        configureBorder(this);
+    }
+
+    private void configureBorder(final Region region) {
+        region.setStyle(
+                //		"-fx-border-color: " + color + ";" + 
+                """
 			-fx-background-color: -fx-diagram-color;
 			-fx-background-radius: 6;
 			-fx-border-width: 1;
 			-fx-border-radius: 6;
 			-fx-padding: 6 0 6 0;
 		""");
-	}
+    }
 
-	private void configureSelectedBorder(final Region region) {
-		region.setStyle("""
+    private void configureSelectedBorder(final Region region) {
+        region.setStyle("""
 					-fx-border-color: -fx-accent;
 					-fx-background-color: -fx-diagram-color;
 					-fx-background-radius: 6;
@@ -106,14 +106,13 @@ public class SqlTableNode extends VBox {
 					-fx-border-radius: 6;
 					-fx-padding: 6 0 6 0;
 				""");
-	}
+    }
 
-	private void configureTitleBorder(final Region region) {
-		region.setStyle("""
+    private void configureTitleBorder(final Region region) {
+        region.setStyle("""
 					-fx-border-color: -fx-base;
 					-fx-border-width: 0 0 1 0;
 				""");
-	}
-
+    }
 
 }

@@ -15,61 +15,59 @@ import javafx.scene.input.KeyEvent;
 
 public class TypeScriptCodeArea extends AutoCompleteCodeArea<TypeScriptCodeAreaSyntaxProvider> implements ContextMenuOwner, HighLighter {
 
-	protected MenuItem menuItemRun;
-	private CustomPopOver sqlQueryPopOver;
-	
-	public TypeScriptCodeArea() {
-		this(null);
-	}
-	
-	public TypeScriptCodeArea(String text) {
-		this(text, true, true, false);
-	}
+    protected MenuItem menuItemRun;
+    private CustomPopOver sqlQueryPopOver;
 
-	public TypeScriptCodeArea(String text, boolean editable, boolean withMenu, boolean autoFormat) {
-		super(text, editable, withMenu, autoFormat);
-	}
+    public TypeScriptCodeArea() {
+        this(null);
+    }
 
+    public TypeScriptCodeArea(String text) {
+        this(text, true, true, false);
+    }
 
-	private boolean isSqlQueryPopOverShowing() {
-		return sqlQueryPopOver != null && sqlQueryPopOver.isShowing();
-	}
+    public TypeScriptCodeArea(String text, boolean editable, boolean withMenu, boolean autoFormat) {
+        super(text, editable, withMenu, autoFormat);
+    }
 
+    private boolean isSqlQueryPopOverShowing() {
+        return sqlQueryPopOver != null && sqlQueryPopOver.isShowing();
+    }
 
-	@Override
-	protected void onMouseClicked() {
-		super.onMouseClicked();
-		if(isSqlQueryPopOverShowing()) {
-			sqlQueryPopOver.hide();
-		}
-	}
-	
-	@Override
-	public void appendText(String text) {
-		super.appendText(text);
-	}
-	
-	@Override
-	public void paste() {
-		super.paste();
-	}
-	
-	@Override
-	protected TypeScriptCodeAreaSyntaxProvider initSyntaxProvider() {
-		return new TypeScriptCodeAreaSyntaxProvider();
-	}
-	
-	@Override
-	public void setInputMap() {
-		if (!isEditable()) {
-			return;
-		}
-		
-		super.setInputMap();
-		var autocomplete = InputMap.consume(
-				EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
-				action -> this.autoCompleteAction(new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, true, true, false, false))
+    @Override
+    protected void onMouseClicked() {
+        super.onMouseClicked();
+        if (isSqlQueryPopOverShowing()) {
+            sqlQueryPopOver.hide();
+        }
+    }
+
+    @Override
+    public void appendText(String text) {
+        super.appendText(text);
+    }
+
+    @Override
+    public void paste() {
+        super.paste();
+    }
+
+    @Override
+    protected TypeScriptCodeAreaSyntaxProvider initSyntaxProvider() {
+        return new TypeScriptCodeAreaSyntaxProvider();
+    }
+
+    @Override
+    public void setInputMap() {
+        if (!isEditable()) {
+            return;
+        }
+
+        super.setInputMap();
+        var autocomplete = InputMap.consume(
+                EventPattern.keyPressed(KeyCode.SPACE, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN),
+                action -> this.autoCompleteAction(new KeyEvent(KeyEvent.KEY_PRESSED, null, null, KeyCode.SPACE, true, true, false, false))
         );
         Nodes.addInputMap(this, autocomplete);
-	}
+    }
 }

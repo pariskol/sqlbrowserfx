@@ -18,220 +18,218 @@ import javafx.scene.shape.Line;
 
 public class DbDiagramPane extends BorderPane implements ContextMenuOwner {
 
-	private int counter = 0;
-	private int rows = 0;
-	private int[][] grid;
-	private static final int COLS_NUM = 7;
+    private int counter = 0;
+    private int rows = 0;
+    private int[][] grid;
+    private static final int COLS_NUM = 7;
 
-	private final Pane diagramPane = new Pane();
-	private final List<SqlTableNode> diagramNodes = new ArrayList<>();
-	private SqlTableNode selectedDiagramNode = null;
-	private ContextMenu contextMenu = createContextMenu();
+    private final Pane diagramPane = new Pane();
+    private final List<SqlTableNode> diagramNodes = new ArrayList<>();
+    private SqlTableNode selectedDiagramNode = null;
+    private ContextMenu contextMenu = createContextMenu();
 
-	public DbDiagramPane() {
-		setOnMouseClicked(mouseEvent -> {
-			// mouse event handler is used instead of setContextMenu() because setContextMenu() seems to stop event propagation to cells
-			contextMenu.hide();
-			if (mouseEvent.getButton() == MouseButton.SECONDARY) {
-		        contextMenu.show(this, mouseEvent.getScreenX(), mouseEvent.getScreenY());
-		        return;
-		    }
-		});
-	}
-	
-	public DbDiagramPane(List<SqlTable> tables) {
-		this();
-		init(tables);
-	}
-	
-	public void setLoading(boolean loading) {
-		if (loading) {
-			ProgressIndicator progressIndicator = new ProgressIndicator();
-			progressIndicator.setMaxHeight(40);
-			progressIndicator.setMaxWidth(40);
-			this.setCenter(progressIndicator);
-		}
-		else {
-			Platform.runLater(() -> this.setCenter(new ScrollPane(this.diagramPane)));
-		}
-	}
-	
-	public void init(List<SqlTable> tables) {
-	    this.grid = new int[(int) Math.ceil(tables.size() / COLS_NUM) + 1][COLS_NUM];
-	    this.setCenter(new ScrollPane(diagramPane));
+    public DbDiagramPane() {
+        setOnMouseClicked(mouseEvent -> {
+            // mouse event handler is used instead of setContextMenu() because setContextMenu() seems to stop event propagation to cells
+            contextMenu.hide();
+            if (mouseEvent.getButton() == MouseButton.SECONDARY) {
+                contextMenu.show(this, mouseEvent.getScreenX(), mouseEvent.getScreenY());
+                return;
+            }
+        });
+    }
 
-	    tables.forEach(table -> {
-	        final var tableDiagramNode = new SqlTableNode(table);
-	        var node = new Group(tableDiagramNode);
+    public DbDiagramPane(List<SqlTable> tables) {
+        this();
+        init(tables);
+    }
 
-	        if (counter == COLS_NUM) {
-	            rows++;
-	            counter = 0;
-	        }
+    public void setLoading(boolean loading) {
+        if (loading) {
+            ProgressIndicator progressIndicator = new ProgressIndicator();
+            progressIndicator.setMaxHeight(40);
+            progressIndicator.setMaxWidth(40);
+            this.setCenter(progressIndicator);
+        } else {
+            Platform.runLater(() -> this.setCenter(new ScrollPane(this.diagramPane)));
+        }
+    }
 
-	        var sizeOfCellAbove = getSizeOfCellsAbove();
-	        var extraSpace = sizeOfCellAbove * 15;
+    public void init(List<SqlTable> tables) {
+        this.grid = new int[(int) Math.ceil(tables.size() / COLS_NUM) + 1][COLS_NUM];
+        this.setCenter(new ScrollPane(diagramPane));
 
-	        // Initial position
-	        double x = 20 + counter * 240;
-	        double y = 20 + rows * 300 + extraSpace;
+        tables.forEach(table -> {
+            final var tableDiagramNode = new SqlTableNode(table);
+            var node = new Group(tableDiagramNode);
 
-	        // Adjust position to avoid overlap
-	        var adjustedPosition = adjustPositionToAvoidOverlap(x, y, tableDiagramNode);
-	        x = adjustedPosition[0];
-	        y = adjustedPosition[1];
+            if (counter == COLS_NUM) {
+                rows++;
+                counter = 0;
+            }
 
-	        node.relocate(x, y);
-	        this.grid[rows][counter] = table.getColumns().size();
+            var sizeOfCellAbove = getSizeOfCellsAbove();
+            var extraSpace = sizeOfCellAbove * 15;
 
-	        tableDiagramNode.setOnMouseClicked(event -> {
-	        	highlightRelatedTableNodes(tableDiagramNode);
-	        	selectedDiagramNode = tableDiagramNode;
-	        });
+            // Initial position
+            double x = 20 + counter * 240;
+            double y = 20 + rows * 300 + extraSpace;
 
-	        diagramNodes.add(tableDiagramNode);
-	        diagramPane.getChildren().add(node);
+            // Adjust position to avoid overlap
+            var adjustedPosition = adjustPositionToAvoidOverlap(x, y, tableDiagramNode);
+            x = adjustedPosition[0];
+            y = adjustedPosition[1];
 
-	        counter++;
-	    });
+            node.relocate(x, y);
+            this.grid[rows][counter] = table.getColumns().size();
 
-	    JavaFXUtils.timer(500, this::connectAllTableNodes);
-	}
+            tableDiagramNode.setOnMouseClicked(event -> {
+                highlightRelatedTableNodes(tableDiagramNode);
+                selectedDiagramNode = tableDiagramNode;
+            });
 
-	// Method to adjust node positions to avoid overlap
-	private double[] adjustPositionToAvoidOverlap(double x, double y, SqlTableNode newNode) {
-	    double newX = x;
-	    double newY = y;
-	    boolean overlaps;
+            diagramNodes.add(tableDiagramNode);
+            diagramPane.getChildren().add(node);
 
-	    do {
-	        overlaps = false;
+            counter++;
+        });
 
-	        for (SqlTableNode existingNode : diagramNodes) {
-	            if (nodesOverlap(newX, newY, newNode, existingNode)) {
-	                // If overlap detected, shift the new node's position
-	                overlaps = true;
-	                newX += 50; // Shift by 50px horizontally
-	                if (newX > diagramPane.getWidth() - 200) {
-	                    // Wrap to a new row if reaching diagram pane boundary
-	                    newX = 20;
-	                    newY += 300;
-	                }
-	                break;
-	            }
-	        }
-	    } while (overlaps);
+        JavaFXUtils.timer(500, this::connectAllTableNodes);
+    }
 
-	    return new double[]{newX, newY};
-	}
+    // Method to adjust node positions to avoid overlap
+    private double[] adjustPositionToAvoidOverlap(double x, double y, SqlTableNode newNode) {
+        double newX = x;
+        double newY = y;
+        boolean overlaps;
 
-	// Method to check if two nodes overlap
-	private boolean nodesOverlap(double x, double y, SqlTableNode newNode, SqlTableNode existingNode) {
-	    double newWidth = newNode.getWidth();
-	    double newHeight = newNode.getHeight();
+        do {
+            overlaps = false;
 
-	    double existingX = existingNode.getLayoutX();
-	    double existingY = existingNode.getLayoutY();
-	    double existingWidth = existingNode.getWidth();
-	    double existingHeight = existingNode.getHeight();
+            for (SqlTableNode existingNode : diagramNodes) {
+                if (nodesOverlap(newX, newY, newNode, existingNode)) {
+                    // If overlap detected, shift the new node's position
+                    overlaps = true;
+                    newX += 50; // Shift by 50px horizontally
+                    if (newX > diagramPane.getWidth() - 200) {
+                        // Wrap to a new row if reaching diagram pane boundary
+                        newX = 20;
+                        newY += 300;
+                    }
+                    break;
+                }
+            }
+        } while (overlaps);
 
-	    return x < existingX + existingWidth &&
-	           x + newWidth > existingX &&
-	           y < existingY + existingHeight &&
-	           y + newHeight > existingY;
-	}
+        return new double[]{newX, newY};
+    }
 
-	
-	// check length of cells above current cell
-	private int getSizeOfCellsAbove() {
-		var sizeOfCellAbove = 0; 
+    // Method to check if two nodes overlap
+    private boolean nodesOverlap(double x, double y, SqlTableNode newNode, SqlTableNode existingNode) {
+        double newWidth = newNode.getWidth();
+        double newHeight = newNode.getHeight();
 
-		var times = rows - 1;
-		var i = 0;
-		do {
-			sizeOfCellAbove += this.grid[i][counter];
-			i++;
-			times--;
-		} while(times > 0);
-		
-		return sizeOfCellAbove;
-	}
+        double existingX = existingNode.getLayoutX();
+        double existingY = existingNode.getLayoutY();
+        double existingWidth = existingNode.getWidth();
+        double existingHeight = existingNode.getHeight();
 
-	private void highlightRelatedTableNodes(SqlTableNode tableDiagramNode) {
-		clearAllHighligts();
-		
-		tableDiagramNode.highlight();
-		diagramNodes.stream()
-			.filter(node -> tableDiagramNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
-			.forEach(SqlTableNode::highlight);
-		
-		tableDiagramNode.getLines().forEach(line -> {
-			line.setStyle(
-				"""
+        return x < existingX + existingWidth
+                && x + newWidth > existingX
+                && y < existingY + existingHeight
+                && y + newHeight > existingY;
+    }
+
+    // check length of cells above current cell
+    private int getSizeOfCellsAbove() {
+        var sizeOfCellAbove = 0;
+
+        var times = rows - 1;
+        var i = 0;
+        do {
+            sizeOfCellAbove += this.grid[i][counter];
+            i++;
+            times--;
+        } while (times > 0);
+
+        return sizeOfCellAbove;
+    }
+
+    private void highlightRelatedTableNodes(SqlTableNode tableDiagramNode) {
+        clearAllHighligts();
+
+        tableDiagramNode.highlight();
+        diagramNodes.stream()
+                .filter(node -> tableDiagramNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
+                .forEach(SqlTableNode::highlight);
+
+        tableDiagramNode.getLines().forEach(line -> {
+            line.setStyle(
+                    """
 					-fx-stroke: -fx-accent;
 					-fx-stroke-width: 3;
 	        	"""
-			);
-		});
-	}
-	
-	private void clearAllHighligts() {
-		diagramNodes.forEach(diagramNode -> clearHighlight(diagramNode));
-	}
-	
-	private void clearHighlight(SqlTableNode tableDiagramNode) {
-		tableDiagramNode.unhighlight();
-		tableDiagramNode.getLines().forEach(line -> line.setStyle("-fx-stroke: " + tableDiagramNode.getColor() + ";" + "-fx-stroke-width: 1;"));
-		diagramNodes.stream()
-			.filter(node -> tableDiagramNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
-			.forEach(SqlTableNode::unhighlight);
-	}
-	
-	private void connectAllTableNodes() {
-		diagramNodes
-			.forEach(targetNode -> {
-				diagramPane.getChildren().removeAll(targetNode.getLines());
-				targetNode.getLines().clear();
-				diagramNodes.stream()
-				.filter(node -> targetNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
-				.forEach(node -> targetNode.getLines().addAll(connectNodes(targetNode, node, targetNode.getColor())));
-			});
-	}
-	
-	public List<Line> connectNodes(SqlTableNode node1, SqlTableNode node2, String lineColor) {
-		var startX = node1.localToScene(node1.getBoundsInLocal()).getMinX() + node1.getWidth() / 2;
-		var startY = node1.localToScene(node1.getBoundsInLocal()).getMinY() + node1.getHeight() / 2;
-		var endX = node2.localToScene(node2.getBoundsInLocal()).getMinX() + node2.getWidth() / 2;
-		var endY = node2.localToScene(node2.getBoundsInLocal()).getMinY() + node2.getHeight() / 2;
-		var midX = (startX + endX) / 2;
-		var midY = (startY + endY) / 2;
+            );
+        });
+    }
+
+    private void clearAllHighligts() {
+        diagramNodes.forEach(diagramNode -> clearHighlight(diagramNode));
+    }
+
+    private void clearHighlight(SqlTableNode tableDiagramNode) {
+        tableDiagramNode.unhighlight();
+        tableDiagramNode.getLines().forEach(line -> line.setStyle("-fx-stroke: " + tableDiagramNode.getColor() + ";" + "-fx-stroke-width: 1;"));
+        diagramNodes.stream()
+                .filter(node -> tableDiagramNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
+                .forEach(SqlTableNode::unhighlight);
+    }
+
+    private void connectAllTableNodes() {
+        diagramNodes
+                .forEach(targetNode -> {
+                    diagramPane.getChildren().removeAll(targetNode.getLines());
+                    targetNode.getLines().clear();
+                    diagramNodes.stream()
+                            .filter(node -> targetNode.getSqlTable().getRelatedTables().contains(node.getSqlTable().getName()))
+                            .forEach(node -> targetNode.getLines().addAll(connectNodes(targetNode, node, targetNode.getColor())));
+                });
+    }
+
+    public List<Line> connectNodes(SqlTableNode node1, SqlTableNode node2, String lineColor) {
+        var startX = node1.localToScene(node1.getBoundsInLocal()).getMinX() + node1.getWidth() / 2;
+        var startY = node1.localToScene(node1.getBoundsInLocal()).getMinY() + node1.getHeight() / 2;
+        var endX = node2.localToScene(node2.getBoundsInLocal()).getMinX() + node2.getWidth() / 2;
+        var endY = node2.localToScene(node2.getBoundsInLocal()).getMinY() + node2.getHeight() / 2;
+        var midX = (startX + endX) / 2;
+        var midY = (startY + endY) / 2;
 
         // Create the line segments
-		var lines = new ArrayList<Line>();
+        var lines = new ArrayList<Line>();
         lines.add(new Line(startX, startY, midX, startY));
         lines.add(new Line(midX, startY, midX, midY));
         lines.add(new Line(midX, midY, endX, midY));
         lines.add(new Line(endX, midY, endX, endY));
-       
-        diagramPane.getChildren().addAll(lines);
-        
-        lines.forEach(line -> {
-    		line.setStyle("-fx-stroke: " + lineColor + ";");
-        	line.toBack();
-        });
-        
-        return lines;
-	}
 
-	@Override
-	public ContextMenu createContextMenu() {
-		var showSchema = new MenuItem("Show schema");
-		showSchema.setOnAction(event -> {
-			if (selectedDiagramNode != null) {
-				selectedDiagramNode.showSchemaPopup();
-			}
-		});
-		return new ContextMenu(showSchema);
-	}
+        diagramPane.getChildren().addAll(lines);
+
+        lines.forEach(line -> {
+            line.setStyle("-fx-stroke: " + lineColor + ";");
+            line.toBack();
+        });
+
+        return lines;
+    }
+
+    @Override
+    public ContextMenu createContextMenu() {
+        var showSchema = new MenuItem("Show schema");
+        showSchema.setOnAction(event -> {
+            if (selectedDiagramNode != null) {
+                selectedDiagramNode.showSchemaPopup();
+            }
+        });
+        return new ContextMenu(showSchema);
+    }
 
 }

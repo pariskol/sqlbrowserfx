@@ -7,69 +7,70 @@ import gr.sqlbrowserfx.utils.mapper.DTO;
 
 @DTO
 public class Message {
-	@Column("id")
-	private Integer id;
-	@Column("conversation_id")
-	private String conversationId;
-	@Column("role")
-	private String role;
-	@Column("content")
-	private String content;
-	@Column("meta_data")
-	private String metaData;
-	@Column("created_at")
-	private String createdAt;
 
-	public Integer getId() {
-		return this.id;
-	}
+    @Column("id")
+    private Integer id;
+    @Column("conversation_id")
+    private String conversationId;
+    @Column("role")
+    private String role;
+    @Column("content")
+    private String content;
+    @Column("meta_data")
+    private String metaData;
+    @Column("created_at")
+    private String createdAt;
 
-	public void setId(Integer value) {
-		this.id = value;
-	}
+    public Integer getId() {
+        return this.id;
+    }
 
-	public String getConversationId() {
-		return this.conversationId;
-	}
+    public void setId(Integer value) {
+        this.id = value;
+    }
 
-	public void setConversationId(String value) {
-		this.conversationId = value;
-	}
+    public String getConversationId() {
+        return this.conversationId;
+    }
 
-	public String getRole() {
-		return this.role;
-	}
+    public void setConversationId(String value) {
+        this.conversationId = value;
+    }
 
-	public void setRole(String value) {
-		this.role = value;
-	}
+    public String getRole() {
+        return this.role;
+    }
 
-	public String getContent() {
-		return this.content;
-	}
+    public void setRole(String value) {
+        this.role = value;
+    }
 
-	public void setContent(String value) {
-		this.content = value;
-	}
+    public String getContent() {
+        return this.content;
+    }
 
-	public String getMetaData() {
-		return metaData;
-	}
+    public void setContent(String value) {
+        this.content = value;
+    }
 
-	public void setMetaData(String metaData) {
-		this.metaData = metaData;
-	}
+    public String getMetaData() {
+        return metaData;
+    }
 
-	public String getCreatedAt() {
-		return this.createdAt;
-	}
+    public void setMetaData(String metaData) {
+        this.metaData = metaData;
+    }
 
-	public void setCreatedAt(String value) {
-		this.createdAt = value;
-	}
+    public String getCreatedAt() {
+        return this.createdAt;
+    }
 
-	@Override
-	public String toString() {
-		return new JSONObject(this).toString();
-	}
+    public void setCreatedAt(String value) {
+        this.createdAt = value;
+    }
+
+    @Override
+    public String toString() {
+        return new JSONObject(this).toString();
+    }
 }

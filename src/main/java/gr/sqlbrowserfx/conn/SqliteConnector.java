@@ -17,181 +17,174 @@ import gr.sqlbrowserfx.LoggerConf;
 
 public class SqliteConnector extends SqlConnector {
 
-	private final LinkedBlockingQueue<UpdateQuery> updateQueriesQueue;
-	private Connection updateConnection;
-	
-	public SqliteConnector(String database) {
-		super("org.sqlite.JDBC", "jdbc:sqlite:" + database, null, null);
-		this.updateQueriesQueue = new LinkedBlockingQueue<>();
-		this.startUpdateExecutor();
-	}
+    private final LinkedBlockingQueue<UpdateQuery> updateQueriesQueue;
+    private Connection updateConnection;
 
-	private void startUpdateExecutor() {
-		Thread updatesExecutorThread = new Thread(() -> {
-			try (Connection conn = this.getConnection()) {
-				while(!Thread.currentThread().isInterrupted()) {
-					UpdateQuery updateQuery;
-					try {
-						updateQuery = updateQueriesQueue.take();
-						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).info("Executing update");
-						super.executeUpdate(conn, updateQuery.getQuery(), updateQuery.getParams());
-					} catch (Throwable e) {
-						LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
-					}
-				}
-			} catch (SQLException e1) {
-				LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e1.getMessage(), e1);
-			}
-		}, getClass().getSimpleName() + "-updates-executor");
-		updatesExecutorThread.setDaemon(true);
-		updatesExecutorThread.start();
-	}
+    public SqliteConnector(String database) {
+        super("org.sqlite.JDBC", "jdbc:sqlite:" + database, null, null);
+        this.updateQueriesQueue = new LinkedBlockingQueue<>();
+        this.startUpdateExecutor();
+    }
 
-	@Override
-	protected DataSource initDatasource() {
-		SQLiteDataSource datasource = new SQLiteDataSource();
-		datasource.setUrl(this.getUrl());
-		try {
-			this.updateConnection = datasource.getConnection();
-		} catch (SQLException e) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not initialize connection", e);
-		}
-		return datasource;
-	}
-	
-	@Override
-	public void setAutoCommitModeEnabled(boolean isAutoCommitModeEnabled) {
-		super.setAutoCommitModeEnabled(isAutoCommitModeEnabled);
-		try {
-			this.updateConnection.setAutoCommit(false);
-		} catch (SQLException e) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not initialize connection", e);
-		}
-	}
-	
-	
-	protected Connection getConnection() {
-		return this.updateConnection;
-	}
-	
-	@Override
-	public int executeUpdate(String query) throws SQLException {
-		int result;
-		if (isAutoCommitModeEnabled()) {
-			result = super.executeUpdate(query);
-		}
-		else {
-			Connection conn = getConnection();
-			try (Statement statement = conn.createStatement()) {
-				result = statement.executeUpdate(query);
-			}
-		}
+    private void startUpdateExecutor() {
+        Thread updatesExecutorThread = new Thread(() -> {
+            try (Connection conn = this.getConnection()) {
+                while (!Thread.currentThread().isInterrupted()) {
+                    UpdateQuery updateQuery;
+                    try {
+                        updateQuery = updateQueriesQueue.take();
+                        LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).info("Executing update");
+                        super.executeUpdate(conn, updateQuery.getQuery(), updateQuery.getParams());
+                    } catch (Throwable e) {
+                        LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
+                    }
+                }
+            } catch (SQLException e1) {
+                LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e1.getMessage(), e1);
+            }
+        }, getClass().getSimpleName() + "-updates-executor");
+        updatesExecutorThread.setDaemon(true);
+        updatesExecutorThread.start();
+    }
 
-		return result;
-	}
+    @Override
+    protected DataSource initDatasource() {
+        SQLiteDataSource datasource = new SQLiteDataSource();
+        datasource.setUrl(this.getUrl());
+        try {
+            this.updateConnection = datasource.getConnection();
+        } catch (SQLException e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not initialize connection", e);
+        }
+        return datasource;
+    }
 
-	@Override
-	public int executeUpdate(String query, List<Object> params) throws SQLException {
-		int result;
-		if (isAutoCommitModeEnabled()) {
-			result = super.executeUpdate(query,params);
-		}
-		else {
-			Connection conn = getConnection();
-			try (PreparedStatement statement = prepareStatementWithParams(conn, query, params)) {
-				result = statement.executeUpdate();
-			}
-		}
-		return result;
-	}
+    @Override
+    public void setAutoCommitModeEnabled(boolean isAutoCommitModeEnabled) {
+        super.setAutoCommitModeEnabled(isAutoCommitModeEnabled);
+        try {
+            this.updateConnection.setAutoCommit(false);
+        } catch (SQLException e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Could not initialize connection", e);
+        }
+    }
 
-	@Override
-	public int executeUpdate(Connection conn, String query, List<Object> params) throws SQLException {
-		int result;
-		if (isAutoCommitModeEnabled()) {
-			result = super.executeUpdate(conn, query, params);
-		}
-		else {
-			try (PreparedStatement statement = prepareStatementWithParams(conn, query, params)) {
-				result = statement.executeUpdate();
-			}
-		}
+    protected Connection getConnection() {
+        return this.updateConnection;
+    }
 
-		return result;
-	}
-	
-	@Override
-	public void rollbackAll() {
-		try {
-			this.updateConnection.rollback();
-		} catch (SQLException e) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
-		}
-	}
-	
-	@Override
-	public void commitAll() {
-		try {
-			this.updateConnection.commit();
-		} catch (SQLException e) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
-			this.rollbackQuietly(this.updateConnection);
-		}
-	}
-	
-	public int executeUpdateSerially(String query, List<Object> params) {
-		try {
-			this.updateQueriesQueue.put(new UpdateQuery(query, params));
-		} catch (InterruptedException e) {
-			LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
-		}
-		return 2;
-	}
-	
-	@Override
-	public Object castToDBType(SqlTable table, String label, String value) {
-		Object actualValue;
+    @Override
+    public int executeUpdate(String query) throws SQLException {
+        int result;
+        if (isAutoCommitModeEnabled()) {
+            result = super.executeUpdate(query);
+        } else {
+            Connection conn = getConnection();
+            try (Statement statement = conn.createStatement()) {
+                result = statement.executeUpdate(query);
+            }
+        }
 
-		if (table.getColumnsMap().get(label).equals("INTEGER") && value != null && !value.isEmpty()) {
+        return result;
+    }
+
+    @Override
+    public int executeUpdate(String query, List<Object> params) throws SQLException {
+        int result;
+        if (isAutoCommitModeEnabled()) {
+            result = super.executeUpdate(query, params);
+        } else {
+            Connection conn = getConnection();
+            try (PreparedStatement statement = prepareStatementWithParams(conn, query, params)) {
+                result = statement.executeUpdate();
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public int executeUpdate(Connection conn, String query, List<Object> params) throws SQLException {
+        int result;
+        if (isAutoCommitModeEnabled()) {
+            result = super.executeUpdate(conn, query, params);
+        } else {
+            try (PreparedStatement statement = prepareStatementWithParams(conn, query, params)) {
+                result = statement.executeUpdate();
+            }
+        }
+
+        return result;
+    }
+
+    @Override
+    public void rollbackAll() {
+        try {
+            this.updateConnection.rollback();
+        } catch (SQLException e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
+        }
+    }
+
+    @Override
+    public void commitAll() {
+        try {
+            this.updateConnection.commit();
+        } catch (SQLException e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error("Failed to commit changes , about to rollback", e);
+            this.rollbackQuietly(this.updateConnection);
+        }
+    }
+
+    public int executeUpdateSerially(String query, List<Object> params) {
+        try {
+            this.updateQueriesQueue.put(new UpdateQuery(query, params));
+        } catch (InterruptedException e) {
+            LoggerFactory.getLogger(LoggerConf.LOGGER_NAME).error(e.getMessage(), e);
+        }
+        return 2;
+    }
+
+    @Override
+    public Object castToDBType(SqlTable table, String label, String value) {
+        Object actualValue;
+
+        if (table.getColumnsMap().get(label).equals("INTEGER") && value != null && !value.isEmpty()) {
             actualValue = Integer.parseInt(value);
-		} else if (table.getColumnsMap().get(label).equals("REAL")  && value != null && !value.isEmpty()) {
+        } else if (table.getColumnsMap().get(label).equals("REAL") && value != null && !value.isEmpty()) {
             actualValue = Double.parseDouble(value);
-		} else {
-			actualValue = value;
-		}
-		return actualValue;
-	}
-	
-	
-	@Override
-	public String getContentsQuery() {
-		return "select name,type from sqlite_master order by name";
-	}
+        } else {
+            actualValue = value;
+        }
+        return actualValue;
+    }
 
-	
-	@Override
-	public void getTableSchema(String name, ResultSetAction action) throws SQLException {
-		this.getSchema(name, action);
-	}
-	
-	@Override
-	public void getViewSchema(String name, ResultSetAction action) throws SQLException {
-		this.getSchema(name, action);
-	}
-	
-	@Override
-	public void getIndexSchema(String name, ResultSetAction action) throws SQLException {
-		this.getSchema(name, action);
-	}
-	
-	private void getSchema(String name, ResultSetAction action) throws SQLException {
-		this.executeQuery("select sql from sqlite_master where name = ?", Arrays.asList(name), action);
-	}
+    @Override
+    public String getContentsQuery() {
+        return "select name,type from sqlite_master order by name";
+    }
 
+    @Override
+    public void getTableSchema(String name, ResultSetAction action) throws SQLException {
+        this.getSchema(name, action);
+    }
 
-	@Override
-	public void getTriggers(String table, ResultSetAction action) throws SQLException {
-		this.executeQuery("select NAME as TRIGGER_NAME, SQL as ACTION_STATEMENT from sqlite_master where type like 'trigger' and tbl_name like '" + table + "'", action);
-	}
-	
+    @Override
+    public void getViewSchema(String name, ResultSetAction action) throws SQLException {
+        this.getSchema(name, action);
+    }
+
+    @Override
+    public void getIndexSchema(String name, ResultSetAction action) throws SQLException {
+        this.getSchema(name, action);
+    }
+
+    private void getSchema(String name, ResultSetAction action) throws SQLException {
+        this.executeQuery("select sql from sqlite_master where name = ?", Arrays.asList(name), action);
+    }
+
+    @Override
+    public void getTriggers(String table, ResultSetAction action) throws SQLException {
+        this.executeQuery("select NAME as TRIGGER_NAME, SQL as ACTION_STATEMENT from sqlite_master where type like 'trigger' and tbl_name like '" + table + "'", action);
+    }
+
 }

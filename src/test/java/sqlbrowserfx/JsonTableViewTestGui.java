@@ -10,25 +10,24 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-public class JsonTableViewTestGui extends Application{
+public class JsonTableViewTestGui extends Application {
 
-	public static void main(String[] args) {
-		launch(args);
-	}
+    public static void main(String[] args) {
+        launch(args);
+    }
 
-	@Override
-	public void start(Stage primaryStage) {
-		try {
-			primaryStage.setTitle("SqlBrowser");
-			JSONArray jsonArray = new JSONArray(new HttpClient().get("<your url>"));
-			JSONTableView tableView = new JSONTableView();
-			tableView.setItemsLater(jsonArray);
-			primaryStage.setScene(new Scene(new VBox(new TextField(), tableView)));
-			primaryStage.show();
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
+    @Override
+    public void start(Stage primaryStage) {
+        try {
+            primaryStage.setTitle("SqlBrowser");
+            JSONArray jsonArray = new JSONArray(new HttpClient().get("<your url>"));
+            JSONTableView tableView = new JSONTableView();
+            tableView.setItemsLater(jsonArray);
+            primaryStage.setScene(new Scene(new VBox(new TextField(), tableView)));
+            primaryStage.show();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
 
-
-	}
+    }
 }

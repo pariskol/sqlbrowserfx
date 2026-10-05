@@ -5,5 +5,5 @@ import java.sql.Statement;
 @FunctionalInterface
 public interface StatementAction {
 
-	void onStatement(Statement stmt);
+    void onStatement(Statement stmt);
 }

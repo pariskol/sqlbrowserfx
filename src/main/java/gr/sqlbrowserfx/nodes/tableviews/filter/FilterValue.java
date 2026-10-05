@@ -12,16 +12,15 @@ import javafx.scene.paint.Color;
 
 import java.util.Optional;
 
-public final class FilterValue<T,R> extends HBox implements Comparable<FilterValue<T,R>> {
+public final class FilterValue<T, R> extends HBox implements Comparable<FilterValue<T, R>> {
 
     private final R value;
     private final BooleanProperty isSelected = new SimpleBooleanProperty(true);
     private final BooleanProperty inScope = new SimpleBooleanProperty(true);
-    private final ColumnFilter<T,R> columnFilter;
+    private final ColumnFilter<T, R> columnFilter;
     private final InvalidationListener scopeListener;
 
-
-    FilterValue(R value, ColumnFilter<T,R> columnFilter) {
+    FilterValue(R value, ColumnFilter<T, R> columnFilter) {
         this.value = value;
         this.columnFilter = columnFilter;
 
@@ -31,7 +30,7 @@ public final class FilterValue<T,R> extends HBox implements Comparable<FilterVal
         scopeListener = (Observable v) -> label.textFillProperty().set(getInScopeProperty().get() ? Color.BLACK : Color.LIGHTGRAY);
         inScope.addListener(new WeakInvalidationListener(scopeListener));
         checkBox.selectedProperty().bindBidirectional(selectedProperty());
-        getChildren().addAll(checkBox,label);
+        getChildren().addAll(checkBox, label);
     }
 
     /**
@@ -64,16 +63,15 @@ public final class FilterValue<T,R> extends HBox implements Comparable<FilterVal
         return Optional.ofNullable(value).map(Object::toString).orElse("");
     }
 
-
     @Override
-    public int compareTo(FilterValue<T,R> other) {
+    public int compareTo(FilterValue<T, R> other) {
         if (value != null && other.value != null) {
             if (value instanceof Comparable<?> && other.value instanceof Comparable<?>) {
                 try {
-                	return ((Comparable<Object>) value).compareTo(((Comparable<Object>) other.value));
+                    return ((Comparable<Object>) value).compareTo(((Comparable<Object>) other.value));
                 } catch (Exception e) {
-					// ignore
-				}
+                    // ignore
+                }
             }
         }
         return Optional.ofNullable(value).map(Object::toString).orElse("")
