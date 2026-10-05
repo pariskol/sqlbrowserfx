@@ -40,7 +40,6 @@ public class CSqlCodeArea extends SqlCodeArea {
         menu.getItems().addAll(menuItemSave);
 
         var executorRunning = new SimpleBooleanProperty(false);
-        var aiTimeoutMillis = 120 * 1000;
         var ollama = new OllamaHandler() {
             @Override
             public void broadcast(String conversationId, String type, String content) {
@@ -56,7 +55,7 @@ public class CSqlCodeArea extends SqlCodeArea {
             SqlBrowserFXThreadUtils.createDaemonThread(() -> {
                 ollama.reportSqlSyntaxErrors(getText().isEmpty() ? getSelectedText() : getText());
                 Platform.runLater(() -> executorRunning.set(false));
-            }, "ai-syntax-check-thread", aiTimeoutMillis);
+            }, "ai-syntax-check-thread");
         });
 
         var menuItemExplainSql = new MenuItem("(AI) Explain Sql", JavaFXUtils.createIcon("/icons/suggestion.png"));
@@ -67,7 +66,7 @@ public class CSqlCodeArea extends SqlCodeArea {
             SqlBrowserFXThreadUtils.createDaemonThread(() -> {
                 ollama.explainSql(getText().isEmpty() ? getSelectedText() : getText());
                 Platform.runLater(() -> executorRunning.set(false));
-            }, "ai-explain-thread", aiTimeoutMillis);
+            }, "ai-explain-thread");
         });
 
         var menuItemSqlSuggestions = new MenuItem("(AI) Sql Suggestions", JavaFXUtils.createIcon("/icons/suggestion.png"));
@@ -78,7 +77,7 @@ public class CSqlCodeArea extends SqlCodeArea {
             SqlBrowserFXThreadUtils.createDaemonThread(() -> {
                 ollama.suggestSqlQuery(getText().isEmpty() ? getSelectedText() : getText());
                 Platform.runLater(() -> executorRunning.set(false));
-            }, "ai-suggestion-thread", aiTimeoutMillis);
+            }, "ai-suggestion-thread");
         });
 
         menu.getItems().addAll(
