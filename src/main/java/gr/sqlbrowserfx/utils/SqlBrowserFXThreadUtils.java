@@ -1,8 +1,6 @@
 package gr.sqlbrowserfx.utils;
 
 import gr.sqlbrowserfx.LoggerConf;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +11,15 @@ public class SqlBrowserFXThreadUtils {
         void run() throws Exception;
     }
 
-    public static Thread createDaemonThread(ThrowableRunnable runnable, String name, long timeout) {
+    /**
+     * Creates a daemon thread that runs forever if not interrupted ,every given timeout milliseconds.
+     * 
+     * @param runnable
+     * @param name
+     * @param timeout
+     * @return 
+     */
+    public static Thread createDaemonRepeaterThread(ThrowableRunnable runnable, String name, long timeout) {
         var daemon = new Thread(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
@@ -31,19 +37,18 @@ public class SqlBrowserFXThreadUtils {
         return daemon;
     }
 
-    public static Thread createThread(Runnable runnable, String name) {
+    /**
+     * Creates a daemon thread that instantly runs that given runnable.
+     * 
+     * @param runnable
+     * @param name
+     * @return 
+     */
+    public static Thread createDaemonThread(Runnable runnable, String name) {
         var thread = new Thread(() -> runnable.run(), name);
         thread.setDaemon(true);
         thread.start();
         return thread;
     }
 
-    public static List<Thread> createDaemonThreads(ThrowableRunnable runnable, String prefixName, long timeout, int count) {
-        var daemons = new ArrayList<Thread>();
-        for (var i = 0; i < count; i++) {
-            var daemon = createDaemonThread(runnable, prefixName + "-" + i, timeout);
-            daemons.add(daemon);
-        }
-        return daemons;
-    }
 }
