@@ -18,6 +18,8 @@ import gr.sqlbrowserfx.LoggerConf;
 public class PostgreSqlConnector extends SqlConnector {
 
     public PostgreSqlConnector(String url, String database, String user, String password) {
+        var prefix = "jdbc:postgresql://";
+        url = url.startsWith(prefix) ? url : prefix + url;
         super("org.postgresql.Driver", url, user, password);
 
     }

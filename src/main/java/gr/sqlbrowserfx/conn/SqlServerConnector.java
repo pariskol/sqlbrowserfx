@@ -20,14 +20,9 @@ public class SqlServerConnector extends SqlConnector {
 
     private final String database;
 
-    public SqlServerConnector(String database, String user, String password) {
-        super("com.microsoft.sqlserver.jdbc.SQLServerDriver",
-                "jdbc:sqlserver://localhost:1433;encrypt=false;databaseName=" + database,
-                user, password);
-        this.database = database;
-    }
-
     public SqlServerConnector(String url, String database, String user, String password) {
+        var prefix = "jdbc:sqlserver://";
+        url = url.startsWith(prefix) ? url : prefix + url;
         super("com.microsoft.sqlserver.jdbc.SQLServerDriver", url, user, password);
         this.database = database;
     }

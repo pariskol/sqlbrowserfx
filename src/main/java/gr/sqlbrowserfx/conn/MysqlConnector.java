@@ -20,14 +20,9 @@ public class MysqlConnector extends SqlConnector {
 
     private final String database;
 
-    public MysqlConnector(String database, String user, String password) {
-        super("com.mysql.cj.jdbc.Driver",
-                "jdbc:mysql://localhost:3306/" + database + "?autoReconnect=true&useSSL=true&useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC",
-                user, password);
-        this.database = database;
-    }
-
     public MysqlConnector(String url, String database, String user, String password) {
+        var prefix = "jdbc:mysql://";
+        url = url.startsWith(prefix) ? url : prefix + url;
         super("com.mysql.cj.jdbc.Driver", url, user, password);
         this.database = database;
     }

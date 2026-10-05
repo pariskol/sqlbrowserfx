@@ -38,7 +38,7 @@ public abstract class DbConfigBox extends VBox {
         this.getChildren().add(new Label("Database url"));
         databaseField = new TextField();
         urlField = new TextField();
-        urlField.setPromptText("Enter jdbc url ...");
+        urlField.setPromptText("Enter url <ip>:<port>/<database>?<optional options>...");
         urlField.textProperty()
                 .addListener((observable, oldValue, newValue) -> {
                     String[] split = urlField.getText().split("/");
@@ -65,7 +65,7 @@ public abstract class DbConfigBox extends VBox {
         HBox hb = new CustomHBox(connectButton, loader);
         this.getChildren().add(hb);
 
-        this.getChildren().add(new Label("History"));
+        this.getChildren().add(new Label("Connection History"));
         sqlTableView = new HistorySqlTableView(SqlBrowserFXAppManager.getConfigSqlConnector());
         sqlTableView.setColumnWidth(0, 0, 300);
         this.getChildren().add(sqlTableView);
@@ -148,7 +148,7 @@ public abstract class DbConfigBox extends VBox {
     }
 
     public String getUrl() {
-        return urlField.getText().isEmpty() ? urlField.getPromptText().replaceAll("@", "") : urlField.getText();
+        return urlField.getText();
     }
 
     public void showLoader(boolean show) {
