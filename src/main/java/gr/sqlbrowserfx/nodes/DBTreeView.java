@@ -623,7 +623,7 @@ public class DBTreeView extends TreeView<String>
             SqlBrowserFXThreadUtils.createDaemonThread(() -> {
                 ollama.explainSql(this.copyScemaAction());
                 Platform.runLater(() -> executorRunning.set(false));
-            }, "ai-suggestion-thread");
+            }, "ai-explain-thread");
         });
 
         var menuItemFeedScema = new MenuItem("(AI) Copy Schema Prompt", JavaFXUtils.createIcon("/icons/suggestion.png"));
