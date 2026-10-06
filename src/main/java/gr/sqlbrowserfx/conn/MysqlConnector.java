@@ -115,8 +115,24 @@ public class MysqlConnector extends SqlConnector {
     @Override
     public void getTableSchema(String name, ResultSetAction action) throws SQLException {
         String sql = """
-            SELECT CONCAT('CREATE TABLE `', t.TABLE_SCHEMA, '`.`', t.TABLE_NAME, '` ( ', GROUP_CONCAT(CONCAT('  `', c.COLUMN_NAME, '` ', c.COLUMN_TYPE, IF(c.IS_NULLABLE='NO',' NOT NULL',''), IF(c.COLUMN_DEFAULT IS NOT NULL, CONCAT(' DEFAULT \\'', REPLACE(c.COLUMN_DEFAULT,'\\\\','\\\\\\\\'), '\\''),''), IF(c.EXTRA<>'', CONCAT(' ', c.EXTRA),''), IF(c.COLUMN_COMMENT<>'', CONCAT(' COMMENT \\'', REPLACE(c.COLUMN_COMMENT,'\\'','\\\\\\''), '\\''),'') ) ORDER BY c.ORDINAL_POSITION SEPARATOR ', '), IF(pk.primary_key IS NOT NULL, CONCAT(', PRIMARY KEY (', pk.primary_key, ')'), ''), IF(uk.unique_keys IS NOT NULL, CONCAT(', ', uk.unique_keys), ''), IF(fk.foreign_keys IS NOT NULL, CONCAT(', ', fk.foreign_keys), ''), ' ) ENGINE=', MAX(t.ENGINE), ' DEFAULT CHARSET=', MAX(SUBSTRING_INDEX(t.TABLE_COLLATION,'_',1)), ';') AS create_table_statement 
-            FROM information_schema.TABLES t 
+            SELECT CONCAT(
+                'CREATE TABLE `', t.TABLE_SCHEMA, '`.`', t.TABLE_NAME, '` ( ',
+                GROUP_CONCAT(
+                    CONCAT('  `', c.COLUMN_NAME, '` ', c.COLUMN_TYPE, 
+                           IF(c.IS_NULLABLE='NO',' NOT NULL',''),
+                           IF(c.COLUMN_DEFAULT IS NOT NULL, 
+                              CONCAT(' DEFAULT \\'', REPLACE(c.COLUMN_DEFAULT,'\\\\','\\\\\\\\'), '\\''),''),
+                           IF(c.EXTRA<>'', CONCAT(' ', c.EXTRA),''),
+                           IF(c.COLUMN_COMMENT<>'', 
+                              CONCAT(' COMMENT \\'', REPLACE(c.COLUMN_COMMENT,'\\'','\\\\\\''), '\\''),'')
+                    ) ORDER BY c.ORDINAL_POSITION SEPARATOR ', '
+                ),
+                IF(pk.primary_key IS NOT NULL, CONCAT(', PRIMARY KEY (', pk.primary_key, ')'), ''),
+                IF(uk.unique_keys IS NOT NULL, CONCAT(', ', uk.unique_keys), ''),
+                IF(fk.foreign_keys IS NOT NULL, CONCAT(', ', fk.foreign_keys), ''),
+                ' ) ENGINE=', MAX(t.ENGINE), 
+                ' DEFAULT CHARSET=', MAX(SUBSTRING_INDEX(t.TABLE_COLLATION,'_',1)), ';'
+            ) AS create_table_statement            FROM information_schema.TABLES t 
                 JOIN information_schema.COLUMNS c ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME 
                 LEFT JOIN (SELECT kcu.TABLE_SCHEMA, kcu.TABLE_NAME, GROUP_CONCAT(CONCAT('`', kcu.COLUMN_NAME, '`') ORDER BY kcu.ORDINAL_POSITION) AS primary_key FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE kcu ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA AND tc.TABLE_NAME = kcu.TABLE_NAME WHERE tc.CONSTRAINT_TYPE='PRIMARY KEY' GROUP BY kcu.TABLE_SCHEMA, kcu.TABLE_NAME) pk ON t.TABLE_SCHEMA = pk.TABLE_SCHEMA AND t.TABLE_NAME = pk.TABLE_NAME 
                 LEFT JOIN (SELECT uk_sub.TABLE_SCHEMA, uk_sub.TABLE_NAME, GROUP_CONCAT(CONCAT('UNIQUE KEY `', uk_sub.CONSTRAINT_NAME, '` (', uk_sub.column_list, ')') SEPARATOR ', ') AS unique_keys FROM (SELECT kcu.TABLE_SCHEMA, kcu.TABLE_NAME, kcu.CONSTRAINT_NAME, GROUP_CONCAT(CONCAT('`', kcu.COLUMN_NAME, '`') ORDER BY kcu.ORDINAL_POSITION) AS column_list FROM information_schema.TABLE_CONSTRAINTS tc JOIN information_schema.KEY_COLUMN_USAGE kcu ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME AND tc.TABLE_SCHEMA = kcu.TABLE_SCHEMA AND tc.TABLE_NAME = kcu.TABLE_NAME WHERE tc.CONSTRAINT_TYPE='UNIQUE' GROUP BY kcu.TABLE_SCHEMA, kcu.TABLE_NAME, kcu.CONSTRAINT_NAME) AS uk_sub GROUP BY uk_sub.TABLE_SCHEMA, uk_sub.TABLE_NAME) uk ON t.TABLE_SCHEMA = uk.TABLE_SCHEMA AND t.TABLE_NAME = uk.TABLE_NAME 
