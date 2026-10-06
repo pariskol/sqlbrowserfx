@@ -110,62 +110,62 @@ public class SqlServerConnector extends SqlConnector {
     @Override
     public String getContentsQuery() {
         return """
-				SELECT table_name, table_type
-				FROM information_schema.tables
-				ORDER BY table_name ASC;
-				""";
+        SELECT table_name, table_type
+        FROM information_schema.tables
+        ORDER BY table_name ASC;
+        """;
     }
 
     @Override
     public void getTableSchema(String name, ResultSetAction action) throws SQLException {
         this.executeQuery(
                 """
-				SELECT 
-				    'CREATE TABLE [' + s.name + '].[' + t.name + '] (' + CHAR(13) +
-				    STRING_AGG(
-				        '    [' + c.name + '] ' + 
-				        UPPER(ty.name) +
-				        CASE 
-				            WHEN ty.name IN ('varchar','char','varbinary','binary','nvarchar','nchar')
-				                THEN '(' + 
-				                    CASE WHEN c.max_length = -1 THEN 'MAX'
-				                         WHEN ty.name LIKE 'n%' THEN CAST(c.max_length / 2 AS VARCHAR(10))
-				                         ELSE CAST(c.max_length AS VARCHAR(10))
-				                    END + ')'
-				            WHEN ty.name IN ('decimal','numeric')
-				                THEN '(' + CAST(c.precision AS VARCHAR(10)) + ',' + CAST(c.scale AS VARCHAR(10)) + ')'
-				            ELSE ''
-				        END + ' ' +
-				        CASE WHEN c.is_nullable = 0 THEN 'NOT NULL' ELSE 'NULL' END +
-				        CASE WHEN ic.seed_value IS NOT NULL THEN ' IDENTITY(' + CAST(ic.seed_value AS VARCHAR(10)) + ',' + CAST(ic.increment_value AS VARCHAR(10)) + ')' ELSE '' END +
-				        CASE WHEN dc.definition IS NOT NULL THEN ' DEFAULT ' + dc.definition ELSE '' END
-				        , ',' + CHAR(13)
-				        ) WITHIN GROUP (ORDER BY c.column_id)
-				    + 
-				    CASE 
-				        WHEN pk.pkdef IS NOT NULL THEN ',' + CHAR(13) + pk.pkdef
-				        ELSE ''
-				    END
-				    + CHAR(13) + ');' AS create_statement
-				FROM sys.tables t
-				JOIN sys.schemas s ON t.schema_id = s.schema_id
-				JOIN sys.columns c ON t.object_id = c.object_id
-				JOIN sys.types ty ON c.user_type_id = ty.user_type_id
-				LEFT JOIN sys.default_constraints dc ON c.default_object_id = dc.object_id
-				LEFT JOIN sys.identity_columns ic ON c.object_id = ic.object_id AND c.column_id = ic.column_id
-				OUTER APPLY (
-				    SELECT 
-				        '    CONSTRAINT [' + MAX(i.name) + '] PRIMARY KEY (' +
-				        STRING_AGG('[' + c2.name + ']', ', ') WITHIN GROUP (ORDER BY ic2.key_ordinal) + ')'
-				        AS pkdef
-				    FROM sys.indexes i
-				    JOIN sys.index_columns ic2 ON i.object_id = ic2.object_id AND i.index_id = ic2.index_id
-				    JOIN sys.columns c2 ON ic2.object_id = c2.object_id AND ic2.column_id = c2.column_id
-				    WHERE i.is_primary_key = 1 AND i.object_id = t.object_id
-				) pk
-				WHERE t.name = ?
-				GROUP BY s.name, t.name, pk.pkdef;
-				""",
+                    SELECT 
+                        'CREATE TABLE [' + s.name + '].[' + t.name + '] (' + CHAR(13) +
+                        STRING_AGG(
+                            '    [' + c.name + '] ' + 
+                            UPPER(ty.name) +
+                            CASE 
+                                WHEN ty.name IN ('varchar','char','varbinary','binary','nvarchar','nchar')
+                                    THEN '(' + 
+                                        CASE WHEN c.max_length = -1 THEN 'MAX'
+                                             WHEN ty.name LIKE 'n%' THEN CAST(c.max_length / 2 AS VARCHAR(10))
+                                             ELSE CAST(c.max_length AS VARCHAR(10))
+                                        END + ')'
+                                WHEN ty.name IN ('decimal','numeric')
+                                    THEN '(' + CAST(c.precision AS VARCHAR(10)) + ',' + CAST(c.scale AS VARCHAR(10)) + ')'
+                                ELSE ''
+                            END + ' ' +
+                            CASE WHEN c.is_nullable = 0 THEN 'NOT NULL' ELSE 'NULL' END +
+                            CASE WHEN ic.seed_value IS NOT NULL THEN ' IDENTITY(' + CAST(ic.seed_value AS VARCHAR(10)) + ',' + CAST(ic.increment_value AS VARCHAR(10)) + ')' ELSE '' END +
+                            CASE WHEN dc.definition IS NOT NULL THEN ' DEFAULT ' + dc.definition ELSE '' END
+                            , ',' + CHAR(13)
+                            ) WITHIN GROUP (ORDER BY c.column_id)
+                        + 
+                        CASE 
+                            WHEN pk.pkdef IS NOT NULL THEN ',' + CHAR(13) + pk.pkdef
+                            ELSE ''
+                        END
+                        + CHAR(13) + ');' AS create_statement
+                    FROM sys.tables t
+                    JOIN sys.schemas s ON t.schema_id = s.schema_id
+                    JOIN sys.columns c ON t.object_id = c.object_id
+                    JOIN sys.types ty ON c.user_type_id = ty.user_type_id
+                    LEFT JOIN sys.default_constraints dc ON c.default_object_id = dc.object_id
+                    LEFT JOIN sys.identity_columns ic ON c.object_id = ic.object_id AND c.column_id = ic.column_id
+                    OUTER APPLY (
+                        SELECT 
+                            '    CONSTRAINT [' + MAX(i.name) + '] PRIMARY KEY (' +
+                            STRING_AGG('[' + c2.name + ']', ', ') WITHIN GROUP (ORDER BY ic2.key_ordinal) + ')'
+                            AS pkdef
+                        FROM sys.indexes i
+                        JOIN sys.index_columns ic2 ON i.object_id = ic2.object_id AND i.index_id = ic2.index_id
+                        JOIN sys.columns c2 ON ic2.object_id = c2.object_id AND ic2.column_id = c2.column_id
+                        WHERE i.is_primary_key = 1 AND i.object_id = t.object_id
+                    ) pk
+                    WHERE t.name = ?
+                    GROUP BY s.name, t.name, pk.pkdef;
+                    """,
                 Arrays.asList(name),
                 action);
     }
@@ -190,23 +190,23 @@ public class SqlServerConnector extends SqlConnector {
     public void getIndexSchema(String name, ResultSetAction action) throws SQLException {
         this.executeQuery(
                 """
-				SELECT 
-				    'CREATE ' + 
-				    CASE WHEN i.is_unique = 1 THEN 'UNIQUE ' ELSE '' END + 
-				    'INDEX [' + i.name + '] ON [' + s.name + '].[' + t.name + '] (' +
-				    STRING_AGG('[' + c.name + ']' + 
-				        CASE WHEN ic.is_descending_key = 1 THEN ' DESC' ELSE ' ASC' END, ', '
-				        ) WITHIN GROUP (ORDER BY ic.key_ordinal) + ')' AS create_statement
-				FROM sys.indexes i
-				JOIN sys.tables t ON i.object_id = t.object_id
-				JOIN sys.schemas s ON t.schema_id = s.schema_id
-				JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
-				JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
-				WHERE i.is_primary_key = 0 
-				  AND i.is_unique_constraint = 0 
-				  AND t.name = ?
-				GROUP BY s.name, t.name, i.name, i.is_unique;
-				""",
+                SELECT 
+                    'CREATE ' + 
+                    CASE WHEN i.is_unique = 1 THEN 'UNIQUE ' ELSE '' END + 
+                    'INDEX [' + i.name + '] ON [' + s.name + '].[' + t.name + '] (' +
+                    STRING_AGG('[' + c.name + ']' + 
+                        CASE WHEN ic.is_descending_key = 1 THEN ' DESC' ELSE ' ASC' END, ', '
+                        ) WITHIN GROUP (ORDER BY ic.key_ordinal) + ')' AS create_statement
+                FROM sys.indexes i
+                JOIN sys.tables t ON i.object_id = t.object_id
+                JOIN sys.schemas s ON t.schema_id = s.schema_id
+                JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+                JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+                WHERE i.is_primary_key = 0 
+                  AND i.is_unique_constraint = 0 
+                  AND t.name = ?
+                GROUP BY s.name, t.name, i.name, i.is_unique;
+                """,
                 Arrays.asList(name),
                 action
         );
@@ -218,13 +218,13 @@ public class SqlServerConnector extends SqlConnector {
 
         this.executeQuery(
                 """
-			SELECT c.name AS COLUMN_NAME 
-			FROM sys.indexes i 
-			INNER JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id 
-			INNER JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id 
-			INNER JOIN sys.tables t ON i.object_id = t.object_id 
-			WHERE i.is_primary_key = 1 AND t.name = ?	
-			""",
+                SELECT c.name AS COLUMN_NAME 
+                FROM sys.indexes i 
+                INNER JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id 
+                INNER JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id 
+                INNER JOIN sys.tables t ON i.object_id = t.object_id 
+                WHERE i.is_primary_key = 1 AND t.name = ?	
+                """,
                 Arrays.asList(tableName),
                 rset -> {
                     primaryKeyBuilder.append(rset.getString("COLUMN_NAME"));
@@ -245,14 +245,14 @@ public class SqlServerConnector extends SqlConnector {
         List<Map<String, String>> foreignKeys = new ArrayList<>();
         this.executeQuery(
                 """
-			SELECT COL_NAME(fc.parent_object_id, fc.parent_column_id) AS COLUMN_NAME, 
-			OBJECT_NAME(f.referenced_object_id) AS REFERENCED_TABLE_NAME, 
-			COL_NAME(fc.referenced_object_id, fc.referenced_column_id) AS REFERENCED_COLUMN_NAME 
-			FROM sys.foreign_keys AS f 
-			INNER JOIN sys.foreign_key_columns AS fc ON f.object_id = fc.constraint_object_id 
-			INNER JOIN sys.tables t ON t.object_id = fc.parent_object_id 
-			WHERE t.name = ?
-			""",
+                SELECT COL_NAME(fc.parent_object_id, fc.parent_column_id) AS COLUMN_NAME, 
+                OBJECT_NAME(f.referenced_object_id) AS REFERENCED_TABLE_NAME, 
+                COL_NAME(fc.referenced_object_id, fc.referenced_column_id) AS REFERENCED_COLUMN_NAME 
+                FROM sys.foreign_keys AS f 
+                INNER JOIN sys.foreign_key_columns AS fc ON f.object_id = fc.constraint_object_id 
+                INNER JOIN sys.tables t ON t.object_id = fc.parent_object_id 
+                WHERE t.name = ?
+                """,
                 Arrays.asList(tableName),
                 rset -> {
                     Map<String, String> map = new HashMap<>();
@@ -275,9 +275,9 @@ public class SqlServerConnector extends SqlConnector {
     public void getTriggers(String table, ResultSetAction action) throws SQLException {
         this.executeQuery(
                 """
-			SELECT name AS TRIGGER_NAME, OBJECT_DEFINITION(object_id) AS ACTION_STATEMENT 
-			FROM sys.triggers WHERE parent_id = OBJECT_ID(?)
-			""",
+                SELECT name AS TRIGGER_NAME, OBJECT_DEFINITION(object_id) AS ACTION_STATEMENT 
+                FROM sys.triggers WHERE parent_id = OBJECT_ID(?)
+                """,
                 Arrays.asList(table), action);
     }
 
@@ -286,10 +286,10 @@ public class SqlServerConnector extends SqlConnector {
         List<String> tables = new ArrayList<>();
         this.executeQuery(
                 """
-			SELECT table_name, table_type
-			FROM information_schema.tables
-			WHERE table_type = 'BASE TABLE'
-			""",
+                SELECT table_name, table_type
+                FROM information_schema.tables
+                WHERE table_type = 'BASE TABLE'
+                """,
                 rset -> {
                     try {
                         tables.add(rset.getString(1));
@@ -306,10 +306,10 @@ public class SqlServerConnector extends SqlConnector {
         List<String> tables = new ArrayList<>();
         this.executeQuery(
                 """
-				SELECT table_name, table_type
-				FROM information_schema.tables
-				WHERE table_type = 'VIEW'
-			""",
+                SELECT table_name, table_type
+                FROM information_schema.tables
+                WHERE table_type = 'VIEW'
+                """,
                 rset -> {
                     try {
                         tables.add(rset.getString(1));
