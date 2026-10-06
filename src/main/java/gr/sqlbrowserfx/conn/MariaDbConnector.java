@@ -176,20 +176,20 @@ public class MariaDbConnector extends SqlConnector {
     public void getIndexSchema(String name, ResultSetAction action) throws SQLException {
         this.executeQuery(
                 """
-				SELECT DISTINCT
-				  CONCAT(
-				    'CREATE ',
-				    CASE WHEN s.NON_UNIQUE = 0 AND s.INDEX_NAME <> 'PRIMARY' THEN 'UNIQUE ' ELSE '' END,
-				    CASE WHEN s.INDEX_NAME = 'PRIMARY' THEN 'PRIMARY KEY ' ELSE CONCAT('INDEX `', s.INDEX_NAME, '` ') END,
-				    '(',
-				    GROUP_CONCAT(CONCAT('`', s.COLUMN_NAME, '`') ORDER BY s.SEQ_IN_INDEX SEPARATOR ', '),
-				    ') USING ', s.INDEX_TYPE, ';'
-				  ) AS create_index_statement
-				FROM information_schema.STATISTICS s
-				WHERE s.TABLE_SCHEMA = ?
-				  AND s.TABLE_NAME = ?
-				GROUP BY s.TABLE_NAME, s.INDEX_NAME, s.INDEX_TYPE, s.NON_UNIQUE
-				""",
+                SELECT DISTINCT
+                  CONCAT(
+                    'CREATE ',
+                    CASE WHEN s.NON_UNIQUE = 0 AND s.INDEX_NAME <> 'PRIMARY' THEN 'UNIQUE ' ELSE '' END,
+                    CASE WHEN s.INDEX_NAME = 'PRIMARY' THEN 'PRIMARY KEY ' ELSE CONCAT('INDEX `', s.INDEX_NAME, '` ') END,
+                    '(',
+                    GROUP_CONCAT(CONCAT('`', s.COLUMN_NAME, '`') ORDER BY s.SEQ_IN_INDEX SEPARATOR ', '),
+                    ') USING ', s.INDEX_TYPE, ';'
+                  ) AS create_index_statement
+                FROM information_schema.STATISTICS s
+                WHERE s.TABLE_SCHEMA = ?
+                  AND s.TABLE_NAME = ?
+                GROUP BY s.TABLE_NAME, s.INDEX_NAME, s.INDEX_TYPE, s.NON_UNIQUE
+                """,
                 Arrays.asList(database, name),
                 action);
         throw new RuntimeException("No implemented");
