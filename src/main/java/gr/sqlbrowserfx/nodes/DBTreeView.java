@@ -576,7 +576,7 @@ public class DBTreeView extends TreeView<String>
 
         var showSchema = new MenuItem("Show Schema", JavaFXUtils.createIcon("/icons/details.png"));
         showSchema.setOnAction(action -> {
-            var codeArea = new SqlCodeArea(this.copyScemaAction(), false, false, isUsingMysql());
+            var codeArea = new SqlCodeArea(this.copyScemaAction(), false, false, true);
             var scrollPane = new VirtualizedScrollPane<>(codeArea);
             scrollPane.setPrefSize(600, 400);
 
