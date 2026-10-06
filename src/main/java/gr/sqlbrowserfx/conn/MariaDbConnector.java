@@ -121,7 +121,8 @@ public class MariaDbConnector extends SqlConnector {
                     CONCAT('  `', c.COLUMN_NAME, '` ', c.COLUMN_TYPE, 
                            IF(c.IS_NULLABLE='NO',' NOT NULL',''),
                            IF(c.COLUMN_DEFAULT IS NOT NULL, 
-                              CONCAT(' DEFAULT \\'', REPLACE(c.COLUMN_DEFAULT,'\\\\','\\\\\\\\'), '\\''),''),
+                              CONCAT(' DEFAULT ', c.COLUMN_DEFAULT), 
+                              ''),
                            IF(c.EXTRA<>'', CONCAT(' ', c.EXTRA),''),
                            IF(c.COLUMN_COMMENT<>'', 
                               CONCAT(' COMMENT \\'', REPLACE(c.COLUMN_COMMENT,'\\'','\\\\\\''), '\\''),'')
